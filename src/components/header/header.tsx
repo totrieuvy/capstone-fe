@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { FaUserCircle } from "react-icons/fa";
 
-import "./header.scss";
+import "./Header.scss";
 import logo from "../../assets/logo.png";
 import Navigation from "../../constants/navigation";
 import { useEffect } from "react";
@@ -11,7 +11,6 @@ function Header() {
     const handleScroll = () => {
       const header = document.querySelector(".header");
       if (header) {
-        // Check if header is not null
         if (window.scrollY > 50) {
           header.classList.add("header--scrolled");
         } else {
