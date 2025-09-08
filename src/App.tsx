@@ -1,11 +1,18 @@
 import { RouterProvider, createBrowserRouter } from "react-router-dom";
-import Header from "./components/header/header";
+import Layout from "./layouts/Layout";
+import Homepage from "./pages/homepage/Homepage";
 
 const App = () => {
   const router = createBrowserRouter([
     {
-      path: "*",
-      element: <Header />,
+      path: "/",
+      element: <Layout />,
+      children: [
+        {
+          path: "/",
+          element: <Homepage />,
+        },
+      ],
     },
   ]);
 
