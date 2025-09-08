@@ -38,7 +38,9 @@ function Header() {
         ))}
       </div>
       <div className="header__right">
-        <FaUserCircle />
+        <Link to="/login">
+          <FaUserCircle />
+        </Link>
       </div>
     </header>
   );
