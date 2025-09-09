@@ -1,42 +1,47 @@
 import { Form, Input, Button } from "antd";
 import { Link } from "react-router-dom";
 import "./Login.scss";
+import { useEffect } from "react";
 
 const LoginForm = () => {
+  useEffect(() => {
+    document.title = "Login";
+  }, []);
+
   return (
     <div className="login-container">
       <div className="login-background"></div>
       <div className="login-form">
-        <h2>Sign In</h2>
+        <h2>Đăng nhập</h2>
         <Form name="login_form" initialValues={{ remember: true }} layout="vertical">
           <Form.Item
             label="Email"
             name="email"
             rules={[
-              { required: true, message: "Please input your email!" },
-              { type: "email", message: "Please enter a valid email!" },
+              { required: true, message: "Vui lòng nhập email của bạn!" },
+              { type: "email", message: "Vui lòng nhập email hợp lệ!" },
             ]}
           >
-            <Input placeholder="Enter your email" size="large" />
+            <Input placeholder="Nhập email của bạn" size="large" />
           </Form.Item>
 
           <Form.Item
-            label="Password"
+            label="Mật khẩu"
             name="password"
-            rules={[{ required: true, message: "Please input your password!" }]}
+            rules={[{ required: true, message: "Vui lòng nhập mật khẩu của bạn!" }]}
           >
-            <Input.Password placeholder="Enter your password" size="large" />
+            <Input.Password placeholder="Nhập mật khẩu của bạn" size="large" />
           </Form.Item>
 
           <Form.Item>
             <Button type="primary" htmlType="submit" size="large" block>
-              Sign In
+              Đăng nhập
             </Button>
           </Form.Item>
 
           <div className="form-links">
-            <Link to="/forgot-password">Forgot Password?</Link>
-            <Link to="/sign-up">Sign Up</Link>
+            <Link to="/forgot-password">Quên mật khẩu?</Link>
+            <Link to="/register">Đăng ký</Link>
           </div>
         </Form>
       </div>

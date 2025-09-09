@@ -1,0 +1,81 @@
+.signup-container {
+  position: relative;
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+
+  .signup-background {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: url("../../assets/background.jpg") no-repeat center center/cover;
+    z-index: 0;
+    filter: brightness(0.9);
+  }
+
+  .signup-form {
+    position: relative;
+    z-index: 1;
+    background: rgba(255, 255, 255, 0.9);
+    padding: 40px;
+    border-radius: 10px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    width: 100%;
+    max-width: 400px;
+    text-align: center;
+
+    h2 {
+      margin-bottom: 20px;
+      color: #333;
+      font-size: 2rem;
+    }
+
+    .ant-form-item {
+      margin-bottom: 20px;
+
+      .ant-form-item-label {
+        text-align: left;
+        color: #555;
+      }
+
+      .ant-input,
+      .ant-input-password {
+        border-radius: 5px;
+        font-size: 1rem;
+      }
+
+      .ant-input-affix-wrapper {
+        border-radius: 5px;
+      }
+    }
+
+    .ant-btn-primary {
+      background: #1890ff;
+      border-color: #1890ff;
+
+      &:hover {
+        background: #40a9ff;
+        border-color: #40a9ff;
+      }
+    }
+
+    .form-links {
+      margin-top: 20px;
+      text-align: center;
+
+      a {
+        color: #1890ff;
+        text-decoration: none;
+        font-size: 0.9rem;
+
+        &:hover {
+          text-decoration: underline;
+        }
+      }
+    }
+  }
+}
