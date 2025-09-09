@@ -4,6 +4,7 @@ import Homepage from "./pages/homepage/Homepage";
 import NotFoundPage from "./pages/not-found/NotFoundPage";
 import Login from "./pages/login/Login";
 import Register from "./pages/register/Register";
+import ForgotPassword from "./pages/forgot-password/ForgotPassword";
 
 const App = () => {
   const router = createBrowserRouter([
@@ -26,6 +27,10 @@ const App = () => {
         {
           path: "/register",
           element: <Register />,
+        },
+        {
+          path: "/forgot-password",
+          element: <ForgotPassword />,
         },
       ],
     },
