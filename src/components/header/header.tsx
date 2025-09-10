@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { FaUserCircle } from "react-icons/fa";
 
-import "./Header.scss";
+import "./header.scss";
 import logo from "../../assets/logo.png";
 import Navigation from "../../constants/navigation";
 import { useEffect } from "react";
