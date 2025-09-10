@@ -1,8 +1,13 @@
 import { Form, Input, Button } from "antd";
 import { Link } from "react-router-dom";
 import "./ForgotPassword.scss";
+import { useEffect } from "react";
 
 const ForgotPassword = () => {
+  useEffect(() => {
+    document.title = "Forgot Password";
+  }, []);
+
   return (
     <div className="forgot-password-container">
       <div className="forgot-password-background"></div>
