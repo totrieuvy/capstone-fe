@@ -1,12 +1,30 @@
 import { Form, Input, Button } from "antd";
 import { Link } from "react-router-dom";
 import "./Login.scss";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { GoogleAuthProvider, signInWithPopup } from "firebase/auth";
+import { auth, googleProvider } from "../../config/firebase";
 
 const LoginForm = () => {
+  const [loading, setLoading] = useState<boolean>(false);
+
   useEffect(() => {
     document.title = "Login";
   }, []);
+
+  const handleLoginGoogle = async () => {
+    try {
+      setLoading(true);
+      const result = await signInWithPopup(auth, googleProvider);
+
+      const credential = GoogleAuthProvider.credentialFromResult(result);
+      console.log(credential);
+    } catch (error) {
+      console.error("Google login error:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="login-container">
@@ -46,7 +64,7 @@ const LoginForm = () => {
           </div>
 
           <Form.Item>
-            <Button size="large" block className="google-login-button">
+            <Button size="large" block className="google-login-button" onClick={handleLoginGoogle} loading={loading}>
               <img
                 src="https://upload.wikimedia.org/wikipedia/commons/thumb/3/3c/Google_Favicon_2025.svg/250px-Google_Favicon_2025.svg.png"
                 alt="Google logo"
