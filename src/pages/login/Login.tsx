@@ -39,6 +39,23 @@ const LoginForm = () => {
             </Button>
           </Form.Item>
 
+          <div className="separator">
+            <span className="separator-line"></span>
+            <span className="separator-text">Or</span>
+            <span className="separator-line"></span>
+          </div>
+
+          <Form.Item>
+            <Button size="large" block className="google-login-button">
+              <img
+                src="https://upload.wikimedia.org/wikipedia/commons/thumb/3/3c/Google_Favicon_2025.svg/250px-Google_Favicon_2025.svg.png"
+                alt="Google logo"
+                className="google-logo"
+              />
+              Đăng nhập với Google
+            </Button>
+          </Form.Item>
+
           <div className="form-links">
             <Link to="/forgot-password">Quên mật khẩu?</Link>
             <Link to="/register">Đăng ký</Link>
