@@ -47,18 +47,26 @@ const LoginForm = () => {
 
         localStorage.setItem("token", token);
 
-        dispatch(login(user));
+        // Ensure user object has necessary properties
+        const userData = { ...user, token }; // Add token to user object if needed
+        dispatch(login(userData));
 
-        if (role === "CUSTOMER") {
-          navigate("/");
-        } else if (role === "ADMIN") {
-          navigate("/admin");
-        } else if (role === "SHIPPER") {
-          navigate("/shipper");
-        } else if (role === "STAFF") {
-          navigate("/staff");
-        } else if (role === "VETERINARIAN") {
-          navigate("/veterinarian");
+        // Navigate based on role, matching the route paths in App.tsx
+        switch (role) {
+          case "ADMIN":
+            navigate("/ADMIN", { replace: true });
+            break;
+          case "STAFF":
+            navigate("/STAFF", { replace: true });
+            break;
+          case "VETERINARIAN":
+            navigate("/VETERINARIAN", { replace: true });
+            break;
+          case "SHIPPER":
+            navigate("/SHIPPER", { replace: true });
+            break;
+          default:
+            navigate("/", { replace: true });
         }
       }
     } catch (error: unknown) {
