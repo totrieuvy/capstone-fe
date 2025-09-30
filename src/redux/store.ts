@@ -2,17 +2,18 @@ import { configureStore } from "@reduxjs/toolkit";
 import { persistStore, persistReducer } from "redux-persist";
 import storage from "redux-persist/lib/storage";
 
-import userReducer from "./features/userSlice"; // userSlice nãy bạn viết
+import userReducer, { type User } from "./features/userSlice";
 
-// Persist config cho user
 const userPersistConfig = {
   key: "user",
   storage,
 };
 
+const persistedUserReducer = persistReducer<User | null>(userPersistConfig, userReducer);
+
 export const store = configureStore({
   reducer: {
-    user: persistReducer(userPersistConfig, userReducer),
+    user: persistedUserReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
@@ -24,6 +25,5 @@ export const store = configureStore({
 
 export const persistor = persistStore(store);
 
-// 👉 type cho state & dispatch
 export type RootState = ReturnType<typeof store.getState>;
 export type AppDispatch = typeof store.dispatch;

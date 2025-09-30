@@ -1,23 +1,19 @@
 import { createSlice } from "@reduxjs/toolkit";
 import type { PayloadAction } from "@reduxjs/toolkit";
 
-// 👉 Khai báo interface cho User
 export interface User {
   id: number;
-  fullname: string;
+  fullName: string;
   email: string;
   phone: string;
-  role: string;
+  role: "CUSTOMER" | "ADMIN" | "VETERINARIAN" | "STAFF" | "SHIPPER";
   status: "ACTIVE" | "INACTIVE";
 }
 
-// 👉 State có thể là User hoặc null
 type UserState = User | null;
 
-// 👉 State khởi tạo
 const initialState: UserState = null;
 
-// 👉 Tạo slice
 const userSlice = createSlice({
   name: "user",
   initialState,
@@ -27,6 +23,5 @@ const userSlice = createSlice({
   },
 });
 
-// 👉 Export actions và reducer
 export const { login, logout } = userSlice.actions;
 export default userSlice.reducer;
