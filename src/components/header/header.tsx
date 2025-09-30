@@ -1,10 +1,11 @@
 import { Link } from "react-router-dom";
 import { FaUserCircle } from "react-icons/fa";
-
+import { useSelector } from "react-redux";
 import "./header.scss";
 import logo from "../../assets/logo.png";
 import Navigation from "../../constants/navigation";
 import { useEffect } from "react";
+import { type RootState } from "../../redux/store";
 
 function Header() {
   useEffect(() => {
@@ -23,6 +24,8 @@ function Header() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+  const user = useSelector((state: RootState) => state.user);
+
   return (
     <header className="header">
       <div className="header__left">
@@ -38,9 +41,13 @@ function Header() {
         ))}
       </div>
       <div className="header__right">
-        <Link to="/login">
-          <FaUserCircle />
-        </Link>
+        {user && user?.role === "CUSTOMER" ? (
+          <span>Welcome {user?.fullName}</span>
+        ) : (
+          <Link to="/login">
+            <FaUserCircle />
+          </Link>
+        )}
       </div>
     </header>
   );
