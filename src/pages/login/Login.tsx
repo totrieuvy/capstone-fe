@@ -1,16 +1,74 @@
 import { Form, Input, Button } from "antd";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import "./Login.scss";
 import { useEffect, useState } from "react";
 import { GoogleAuthProvider, signInWithPopup } from "firebase/auth";
 import { auth, googleProvider } from "../../config/firebase";
+import { useForm } from "antd/es/form/Form";
+import { AxiosError } from "axios";
+import api from "../../config/axios";
+import { toast } from "react-toastify";
+import { useDispatch } from "react-redux";
+import { login } from "../../redux/features/userSlice";
+
+interface LoginValues {
+  email: string;
+  password: string;
+}
+
+interface ApiError {
+  message: string;
+}
 
 const LoginForm = () => {
+  const [form] = useForm();
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
   const [loading, setLoading] = useState<boolean>(false);
 
   useEffect(() => {
     document.title = "Login";
   }, []);
+
+  const handleLogin = async (values: LoginValues) => {
+    setLoading(true);
+    try {
+      const response = await api.post("/api/auth/login", {
+        email: values.email,
+        password: values.password,
+      });
+
+      if (response.status === 200) {
+        const token = response.data.data.accessToken;
+        const user = response.data.data.user;
+        const role = user.role;
+
+        toast.success(response.data.message);
+
+        localStorage.setItem("token", token);
+
+        dispatch(login(user));
+
+        if (role === "CUSTOMER") {
+          navigate("/");
+        } else if (role === "ADMIN") {
+          navigate("/admin");
+        } else if (role === "SHIPPER") {
+          navigate("/shipper");
+        } else if (role === "STAFF") {
+          navigate("/staff");
+        } else if (role === "VETERINARIAN") {
+          navigate("/veterinarian");
+        }
+      }
+    } catch (error: unknown) {
+      const err = error as AxiosError<ApiError>;
+      toast.error(err.response?.data?.message || "Login failed");
+    } finally {
+      setLoading(false);
+      form.resetFields();
+    }
+  };
 
   const handleLoginGoogle = async () => {
     try {
@@ -31,7 +89,7 @@ const LoginForm = () => {
       <div className="login-background"></div>
       <div className="login-form">
         <h2>Đăng nhập</h2>
-        <Form name="login_form" initialValues={{ remember: true }} layout="vertical">
+        <Form form={form} name="login_form" initialValues={{ remember: true }} layout="vertical" onFinish={handleLogin}>
           <Form.Item
             label="Email"
             name="email"
@@ -52,7 +110,7 @@ const LoginForm = () => {
           </Form.Item>
 
           <Form.Item>
-            <Button type="primary" htmlType="submit" size="large" block>
+            <Button type="primary" htmlType="submit" size="large" block loading={loading}>
               Đăng nhập
             </Button>
           </Form.Item>

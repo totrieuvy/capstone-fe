@@ -9,23 +9,32 @@
   top: 0;
   left: 0;
   width: 100%;
-  transition: backdrop-filter 0.3s ease;
+  transition: backdrop-filter 0.3s ease, background-color 0.3s ease;
   z-index: 1000;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); // Subtle shadow for depth
 
   &--scrolled {
     backdrop-filter: blur(8px);
-    background-color: rgba(245, 230, 204, 0.8);
+    background-color: rgba(245, 230, 204, 0.9); // Slightly opaque for better visibility
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15); // Enhanced shadow on scroll
   }
 
   &__left {
     &__logo {
       width: 160px;
+      height: auto;
+      transition: transform 0.3s ease;
+
+      &:hover {
+        transform: scale(1.05);
+      }
     }
   }
 
   &__middle {
     display: flex;
     gap: 25px;
+    align-items: center;
 
     a {
       text-decoration: none;
@@ -33,7 +42,8 @@
       font-size: 17px;
       text-transform: capitalize;
       position: relative;
-      transition: color 0.3s ease;
+      padding: 5px 10px;
+      transition: color 0.3s ease, background-color 0.3s ease;
 
       &::after {
         content: "";
@@ -48,6 +58,16 @@
       }
 
       &:hover {
+        color: #d65a1a; // Darker shade on hover
+        background-color: rgba(224, 115, 47, 0.1);
+        &::after {
+          width: 100%;
+        }
+      }
+
+      &.active {
+        color: #d65a1a;
+        font-weight: 500;
         &::after {
           width: 100%;
         }
@@ -57,5 +77,39 @@
 
   &__right {
     font-size: 38px;
+    color: #e0732f;
+    cursor: pointer;
+    transition: color 0.3s ease;
+
+    &:hover {
+      color: #d65a1a;
+    }
+
+    span {
+      font-size: 16px;
+      color: #333;
+      margin-left: 10px;
+      font-weight: 500;
+
+      @media (max-width: 768px) {
+        display: none;
+      }
+    }
+  }
+}
+
+// Responsive adjustments
+@media (max-width: 768px) {
+  .header {
+    padding: 10px 15px;
+    height: 60px;
+
+    &__middle {
+      display: none;
+    }
+
+    &__right {
+      font-size: 30px;
+    }
   }
 }
