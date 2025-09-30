@@ -5,7 +5,10 @@ import "./header.scss";
 import logo from "../../assets/logo.png";
 import Navigation from "../../constants/navigation";
 import { useEffect } from "react";
-import { type RootState } from "../../redux/store";
+
+type RootState = {
+  user: { fullName: string; role: string } | null;
+};
 
 function Header() {
   useEffect(() => {
