@@ -1,7 +1,7 @@
 import axios from "axios";
 import type { InternalAxiosRequestConfig, AxiosError } from "axios";
 
-const baseURL = "https://6692a166346eeafcf46da14d.mockapi.io/";
+const baseURL = "http://18.143.165.160:9090";
 
 //
 const config = {

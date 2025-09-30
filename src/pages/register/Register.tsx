@@ -1,19 +1,69 @@
 import { Form, Input, Button } from "antd";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import "./Register.scss";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { useForm } from "antd/es/form/Form";
+import api from "../../config/axios";
+import { toast } from "react-toastify";
+import { AxiosError } from "axios";
+
+// 👉 Đặt interface ở đây
+interface RegisterValues {
+  fullName: string;
+  email: string;
+  phone: string;
+  address: string;
+  citizenId: string;
+  password: string;
+  confirm: string;
+}
+
+interface ApiError {
+  message: string;
+}
 
 const Register = () => {
+  const [form] = useForm();
+  const [loading, setLoading] = useState<boolean>(false);
+  const navigate = useNavigate();
+
   useEffect(() => {
     document.title = "Register";
   }, []);
+
+  const handleRegister = async (values: RegisterValues) => {
+    setLoading(true);
+    try {
+      const response = await api.post("/api/auth/register", {
+        fullName: values.fullName,
+        email: values.email,
+        phone: values.phone,
+        address: values.address,
+        citizenId: values.citizenId,
+        password: values.password,
+      });
+      toast.success(response.data.data);
+      navigate("/login");
+    } catch (error: unknown) {
+      const err = error as AxiosError<ApiError>;
+      toast.error(err.response?.data?.message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="signup-container">
       <div className="signup-background"></div>
       <div className="signup-form">
         <h2>Đăng kí</h2>
-        <Form name="signup_form" initialValues={{ remember: true }} layout="vertical">
+        <Form
+          form={form}
+          name="signup_form"
+          initialValues={{ remember: true }}
+          layout="vertical"
+          onFinish={handleRegister}
+        >
           <Form.Item
             label="Họ và tên"
             name="fullName"
@@ -45,6 +95,22 @@ const Register = () => {
           </Form.Item>
 
           <Form.Item
+            label="Địa chỉ nhà"
+            name="address"
+            rules={[{ required: true, message: "Vui lòng nhập địa chỉ nhà của bạn!" }]}
+          >
+            <Input placeholder="Nhập địa chỉ nhà của bạn" size="large" />
+          </Form.Item>
+
+          <Form.Item
+            label="Số căn cước công dân"
+            name="citizenId"
+            rules={[{ required: true, message: "Vui lòng nhập cố căn cước công dân của bạn!" }]}
+          >
+            <Input placeholder="Nhập cố căn cước công dân của bạn" size="large" />
+          </Form.Item>
+
+          <Form.Item
             label="Mật khẩu"
             name="password"
             rules={[
@@ -58,13 +124,24 @@ const Register = () => {
           <Form.Item
             label="Xác nhận mật khẩu"
             name="confirm"
-            rules={[{ required: true, message: "Vui lòng xác nhận mật khẩu của bạn!" }]}
+            dependencies={["password"]}
+            rules={[
+              { required: true, message: "Vui lòng xác nhận mật khẩu của bạn!" },
+              ({ getFieldValue }) => ({
+                validator(_, value) {
+                  if (!value || getFieldValue("password") === value) {
+                    return Promise.resolve();
+                  }
+                  return Promise.reject(new Error("Mật khẩu xác nhận không khớp!"));
+                },
+              }),
+            ]}
           >
             <Input.Password placeholder="Nhập lại mật khẩu của bạn" size="large" />
           </Form.Item>
 
           <Form.Item>
-            <Button type="primary" htmlType="submit" size="large" block>
+            <Button type="primary" htmlType="submit" size="large" loading={loading} block>
               Đăng ký
             </Button>
           </Form.Item>
