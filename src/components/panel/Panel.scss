@@ -1,0 +1,106 @@
+.Panel {
+  display: flex;
+  height: 100vh;
+  background-color: #f5f6f7;
+
+  &__left {
+    width: 260px;
+    background-color: #ffffff;
+    border-right: 1px solid #e5e5e5;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px 0;
+    gap: 10px;
+
+    .menu-item {
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      gap: 12px;
+      width: 85%;
+      padding: 12px 16px;
+      font-size: 16px;
+      font-weight: 500;
+      color: #444;
+      text-decoration: none;
+      border-radius: 10px;
+      transition: all 0.25s ease;
+
+      &:hover {
+        background-color: #f7f9fb;
+        color: #1877f2;
+      }
+
+      &.active {
+        background-color: #eaf3ff;
+        color: #1877f2;
+        font-weight: 600;
+
+        svg {
+          color: #1877f2;
+        }
+      }
+
+      svg,
+      span[role="img"] {
+        font-size: 20px;
+        min-width: 24px;
+        text-align: center;
+      }
+    }
+
+    .dropdown {
+      justify-content: space-between;
+      cursor: pointer;
+
+      .arrow {
+        margin-left: auto;
+        transition: transform 0.3s ease;
+      }
+
+      &.open .arrow {
+        transform: rotate(180deg);
+      }
+    }
+
+    .submenu {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      width: 80%;
+      margin-top: 6px;
+      margin-left: 15px;
+      padding-left: 10px;
+      border-left: 2px solid #f0f0f0;
+
+      .submenu-item {
+        padding: 8px 12px;
+        font-size: 15px;
+        font-weight: 400;
+        color: #555;
+        text-decoration: none;
+        border-radius: 8px;
+        transition: all 0.25s ease;
+
+        &:hover {
+          background-color: #f7f9fb;
+          color: #1877f2;
+        }
+
+        &.active {
+          background-color: #eaf3ff;
+          color: #1877f2;
+          font-weight: 600;
+        }
+      }
+    }
+  }
+
+  &__right {
+    flex: 1;
+    padding: 24px;
+    background-color: #f5f6f7;
+    overflow-y: auto;
+  }
+}
