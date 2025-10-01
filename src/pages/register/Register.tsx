@@ -7,7 +7,6 @@ import api from "../../config/axios";
 import { toast } from "react-toastify";
 import { AxiosError } from "axios";
 
-// 👉 Đặt interface ở đây
 interface RegisterValues {
   fullName: string;
   email: string;
