@@ -12,6 +12,8 @@ import Dashboard from "./pages/admin/dashboard/Dashboard";
 import { useEffect } from "react";
 import { logout } from "./redux/features/userSlice";
 import { jwtDecode } from "jwt-decode";
+import Panel from "./components/panel/Panel";
+import ProfileHamster from "./pages/customer/profile-hamster/ProfileHamster";
 
 interface User {
   id: number;
@@ -87,6 +89,16 @@ const App = () => {
         { path: "/login", element: <Login /> },
         { path: "/register", element: <Register /> },
         { path: "/forgot-password", element: <ForgotPassword /> },
+        {
+          path: "/profile/your-hamster",
+          element: <Panel />,
+          children: [
+            {
+              path: "",
+              element: <ProfileHamster />,
+            },
+          ],
+        },
       ],
     },
     {

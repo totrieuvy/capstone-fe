@@ -1,16 +1,19 @@
 import { Link } from "react-router-dom";
-import { FaUserCircle } from "react-icons/fa";
-import { useSelector } from "react-redux";
+import { FaUserCircle, FaUser, FaSignOutAlt } from "react-icons/fa";
+import { useDispatch, useSelector } from "react-redux";
 import "./header.scss";
 import logo from "../../assets/logo.png";
 import Navigation from "../../constants/navigation";
 import { useEffect } from "react";
+import { logout } from "../../redux/features/userSlice";
 
 type RootState = {
   user: { fullName: string; role: string } | null;
 };
 
 function Header() {
+  const dispatch = useDispatch();
+
   useEffect(() => {
     const handleScroll = () => {
       const header = document.querySelector(".header");
@@ -29,6 +32,10 @@ function Header() {
 
   const user = useSelector((state: RootState) => state.user);
 
+  const handleLogout = () => {
+    dispatch(logout());
+  };
+
   return (
     <header className="header">
       <div className="header__left">
@@ -45,10 +52,22 @@ function Header() {
       </div>
       <div className="header__right">
         {user && user?.role === "CUSTOMER" ? (
-          <span>Welcome {user?.fullName}</span>
+          <div className="dropdown">
+            <span className="dropdown-toggle">
+              <FaUserCircle /> Welcome {user?.fullName}
+            </span>
+            <div className="dropdown-menu">
+              <Link to="/profile/your-hamster" className="dropdown-item">
+                <FaUser /> Thông tin cá nhân
+              </Link>
+              <Link to="/" className="dropdown-item" onClick={handleLogout}>
+                <FaSignOutAlt /> Đăng xuất
+              </Link>
+            </div>
+          </div>
         ) : (
           <Link to="/login">
-            <FaUserCircle />
+            <FaUserCircle style={{ fontSize: "35px", color: "#e0732f" }} />
           </Link>
         )}
       </div>
