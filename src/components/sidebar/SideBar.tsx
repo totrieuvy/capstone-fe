@@ -15,6 +15,7 @@ import { Link, Outlet, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { logout } from "../../redux/features/userSlice";
 import logo from "../../assets/logo.png";
+import "./sidebar.scss";
 
 interface User {
   id: number;
@@ -92,29 +93,33 @@ const SideBar: React.FC = () => {
   return (
     <Layout style={{ minHeight: "100vh" }}>
       <Sider
-        width={200}
-        style={{ background: colorBgContainer, minHeight: "100vh" }}
+        width={270}
+        className="Sidebar"
+        style={{ background: colorBgContainer, minHeight: "100vh", display: "flex", flexDirection: "column" }}
         collapsible
         collapsed={collapsed}
         onCollapse={(value) => setCollapsed(value)}
         breakpoint="md"
       >
-        <div className="logo-container" style={{ padding: "10px", textAlign: "center" }}>
-          <img src={logo} alt="Logo" style={{ maxWidth: "100%", height: "auto" }} />
+        <div className="Sidebar__logo">
+          <img src={logo} alt="Logo" />
         </div>
+
         <Menu
           mode="inline"
           defaultSelectedKeys={["1"]}
           defaultOpenKeys={["dashboard"]}
-          style={{ flex: 1, borderInlineEnd: 0 }} // Use flex to fill available space
+          className="Sidebar__menu"
           items={menuItems}
         />
-        <div className="logout-container" style={{ padding: "10px" }}>
-          <Button type="primary" danger icon={<PoweroffOutlined />} onClick={handleLogout} block>
+
+        <div className="Sidebar__logout">
+          <Button type="primary" danger icon={<PoweroffOutlined />} onClick={handleLogout}>
             Đăng xuất
           </Button>
         </div>
       </Sider>
+
       <Content
         style={{
           padding: 24,

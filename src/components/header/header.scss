@@ -11,12 +11,12 @@
   width: 100%;
   transition: backdrop-filter 0.3s ease, background-color 0.3s ease;
   z-index: 1000;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); // Subtle shadow for depth
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
 
   &--scrolled {
     backdrop-filter: blur(8px);
-    background-color: rgba(245, 230, 204, 0.9); // Slightly opaque for better visibility
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15); // Enhanced shadow on scroll
+    background-color: rgba(245, 230, 204, 0.9);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
   }
 
   &__left {
@@ -58,7 +58,7 @@
       }
 
       &:hover {
-        color: #d65a1a; // Darker shade on hover
+        color: #d65a1a;
         background-color: rgba(224, 115, 47, 0.1);
         &::after {
           width: 100%;
@@ -98,7 +98,6 @@
   }
 }
 
-// Responsive adjustments
 @media (max-width: 768px) {
   .header {
     padding: 10px 15px;

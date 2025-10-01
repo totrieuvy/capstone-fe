@@ -47,11 +47,9 @@ const LoginForm = () => {
 
         localStorage.setItem("token", token);
 
-        // Ensure user object has necessary properties
-        const userData = { ...user, token }; // Add token to user object if needed
+        const userData = { ...user, token };
         dispatch(login(userData));
 
-        // Navigate based on role, matching the route paths in App.tsx
         switch (role) {
           case "ADMIN":
             navigate("/ADMIN", { replace: true });
