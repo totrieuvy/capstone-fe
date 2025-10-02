@@ -9,6 +9,7 @@ import {
   ScheduleOutlined,
   ClockCircleOutlined,
 } from "@ant-design/icons";
+import { GiPawPrint } from "react-icons/gi";
 import { Layout, Menu, Button, theme } from "antd";
 import type { ItemType } from "antd/es/menu/interface";
 import { Link, Outlet, useNavigate } from "react-router-dom";
@@ -67,6 +68,7 @@ const SideBar: React.FC = () => {
 
     if (user?.role === "ADMIN") {
       items = [
+        getItem("Quản lí loài hamster", "quan-li-loai-hamster", <GiPawPrint />),
         getItem("Thống kê", "thong-ke", <AreaChartOutlined />),
         getItem("Quản lí tài khoản", "quan-li-tai-khoan", <UserOutlined />),
         getItem("Quản lí đơn hàng", "quan-li-don-hang", <ShoppingOutlined />),

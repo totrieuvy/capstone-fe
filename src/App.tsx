@@ -14,6 +14,7 @@ import { logout } from "./redux/features/userSlice";
 import { jwtDecode } from "jwt-decode";
 import Panel from "./components/panel/Panel";
 import ProfileHamster from "./pages/customer/profile-hamster/ProfileHamster";
+import Species from "./pages/admin/species/Species";
 
 interface User {
   id: number;
@@ -111,6 +112,7 @@ const App = () => {
           children: [
             { path: "quan-li-tai-khoan", element: <ManageAccount /> },
             { path: "thong-ke", element: <Dashboard /> },
+            { path: "quan-li-loai-hamster", element: <Species /> },
           ],
         },
       ],
