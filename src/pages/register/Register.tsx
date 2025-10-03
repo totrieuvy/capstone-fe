@@ -41,7 +41,8 @@ const Register = () => {
         citizenId: values.citizenId,
         password: values.password,
       });
-      toast.success(response.data.data);
+      console.log(response.data);
+      toast.success(response.data.message);
       navigate("/login");
     } catch (error: unknown) {
       const err = error as AxiosError<ApiError>;

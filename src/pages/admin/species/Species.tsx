@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
-import type { Species } from "../../../types/species";
 import api from "../../../config/axios";
 import { Table, Input } from "antd";
 import type { TableColumnsType } from "antd";
 import "./Species.scss";
 import { toast } from "react-toastify";
+import type { SpeciesType } from "../../../types/species";
 
 const { Search } = Input;
 
@@ -14,8 +14,8 @@ interface DataType {
 }
 
 function Species() {
-  const [species, setSpecies] = useState<Species[]>([]);
-  const [filteredSpecies, setFilteredSpecies] = useState<Species[]>([]);
+  const [species, setSpecies] = useState<SpeciesType[]>([]);
+  const [filteredSpecies, setFilteredSpecies] = useState<SpeciesType[]>([]);
 
   const fetchSpecies = async () => {
     try {

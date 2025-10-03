@@ -14,6 +14,7 @@ import { logout } from "./redux/features/userSlice";
 import { jwtDecode } from "jwt-decode";
 import Panel from "./components/panel/Panel";
 import ProfileHamster from "./pages/customer/profile-hamster/ProfileHamster";
+import VerifyOtp from "./pages/verify-otp/VerifyOtp";
 import Species from "./pages/admin/species/Species";
 
 interface User {
@@ -90,6 +91,7 @@ const App = () => {
         { path: "/login", element: <Login /> },
         { path: "/register", element: <Register /> },
         { path: "/forgot-password", element: <ForgotPassword /> },
+        { path: "/verify-otp", element: <VerifyOtp /> },
         {
           path: "/profile/your-hamster",
           element: <Panel />,
