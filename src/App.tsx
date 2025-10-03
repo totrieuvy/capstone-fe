@@ -16,6 +16,7 @@ import Panel from "./components/panel/Panel";
 import ProfileHamster from "./pages/customer/profile-hamster/ProfileHamster";
 import VerifyOtp from "./pages/verify-otp/VerifyOtp";
 import Species from "./pages/admin/species/Species";
+import ResetPassword from "./pages/reset-password/ResetPassword";
 
 interface User {
   id: number;
@@ -92,6 +93,7 @@ const App = () => {
         { path: "/register", element: <Register /> },
         { path: "/forgot-password", element: <ForgotPassword /> },
         { path: "/verify-otp", element: <VerifyOtp /> },
+        { path: "/reset-password", element: <ResetPassword /> },
         {
           path: "/profile/your-hamster",
           element: <Panel />,
