@@ -4,7 +4,7 @@ import { Table, Input, Button, Modal, Form, Tag } from "antd";
 import type { TableColumnsType } from "antd";
 import "./Category.scss";
 import { toast } from "react-toastify";
-import type { CategoryType } from "../../../types/Category";
+import type { CategoryType } from "../../../types/category";
 
 const { Search } = Input;
 
