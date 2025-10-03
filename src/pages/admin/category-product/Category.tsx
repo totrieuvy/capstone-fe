@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import api from "../../../config/axios";
-import { Table, Input, Button, Modal, Form, Tag } from "antd";
+import { Table, Input, Button, Modal, Form, Tag, Popconfirm } from "antd";
 import type { TableColumnsType } from "antd";
 import "./Category.scss";
 import { toast } from "react-toastify";
@@ -13,6 +13,7 @@ function Category() {
   const [filteredCategories, setFilteredCategories] = useState<CategoryType[]>([]);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [isUpdate, setIsUpdate] = useState(false);
   const [form] = Form.useForm();
 
   const fetchCategories = async () => {
@@ -21,24 +22,33 @@ function Category() {
       setCategories(response.data.data);
       setFilteredCategories(response.data.data);
     } catch (error) {
-      toast.error("Lấy danh sách danh mục thất bại" + error);
+      toast.error("Lấy danh sách danh mục thất bại: " + error);
     }
   };
+
+  useEffect(() => {
+    document.title = "Quản lí danh mục";
+    fetchCategories();
+  }, []);
 
   const handleSearch = (value: string) => {
     const filtered = categories.filter((item) => item.name.toLowerCase().includes(value.toLowerCase()));
     setFilteredCategories(filtered);
   };
 
-  const handleAddCategory = async (values: { name: string }) => {
+  const handleSubmit = async (values: { id?: number; name: string }) => {
     setLoading(true);
     try {
-      const response = await api.post("/api/product-categories", null, { params: { name: values.name } });
-
-      toast.success(response.data.message);
+      if (values.id) {
+        await api.put(`/api/product-categories/${values.id}`, { name: values.name, isActive: true });
+        toast.success("Cập nhật danh mục thành công!");
+      } else {
+        await api.post("/api/product-categories", null, { params: { name: values.name } });
+        toast.success("Thêm danh mục thành công!");
+      }
       fetchCategories();
     } catch (error) {
-      toast.error("Thêm danh mục thất bại" + error);
+      toast.error("Thao tác thất bại: " + error);
     } finally {
       setLoading(false);
       form.resetFields();
@@ -46,13 +56,25 @@ function Category() {
     }
   };
 
-  const showModal = () => {
-    setIsModalVisible(true);
-  };
-
   const handleCancel = () => {
     setIsModalVisible(false);
     form.resetFields();
+  };
+
+  const handleOpenAdd = () => {
+    form.resetFields();
+    setIsUpdate(false);
+    setIsModalVisible(true);
+  };
+
+  const handleDelete = async (id: number) => {
+    try {
+      await api.delete(`/api/product-categories/${id}`);
+      toast.success("Xoá danh mục thành công!");
+      fetchCategories();
+    } catch (error) {
+      toast.error("Xoá danh mục thất bại: " + error);
+    }
   };
 
   const columns: TableColumnsType<CategoryType> = [
@@ -60,14 +82,13 @@ function Category() {
       title: "ID",
       dataIndex: "id",
       key: "id",
-      width: 150,
+      width: 100,
     },
     {
       title: "Tên danh mục",
       dataIndex: "name",
       key: "name",
       sorter: (a, b) => a.name.localeCompare(b.name),
-      width: 300,
     },
     {
       title: "Trạng thái",
@@ -78,12 +99,34 @@ function Category() {
         <Tag color={isActive ? "green" : "red"}>{isActive ? "Hoạt động" : "Không hoạt động"}</Tag>
       ),
     },
+    {
+      title: "Hành động",
+      key: "action",
+      width: 250,
+      render: (_, record) => (
+        <>
+          <Button
+            type="primary"
+            style={{ marginRight: 8 }}
+            onClick={() => {
+              setIsUpdate(true);
+              setIsModalVisible(true);
+              form.setFieldsValue(record);
+            }}
+          >
+            Cập nhật
+          </Button>
+          <Popconfirm
+            title="Xóa danh mục?"
+            description="Bạn có chắc muốn xóa danh mục này?"
+            onConfirm={() => handleDelete(record.id)}
+          >
+            <Button danger>Xóa</Button>
+          </Popconfirm>
+        </>
+      ),
+    },
   ];
-
-  useEffect(() => {
-    document.title = "Quản lí danh mục";
-    fetchCategories();
-  }, []);
 
   return (
     <div className="Category">
@@ -96,7 +139,7 @@ function Category() {
           onChange={(e) => handleSearch(e.target.value)}
           style={{ width: 300 }}
         />
-        <Button type="primary" onClick={showModal} loading={loading}>
+        <Button type="primary" onClick={handleOpenAdd} loading={loading}>
           Thêm danh mục
         </Button>
       </div>
@@ -104,14 +147,22 @@ function Category() {
       <Table dataSource={filteredCategories} columns={columns} rowKey="id" pagination={{ pageSize: 5 }} />
 
       <Modal
-        title="Thêm danh mục mới"
-        visible={isModalVisible}
-        onOk={() => form.submit()}
+        open={isModalVisible}
+        title={isUpdate ? "Cập nhật danh mục" : "Thêm danh mục mới"}
         onCancel={handleCancel}
-        okText="Thêm"
-        cancelText="Hủy"
+        footer={[
+          <Button key="back" onClick={handleCancel}>
+            Hủy
+          </Button>,
+          <Button key="submit" type="primary" loading={loading} onClick={() => form.submit()}>
+            {isUpdate ? "Cập nhật" : "Thêm"}
+          </Button>,
+        ]}
       >
-        <Form form={form} name="add_category_form" layout="vertical" onFinish={handleAddCategory}>
+        <Form form={form} name="category_form" layout="vertical" onFinish={handleSubmit}>
+          <Form.Item name="id" hidden>
+            <Input />
+          </Form.Item>
           <Form.Item
             label="Tên danh mục"
             name="name"
