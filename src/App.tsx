@@ -17,6 +17,7 @@ import ProfileHamster from "./pages/customer/profile-hamster/ProfileHamster";
 import VerifyOtp from "./pages/verify-otp/VerifyOtp";
 import Species from "./pages/admin/species/Species";
 import ResetPassword from "./pages/reset-password/ResetPassword";
+import Category from "./pages/admin/category-product/Category";
 
 interface User {
   id: number;
@@ -117,6 +118,7 @@ const App = () => {
             { path: "quan-li-tai-khoan", element: <ManageAccount /> },
             { path: "thong-ke", element: <Dashboard /> },
             { path: "quan-li-loai-hamster", element: <Species /> },
+            { path: "quan-li-danh-muc-san-pham", element: <Category /> },
           ],
         },
       ],
