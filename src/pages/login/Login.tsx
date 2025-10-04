@@ -82,7 +82,35 @@ const LoginForm = () => {
       const result = await signInWithPopup(auth, googleProvider);
 
       const credential = GoogleAuthProvider.credentialFromResult(result);
-      console.log(credential);
+      const idToken = credential?.idToken;
+      const response = await api.post("/api/auth/google", { token: idToken });
+      const token = response.data.data.accessToken;
+      const user = response.data.data.user;
+      const role = user.role;
+
+      toast.success(response.data.message);
+
+      localStorage.setItem("token", token);
+
+      const userData = { ...user, token };
+      dispatch(login(userData));
+
+      switch (role) {
+        case "ADMIN":
+          navigate("/ADMIN", { replace: true });
+          break;
+        case "STAFF":
+          navigate("/STAFF", { replace: true });
+          break;
+        case "VETERINARIAN":
+          navigate("/VETERINARIAN", { replace: true });
+          break;
+        case "SHIPPER":
+          navigate("/SHIPPER", { replace: true });
+          break;
+        default:
+          navigate("/", { replace: true });
+      }
     } catch (error) {
       console.error("Google login error:", error);
     } finally {
