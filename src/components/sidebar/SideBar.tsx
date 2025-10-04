@@ -8,6 +8,7 @@ import {
   HomeOutlined,
   ScheduleOutlined,
   ClockCircleOutlined,
+  TagOutlined,
 } from "@ant-design/icons";
 import { GiPawPrint } from "react-icons/gi";
 import { BiCategory } from "react-icons/bi";
@@ -71,6 +72,7 @@ const SideBar: React.FC = () => {
       items = [
         getItem("Quản lí loài hamster", "quan-li-loai-hamster", <GiPawPrint />),
         getItem("Quản lí danh mục sản phẩm", "quan-li-danh-muc-san-pham", <BiCategory />),
+        getItem("Quản lí sản phẩm", "quan-li-san-pham", <TagOutlined />),
         getItem("Thống kê", "thong-ke", <AreaChartOutlined />),
         getItem("Quản lí tài khoản", "quan-li-tai-khoan", <UserOutlined />),
         getItem("Quản lí đơn hàng", "quan-li-don-hang", <ShoppingOutlined />),

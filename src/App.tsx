@@ -18,6 +18,7 @@ import VerifyOtp from "./pages/verify-otp/VerifyOtp";
 import Species from "./pages/admin/species/Species";
 import ResetPassword from "./pages/reset-password/ResetPassword";
 import Category from "./pages/admin/category-product/Category";
+import ManageProduct from "./pages/admin/product/ManageProduct";
 
 interface User {
   id: number;
@@ -119,6 +120,10 @@ const App = () => {
             { path: "thong-ke", element: <Dashboard /> },
             { path: "quan-li-loai-hamster", element: <Species /> },
             { path: "quan-li-danh-muc-san-pham", element: <Category /> },
+            {
+              path: "quan-li-san-pham",
+              element: <ManageProduct />,
+            },
           ],
         },
       ],

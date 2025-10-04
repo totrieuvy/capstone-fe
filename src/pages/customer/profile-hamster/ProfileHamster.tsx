@@ -56,23 +56,30 @@ function ProfileHamster() {
   const [species, setSpecies] = useState<Species[]>([]);
   const [visible, setVisible] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [fetchLoading, setFetchLoading] = useState(true);
   const [form] = Form.useForm<FormValues>();
 
   const fetchProfiles = async () => {
+    setFetchLoading(true);
     try {
       const { data } = await api.get("/api/hamster/profile-list");
       if (data.code === 200) setProfiles(data.data);
     } catch {
       message.error("Không thể tải danh sách hamster");
+    } finally {
+      setFetchLoading(false);
     }
   };
 
   const fetchSpecies = async () => {
+    setFetchLoading(true);
     try {
       const { data } = await api.get("/api/species");
       if (data.code === 200) setSpecies(data.data);
     } catch {
       message.error("Không thể tải danh sách loài");
+    } finally {
+      setFetchLoading(false);
     }
   };
 
@@ -130,80 +137,107 @@ function ProfileHamster() {
 
   return (
     <div className="hamster-container">
-      <div className="hamster__header">
-        <h2>🐹 Hồ sơ Hamster</h2>
-        <Button type="primary" icon={<PlusOutlined />} onClick={() => setVisible(true)}>
-          Thêm hồ sơ
-        </Button>
-      </div>
+      <Spin spinning={fetchLoading} size="large" tip="Đang tải dữ liệu...">
+        <div className="hamster__header">
+          <h2 style={{ color: "#ff6f61", textShadow: "1px 1px 2px rgba(0, 0, 0, 0.2)" }}>🐹 Hồ sơ Hamster</h2>
+          <Button
+            type="primary"
+            icon={<PlusOutlined />}
+            onClick={() => setVisible(true)}
+            style={{
+              background: "linear-gradient(45deg, #ff6f61, #ffcc5c)",
+              border: "none",
+              boxShadow: "0 4px 12px rgba(0, 0, 0, 0.2)",
+            }}
+          >
+            Thêm hồ sơ
+          </Button>
+        </div>
 
-      <Row gutter={[16, 16]}>
-        {profiles.length === 0 ? (
-          <Col span={24}>
-            <div style={{ textAlign: "center", padding: "40px 0", color: "#888" }}>🐹 Chưa có hồ sơ hamster nào</div>
-          </Col>
-        ) : (
-          profiles.map((hamster) => (
-            <Col xs={24} sm={12} md={8} lg={6} key={hamster.id}>
-              <Badge.Ribbon text={hamster.species} color="volcano">
-                <Card
-                  hoverable
-                  className="hamster__card"
-                  cover={<img src={hamster.profilePicture} alt={hamster.name} className="hamster__card-img" />}
-                >
-                  <div className="hamster__card-name">{hamster.name}</div>
-                  <div className="hamster__info">
-                    <p>
-                      <b>Màu sắc:</b> {hamster.color}
-                    </p>
-                    <p>
-                      <b>Ngày sinh:</b> {hamster.dob}
-                    </p>
-                    <p>
-                      <b>Giới tính:</b> {hamster.gender}
-                    </p>
-                    <p>
-                      <b>Cân nặng:</b> {hamster.weight} g
-                    </p>
-                    <p>
-                      <b>Ghi chú:</b> {hamster.healthNote || "Không có"}
-                    </p>
-                  </div>
-                </Card>
-              </Badge.Ribbon>
+        <Row gutter={[24, 24]}>
+          {profiles.length === 0 && !fetchLoading ? (
+            <Col span={24}>
+              <div
+                style={{ textAlign: "center", padding: "60px 0", color: "#ff6f61", fontSize: "18px", fontWeight: 500 }}
+              >
+                🐹 Chưa có hồ sơ hamster nào
+              </div>
             </Col>
-          ))
-        )}
-      </Row>
+          ) : (
+            profiles.map((hamster) => (
+              <Col xs={24} sm={12} md={8} lg={6} key={hamster.id}>
+                <Badge.Ribbon text={hamster.species} color="#ff6f61">
+                  <Card
+                    hoverable
+                    className="hamster__card"
+                    cover={<img src={hamster.profilePicture} alt={hamster.name} className="hamster__card-img" />}
+                    style={{ animation: "fadeIn 0.5s ease-in-out" }}
+                  >
+                    <div className="hamster__card-name">{hamster.name}</div>
+                    <div className="hamster__info">
+                      <p>
+                        <b style={{ color: "#ff6f61" }}>Màu sắc:</b> {hamster.color}
+                      </p>
+                      <p>
+                        <b style={{ color: "#ff6f61" }}>Ngày sinh:</b> {hamster.dob}
+                      </p>
+                      <p>
+                        <b style={{ color: "#ff6f61" }}>Giới tính:</b> {hamster.gender}
+                      </p>
+                      <p>
+                        <b style={{ color: "#ff6f61" }}>Cân nặng:</b> {hamster.weight} g
+                      </p>
+                      <p>
+                        <b style={{ color: "#ff6f61" }}>Ghi chú:</b> {hamster.healthNote || "Không có"}
+                      </p>
+                    </div>
+                  </Card>
+                </Badge.Ribbon>
+              </Col>
+            ))
+          )}
+        </Row>
+      </Spin>
 
-      <Modal title="Tạo hồ sơ Hamster" open={visible} onCancel={() => setVisible(false)} footer={null}>
+      <Modal
+        title="Tạo hồ sơ Hamster"
+        open={visible}
+        onCancel={() => setVisible(false)}
+        footer={null}
+        style={{ borderRadius: 12 }}
+        bodyStyle={{ background: "linear-gradient(135deg, #fff5e6, #ffe6cc)", padding: 24 }}
+      >
         <Spin spinning={loading}>
           <Form form={form} layout="vertical" onFinish={handleFinish}>
             <Form.Item label="Tên" name="name" rules={[{ required: true, message: "Vui lòng nhập tên" }]}>
-              <Input placeholder="Tên hamster" />
+              <Input placeholder="Tên hamster" style={{ borderRadius: 8 }} />
             </Form.Item>
             <Form.Item label="Màu sắc" name="color" rules={[{ required: true, message: "Vui lòng nhập màu" }]}>
-              <Input placeholder="Màu sắc" />
+              <Input placeholder="Màu sắc" style={{ borderRadius: 8 }} />
             </Form.Item>
             <Form.Item label="Ngày sinh" name="dob" rules={[{ required: true, message: "Vui lòng chọn ngày" }]}>
               <DatePicker
                 format="DD-MM-YYYY"
-                style={{ width: "100%" }}
+                style={{ width: "100%", borderRadius: 8 }}
                 disabledDate={(current) => current && current > dayjs().endOf("day")}
               />
             </Form.Item>
 
             <Form.Item label="Giới tính" name="gender" rules={[{ required: true, message: "Chọn giới tính" }]}>
-              <Radio.Group>
-                <Radio value="Male">Đực</Radio>
-                <Radio value="Female">Cái</Radio>
+              <Radio.Group style={{ display: "flex", gap: 16 }}>
+                <Radio value="Male" style={{ color: "#ff6f61" }}>
+                  Đực
+                </Radio>
+                <Radio value="Female" style={{ color: "#ff6f61" }}>
+                  Cái
+                </Radio>
               </Radio.Group>
             </Form.Item>
             <Form.Item label="Cân nặng (gram)" name="weight" rules={[{ required: true, message: "Nhập cân nặng" }]}>
-              <Input type="number" placeholder="Ví dụ: 120" />
+              <Input type="number" placeholder="Ví dụ: 120" style={{ borderRadius: 8 }} />
             </Form.Item>
             <Form.Item label="Loài" name="speciesId" rules={[{ required: true, message: "Chọn loài hamster" }]}>
-              <Select placeholder="Chọn loài">
+              <Select placeholder="Chọn loài" style={{ borderRadius: 8 }}>
                 {species.map((s) => (
                   <Option key={s.id} value={s.id}>
                     {s.speciesName}
@@ -219,18 +253,28 @@ function ProfileHamster() {
               rules={[{ required: true, message: "Vui lòng chọn ảnh" }]}
             >
               <Upload listType="picture-card" beforeUpload={() => false} maxCount={1} accept="image/*">
-                <div>Chọn ảnh</div>
+                <div style={{ color: "#ff6f61" }}>Chọn ảnh</div>
               </Upload>
             </Form.Item>
             <Form.Item
-              label="Ghi chú sức khoẻ (bình thường thì nhập `Không có`)`"
+              label="Ghi chú sức khoẻ (bình thường thì nhập `Không có`)"
               name="healthNote"
               rules={[{ required: true, message: "Vui lòng nhập ghi chú" }]}
             >
-              <Input.TextArea placeholder="Ví dụ: Đã tiêm đầy đủ" />
+              <Input.TextArea placeholder="Ví dụ: Đã tiêm đầy đủ" style={{ borderRadius: 8 }} />
             </Form.Item>
             <Form.Item>
-              <Button type="primary" htmlType="submit" block>
+              <Button
+                type="primary"
+                htmlType="submit"
+                block
+                style={{
+                  background: "linear-gradient(45deg, #ff6f61, #ffcc5c)",
+                  border: "none",
+                  borderRadius: 8,
+                  boxShadow: "0 4px 12px rgba(0, 0, 0, 0.2)",
+                }}
+              >
                 Tạo hồ sơ
               </Button>
             </Form.Item>
