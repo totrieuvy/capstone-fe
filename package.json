@@ -13,6 +13,7 @@
     "@reduxjs/toolkit": "^2.9.0",
     "@supabase/supabase-js": "^2.57.4",
     "antd": "^5.27.3",
+    "aos": "^2.3.4",
     "axios": "^1.11.0",
     "env": "^0.0.2",
     "firebase": "^12.3.0",
@@ -28,6 +29,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.33.0",
+    "@types/aos": "^3.0.7",
     "@types/react": "^19.1.10",
     "@types/react-dom": "^19.1.7",
     "@vitejs/plugin-react": "^5.0.0",
