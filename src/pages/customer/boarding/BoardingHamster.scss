@@ -90,6 +90,42 @@
   }
 }
 
+// Compact hamster card for selection
+.hamster__card-compact {
+  transition: all 0.3s ease;
+  
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(255, 111, 97, 0.2);
+  }
+
+  &.selected {
+    background: linear-gradient(135deg, #fff5f5 0%, #ffe6e6 100%);
+    box-shadow: 0 4px 12px rgba(255, 111, 97, 0.3);
+  }
+
+  .hamster__info-compact {
+    p {
+      margin: 4px 0;
+      font-size: 13px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+
+      .label {
+        color: #999;
+        font-size: 12px;
+        min-width: 70px;
+      }
+
+      .value {
+        color: #333;
+        font-weight: 500;
+      }
+    }
+  }
+}
+
 .step-select-hamster,
 .step-select-dates,
 .step-confirmation {
