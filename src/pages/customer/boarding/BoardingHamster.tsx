@@ -24,6 +24,7 @@ import {
 } from "@ant-design/icons";
 import dayjs, { Dayjs } from "dayjs";
 import "./BoardingHamster.scss";
+import ProfileHamsterService from "../../../services/ProfileHamsterService";
 
 const { RangePicker } = DatePicker;
 
@@ -54,54 +55,6 @@ interface AdditionalService {
   description: string;
   pricePerDay: number;
 }
-
-// Mock data for hamsters
-const mockHamsters: HamsterProfile[] = [
-  {
-    id: "1",
-    name: "Fluffy",
-    color: "Nâu vàng",
-    dob: "15-03-2024",
-    species: "Syrian",
-    gender: "Male",
-    weight: 120,
-    profilePicture: "https://images.unsplash.com/photo-1425082661705-1834bfd09dca?w=400",
-    healthNote: "Khỏe mạnh",
-  },
-  {
-    id: "2",
-    name: "Snowy",
-    color: "Trắng",
-    dob: "22-05-2024",
-    species: "Winter White",
-    gender: "Female",
-    weight: 95,
-    profilePicture: "https://images.unsplash.com/photo-1548767797-d8c844163c4c?w=400",
-    healthNote: "Không có",
-  },
-  {
-    id: "3",
-    name: "Cookie",
-    color: "Vàng nâu",
-    dob: "10-01-2024",
-    species: "Roborovski",
-    gender: "Male",
-    weight: 85,
-    profilePicture: "https://images.unsplash.com/photo-1452857297128-d9c29adba80b?w=400",
-    healthNote: "Đã tiêm đầy đủ",
-  },
-  {
-    id: "4",
-    name: "Ginger",
-    color: "Cam",
-    dob: "30-06-2024",
-    species: "Campbell's Dwarf",
-    gender: "Female",
-    weight: 75,
-    profilePicture: "https://images.unsplash.com/photo-1548767797-d8c844163c4c?w=400",
-    healthNote: "Khỏe mạnh",
-  }
-];
 
 // Mock data for cage types
 const mockCageTypes: CageType[] = [
@@ -185,10 +138,11 @@ function BoardingHamster() {
   const fetchProfiles = async () => {
     setLoading(true);
     try {
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      setProfiles(mockHamsters);
-    } catch {
+      const hamsterProfiles = await ProfileHamsterService.getProfiles();
+      setProfiles(hamsterProfiles);
+    } catch (error) {
       message.error("Không thể tải danh sách hamster");
+      console.error("Error fetching hamster profiles:", error);
     } finally {
       setLoading(false);
     }
@@ -412,6 +366,10 @@ function BoardingHamster() {
                               <p>
                                 <span className="label">Loài:</span>
                                 <span className="value">{hamster.species}</span>
+                              </p>
+                               <p>
+                                <span className="label">Ngày sinh:</span>
+                                <span className="value">{hamster.dob}</span>
                               </p>
                               <p>
                                 <span className="label">Màu:</span>
