@@ -5,6 +5,9 @@ import api from "../../config/axios";
 import Banner from "../../components/banner/Banner";
 import "./Homepage.scss";
 
+import AOS from "aos";
+import "aos/dist/aos.css";
+
 interface Product {
   id: string;
   name: string;
@@ -65,6 +68,7 @@ function Homepage() {
 
   useEffect(() => {
     document.title = "The Hamster";
+    AOS.init({ duration: 800, once: true, offset: 80 });
     fetchProducts();
   }, [fetchProducts]);
 
@@ -98,11 +102,13 @@ function Homepage() {
     <div className="Homepage">
       <Banner />
       <div className="content">
-        <h1 className="title">Sản phẩm của chúng tôi</h1>
+        <h1 className="title" data-aos="fade-up">
+          Sản phẩm của chúng tôi
+        </h1>
         <Row gutter={[24, 24]}>
           {/* Sidebar Filter */}
           <Col xs={24} md={6} lg={5}>
-            <div className="filter-box">
+            <div className="filter-box" data-aos="fade-right">
               <h3 className="filter-title">Bộ lọc</h3>
               <div className="filter-section">
                 <h4 className="filter-subtitle">Danh mục</h4>
@@ -124,6 +130,7 @@ function Homepage() {
             </div>
           </Col>
 
+          {/* Main Content */}
           <Col xs={24} md={18} lg={19}>
             {loading ? (
               <div className="loading">
@@ -135,11 +142,21 @@ function Homepage() {
                   const categoryProducts = getProductsByCategory(categoryName);
                   if (categoryProducts.length === 0) return null;
                   return (
-                    <div key={categoryName} className="category-section">
-                      <h2 className="category-title">{categoryName}</h2>
+                    <div key={categoryName} className="category-section" data-aos="fade-up" data-aos-offset="100">
+                      <h2 className="category-title" data-aos="fade-right">
+                        {categoryName}
+                      </h2>
                       <Row gutter={[16, 16]} justify="center">
-                        {categoryProducts.map((product) => (
-                          <Col xs={24} sm={12} md={8} lg={6} key={product.id}>
+                        {categoryProducts.map((product, index) => (
+                          <Col
+                            xs={24}
+                            sm={12}
+                            md={8}
+                            lg={6}
+                            key={product.id}
+                            data-aos="zoom-in"
+                            data-aos-delay={index * 100}
+                          >
                             <Card
                               hoverable
                               cover={<img alt={product.name} src={product.imageUrl} className="product-image" />}
