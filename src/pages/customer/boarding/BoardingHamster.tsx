@@ -90,6 +90,17 @@ const mockHamsters: HamsterProfile[] = [
     profilePicture: "https://images.unsplash.com/photo-1452857297128-d9c29adba80b?w=400",
     healthNote: "Đã tiêm đầy đủ",
   },
+  {
+    id: "4",
+    name: "Milo",
+    color: "Xám",
+    dob: "30-06-2024",
+    species: "Campbell's Dwarf",
+    gender: "Male",
+    weight: 110,
+    profilePicture: "https://images.unsplash.com/photo-1508214751196-bcfd4ca60f91?w=400",
+    healthNote: "Dị ứng với hạt hướng dương",
+  }
 ];
 
 // Mock data for cage types
@@ -126,6 +137,7 @@ const mockCageTypes: CageType[] = [
     size: "100cm x 60cm x 50cm",
     image: "https://images.unsplash.com/photo-1548767797-d8c844163c4c?w=600",
   },
+  
 ];
 
 // Mock data for additional services
