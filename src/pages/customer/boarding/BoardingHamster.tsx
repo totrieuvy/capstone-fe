@@ -92,14 +92,14 @@ const mockHamsters: HamsterProfile[] = [
   },
   {
     id: "4",
-    name: "Milo",
-    color: "Xám",
+    name: "Ginger",
+    color: "Cam",
     dob: "30-06-2024",
     species: "Campbell's Dwarf",
-    gender: "Male",
-    weight: 110,
-    profilePicture: "https://images.unsplash.com/photo-1508214751196-bcfd4ca60f91?w=400",
-    healthNote: "Dị ứng với hạt hướng dương",
+    gender: "Female",
+    weight: 75,
+    profilePicture: "https://images.unsplash.com/photo-1548767797-d8c844163c4c?w=400",
+    healthNote: "Khỏe mạnh",
   }
 ];
 
@@ -137,7 +137,6 @@ const mockCageTypes: CageType[] = [
     size: "100cm x 60cm x 50cm",
     image: "https://images.unsplash.com/photo-1548767797-d8c844163c4c?w=600",
   },
-  
 ];
 
 // Mock data for additional services
@@ -359,56 +358,101 @@ function BoardingHamster() {
                   🐹 Chưa có hồ sơ hamster nào. Vui lòng tạo hồ sơ trước.
                 </div>
               ) : (
-                <Row gutter={[24, 24]}>
+                <Row gutter={[16, 16]}>
                   {profiles.map((hamster) => (
-                    <Col xs={24} sm={12} md={8} key={hamster.id}>
-                      <Badge.Ribbon text={hamster.species} color="#ff6f61">
-                        <Card
-                          hoverable
-                          className={`hamster__card ${
-                            selectedHamsterId === hamster.id ? "selected" : ""
-                          }`}
-                          cover={
+                    <Col xs={24} sm={24} md={12} lg={8} key={hamster.id}>
+                      <Card
+                        hoverable
+                        className={`hamster__card-compact ${
+                          selectedHamsterId === hamster.id ? "selected" : ""
+                        }`}
+                        onClick={() => handleSelectHamster(hamster.id)}
+                        style={{
+                          border:
+                            selectedHamsterId === hamster.id
+                              ? "3px solid #ff6f61"
+                              : "2px solid #f0f0f0",
+                          cursor: "pointer",
+                          position: "relative",
+                          borderRadius: 12,
+                        }}
+                        bodyStyle={{ padding: 0 }}
+                      >
+                        <div style={{ display: "flex", height: "100%" }}>
+                          {/* Left Column - Image */}
+                          <div style={{ width: 150, flexShrink: 0 }}>
                             <img
                               src={hamster.profilePicture}
                               alt={hamster.name}
-                              className="hamster__card-img"
+                              style={{
+                                width: "100%",
+                                height: "100%",
+                                objectFit: "cover",
+                                borderRadius: "10px 0 0 10px",
+                              }}
                             />
-                          }
-                          onClick={() => handleSelectHamster(hamster.id)}
-                          style={{
-                            animation: "fadeIn 0.5s ease-in-out",
-                            border:
-                              selectedHamsterId === hamster.id
-                                ? "3px solid #ff6f61"
-                                : "1px solid #f0f0f0",
-                            cursor: "pointer",
-                          }}
-                        >
-                          <div className="hamster__card-name">{hamster.name}</div>
-                          <div className="hamster__info">
-                            <p>
-                              <b style={{ color: "#ff6f61" }}>Màu sắc:</b> {hamster.color}
-                            </p>
-                            <p>
-                              <b style={{ color: "#ff6f61" }}>Ngày sinh:</b> {hamster.dob}
-                            </p>
-                            <p>
-                              <b style={{ color: "#ff6f61" }}>Giới tính:</b> {hamster.gender}
-                            </p>
-                            <p>
-                              <b style={{ color: "#ff6f61" }}>Cân nặng:</b> {hamster.weight} g
-                            </p>
-                            <p>
-                              <b style={{ color: "#ff6f61" }}>Ghi chú:</b>{" "}
-                              {hamster.healthNote || "Không có"}
-                            </p>
                           </div>
+
+                          {/* Right Column - Information */}
+                          <div style={{ flex: 1, padding: 16, minWidth: 0 }}>
+                            <h4
+                              style={{
+                                fontSize: 16,
+                                fontWeight: 700,
+                                color: "#ff6f61",
+                                margin: "0 0 8px 0",
+                                overflow: "hidden",
+                                textOverflow: "ellipsis",
+                                whiteSpace: "nowrap",
+                              }}
+                            >
+                              {hamster.name}
+                            </h4>
+                            <div className="hamster__info-compact">
+                              <p>
+                                <span className="label">Loài:</span>
+                                <span className="value">{hamster.species}</span>
+                              </p>
+                              <p>
+                                <span className="label">Màu:</span>
+                                <span className="value">{hamster.color}</span>
+                              </p>
+                              <p>
+                                <span className="label">Giới tính:</span>
+                                <span className="value">{hamster.gender === "Male" ? "Đực" : "Cái"}</span>
+                              </p>
+                              <p>
+                                <span className="label">Cân nặng:</span>
+                                <span className="value">{hamster.weight}g</span>
+                              </p>
+                            </div>
+                          </div>
+
+                          {/* Selection indicator */}
                           {selectedHamsterId === hamster.id && (
-                            <div className="selected-checkmark">✓</div>
+                            <div
+                              style={{
+                                position: "absolute",
+                                top: 8,
+                                right: 8,
+                                background: "#ff6f61",
+                                color: "white",
+                                borderRadius: "50%",
+                                width: 24,
+                                height: 24,
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                fontSize: 14,
+                                fontWeight: "bold",
+                                boxShadow: "0 2px 4px rgba(0,0,0,0.2)",
+                              }}
+                            >
+                              ✓
+                            </div>
                           )}
-                        </Card>
-                      </Badge.Ribbon>
+                        </div>
+                      </Card>
                     </Col>
                   ))}
                 </Row>
