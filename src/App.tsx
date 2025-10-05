@@ -20,6 +20,7 @@ import ResetPassword from "./pages/reset-password/ResetPassword";
 import Category from "./pages/admin/category-product/Category";
 import ManageProduct from "./pages/admin/product/ManageProduct";
 import BoardingHamster from "./pages/customer/boarding/BoardingHamster";
+import ProductDetail from "./pages/product-detail/ProductDetail";
 
 interface User {
   id: number;
@@ -91,6 +92,7 @@ const App = () => {
       element: <Layout />,
       children: [
         { path: "/", element: <Homepage /> },
+        { path: "/product/:id", element: <ProductDetail /> },
         { path: "*", element: <NotFoundPage /> },
         { path: "/login", element: <Login /> },
         { path: "/register", element: <Register /> },

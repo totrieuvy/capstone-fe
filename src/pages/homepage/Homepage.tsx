@@ -7,6 +7,7 @@ import "./Homepage.scss";
 
 import AOS from "aos";
 import "aos/dist/aos.css";
+import { Link } from "react-router-dom";
 
 interface Product {
   id: string;
@@ -157,13 +158,14 @@ function Homepage() {
                             data-aos="zoom-in"
                             data-aos-delay={index * 100}
                           >
-                            <Card
-                              hoverable
-                              cover={<img alt={product.name} src={product.imageUrl} className="product-image" />}
-                              className="product-card"
-                            >
+                            <Card hoverable className="product-card">
+                              <Link to={`/product/${product.id}`}>
+                                <img alt={product.name} src={product.imageUrl} className="product-image" />
+                              </Link>
                               <div className="product-info">
-                                <h3 className="product-name">{product.name}</h3>
+                                <Link to={`/product/${product.id}`}>
+                                  <h3 className="product-name">{product.name}</h3>
+                                </Link>
                                 <p className="product-price">{getFormattedPrice(product.price)}</p>
                                 <p className="product-stock">Số lượng: {product.stockQuantity}</p>
                                 <Button type="primary" className="buy-button">
