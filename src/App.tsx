@@ -19,6 +19,7 @@ import Species from "./pages/admin/species/Species";
 import ResetPassword from "./pages/reset-password/ResetPassword";
 import Category from "./pages/admin/category-product/Category";
 import ManageProduct from "./pages/admin/product/ManageProduct";
+import BoardingHamster from "./pages/customer/boarding/BoardingHamster";
 
 interface User {
   id: number;
@@ -96,6 +97,7 @@ const App = () => {
         { path: "/forgot-password", element: <ForgotPassword /> },
         { path: "/verify-otp", element: <VerifyOtp /> },
         { path: "/reset-password", element: <ResetPassword /> },
+        { path: "/dat-lich-giu-ho", element: <BoardingHamster /> },
         {
           path: "/profile/your-hamster",
           element: <Panel />,
