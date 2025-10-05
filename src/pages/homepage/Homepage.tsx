@@ -1,18 +1,177 @@
-import { useEffect } from "react";
+import { useEffect, useState, useCallback } from "react";
+import { Row, Col, Card, Button, Pagination, Checkbox, Radio, Spin } from "antd";
+import { getFormattedPrice } from "../../utils/formatPrice";
+import api from "../../config/axios";
 import Banner from "../../components/banner/Banner";
 import "./Homepage.scss";
 
+interface Product {
+  id: string;
+  name: string;
+  description: string;
+  categoryId: string;
+  categoryName: string;
+  price: number;
+  stockQuantity: number;
+  imageUrl: string;
+  isActive: boolean;
+  createdAt: string;
+  createdBy: string;
+  updatedAt: string;
+  updatedBy: string;
+}
+
+interface PaginatedResponse {
+  content: Product[];
+  pageNumber: number;
+  pageSize: number;
+  totalElements: number;
+  totalPages: number;
+  first: boolean;
+  last: boolean;
+}
+
 function Homepage() {
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [categories, setCategories] = useState<string[]>([]);
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc" | "">("");
+  const [pagination, setPagination] = useState({
+    page: 0,
+    size: 12,
+    total: 0,
+  });
+
+  const fetchProducts = useCallback(async () => {
+    try {
+      setLoading(true);
+      const response = await api.get(`/api/products/paginated?page=${pagination.page}&size=${pagination.size}`);
+      const paginatedData = response.data.data as PaginatedResponse;
+      setProducts(paginatedData.content);
+      setPagination((prev) => ({
+        ...prev,
+        total: paginatedData.totalElements,
+      }));
+
+      const unique = [...new Set(paginatedData.content.map((p) => p.categoryName))];
+      setCategories(unique);
+    } catch (error) {
+      console.error("Lỗi khi tải dữ liệu:", error);
+    } finally {
+      setLoading(false);
+    }
+  }, [pagination.page, pagination.size]);
+
   useEffect(() => {
     document.title = "The Hamster";
-  }, []);
+    fetchProducts();
+  }, [fetchProducts]);
+
+  const handlePageChange = (page: number, pageSize?: number) => {
+    setPagination((prev) => ({
+      ...prev,
+      page: page - 1,
+      size: pageSize || prev.size,
+    }));
+  };
+
+  const filteredProducts = (): Product[] => {
+    let filtered = [...products];
+    if (selectedCategories.length > 0) {
+      filtered = filtered.filter((p) => selectedCategories.includes(p.categoryName));
+    }
+    if (sortOrder === "asc") filtered.sort((a, b) => a.price - b.price);
+    else if (sortOrder === "desc") filtered.sort((a, b) => b.price - a.price);
+    return filtered;
+  };
+
+  const getProductsByCategory = (category: string): Product[] => {
+    return filteredProducts().filter((p) => p.categoryName === category);
+  };
+
+  const handleCategoryChange = (checkedValues: (string | number)[]) => {
+    setSelectedCategories(checkedValues as string[]);
+  };
 
   return (
     <div className="Homepage">
-      <div>
-        <Banner />
+      <Banner />
+      <div className="content">
+        <h1 className="title">Sản phẩm của chúng tôi</h1>
+        <Row gutter={[24, 24]}>
+          {/* Sidebar Filter */}
+          <Col xs={24} md={6} lg={5}>
+            <div className="filter-box">
+              <h3 className="filter-title">Bộ lọc</h3>
+              <div className="filter-section">
+                <h4 className="filter-subtitle">Danh mục</h4>
+                <Checkbox.Group
+                  options={categories.map((c) => ({ label: c, value: c }))}
+                  value={selectedCategories}
+                  onChange={handleCategoryChange}
+                  className="filter-checkbox"
+                />
+              </div>
+              <div className="filter-section">
+                <h4 className="filter-subtitle">Giá</h4>
+                <Radio.Group onChange={(e) => setSortOrder(e.target.value)} value={sortOrder} className="filter-radio">
+                  <Radio value="">Tất cả</Radio>
+                  <Radio value="asc">Tăng dần</Radio>
+                  <Radio value="desc">Giảm dần</Radio>
+                </Radio.Group>
+              </div>
+            </div>
+          </Col>
+
+          <Col xs={24} md={18} lg={19}>
+            {loading ? (
+              <div className="loading">
+                <Spin size="large" /> <p>Đang tải...</p>
+              </div>
+            ) : (
+              <>
+                {categories.map((categoryName) => {
+                  const categoryProducts = getProductsByCategory(categoryName);
+                  if (categoryProducts.length === 0) return null;
+                  return (
+                    <div key={categoryName} className="category-section">
+                      <h2 className="category-title">{categoryName}</h2>
+                      <Row gutter={[16, 16]} justify="center">
+                        {categoryProducts.map((product) => (
+                          <Col xs={24} sm={12} md={8} lg={6} key={product.id}>
+                            <Card
+                              hoverable
+                              cover={<img alt={product.name} src={product.imageUrl} className="product-image" />}
+                              className="product-card"
+                            >
+                              <div className="product-info">
+                                <h3 className="product-name">{product.name}</h3>
+                                <p className="product-price">{getFormattedPrice(product.price)}</p>
+                                <p className="product-stock">Số lượng: {product.stockQuantity}</p>
+                                <Button type="primary" className="buy-button">
+                                  Mua hàng
+                                </Button>
+                              </div>
+                            </Card>
+                          </Col>
+                        ))}
+                      </Row>
+                    </div>
+                  );
+                })}
+                <Pagination
+                  current={pagination.page + 1}
+                  pageSize={pagination.size}
+                  total={pagination.total}
+                  onChange={handlePageChange}
+                  style={{ marginTop: 20, textAlign: "center" }}
+                />
+              </>
+            )}
+          </Col>
+        </Row>
       </div>
-      <div>Homepage</div>
     </div>
   );
 }
