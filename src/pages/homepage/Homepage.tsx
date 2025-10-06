@@ -4,10 +4,13 @@ import { getFormattedPrice } from "../../utils/formatPrice";
 import api from "../../config/axios";
 import Banner from "../../components/banner/Banner";
 import "./Homepage.scss";
-
 import AOS from "aos";
 import "aos/dist/aos.css";
 import { Link } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
+import { addToCart } from "../../redux/features/cartSlice";
+import { toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 interface Product {
   id: string;
@@ -35,6 +38,13 @@ interface PaginatedResponse {
   last: boolean;
 }
 
+interface RootState {
+  user: { fullName: string; role: string } | null;
+  cart: {
+    items: { id: string; name: string; price: number; quantity: number; stockQuantity: number; imageUrl: string }[];
+  };
+}
+
 function Homepage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -46,6 +56,9 @@ function Homepage() {
     size: 12,
     total: 0,
   });
+  const [showPopup, setShowPopup] = useState(false);
+  const dispatch = useDispatch();
+  const user = useSelector((state: RootState) => state.user);
 
   const fetchProducts = useCallback(async () => {
     try {
@@ -99,6 +112,32 @@ function Homepage() {
     setSelectedCategories(checkedValues as string[]);
   };
 
+  const handleAddToCart = (product: Product) => {
+    if (!user) {
+      toast.error("Vui lòng đăng nhập để thêm sản phẩm vào giỏ hàng!", {
+        position: "top-right",
+        autoClose: 3000,
+        theme: "colored",
+      });
+      return;
+    }
+
+    dispatch(
+      addToCart({
+        id: product.id,
+        name: product.name,
+        price: product.price,
+        stockQuantity: product.stockQuantity,
+        imageUrl: product.imageUrl,
+        quantity: 1,
+      })
+    );
+
+    // Hiển thị popup “Thêm vào giỏ hàng”
+    setShowPopup(true);
+    setTimeout(() => setShowPopup(false), 2000);
+  };
+
   return (
     <div className="Homepage">
       <Banner />
@@ -106,6 +145,7 @@ function Homepage() {
         <h1 className="title" data-aos="fade-up">
           Sản phẩm của chúng tôi
         </h1>
+
         <Row gutter={[24, 24]}>
           {/* Sidebar Filter */}
           <Col xs={24} md={6} lg={5}>
@@ -148,16 +188,8 @@ function Homepage() {
                         {categoryName}
                       </h2>
                       <Row gutter={[16, 16]} justify="center">
-                        {categoryProducts.map((product, index) => (
-                          <Col
-                            xs={24}
-                            sm={12}
-                            md={8}
-                            lg={6}
-                            key={product.id}
-                            data-aos="zoom-in"
-                            data-aos-delay={index * 100}
-                          >
+                        {categoryProducts.map((product) => (
+                          <Col xs={24} sm={12} md={8} lg={6} key={product.id} data-aos="zoom-in">
                             <Card hoverable className="product-card">
                               <Link to={`/product/${product.id}`}>
                                 <img alt={product.name} src={product.imageUrl} className="product-image" />
@@ -168,7 +200,7 @@ function Homepage() {
                                 </Link>
                                 <p className="product-price">{getFormattedPrice(product.price)}</p>
                                 <p className="product-stock">Số lượng: {product.stockQuantity}</p>
-                                <Button type="primary" className="buy-button">
+                                <Button type="primary" className="buy-button" onClick={() => handleAddToCart(product)}>
                                   Mua hàng
                                 </Button>
                               </div>
@@ -190,6 +222,13 @@ function Homepage() {
             )}
           </Col>
         </Row>
+
+        {/* Popup thông báo thêm sản phẩm */}
+        {showPopup && (
+          <div className="added-popup">
+            <div className="popup-content">✅ Sản phẩm đã được thêm vào giỏ hàng!</div>
+          </div>
+        )}
       </div>
     </div>
   );
