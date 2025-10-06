@@ -89,8 +89,10 @@ const SideBar: React.FC = () => {
         ]),
       ];
     } else if (user?.role === "VETERINARIAN") {
-      items = [getItem("Lịch khám của tui", "lich-kham", <ScheduleOutlined />)];
-      items = [getItem("Lịch đặt khám", "lich-dat-kham", <ClockCircleOutlined />)];
+      items = [
+        getItem("Lịch khám của tui", "lich-kham", <ScheduleOutlined />),
+        getItem("Lịch đặt khám", "lich-dat-kham", <ClockCircleOutlined />),
+      ];
     }
 
     setMenuItems(items);
@@ -101,42 +103,39 @@ const SideBar: React.FC = () => {
       <Sider
         width={270}
         className="Sidebar"
-        style={{ background: colorBgContainer, minHeight: "100vh", display: "flex", flexDirection: "column" }}
+        style={{ background: colorBgContainer }}
         collapsible
         collapsed={collapsed}
         onCollapse={(value) => setCollapsed(value)}
-        breakpoint="md"
+        breakpoint="lg"
+        collapsedWidth="80"
       >
-        <div className="Sidebar__logo">
+        <div className={`Sidebar__logo ${collapsed ? "collapsed" : ""}`}>
           <img src={logo} alt="Logo" />
         </div>
 
-        <Menu
-          mode="inline"
-          defaultSelectedKeys={["1"]}
-          defaultOpenKeys={["dashboard"]}
-          className="Sidebar__menu"
-          items={menuItems}
-        />
+        <Menu mode="inline" className="Sidebar__menu" items={menuItems} />
 
         <div className="Sidebar__logout">
           <Button type="primary" danger icon={<PoweroffOutlined />} onClick={handleLogout}>
-            Đăng xuất
+            {!collapsed && "Đăng xuất"}
           </Button>
         </div>
       </Sider>
 
-      <Content
-        style={{
-          padding: 24,
-          margin: 0,
-          minHeight: "100vh",
-          background: colorBgContainer,
-          borderRadius: borderRadiusLG,
-        }}
-      >
-        <Outlet />
-      </Content>
+      <Layout>
+        <Content
+          style={{
+            margin: "16px",
+            padding: 24,
+            minHeight: 280,
+            background: colorBgContainer,
+            borderRadius: borderRadiusLG,
+          }}
+        >
+          <Outlet />
+        </Content>
+      </Layout>
     </Layout>
   );
 };
