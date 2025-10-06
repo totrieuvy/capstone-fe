@@ -21,6 +21,7 @@ import Category from "./pages/admin/category-product/Category";
 import ManageProduct from "./pages/admin/product/ManageProduct";
 import BoardingHamster from "./pages/customer/boarding/BoardingHamster";
 import ProductDetail from "./pages/product-detail/ProductDetail";
+import { clearCart } from "./redux/features/cartSlice";
 
 interface User {
   id: number;
@@ -67,21 +68,23 @@ const App = () => {
           const currentTime = Math.floor(Date.now() / 1000);
           if (decoded.exp < currentTime) {
             dispatch(logout());
-            localStorage.removeItem("token");
+            dispatch(clearCart());
             window.location.href = "/";
           }
         } catch (error) {
           console.error("Error decoding token:", error);
           dispatch(logout());
-          localStorage.removeItem("token");
           window.location.href = "/";
         }
+      } else {
+        dispatch(logout());
+        dispatch(clearCart());
       }
     };
 
-    const intervalId = setInterval(checkTokenExpiration, 30 * 1000);
-
     checkTokenExpiration();
+
+    const intervalId = setInterval(checkTokenExpiration, 30 * 1000);
 
     return () => clearInterval(intervalId);
   }, [dispatch]);

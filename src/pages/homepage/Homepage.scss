@@ -46,12 +46,7 @@
           padding-bottom: 4px;
         }
 
-        .filter-checkbox {
-          display: flex;
-          flex-direction: column;
-          gap: 6px;
-        }
-
+        .filter-checkbox,
         .filter-radio {
           display: flex;
           flex-direction: column;
@@ -79,7 +74,6 @@
         transition: all 0.3s ease;
         background: #ffffff;
         height: 100%;
-
         display: flex;
         flex-direction: column;
         justify-content: space-between;
@@ -111,9 +105,6 @@
             margin: 10px 0;
             text-align: center;
             min-height: 48px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
           }
 
           .product-price {
@@ -132,19 +123,21 @@
           }
 
           .buy-button {
-            margin-top: auto;
-            margin-bottom: 2px;
             width: 100%;
             background: linear-gradient(45deg, #ff6f61, #ffcc5c);
             border: none;
             border-radius: 8px;
             padding: 8px 0;
             font-weight: 500;
-            transition: all 0.3s ease;
+            transition: all 0.25s ease;
 
             &:hover {
               opacity: 0.9;
               transform: scale(1.05);
+            }
+
+            &:active {
+              transform: scale(0.95);
             }
           }
         }
@@ -162,9 +155,7 @@
       display: flex;
       justify-content: center;
       margin-top: 30px;
-    }
 
-    .ant-pagination {
       .ant-pagination-item-active {
         background: #ff6f61;
         border-color: #ff6f61;
@@ -173,6 +164,45 @@
           color: #fff;
         }
       }
+    }
+  }
+
+  /* Popup thông báo thêm sản phẩm */
+  .added-popup {
+    position: fixed;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 2000;
+    animation: fadeInOut 2s ease forwards;
+
+    .popup-content {
+      background: #ff6f61;
+      color: #fff;
+      padding: 14px 26px;
+      border-radius: 10px;
+      font-size: 16px;
+      font-weight: 500;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    }
+  }
+
+  @keyframes fadeInOut {
+    0% {
+      opacity: 0;
+      transform: translate(-50%, 20px);
+    }
+    15% {
+      opacity: 1;
+      transform: translate(-50%, 0);
+    }
+    85% {
+      opacity: 1;
+      transform: translate(-50%, 0);
+    }
+    100% {
+      opacity: 0;
+      transform: translate(-50%, 20px);
     }
   }
 }
