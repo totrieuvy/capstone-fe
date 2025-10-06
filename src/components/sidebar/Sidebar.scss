@@ -1,50 +1,40 @@
 .Sidebar {
   display: flex;
   flex-direction: column;
-  height: 100vh;
+  height: 100vh; // Đảm bảo sidebar luôn cao hết màn hình
 
   &__logo {
-    padding: 10px;
+    padding: 16px;
     text-align: center;
+    transition: padding 0.3s ease;
 
     img {
-      max-width: 100%;
+      max-width: 150px; // Giới hạn kích thước logo
       height: auto;
-    }
-  }
-
-  &__menu {
-    flex: 1;
-    border-inline-end: 0;
-
-    .ant-menu-item,
-    .ant-menu-submenu-title {
-      display: flex !important;
-      justify-content: center !important;
-      align-items: center !important;
-      text-align: center !important;
+      transition: max-width 0.3s ease;
     }
 
-    .ant-menu-title-content {
-      flex: 1;
-      display: flex;
-      justify-content: center;
-      a {
-        flex: 1;
-        text-align: center;
+    // Khi sidebar thu gọn, thu nhỏ logo lại
+    &.collapsed {
+      padding: 16px 8px;
+      img {
+        max-width: 40px; // Kích thước logo khi thu gọn
       }
     }
   }
 
+  &__menu {
+    flex: 1; // Giúp menu chiếm hết không gian còn lại
+    border-inline-end: 0;
+  }
+
   &__logout {
-    padding: 10px;
+    padding: 16px;
+    margin-top: auto; // Luôn đẩy nút logout xuống dưới cùng
 
     .ant-btn {
       width: 100%;
-      text-align: center;
-      display: flex;
-      justify-content: center;
-      align-items: center;
+      // Khi thu gọn, text đã được ẩn bằng React, AntD sẽ tự động căn giữa icon
     }
   }
 }
