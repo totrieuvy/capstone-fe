@@ -1,19 +1,22 @@
 .header {
-  position: fixed;
-  top: 0;
-  width: 100%;
-  background: white;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 12px 50px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  padding: 10px 25px;
+  background-color: #f5e6cc;
+  height: 80px;
+  position: sticky;
+  top: 0;
+  left: 0;
+  width: 100%;
+  transition: backdrop-filter 0.3s ease, background-color 0.3s ease;
   z-index: 1000;
-  transition: all 0.3s ease;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
 
   &--scrolled {
-    background: #fffaf7;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    backdrop-filter: blur(8px);
+    background-color: rgba(245, 230, 204, 0.9);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
   }
 
   &__left__logo {
