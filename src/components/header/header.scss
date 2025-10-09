@@ -13,6 +13,25 @@
   z-index: 1000;
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
 
+  .cart-checkout {
+    text-align: center;
+    margin-top: 10px;
+
+    .checkout-btn {
+      display: inline-block;
+      background-color: #e0732f;
+      color: #fff;
+      padding: 8px 20px;
+      border-radius: 6px;
+      font-weight: 600;
+      transition: 0.3s ease;
+
+      &:hover {
+        background-color: #c85f1c;
+      }
+    }
+  }
+
   &--scrolled {
     backdrop-filter: blur(8px);
     background-color: rgba(245, 230, 204, 0.9);
