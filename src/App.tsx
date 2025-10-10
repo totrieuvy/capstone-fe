@@ -26,6 +26,7 @@ import Checkout from "./pages/customer/checkout/Checkout";
 import PaymentSuccess from "./pages/customer/payment-success/PaymentSuccess";
 import TrackOrder from "./pages/customer/track-order/track-order-overall/TrackOrder";
 import TrackOrderDetail from "./pages/customer/track-order/track-order-detail/TrackOrderDetail";
+import CageType from "./pages/admin/CageType/CageType";
 
 interface User {
   id: number;
