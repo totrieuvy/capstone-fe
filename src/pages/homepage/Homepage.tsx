@@ -26,6 +26,7 @@ interface Product {
   createdBy: string;
   updatedAt: string;
   updatedBy: string;
+  weight: number;
 }
 
 interface PaginatedResponse {
@@ -41,7 +42,15 @@ interface PaginatedResponse {
 interface RootState {
   user: { fullName: string; role: string } | null;
   cart: {
-    items: { id: string; name: string; price: number; quantity: number; stockQuantity: number; imageUrl: string }[];
+    items: {
+      id: string;
+      name: string;
+      price: number;
+      quantity: number;
+      stockQuantity: number;
+      imageUrl: string;
+      weight: number;
+    }[];
   };
 }
 
@@ -130,6 +139,7 @@ function Homepage() {
         stockQuantity: product.stockQuantity,
         imageUrl: product.imageUrl,
         quantity: 1,
+        weight: product.weight,
       })
     );
 

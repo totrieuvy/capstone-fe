@@ -115,45 +115,40 @@ function Header() {
                   {cartItems.length === 0 ? (
                     <div className="cart-empty">Giỏ hàng trống</div>
                   ) : (
-                    cartItems.map((item: CartItem) => (
-                      <div key={item.id} className="cart-item">
-                        <img src={item.imageUrl} alt={item.name} className="cart-item-image" />
-                        <div className="cart-item-details">
-                          <span className="cart-item-name">{item.name}</span>
-                          <span className="cart-item-price">{item.price.toLocaleString()} VNĐ</span>
-                          <div className="cart-item-quantity">
-                            <button
-                              onClick={() =>
-                                dispatch(
-                                  updateQuantity({
-                                    id: item.id,
-                                    quantity: item.quantity - 1,
-                                  })
-                                )
-                              }
-                              disabled={item.quantity <= 1}
-                            >
-                              -
-                            </button>
-                            <span>{item.quantity}</span>
-                            <button
-                              onClick={() =>
-                                dispatch(
-                                  updateQuantity({
-                                    id: item.id,
-                                    quantity: item.quantity + 1,
-                                  })
-                                )
-                              }
-                              disabled={item.quantity >= item.stockQuantity}
-                            >
-                              +
-                            </button>
+                    <>
+                      {cartItems.map((item: CartItem) => (
+                        <div key={item.id} className="cart-item">
+                          <img src={item.imageUrl} alt={item.name} className="cart-item-image" />
+                          <div className="cart-item-details">
+                            <span className="cart-item-name">{item.name}</span>
+                            <span className="cart-item-price">{item.price.toLocaleString()} VNĐ</span>
+                            <div className="cart-item-quantity">
+                              <button
+                                onClick={() => dispatch(updateQuantity({ id: item.id, quantity: item.quantity - 1 }))}
+                                disabled={item.quantity <= 1}
+                              >
+                                -
+                              </button>
+                              <span>{item.quantity}</span>
+                              <button
+                                onClick={() => dispatch(updateQuantity({ id: item.id, quantity: item.quantity + 1 }))}
+                                disabled={item.quantity >= item.stockQuantity}
+                              >
+                                +
+                              </button>
+                            </div>
                           </div>
+                          <FaTrash onClick={() => handleRemoveItem(item.id)} className="cart-item-remove" />
                         </div>
-                        <FaTrash onClick={() => handleRemoveItem(item.id)} className="cart-item-remove" />
+                      ))}
+
+                      {/* 👇 Nút Checkout mới thêm */}
+                      <div className="cart-checkout">
+                        <Link to="/checkout" className="checkout-btn">
+                          Thanh toán
+                        </Link>
                       </div>
-                    ))
+                    </>
                   )}
                 </div>
               )}

@@ -8,6 +8,7 @@ interface CartItem {
   stockQuantity: number;
   price?: number; // nếu có
   imageUrl?: string; // nếu có
+  weight: number;
 }
 
 interface CartState {

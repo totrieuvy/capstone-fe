@@ -25,6 +25,8 @@ import { toast } from "react-toastify";
 import { getFormattedPrice } from "../../../utils/formatPrice";
 import type { ProductType } from "../../../types/product";
 import "./ManageProduct.scss";
+import { storage } from "../../../config/firebase"; // đường dẫn tới file firebase
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 
 const { Search } = Input;
 const { Option } = Select;
@@ -35,6 +37,7 @@ interface ProductFormValues {
   description: string;
   categoryId: string;
   price: number;
+  weight: number;
   stockQuantity: number;
   imageUrl: UploadFile[];
   isActive: boolean;
@@ -53,7 +56,7 @@ function ManageProduct() {
 
   const fetchProducts = async () => {
     try {
-      const response = await api.get("/api/products");
+      const response = await api.get("/api/products/all");
       setProducts(response.data.data);
       setFilteredProducts(response.data.data);
     } catch (error) {
@@ -84,46 +87,49 @@ function ManageProduct() {
   const handleSubmit = async (values: ProductFormValues) => {
     setLoading(true);
     try {
-      let imageUrl = values.imageUrl?.[0]?.url || "";
+      let imageUrl = "";
 
+      // 🔹 Kiểm tra nếu có ảnh mới được chọn
       const newFile = values.imageUrl?.[0]?.originFileObj as File | undefined;
-      if (newFile) {
-        const formData = new FormData();
-        formData.append("file", newFile);
-        const { data: uploadRes } = await api.post("/api/file/upload", formData, {
-          headers: { "Content-Type": "multipart/form-data" },
-        });
 
-        if (uploadRes.code === 200) {
-          imageUrl = uploadRes.data;
+      if (newFile) {
+        // Tạo đường dẫn trong Firebase Storage (folder images)
+        const storageRef = ref(storage, `images/${Date.now()}_${newFile.name}`);
+
+        // Upload file lên Firebase
+        await uploadBytes(storageRef, newFile);
+
+        // Lấy URL công khai của ảnh sau khi upload
+        imageUrl = await getDownloadURL(storageRef);
+      } else {
+        // Không có ảnh mới
+        if (isUpdate) {
+          imageUrl = ""; // giữ nguyên nếu cập nhật mà không đổi ảnh
         } else {
-          message.error("Upload ảnh thất bại");
+          message.error("Vui lòng chọn ảnh sản phẩm!");
           setLoading(false);
           return;
         }
-      } else if (isUpdate && !newFile) {
-        imageUrl = "";
-      } else if (!imageUrl) {
-        message.error("Chưa chọn ảnh sản phẩm");
-        setLoading(false);
-        return;
       }
 
+      // 🔹 Dữ liệu gửi về backend
       const payload = {
         name: values.name,
         description: values.description,
         categoryId: values.categoryId,
         price: values.price,
+        weight: values.weight,
         stockQuantity: values.stockQuantity,
-        ...(imageUrl && { imageUrl }),
+        imageUrl,
         isActive: values.isActive,
       };
 
+      // 🔹 Gửi request tạo hoặc cập nhật
       if (isUpdate && values.id) {
         await api.put(`/api/products/${values.id}`, payload);
         toast.success("Cập nhật sản phẩm thành công!");
       } else {
-        await api.post("/api/products", payload);
+        await api.post("/api/products/create", payload);
         toast.success("Thêm sản phẩm thành công!");
       }
 
@@ -286,6 +292,14 @@ function ManageProduct() {
             </Form.Item>
 
             <Form.Item
+              label="Cân nặng (gram)"
+              name="weight"
+              rules={[{ required: true, message: "Vui lòng nhập cân nặng!" }]}
+            >
+              <InputNumber style={{ width: "100%" }} min={0} />
+            </Form.Item>
+
+            <Form.Item
               label="Danh mục"
               name="categoryId"
               rules={[{ required: true, message: "Vui lòng chọn danh mục!" }]}
@@ -377,6 +391,9 @@ function ManageProduct() {
                   </p>
                   <p>
                     <strong>Giá:</strong> {getFormattedPrice(selectedProduct.price)}
+                  </p>
+                  <p>
+                    <strong>Cân nặng:</strong> {selectedProduct.weight} gram
                   </p>
                   <p>
                     <strong>Số lượng:</strong> {selectedProduct.stockQuantity}

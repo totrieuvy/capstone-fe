@@ -22,6 +22,8 @@ import ManageProduct from "./pages/admin/product/ManageProduct";
 import BoardingHamster from "./pages/customer/boarding/BoardingHamster";
 import ProductDetail from "./pages/product-detail/ProductDetail";
 import { clearCart } from "./redux/features/cartSlice";
+import Checkout from "./pages/customer/checkout/Checkout";
+import PaymentSuccess from "./pages/customer/payment-success/PaymentSuccess";
 import CageType from "./pages/admin/CageType/CageType";
 
 interface User {
@@ -103,6 +105,8 @@ const App = () => {
         { path: "/forgot-password", element: <ForgotPassword /> },
         { path: "/verify-otp", element: <VerifyOtp /> },
         { path: "/reset-password", element: <ResetPassword /> },
+        { path: "/checkout", element: <Checkout /> },
+        { path: "/payment-success", element: <PaymentSuccess /> },
         { path: "/dat-lich-giu-ho", element: <BoardingHamster /> },
         {
           path: "/profile/your-hamster",
