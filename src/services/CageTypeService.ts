@@ -30,7 +30,7 @@ export const cageTypeService = {
   createCageType: async (data: CreateCageTypeReq): Promise<CageTypeResponse> => {
     try {
       const response = await api.post("/api/cage-types", data);
-      return response.data.data || response.data; // Handle nested data structure
+      return response.data.data || response.data;
     } catch (error) {
       console.error("Error creating cage type:", error);
       throw error;
@@ -41,8 +41,7 @@ export const cageTypeService = {
   getCageTypes: async (): Promise<CageTypeResponse[]> => {
     try {
       const response = await api.get("/api/cage-types");
-      console.log("API Response:", response.data); // Debug log
-      return response.data.data || []; // Extract the data array from response
+      return response.data.data || [];
     } catch (error) {
       console.error("Error fetching cage types:", error);
       throw error;

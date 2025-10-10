@@ -12,6 +12,7 @@ import {
   Popconfirm,
   Image,
   Upload,
+  Spin,
   type UploadFile,
 } from "antd";
 import {
@@ -19,7 +20,6 @@ import {
   EditOutlined,
   DeleteOutlined,
   SearchOutlined,
-  UploadOutlined,
 } from "@ant-design/icons";
 import type { ColumnsType } from "antd/es/table";
 import cageTypeService from "../../../services/CageTypeService";
@@ -28,16 +28,28 @@ import type {
   CreateCageTypeReq,
 } from "../../../services/CageTypeService";
 import { getFormattedPrice } from "../../../utils/formatPrice";
+import { storage } from "../../../config/firebase";
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import "./CageType.scss";
 
+interface CageTypeFormValues {
+  id?: string;
+  typeName: string;
+  description: string;
+  sizeDimensions: string;
+  price: number;
+  material: string;
+  isActive: boolean;
+  imageUrl: UploadFile[];
+}
 
 const CageType: React.FC = () => {
   const [cageTypes, setCageTypes] = useState<CageTypeResponse[]>([]);
   const [loading, setLoading] = useState(false);
+  const [submitLoading, setSubmitLoading] = useState(false);
   const [isModalVisible, setIsModalVisible] = useState(false);
-  const [editingRecord, setEditingRecord] = useState<CageTypeResponse | null>(
-    null
-  );
+  const [isUpdate, setIsUpdate] = useState(false);
+  const [editingRecord, setEditingRecord] = useState<CageTypeResponse | null>(null);
   const [searchText, setSearchText] = useState("");
   const [form] = Form.useForm();
 
@@ -55,58 +67,116 @@ const CageType: React.FC = () => {
   };
 
   useEffect(() => {
+    document.title = "Quản lý loại chuồng";
     fetchCageTypes();
   }, []);
 
-  // Handle create/update
-  const handleSubmit = async (values: any) => {
-    try {
-      if (editingRecord) {
-        await cageTypeService.updateCageType(editingRecord.id, values);
-        message.success("Cage type updated successfully");
-      } else {
-        await cageTypeService.createCageType(values);
-        message.success("Cage type created successfully");
+  // Handle create/update following ManageProduct pattern
+ const handleSubmit = async (values: CageTypeFormValues) => {
+  setSubmitLoading(true);
+  try {
+    let imageUrl = "";
+
+    // Check if there's a new image file selected
+    const newFile = values.imageUrl?.[0]?.originFileObj as File | undefined;
+
+    if (newFile) {
+      // Create Firebase Storage reference with timestamp and file name
+      const storageRef = ref(storage, `cage-types/${Date.now()}_${newFile.name}`);
+      
+      // Upload file to Firebase
+      await uploadBytes(storageRef, newFile);
+      
+      // Get download URL
+      imageUrl = await getDownloadURL(storageRef);
+    } else {
+      // No new image
+      if (isUpdate && editingRecord?.imageUrl) {
+        // Keep existing image URL when updating without changing image
+        imageUrl = editingRecord.imageUrl;
+      } else if (!isUpdate) {
+        // For create operation, image is required
+        message.error("Vui lòng chọn ảnh cho loại chuồng!");
+        setSubmitLoading(false);
+        return;
       }
-      setIsModalVisible(false);
-      form.resetFields();
-      setEditingRecord(null);
-      fetchCageTypes();
-    } catch (error) {
-      message.error(
-        `Failed to ${editingRecord ? "update" : "create"} cage type`
-      );
     }
-  };
+
+    // Prepare data for API submission
+    const payload: CreateCageTypeReq = {
+      typeName: values.typeName,
+      description: values.description,
+      sizeDimensions: values.sizeDimensions,
+      price: values.price,
+      material: values.material,
+      isActive: values.isActive,
+      imageUrl: imageUrl,
+    };
+
+    // Send request to create or update
+    if (isUpdate && values.id) {
+      await cageTypeService.updateCageType(values.id, payload);
+      message.success("Cập nhật loại chuồng thành công!");
+    } else {
+      await cageTypeService.createCageType(payload);
+      message.success("Thêm loại chuồng thành công!");
+    }
+
+    fetchCageTypes();
+    handleCancel();
+  } catch (error) {
+    message.error("Thao tác thất bại: " + error);
+  } finally {
+    setSubmitLoading(false);
+  }
+};
 
   // Handle delete
   const handleDelete = async (id: string) => {
     try {
       await cageTypeService.deleteCageType(id);
-      message.success("Cage type deleted successfully");
+      message.success("Xóa loại chuồng thành công!");
       fetchCageTypes();
     } catch (error) {
-      message.error("Failed to delete cage type");
+      message.error("Xóa thất bại!");
     }
   };
 
-  // Open modal for create/edit
-  const openModal = (record?: CageTypeResponse) => {
-    if (record) {
-      setEditingRecord(record);
-      form.setFieldsValue(record);
-    } else {
-      setEditingRecord(null);
-      form.resetFields();
-    }
+  // Open modal for create
+  const handleOpenAdd = () => {
+    setIsUpdate(false);
+    setEditingRecord(null);
     setIsModalVisible(true);
+    form.resetFields();
+    form.setFieldsValue({ isActive: true });
+  };
+
+  // Open modal for edit following ManageProduct pattern
+  const handleOpenEdit = (record: CageTypeResponse) => {
+    setIsUpdate(true);
+    setEditingRecord(record);
+    setIsModalVisible(true);
+    form.setFieldsValue({
+      ...record,
+      imageUrl: record.imageUrl
+        ? [
+            {
+              uid: "-1",
+              name: "image.png",
+              status: "done",
+              url: record.imageUrl,
+            },
+          ]
+        : [],
+    });
   };
 
   // Close modal
-  const closeModal = () => {
+  const handleCancel = () => {
     setIsModalVisible(false);
     form.resetFields();
     setEditingRecord(null);
+    setIsUpdate(false);
   };
 
   // Filter data based on search
@@ -119,7 +189,7 @@ const CageType: React.FC = () => {
   // Table columns
   const columns: ColumnsType<CageTypeResponse> = [
     {
-      title: "Image",
+      title: "Hình ảnh",
       dataIndex: "imageUrl",
       key: "imageUrl",
       width: 100,
@@ -135,65 +205,66 @@ const CageType: React.FC = () => {
       ),
     },
     {
-      title: "Type Name",
+      title: "Tên loại",
       dataIndex: "typeName",
       key: "typeName",
       sorter: (a, b) => a.typeName.localeCompare(b.typeName),
     },
     {
-      title: "Description",
+      title: "Mô tả",
       dataIndex: "description",
       key: "description",
       ellipsis: true,
     },
     {
-      title: "Size",
+      title: "Kích thước",
       dataIndex: "sizeDimensions",
       key: "sizeDimensions",
     },
     {
-      title: "Material",
+      title: "Chất liệu",
       dataIndex: "material",
       key: "material",
     },
     {
-      title: "Price",
+      title: "Giá",
       dataIndex: "price",
       key: "price",
       sorter: (a, b) => a.price - b.price,
       render: (price: number) => getFormattedPrice(price),
     },
     {
-      title: "Status",
+      title: "Trạng thái",
       dataIndex: "isActive",
       key: "isActive",
       render: (isActive: boolean) => (
         <span style={{ color: isActive ? "#52c41a" : "#ff4d4f" }}>
-          {isActive ? "Active" : "Inactive"}
+          {isActive ? "Hoạt động" : "Không hoạt động"}
         </span>
       ),
     },
     {
-      title: "Actions",
+      title: "Hành động",
       key: "actions",
-      width: 150,
+      width: 200,
       render: (_, record) => (
         <Space>
           <Button
-            type="link"
+            type="primary"
             icon={<EditOutlined />}
-            onClick={() => openModal(record)}
+            onClick={() => handleOpenEdit(record)}
           >
-            Edit
+            Cập nhật
           </Button>
           <Popconfirm
-            title="Bạn có chắc chắn muốn xóa loại chuồng này?"
+            title="Xóa loại chuồng?"
+            description="Bạn có chắc muốn xóa loại chuồng này?"
             onConfirm={() => handleDelete(record.id)}
             okText="Có"
             cancelText="Không"
           >
-            <Button type="link" danger icon={<DeleteOutlined />}>
-              Delete
+            <Button danger icon={<DeleteOutlined />}>
+              Xóa
             </Button>
           </Popconfirm>
         </Space>
@@ -202,13 +273,13 @@ const CageType: React.FC = () => {
   ];
 
   return (
-   <div className="CageType">
+    <div className="CageType">
       <h1>Quản lý loại chuồng</h1>
 
       <div className="search-box">
         <Space style={{ marginBottom: 16, width: "100%" }}>
           <Input
-            placeholder="Search cage types..."
+            placeholder="Tìm kiếm loại chuồng..."
             prefix={<SearchOutlined />}
             value={searchText}
             onChange={(e) => setSearchText(e.target.value)}
@@ -217,10 +288,10 @@ const CageType: React.FC = () => {
           <Button
             type="primary"
             icon={<PlusOutlined />}
-            onClick={() => openModal()}
+            onClick={handleOpenAdd}
             style={{ marginLeft: "auto" }}
           >
-            Thêm loại chuồng mới 
+            Thêm loại chuồng mới
           </Button>
         </Space>
       </div>
@@ -238,101 +309,117 @@ const CageType: React.FC = () => {
       />
 
       <Modal
-        title={editingRecord ? "Chỉnh sửa loại chuồng" : "Thêm loại chuồng mới"}
+        title={isUpdate ? "Cập nhật loại chuồng" : "Thêm loại chuồng mới"}
         open={isModalVisible}
-        onCancel={closeModal}
+        onCancel={handleCancel}
         footer={null}
         width={700}
       >
-        <Form
-          form={form}
-          layout="vertical"
-          onFinish={handleSubmit}
-          initialValues={{ isActive: true }}
-        >
-          <Form.Item
-            name="typeName"
-            label="Tên"
-            rules={[
-              { required: true, message: "Please input the type name!" },
-            ]}
+        <Spin spinning={submitLoading}>
+          <Form
+            form={form}
+            layout="vertical"
+            onFinish={handleSubmit}
+            initialValues={{ isActive: true }}
           >
-            <Input placeholder="Enter cage type name" />
-          </Form.Item>
+            <Form.Item name="id" hidden>
+              <Input />
+            </Form.Item>
 
-          <Form.Item
-            name="description"
-            label="Mô tả"
-            rules={[
-              { required: true, message: "Please input the description!" },
-            ]}
-          >
-            <Input.TextArea
-              rows={3}
-              placeholder="Enter description"
-            />
-          </Form.Item>
+            <Form.Item
+              name="typeName"
+              label="Tên loại chuồng"
+              rules={[
+                { required: true, message: "Vui lòng nhập tên loại chuồng!" },
+              ]}
+            >
+              <Input placeholder="Nhập tên loại chuồng" />
+            </Form.Item>
 
-          <Form.Item
-            name="sizeDimensions"
-            label="Kích thước"
-            rules={[
-              { required: true, message: "Please input the size dimensions!" },
-            ]}
-          >
-            <Input placeholder="e.g., 24x18x21 inches" />
-          </Form.Item>
+            <Form.Item
+              name="description"
+              label="Mô tả"
+              rules={[
+                { required: true, message: "Vui lòng nhập mô tả!" },
+              ]}
+            >
+              <Input.TextArea
+                rows={3}
+                placeholder="Nhập mô tả loại chuồng"
+              />
+            </Form.Item>
 
-          <Form.Item
-            name="material"
-            label="Chất liệu"
-            rules={[{ required: true, message: "Please input the material!" }]}
-          >
-            <Input placeholder="e.g., Stainless Steel" />
-          </Form.Item>
+            <Form.Item
+              name="sizeDimensions"
+              label="Kích thước"
+              rules={[
+                { required: true, message: "Vui lòng nhập kích thước!" },
+              ]}
+            >
+              <Input placeholder="VD: 24x18x21 inches" />
+            </Form.Item>
 
-         <Form.Item
-            name="price"
-            label="Giá (VND)"
-            rules={[{ required: true, message: "Please input the price!" }]}
-          >
-            <InputNumber
-              min={0}
-              step={1000}
-              style={{ width: "100%" }}
-              placeholder="Enter price in VND"
-              formatter={(value) =>
-                `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",")
-              }
-              parser={(value) => parseFloat(value!.replace(/\$\s?|(,*)/g, "")) || 0}
-              addonAfter="đ"
-            />
-          </Form.Item>
+            <Form.Item
+              name="material"
+              label="Chất liệu"
+              rules={[{ required: true, message: "Vui lòng nhập chất liệu!" }]}
+            >
+              <Input placeholder="VD: Thép không gỉ" />
+            </Form.Item>
 
-          <Form.Item
-            name="imageUrl"
-            label="URL hình ảnh"
-            rules={[
-              { required: true, message: "Please input the image URL!" },
-              { type: "url", message: "Please enter a valid URL!" },
-            ]}
-          >
-            <Input placeholder="https://example.com/image.jpg" />
-          </Form.Item>
+            <Form.Item
+              name="price"
+              label="Giá (VND)"
+              rules={[
+                { required: true, message: "Vui lòng nhập giá!" },
+                { type: "number", min: 1, max: 999999999, message: "Giá phải từ 1 đến 999,999,999!" },
+              ]}
+            >
+              <InputNumber
+                min={0}
+                max={999999999}
+                step={1000}
+                style={{ width: "100%" }}
+                placeholder="Nhập giá"
+                formatter={(value) =>
+                  `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",")
+                }
+                parser={(value) => {
+                  const parsed = parseFloat(value!.replace(/\$\s?|(,*)/g, "")) || 0;
+                  return parsed > 999999999 ? 999999999 : parsed as 0 | 999999999;
+                }}
+                addonAfter="đ"
+              />
+            </Form.Item>
 
-          <Form.Item name="isActive" label="Status" valuePropName="checked">
-            <Switch checkedChildren="Đang áp dụng" unCheckedChildren="Ngừng áp dụng" />
-          </Form.Item>
+            <Form.Item
+              label="Hình ảnh"
+              name="imageUrl"
+              valuePropName="fileList"
+              getValueFromEvent={(e) => (Array.isArray(e) ? e : e?.fileList)}
+              rules={[{ required: !isUpdate, message: "Vui lòng chọn ảnh!" }]}
+            >
+              <Upload 
+                listType="picture-card" 
+                beforeUpload={() => false} 
+                maxCount={1} 
+                accept="image/*"
+              >
+                <div>Chọn ảnh</div>
+              </Upload>
+            </Form.Item>
 
-          <Form.Item>
-            <Space style={{ width: "100%", justifyContent: "flex-end" }}>
-              <Button onClick={closeModal}>Hủy</Button>
-              <Button type="primary" htmlType="submit">
-                {editingRecord ? "Cập nhật" : "Tạo mới"}
+            <Form.Item name="isActive" label="Trạng thái" valuePropName="checked">
+              <Switch checkedChildren="Hoạt động" unCheckedChildren="Không hoạt động" />
+            </Form.Item>
+
+            <Form.Item>
+              <Button type="primary" htmlType="submit" block>
+                {isUpdate ? "Cập nhật" : "Thêm loại chuồng"}
               </Button>
-            </Space>
-          </Form.Item>
-        </Form>
+            </Form.Item>
+          </Form>
+        </Spin>
       </Modal>
     </div>
   );
