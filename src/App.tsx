@@ -24,7 +24,8 @@ import ProductDetail from "./pages/product-detail/ProductDetail";
 import { clearCart } from "./redux/features/cartSlice";
 import Checkout from "./pages/customer/checkout/Checkout";
 import PaymentSuccess from "./pages/customer/payment-success/PaymentSuccess";
-import CageType from "./pages/admin/CageType/CageType";
+import TrackOrder from "./pages/customer/track-order/track-order-overall/TrackOrder";
+import TrackOrderDetail from "./pages/customer/track-order/track-order-detail/TrackOrderDetail";
 
 interface User {
   id: number;
@@ -107,6 +108,14 @@ const App = () => {
         { path: "/reset-password", element: <ResetPassword /> },
         { path: "/checkout", element: <Checkout /> },
         { path: "/payment-success", element: <PaymentSuccess /> },
+        {
+          path: "/your-orders",
+          element: <Panel />,
+          children: [
+            { path: "", element: <TrackOrder /> },
+            { path: ":orderId", element: <TrackOrderDetail /> },
+          ],
+        },
         { path: "/dat-lich-giu-ho", element: <BoardingHamster /> },
         {
           path: "/profile/your-hamster",

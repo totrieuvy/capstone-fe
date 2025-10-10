@@ -1,37 +1,30 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
-import { Card, Input, Button, Radio, message, Spin, Row, Col } from "antd";
-import { StandaloneSearchBox, useJsApiLoader } from "@react-google-maps/api";
+import { Card, Input, Button, Select, message, Row, Col, Radio, Spin, Form } from "antd";
 import { clearCart } from "../../../redux/features/cartSlice";
 import api from "../../../config/axios";
 import "./Checkout.scss";
 
-interface RootState {
-  user: { fullName: string; role: string } | null;
-  cart: {
-    items: {
-      id: string;
-      name: string;
-      price: number;
-      quantity: number;
-      stockQuantity: number;
-      imageUrl: string;
-      weight: number;
-    }[];
-  };
+// --- Interface Definitions ---
+interface District {
+  id: number;
+  districtName: string;
 }
 
-interface ShippingFeeResponse {
-  success: boolean;
-  fee: {
-    name: string;
-    fee: number;
-    insurance_fee: number;
-  };
+interface Ward {
+  wardCode: string;
+  wardName: string;
+}
+
+interface CustomerInfo {
+  fullName: string;
+  phone: string;
+  email: string;
 }
 
 interface MembershipResponse {
   code: number;
+  message: string;
   data: {
     discountPercent: number;
     rankName: string;
@@ -39,215 +32,354 @@ interface MembershipResponse {
   };
 }
 
+interface ShippingFeeResponse {
+  code: number;
+  message: string;
+  data: {
+    total: number;
+    [key: string]: number;
+  };
+  success: boolean;
+}
+
+interface OrderItemPayload {
+  productId: string | number;
+  productName: string;
+  quantity: number;
+  unitPrice: number;
+  totalPrice: number;
+}
+
+interface OrderPayload {
+  totalAmount: number;
+  discountPercent: number;
+  finalAmount: number;
+  shippingFee: number;
+  deliveryAddress: string;
+  orderItem: OrderItemPayload[];
+  paymentMethod: string;
+  // Added customer info
+  customerName: string;
+  customerPhone: string;
+}
+
 interface OrderResponse {
   code: number;
   message: string;
-  data: { paymentUrl: string };
+  data?: { paymentUrl: string };
+}
+
+interface CartItem {
+  id: number | string;
+  name: string;
+  quantity: number;
+  stockQuantity: number;
+  price?: number;
+  imageUrl?: string;
+  weight: number;
+}
+
+interface RootState {
+  cart: { items: CartItem[] };
 }
 
 const Checkout = () => {
   const dispatch = useDispatch();
   const { items: cartItems } = useSelector((state: RootState) => state.cart);
 
-  const [address, setAddress] = useState<string>("");
-  const [district, setDistrict] = useState<string>("");
-  const [province] = useState<string>("Hồ Chí Minh");
+  // --- State Management ---
+  const [fullName, setFullName] = useState<string>("");
+  const [phone, setPhone] = useState<string>("");
+  const [districts, setDistricts] = useState<District[]>([]);
+  const [wards, setWards] = useState<Ward[]>([]);
+  const [selectedDistrict, setSelectedDistrict] = useState<number | null>(null);
+  const [selectedWard, setSelectedWard] = useState<string>("");
+  const [addressDetail, setAddressDetail] = useState<string>("");
   const [fee, setFee] = useState<number | null>(null);
   const [discountPercent, setDiscountPercent] = useState<number>(0);
-  const [paymentMethod, setPaymentMethod] = useState<"VNPAY" | "PAYOS">("VNPAY");
   const [loading, setLoading] = useState(false);
   const [shipLoading, setShipLoading] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState<"VNPAY" | "PAYOS">("VNPAY");
 
-  const inputRef = useRef<google.maps.places.SearchBox | null>(null);
-  const { isLoaded } = useJsApiLoader({
-    id: "google-map-script",
-    googleMapsApiKey: "AIzaSyAwSwTDdF00hbh21k7LsX-4Htuwqm9MlPg",
-    libraries: ["places"],
-  });
+  const totalWeight = cartItems.reduce((sum, item) => sum + item.weight * item.quantity, 0);
+  const totalValue = cartItems.reduce((sum, item) => sum + (item.price || 0) * item.quantity, 0);
 
-  const totalWeight = cartItems.reduce((sum, i) => sum + i.weight * i.quantity, 0);
-  const totalValue = cartItems.reduce((sum, i) => sum + i.price * i.quantity, 0);
-
+  // --- Data Fetching ---
   useEffect(() => {
     document.title = "Thanh toán";
+    fetchDistricts();
     fetchMembership();
+    fetchCustomerInfo(); // Fetch customer info on component mount
   }, []);
+
+  const fetchCustomerInfo = async () => {
+    try {
+      const { data }: { data: { code: number; data: CustomerInfo } } = await api.get("/api/customer");
+      if (data.code === 200 && data.data) {
+        setFullName(data.data.fullName);
+        setPhone(data.data.phone);
+      }
+    } catch {
+      message.error("Không thể tải thông tin khách hàng.");
+    }
+  };
+
+  const fetchDistricts = async () => {
+    try {
+      const { data } = await api.get("/api/address/district");
+      if (data.code === 200) setDistricts(data.data);
+      else message.error("Không tải được danh sách quận/huyện.");
+    } catch {
+      message.error("Lỗi khi tải danh sách quận/huyện.");
+    }
+  };
+
+  const fetchWards = async (districtId: number) => {
+    try {
+      const { data } = await api.get(`/api/address/ward?districtId=${districtId}`);
+      if (data.code === 200) setWards(data.data);
+      else message.error("Không tải được danh sách phường/xã.");
+    } catch {
+      message.error("Lỗi khi tải danh sách phường/xã.");
+    }
+  };
 
   const fetchMembership = async () => {
     try {
       const { data }: { data: MembershipResponse } = await api.get("/api/membership");
-      setDiscountPercent(data.data.discountPercent || 0);
+      if (data.code === 200) setDiscountPercent(data.data.discountPercent || 0);
     } catch {
-      message.warning("Không thể tải thông tin hạng thành viên");
+      // Non-critical error, a warning is sufficient
     }
   };
 
-  const handleAddressChange = async () => {
-    if (!address) return;
-    await calculateShippingFee(address);
+  // --- Event Handlers ---
+  const handleDistrictChange = (value: number) => {
+    setSelectedDistrict(value);
+    setWards([]);
+    setSelectedWard("");
+    setFee(null); // Reset fee when district changes
+    fetchWards(value);
   };
 
-  const calculateShippingFee = async (addr: string) => {
-    if (!district) return;
+  const handleWardChange = (value: string) => {
+    setSelectedWard(value);
+    setFee(null); // Reset fee when ward changes
+  };
+
+  const handleCalculateFee = async () => {
+    if (!selectedDistrict || !selectedWard) {
+      message.warning("Vui lòng chọn đầy đủ quận/huyện và phường/xã.");
+      return;
+    }
+
     setShipLoading(true);
     try {
       const payload = {
-        address: addr,
-        province: province,
-        district: district,
-        pickAddress: "643 Điện Biên Phủ, Phường 1, Quận 3, TP Hồ Chí Minh",
-        pickProvince: "TP Hồ Chí Minh",
-        pickDistrict: "Quận 3",
+        toWardCode: selectedWard,
+        toDistrictId: selectedDistrict,
         weight: totalWeight,
-        value: totalValue,
       };
+      const { data }: { data: ShippingFeeResponse } = await api.post("/api/ship/ghn", payload);
 
-      // ✅ Vẫn gọi API nội bộ /api/ship
-      const { data }: { data: ShippingFeeResponse } = await api.post("/api/ship", payload);
-
-      if (data.success) {
-        setFee(data.fee.fee);
-        message.success("Tính phí giao hàng thành công!");
+      if (data.code === 200 && data.success) {
+        const feeValue = data.data.total ?? 0;
+        setFee(feeValue);
+        message.success(`Phí giao hàng dự kiến: ${feeValue.toLocaleString()}đ`);
       } else {
-        message.error("Không thể tính phí giao hàng.");
+        message.error(data.message || "Không thể tính phí giao hàng. Vui lòng thử lại.");
       }
-    } catch (err) {
-      message.error("Lỗi khi gọi API tính phí vận chuyển.");
+    } catch {
+      message.error("Lỗi khi kết nối dịch vụ vận chuyển.");
     } finally {
       setShipLoading(false);
     }
   };
 
-  const handlePlaceChange = () => {
-    if (!inputRef.current) return;
-    const places = inputRef.current.getPlaces();
-    if (!places || places.length === 0) return;
-    const place = places[0];
-    if (!place.formatted_address || !place.address_components) return;
-
-    setAddress(place.formatted_address);
-
-    const districtComp = place.address_components.find((c) => c.types.includes("administrative_area_level_2"));
-    const districtName = districtComp?.long_name || "";
-    setDistrict(districtName);
-
-    calculateShippingFee(place.formatted_address);
-  };
-
   const handleCheckout = async () => {
-    if (!fee) {
-      message.warning("Chưa tính được phí giao hàng!");
+    if (!fullName.trim() || !phone.trim() || !addressDetail.trim()) {
+      message.warning("Vui lòng điền đầy đủ thông tin nhận hàng.");
       return;
     }
+    if (fee === null) {
+      message.warning("Vui lòng tính phí giao hàng trước khi thanh toán.");
+      return;
+    }
+
+    const districtName = districts.find((d) => d.id === selectedDistrict)?.districtName || "";
+    const wardName = wards.find((w) => w.wardCode === selectedWard)?.wardName || "";
+    const fullAddress = `${addressDetail}, ${wardName}, ${districtName}`;
+
+    const totalAmount = totalValue;
+    const shippingFee = fee;
+    const finalAmount = totalValue * (1 - discountPercent / 100) + shippingFee;
+
+    const orderItems: OrderItemPayload[] = cartItems.map((item) => ({
+      productId: item.id,
+      productName: item.name,
+      quantity: item.quantity,
+      unitPrice: item.price || 0,
+      totalPrice: (item.price || 0) * item.quantity,
+    }));
+
+    const payload: OrderPayload = {
+      totalAmount,
+      discountPercent,
+      finalAmount,
+      shippingFee,
+      deliveryAddress: fullAddress,
+      orderItem: orderItems,
+      paymentMethod,
+      customerName: fullName,
+      customerPhone: phone,
+    };
+
     setLoading(true);
     try {
-      const payload = {
-        totalAmount: totalValue,
-        discountPercent,
-        shippingFee: fee,
-        deliveryAddress: address,
-        orderItem: cartItems.map((i) => ({
-          productId: i.id,
-          productName: i.name,
-          quantity: i.quantity,
-          unitPrice: i.price,
-          totalPrice: i.price * i.quantity,
-        })),
-        paymentMethod,
-      };
       const { data }: { data: OrderResponse } = await api.post("/api/order", payload);
-      if (data.code === 200 && data.data.paymentUrl) {
+      if (data.code === 200 && data.data?.paymentUrl) {
         dispatch(clearCart());
-        setTimeout(() => {
-          window.location.href = data.data.paymentUrl;
-        }, 200);
-      } else message.error(data.message);
+        window.location.href = data.data.paymentUrl;
+      } else {
+        message.error(data.message || "Thanh toán thất bại, vui lòng thử lại.");
+      }
     } catch {
-      message.error("Thanh toán thất bại");
+      message.error("Đã có lỗi xảy ra trong quá trình thanh toán.");
     } finally {
       setLoading(false);
     }
   };
 
+  // --- Render ---
   return (
     <div className="checkout-page">
-      <h1 className="checkout-title">Thanh toán đơn hàng</h1>
+      <div className="checkout-container">
+        <h1 className="checkout-title">Thông tin Thanh toán</h1>
+        <Row gutter={32} className="checkout-layout">
+          {/* Left Column: Form */}
+          <Col xs={24} lg={14}>
+            <Card className="checkout-card" bordered={false}>
+              <h2 className="card-title">Thông tin nhận hàng</h2>
+              <Form layout="vertical">
+                <Row gutter={16}>
+                  <Col xs={24} sm={12}>
+                    <Form.Item label="Họ và tên">
+                      <Input value={fullName} onChange={(e) => setFullName(e.target.value)} />
+                    </Form.Item>
+                  </Col>
+                  <Col xs={24} sm={12}>
+                    <Form.Item label="Số điện thoại">
+                      <Input value={phone} onChange={(e) => setPhone(e.target.value)} />
+                    </Form.Item>
+                  </Col>
+                </Row>
+                <Row gutter={16}>
+                  <Col xs={24} sm={12}>
+                    <Form.Item label="Quận / Huyện">
+                      <Select
+                        placeholder="Chọn quận / huyện"
+                        value={selectedDistrict ?? undefined}
+                        onChange={handleDistrictChange}
+                        options={districts.map((d) => ({ value: d.id, label: d.districtName }))}
+                      />
+                    </Form.Item>
+                  </Col>
+                  <Col xs={24} sm={12}>
+                    <Form.Item label="Phường / Xã">
+                      <Select
+                        placeholder="Chọn phường / xã"
+                        value={selectedWard || undefined}
+                        onChange={handleWardChange}
+                        options={wards.map((w) => ({ value: w.wardCode, label: w.wardName }))}
+                        disabled={!selectedDistrict}
+                      />
+                    </Form.Item>
+                  </Col>
+                </Row>
+                <Form.Item label="Địa chỉ cụ thể">
+                  <Input
+                    placeholder="Số nhà, tên đường..."
+                    value={addressDetail}
+                    onChange={(e) => setAddressDetail(e.target.value)}
+                  />
+                </Form.Item>
 
-      <Row gutter={24} justify="center" className="checkout-layout">
-        <Col xs={24} md={14}>
-          <Card className="checkout-card">
-            <h2>Địa chỉ giao hàng</h2>
-            {isLoaded ? (
-              <StandaloneSearchBox onLoad={(ref) => (inputRef.current = ref)} onPlacesChanged={handlePlaceChange}>
-                <Input
-                  value={address}
-                  placeholder="Nhập địa chỉ giao hàng..."
-                  onChange={(e) => setAddress(e.target.value)}
-                  onBlur={handleAddressChange}
-                />
-              </StandaloneSearchBox>
-            ) : (
-              <Input placeholder="Đang tải Google Maps..." disabled />
-            )}
-            {shipLoading ? (
-              <Spin style={{ marginTop: 10 }} />
-            ) : (
-              fee !== null && <p className="fee-result">Phí giao hàng: {fee.toLocaleString()}đ</p>
-            )}
+                <Button block onClick={handleCalculateFee} loading={shipLoading} className="btn-calculate-fee">
+                  {shipLoading ? <Spin size="small" /> : "Tính phí giao hàng"}
+                </Button>
 
-            <h2 style={{ marginTop: 20 }}>Phương thức thanh toán</h2>
-            <Radio.Group
-              value={paymentMethod}
-              onChange={(e) => setPaymentMethod(e.target.value)}
-              className="payment-method"
-            >
-              <Radio value="VNPAY">
-                <img src="https://sandbox.vnpayment.vn/paymentv2/images/icons/vnpay.png" alt="vnpay" />
-                VNPAY
-              </Radio>
-              <Radio value="PAYOS">
-                <img src="https://static.payos.vn/img/logo.svg" alt="payos" />
-                PAYOS
-              </Radio>
-            </Radio.Group>
-          </Card>
-        </Col>
-
-        <Col xs={24} md={10}>
-          <Card className="checkout-card summary-card">
-            <h2>Tóm tắt đơn hàng</h2>
-            {cartItems.map((item) => (
-              <div key={item.id} className="summary-item">
-                <img src={item.imageUrl} alt={item.name} />
-                <div className="summary-info">
-                  <p>{item.name}</p>
-                  <p>
-                    {item.quantity} × {item.price.toLocaleString()}đ
+                {fee !== null && (
+                  <p className="fee-result">
+                    Phí giao hàng: <strong>{fee.toLocaleString()}đ</strong>
                   </p>
+                )}
+              </Form>
+
+              <h2 className="card-title payment-title">Phương thức thanh toán</h2>
+              <Radio.Group
+                value={paymentMethod}
+                onChange={(e) => setPaymentMethod(e.target.value)}
+                className="payment-method-group"
+              >
+                <Radio.Button value="VNPAY">VNPAY</Radio.Button>
+                <Radio.Button value="PAYOS">PAYOS</Radio.Button>
+              </Radio.Group>
+            </Card>
+          </Col>
+
+          {/* Right Column: Summary */}
+          <Col xs={24} lg={10}>
+            <Card className="checkout-card summary-card" bordered={false}>
+              <h2 className="card-title">Tóm tắt đơn hàng</h2>
+              <div className="summary-items-list">
+                {cartItems.map((item) => (
+                  <div key={item.id} className="summary-item">
+                    <div className="summary-item-image">
+                      <img src={item.imageUrl} alt={item.name} />
+                      <span className="summary-item-quantity">{item.quantity}</span>
+                    </div>
+                    <div className="summary-info">
+                      <p className="summary-item-name">{item.name}</p>
+                      <p className="summary-item-price">{(item.price || 0).toLocaleString()}đ</p>
+                    </div>
+                    <p className="summary-item-total">{((item.price || 0) * item.quantity).toLocaleString()}đ</p>
+                  </div>
+                ))}
+              </div>
+
+              <div className="summary-total">
+                <div className="summary-line">
+                  <span>Tạm tính</span>
+                  <span>{totalValue.toLocaleString()}đ</span>
+                </div>
+                <div className="summary-line">
+                  <span>Giảm giá thành viên</span>
+                  <span>- {discountPercent}%</span>
+                </div>
+                <div className="summary-line">
+                  <span>Phí vận chuyển</span>
+                  <span>{fee !== null ? `${fee.toLocaleString()}đ` : "—"}</span>
+                </div>
+                <div className="summary-line final-total">
+                  <h3>Tổng cộng</h3>
+                  <h3>{fee !== null ? (totalValue * (1 - discountPercent / 100) + fee).toLocaleString() : "—"} đ</h3>
                 </div>
               </div>
-            ))}
 
-            <div className="summary-total">
-              <p>Tạm tính: {totalValue.toLocaleString()}đ</p>
-              <p>Giảm giá: {discountPercent}%</p>
-              <p>Phí ship: {fee ? `${fee.toLocaleString()}đ` : "Chưa có"}</p>
-              <h3>Tổng cộng: {fee ? (totalValue * (1 - discountPercent / 100) + fee).toLocaleString() : "—"} đ</h3>
-            </div>
-
-            <Button
-              type="primary"
-              block
-              onClick={handleCheckout}
-              loading={loading}
-              disabled={!fee}
-              className="btn-checkout"
-            >
-              Thanh toán
-            </Button>
-          </Card>
-        </Col>
-      </Row>
+              <Button
+                type="primary"
+                block
+                onClick={handleCheckout}
+                loading={loading}
+                disabled={fee === null}
+                className="btn-checkout"
+              >
+                {loading ? "Đang xử lý..." : "Thanh toán"}
+              </Button>
+            </Card>
+          </Col>
+        </Row>
+      </div>
     </div>
   );
 };

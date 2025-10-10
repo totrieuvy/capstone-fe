@@ -35,6 +35,13 @@ const Panel: React.FC = () => {
           Ví của bạn
         </NavLink>
 
+        <NavLink to="/your-orders" className={({ isActive }) => `menu-item ${isActive ? "active" : ""}`}>
+          <span role="img" aria-label="orders">
+            📦
+          </span>
+          Đơn hàng của bạn
+        </NavLink>
+
         <div
           className={`menu-item dropdown ${isDropdownOpen ? "open" : ""}`}
           onClick={() => setIsDropdownOpen(!isDropdownOpen)}
