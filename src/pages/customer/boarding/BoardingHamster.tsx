@@ -24,6 +24,7 @@ import {
 import dayjs, { Dayjs } from "dayjs";
 import "./BoardingHamster.scss";
 import ProfileHamsterService from "../../../services/ProfileHamsterService";
+import { useNavigate } from "react-router-dom";
 
 const { RangePicker } = DatePicker;
 
@@ -114,6 +115,7 @@ const mockAdditionalServices: AdditionalService[] = [
 ];
 
 function BoardingHamster() {
+  const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState(0);
   const [profiles, setProfiles] = useState<HamsterProfile[]>([]);
   const [cageTypes, setCageTypes] = useState<CageType[]>([]);
@@ -308,7 +310,19 @@ function BoardingHamster() {
                     fontWeight: 500,
                   }}
                 >
-                  🐹 Chưa có hồ sơ hamster nào. Vui lòng tạo hồ sơ trước.
+                  🐹 Chưa có hồ sơ hamster nào. Vui lòng tạo hồ sơ trước{" "}
+                  <span
+                    style={{
+                      textDecoration: "underline",
+                      cursor: "pointer",
+                      color: "#ff6f61",
+                      fontWeight: 600,
+                    }}
+                    onClick={() => navigate("/profile/your-hamster")}
+                  >
+                    tại đây
+                  </span>
+                  .
                 </div>
               ) : (
                 <Row gutter={[16, 16]}>

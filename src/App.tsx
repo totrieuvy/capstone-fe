@@ -22,6 +22,7 @@ import ManageProduct from "./pages/admin/product/ManageProduct";
 import BoardingHamster from "./pages/customer/boarding/BoardingHamster";
 import ProductDetail from "./pages/product-detail/ProductDetail";
 import { clearCart } from "./redux/features/cartSlice";
+import CageType from "./pages/admin/CageType/CageType";
 
 interface User {
   id: number;
@@ -127,6 +128,7 @@ const App = () => {
             { path: "thong-ke", element: <Dashboard /> },
             { path: "quan-li-loai-hamster", element: <Species /> },
             { path: "quan-li-danh-muc-san-pham", element: <Category /> },
+            { path: "quan-li-loai-chuong", element: <CageType /> },
             {
               path: "quan-li-san-pham",
               element: <ManageProduct />,
