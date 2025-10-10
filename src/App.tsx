@@ -27,6 +27,7 @@ import PaymentSuccess from "./pages/customer/payment-success/PaymentSuccess";
 import TrackOrder from "./pages/customer/track-order/track-order-overall/TrackOrder";
 import TrackOrderDetail from "./pages/customer/track-order/track-order-detail/TrackOrderDetail";
 import CageType from "./pages/admin/CageType/CageType";
+import ViewProfile from "./pages/customer/profile/ProfileCustomer";
 
 interface User {
   id: number;
@@ -109,6 +110,16 @@ const App = () => {
         { path: "/reset-password", element: <ResetPassword /> },
         { path: "/checkout", element: <Checkout /> },
         { path: "/payment-success", element: <PaymentSuccess /> },
+        {
+          path: "/profile",
+          element: <Panel />,
+          children: [
+            {
+              path: "",
+              element: <ViewProfile />,
+            },
+          ],
+        },
         {
           path: "/your-orders",
           element: <Panel />,
