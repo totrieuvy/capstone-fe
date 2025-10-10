@@ -25,6 +25,10 @@ import dayjs, { Dayjs } from "dayjs";
 import "./BoardingHamster.scss";
 import ProfileHamsterService from "../../../services/ProfileHamsterService";
 import cageTypeService from "../../../services/CageTypeService";
+import boardingService from "../../../services/BoardingService";
+import type { DailyAvailability } from "../../../services/BoardingService";
+import { customerService } from "../../../services/CustomerService";
+import type { CustomerProfile } from "../../../services/CustomerService";
 import { useNavigate } from "react-router-dom";
 
 const { RangePicker } = DatePicker;
@@ -95,12 +99,19 @@ function BoardingHamster() {
   const [drawerCage, setDrawerCage] = useState<CageType | null>(null);
   const [loading, setLoading] = useState(false);
   const [termsAccepted, setTermsAccepted] = useState(false);
+  const [customerProfile, setCustomerProfile] = useState<CustomerProfile | null>(null);
+  
+  // New state for cage selection and availability
+  const [cageSelectionStep, setCageSelectionStep] = useState(0); // 0: select cage, 1: select dates
+  const [availability, setAvailability] = useState<DailyAvailability[]>([]);
+  const [loadingAvailability, setLoadingAvailability] = useState(false);
 
   useEffect(() => {
     document.title = "Đặt Phòng Hamster";
     fetchProfiles();
     fetchCageTypes();
     fetchAdditionalServices();
+    fetchCustomerProfile();
   }, []);
 
   const fetchProfiles = async () => {
@@ -153,16 +164,198 @@ function BoardingHamster() {
     }
   };
 
+  const fetchCustomerProfile = async () => {
+    try {
+      const profile = await customerService.getCustomerProfile();
+      setCustomerProfile(profile);
+    } catch (error) {
+      console.error("Error fetching customer profile:", error);
+      message.error("Không thể tải thông tin khách hàng");
+    }
+  };
+
   const handleSelectHamster = (hamsterId: string) => {
     setSelectedHamsterId(hamsterId);
   };
 
   const handleDateChange = (dates: [Dayjs | null, Dayjs | null] | null) => {
-    if (dates) {
+    if (dates && dates[0] && dates[1]) {
       setDateRange(dates);
+      // Check availability when dates are selected
+      checkCageAvailability(dates[0], dates[1]);
     } else {
       setDateRange([null, null]);
+      setAvailability([]);
     }
+  };
+
+  // Function to render availability information
+  const renderAvailabilityInfo = () => {
+    if (availability.length === 0) return null;
+
+    const unavailableDays = availability.filter(day => !day.isAvailable);
+    const hasUnavailableDays = unavailableDays.length > 0;
+    
+    // Calculate summary statistics
+    const totalDaysInRange = availability.length;
+    const availableDaysCount = availability.filter(day => day.isAvailable).length;
+    const avgAvailableCages = Math.round(
+      availability.reduce((sum, day) => sum + day.availableCages, 0) / totalDaysInRange
+    );
+
+    return (
+      <div style={{ marginTop: 24 }}>
+        <h4 style={{ color: "#ff6f61", marginBottom: 16 }}>📊 Tình trạng chuồng trong khoảng thời gian đã chọn</h4>
+        
+        {/* Summary Cards */}
+        <Row gutter={16} style={{ marginBottom: 16 }}>
+          <Col xs={24} sm={6}>
+            <Card size="small" style={{ textAlign: "center" }}>
+              <Statistic
+                title="Tổng số ngày"
+                value={totalDaysInRange}
+                valueStyle={{ color: "#1890ff", fontSize: 20 }}
+                suffix="ngày"
+              />
+            </Card>
+          </Col>
+          <Col xs={24} sm={6}>
+            <Card size="small" style={{ textAlign: "center" }}>
+              <Statistic
+                title="Ngày khả dụng"
+                value={availableDaysCount}
+                valueStyle={{ color: "#52c41a", fontSize: 20 }}
+                suffix={`/${totalDaysInRange}`}
+              />
+            </Card>
+          </Col>
+          <Col xs={24} sm={6}>
+            <Card size="small" style={{ textAlign: "center" }}>
+              <Statistic
+                title="Chuồng trống (TB)"
+                value={avgAvailableCages}
+                valueStyle={{ color: "#722ed1", fontSize: 20 }}
+                suffix="chuồng"
+              />
+            </Card>
+          </Col>
+          <Col xs={24} sm={6}>
+            <Card size="small" style={{ textAlign: "center" }}>
+              <Statistic
+                title="Tình trạng"
+                value={hasUnavailableDays ? "Có hạn chế" : "Tốt"}
+                valueStyle={{ 
+                  color: hasUnavailableDays ? "#ff4d4f" : "#52c41a", 
+                  fontSize: 16 
+                }}
+              />
+            </Card>
+          </Col>
+        </Row>
+
+        {/* Warning for unavailable days */}
+        {hasUnavailableDays && (
+          <Alert
+            message=" Một số ngày không khả dụng"
+            description={`Có ${unavailableDays.length} ngày trong khoảng thời gian bạn chọn không có chuồng trống. Vui lòng xem chi tiết bên dưới và cân nhắc chọn ngày khác.`}
+            type="warning"
+            showIcon
+            style={{ marginBottom: 16 }}
+          />
+        )}
+
+        {/* Detailed Availability Table */}
+        {/* <Card 
+          title="Chi tiết tình trạng theo ngày" 
+          size="small"
+          headStyle={{ background: "#fafafa", color: "#ff6f61" }}
+        >
+          <div style={{ maxHeight: 300, overflowY: "auto" }}>
+            <table style={{ width: "100%", borderCollapse: "collapse" }}>
+              <thead>
+                <tr style={{ background: "#f5f5f5" }}>
+                  <th style={{ padding: "8px 12px", textAlign: "left", border: "1px solid #d9d9d9" }}>
+                    Ngày
+                  </th>
+                  <th style={{ padding: "8px 12px", textAlign: "center", border: "1px solid #d9d9d9" }}>
+                    Chuồng đã đặt
+                  </th>
+                  <th style={{ padding: "8px 12px", textAlign: "center", border: "1px solid #d9d9d9" }}>
+                    Chuồng còn trống
+                  </th>
+                  <th style={{ padding: "8px 12px", textAlign: "center", border: "1px solid #d9d9d9" }}>
+                    Trạng thái
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {availability.map((day, index) => (
+                  <tr 
+                    key={day.date}
+                    style={{ 
+                      background: index % 2 === 0 ? "#fafafa" : "white",
+                      borderBottom: "1px solid #d9d9d9"
+                    }}
+                  >
+                    <td style={{ padding: "8px 12px", border: "1px solid #d9d9d9", fontWeight: 500 }}>
+                      {dayjs(day.date).format("DD/MM/YYYY")}
+                      <div style={{ fontSize: 12, color: "#666" }}>
+                        {dayjs(day.date).format("dddd")}
+                      </div>
+                    </td>
+                    <td style={{ 
+                      padding: "8px 12px", 
+                      textAlign: "center", 
+                      border: "1px solid #d9d9d9",
+                      color: "#fa8c16",
+                      fontWeight: 600
+                    }}>
+                      {day.bookedCages}
+                    </td>
+                    <td style={{ 
+                      padding: "8px 12px", 
+                      textAlign: "center", 
+                      border: "1px solid #d9d9d9",
+                      color: day.availableCages > 0 ? "#52c41a" : "#ff4d4f",
+                      fontWeight: 600
+                    }}>
+                      {day.availableCages}
+                    </td>
+                    <td style={{ 
+                      padding: "8px 12px", 
+                      textAlign: "center", 
+                      border: "1px solid #d9d9d9"
+                    }}>
+                      <span style={{
+                        padding: "2px 8px",
+                        borderRadius: 4,
+                        fontSize: 12,
+                        fontWeight: 600,
+                        background: day.isAvailable ? "#f6ffed" : "#fff2e8",
+                        color: day.isAvailable ? "#52c41a" : "#fa8c16",
+                        border: `1px solid ${day.isAvailable ? "#b7eb8f" : "#ffbb96"}`
+                      }}>
+                        {day.isAvailable ? "✓ Khả dụng" : "✗ Hết chỗ"}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </Card> */}
+
+        {/* Success message if all days are available */}
+        {!hasUnavailableDays && (
+          <Alert
+            message=" Bạn có thể tiếp tục đặt phòng cho hamster trong khoảng thời gian này."
+            type="success"
+            showIcon
+            style={{ marginTop: 16 }}
+          />
+        )}
+      </div>
+    );
   };
 
   const calculateTotalDays = (): number => {
@@ -186,7 +379,28 @@ function BoardingHamster() {
   const handleSelectCage = (cageId: string) => {
     setSelectedCageId(cageId);
     setDrawerVisible(false);
-    message.success("Đã chọn loại chuồng");
+    setCageSelectionStep(1); // Move to date selection step
+    message.success("Đã chọn loại chuồng. Vui lòng chọn ngày gửi.");
+  };
+
+  // Function to check cage availability
+  const checkCageAvailability = async (startDate: Dayjs, endDate: Dayjs) => {
+    if (!selectedCageId) return;
+    
+    setLoadingAvailability(true);
+    try {
+      const response = await boardingService.checkAvailability({
+        cageTypeId: selectedCageId,
+        startDate: startDate.format("YYYY-MM-DD"),
+        endDate: endDate.format("YYYY-MM-DD"),
+      });
+      setAvailability(response.dailyAvailability);
+    } catch (error) {
+      console.error("Error checking availability:", error);
+      message.error("Không thể kiểm tra tình trạng chuồng. Vui lòng thử lại.");
+    } finally {
+      setLoadingAvailability(false);
+    }
   };
 
   const handleToggleService = (serviceId: string) => {
@@ -205,13 +419,28 @@ function BoardingHamster() {
       return;
     }
     if (currentStep === 1) {
-      if (!dateRange[0] || !dateRange[1]) {
-        message.warning("Vui lòng chọn ngày gửi và nhận hamster");
+      // In step 1, check which sub-step we're in
+      if (cageSelectionStep === 0) {
+        // User is trying to proceed without selecting a cage
+        if (!selectedCageId) {
+          message.warning("Vui lòng chọn loại chuồng");
+          return;
+        }
+        // Cage is selected, move to date selection sub-step
+        setCageSelectionStep(1);
         return;
-      }
-      if (!selectedCageId) {
-        message.warning("Vui lòng chọn loại chuồng");
-        return;
+      } else if (cageSelectionStep === 1) {
+        // User is in date selection sub-step
+        if (!dateRange[0] || !dateRange[1]) {
+          message.warning("Vui lòng chọn ngày gửi và nhận hamster");
+          return;
+        }
+        // Check if selected dates are available
+        const hasUnavailableDays = availability.some(day => !day.isAvailable);
+        if (hasUnavailableDays) {
+          message.warning("Một số ngày đã chọn không có chuồng trống. Vui lòng chọn ngày khác.");
+          return;
+        }
       }
     }
     if (currentStep === 2) {
@@ -227,6 +456,20 @@ function BoardingHamster() {
   };
 
   const handlePrevious = () => {
+    if (currentStep === 1 && cageSelectionStep === 1) {
+      // If in date selection sub-step, go back to cage selection
+      setCageSelectionStep(0);
+      setDateRange([null, null]);
+      setAvailability([]);
+      return;
+    }
+    // For other cases, go to previous main step
+    if (currentStep === 1) {
+      setCageSelectionStep(0); // Reset to cage selection when going back from step 1
+      setSelectedCageId(null); // Clear cage selection when going back to step 0
+      setDateRange([null, null]);
+      setAvailability([]);
+    }
     setCurrentStep(currentStep - 1);
   };
 
@@ -417,194 +660,236 @@ function BoardingHamster() {
             </div>
           )}
 
-          {/* Step 2: Select Dates & Cage Type */}
+          {/* Step 2: Select Cage Type & Dates */}
           {currentStep === 1 && (
-            <div className="step-select-dates">
-              {/* Date Selection Section */}
-              <div className="date-section">
-                <h3 style={{ color: "#ff6f61", marginBottom: 16, fontSize: 20 }}>
-                  📅 Chọn Ngày Gửi và Nhận
-                </h3>
-
-                {/* Discount Information */}
-                <Alert
-                  message="Ưu đãi theo thời gian gửi thú"
-                  description={
-                    <ul style={{ margin: 0, paddingLeft: 20 }}>
-                      <li>Từ 3-6 ngày: Giảm 5% tổng hóa đơn</li>
-                      <li>Từ 7-13 ngày: Giảm 10% tổng hóa đơn</li>
-                      <li>Từ 14-29 ngày: Giảm 15% tổng hóa đơn</li>
-                      <li>Từ 30 ngày trở lên: Giảm 20% tổng hóa đơn</li>
-                    </ul>
-                  }
-                  type="success"
-                  showIcon
-                  style={{ marginBottom: 16 }}
-                />
-
-                <Alert
-                  message="Phụ thu ngày lễ"
-                  description="Các ngày lễ, Tết sẽ có phụ thu 20% trên giá dịch vụ hàng ngày"
-                  type="warning"
-                  showIcon
-                  style={{ marginBottom: 24 }}
-                />
-
-                {/* Date Picker */}
-                <div style={{ marginBottom: 24 }}>
-                  <label style={{ display: "block", marginBottom: 8, fontWeight: 600, color: "#333" }}>
-                    Chọn ngày gửi và nhận hamster:
-                  </label>
-                  <RangePicker
-                    style={{ width: "100%", borderRadius: 8 }}
-                    format="DD-MM-YYYY"
-                    placeholder={["Ngày gửi", "Ngày nhận"]}
-                    onChange={handleDateChange}
-                    disabledDate={(current) => current && current < dayjs().startOf("day")}
+            <div className="step-select-cage-and-dates">
+              {cageSelectionStep === 0 ? (
+                // Sub-step 1: Select Cage Type
+                <div className="cage-selection-substep">
+                  <h3 style={{ color: "#ff6f61", marginBottom: 24, fontSize: 20 }}>
+                    🏠 Chọn Loại Chuồng
+                  </h3>
+                  
+                  <Alert
+                    message="Bước 1: Chọn loại chuồng"
+                    description="Vui lòng chọn loại chuồng phù hợp cho hamster của bạn. Sau khi chọn, bạn sẽ có thể xem tình trạng khả dụng và chọn ngày gửi."
+                    type="info"
+                    showIcon
+                    style={{ marginBottom: 24 }}
                   />
-                </div>
 
-                {/* Display Total Days and Discount */}
-                {totalDays > 0 && (
-                  <Row gutter={16} style={{ marginTop: 24 }}>
-                    <Col span={12}>
-                      <Card style={{ textAlign: "center", borderRadius: 8 }}>
-                        <Statistic
-                          title="Tổng số ngày"
-                          value={totalDays}
-                          suffix="ngày"
-                          valueStyle={{ color: "#ff6f61" }}
-                        />
-                      </Card>
-                    </Col>
-                    <Col span={12}>
-                      <Card style={{ textAlign: "center", borderRadius: 8 }}>
-                        <Statistic
-                          title="Giảm giá"
-                          value={discount}
-                          suffix="%"
-                          valueStyle={{ color: "#52c41a" }}
-                        />
-                      </Card>
-                    </Col>
+                  <Row gutter={[24, 24]}>
+                    {cageTypes.map((cage) => (
+                      <Col xs={24} sm={12} md={6} key={cage.id}>
+                        <Card
+                          hoverable
+                          className={`cage__card ${selectedCageId === cage.id ? "selected" : ""}`}
+                          onClick={() => handleCageClick(cage)}
+                          style={{
+                            borderRadius: 12,
+                            border:
+                              selectedCageId === cage.id
+                                ? "3px solid #ff6f61"
+                                : "1px solid #f0f0f0",
+                            cursor: "pointer",
+                            position: "relative",
+                          }}
+                        >
+                          <div style={{ textAlign: "center" }}>
+                            <HomeOutlined
+                              style={{ fontSize: 48, color: "#ff6f61", marginBottom: 12 }}
+                            />
+                            <h4 style={{ fontSize: 18, fontWeight: 700, color: "#ff6f61", marginBottom: 8 }}>
+                              {cage.typeName}
+                            </h4>
+                            <p style={{ fontSize: 16, fontWeight: 600, color: "#333", margin: "8px 0" }}>
+                              {cage.pricePerDay.toLocaleString("vi-VN")} đ/ngày
+                            </p>
+                            <p style={{ fontSize: 14, color: "#666", margin: 0 }}>
+                              Kích thước: {cage.size}
+                            </p>
+                          </div>
+                          {selectedCageId === cage.id && (
+                            <div className="selected-checkmark">✓</div>
+                          )}
+                        </Card>
+                      </Col>
+                    ))}
                   </Row>
-                )}
-              </div>
 
-              {/* Cage Type Selection Section */}
-              <div className="cage-section" style={{ marginTop: 40 }}>
-                <h3 style={{ color: "#ff6f61", marginBottom: 24, fontSize: 20 }}>
-                  🏠 Chọn Loại Chuồng
-                </h3>
+                  {selectedCageId && (
+                    <Alert
+                      message="Đã chọn loại chuồng"
+                      description="Nhấn 'Tiếp theo' để chọn ngày gửi và xem tình trạng khả dụng của chuồng."
+                      type="success"
+                      showIcon
+                      style={{ marginTop: 24 }}
+                    />
+                  )}
+                </div>
+              ) : (
+                // Sub-step 2: Select Dates with Availability
+                <div className="date-selection-substep">
+                  <h3 style={{ color: "#ff6f61", marginBottom: 16, fontSize: 20 }}>
+                    📅 Chọn Ngày Gửi và Nhận
+                  </h3>
 
-                <Row gutter={[24, 24]}>
-                  {cageTypes.map((cage) => (
-                    <Col xs={24} sm={12} md={6} key={cage.id}>
-                      <Card
-                        hoverable
-                        className={`cage__card ${selectedCageId === cage.id ? "selected" : ""}`}
-                        onClick={() => handleCageClick(cage)}
-                        style={{
-                          borderRadius: 12,
-                          border:
-                            selectedCageId === cage.id
-                              ? "3px solid #ff6f61"
-                              : "1px solid #f0f0f0",
-                          cursor: "pointer",
-                          position: "relative",
-                        }}
-                      >
-                        <div style={{ textAlign: "center" }}>
-                          <HomeOutlined
-                            style={{ fontSize: 48, color: "#ff6f61", marginBottom: 12 }}
-                          />
-                          <h4 style={{ fontSize: 18, fontWeight: 700, color: "#ff6f61", marginBottom: 8 }}>
-                            {cage.typeName}
-                          </h4>
-                          <p style={{ fontSize: 16, fontWeight: 600, color: "#333", margin: "8px 0" }}>
-                            {cage.pricePerDay.toLocaleString("vi-VN")} đ/ngày
-                          </p>
-                          <p style={{ fontSize: 14, color: "#666", margin: 0 }}>
-                            Kích thước: {cage.size}
-                          </p>
-                        </div>
-                        {selectedCageId === cage.id && (
-                          <div className="selected-checkmark">✓</div>
-                        )}
-                      </Card>
-                    </Col>
-                  ))}
-                </Row>
-              </div>
-
-              {/* Additional Services Section */}
-              <div className="services-section" style={{ marginTop: 40 }}>
-                <h3 style={{ color: "#ff6f61", marginBottom: 8, fontSize: 20 }}>
-                  ✨ Dịch Vụ Bổ Sung (Tùy chọn)
-                </h3>
-                <p style={{ color: "#999", marginBottom: 24, fontSize: 14 }}>
-                  Chọn các dịch vụ bổ sung để chăm sóc hamster tốt hơn
-                </p>
-
-                <Row gutter={[16, 16]}>
-                  {additionalServices.map((service) => (
-                    <Col xs={24} sm={12} md={8} key={service.id}>
-                      <Card
-                        hoverable
-                        className={`service__card ${
-                          selectedServiceIds.includes(service.id) ? "selected" : ""
-                        }`}
-                        onClick={() => handleToggleService(service.id)}
-                        style={{
-                          borderRadius: 12,
-                          border: selectedServiceIds.includes(service.id)
-                            ? "2px solid #ff6f61"
-                            : "1px solid #f0f0f0",
-                          cursor: "pointer",
-                          position: "relative",
-                          height: "100%",
-                        }}
-                      >
+                  {/* Show selected cage info */}
+                  {selectedCageId && (
+                    <Card style={{ marginBottom: 24, background: "#f9f9f9" }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                        <HomeOutlined style={{ fontSize: 24, color: "#ff6f61" }} />
                         <div>
-                          <h4
-                            style={{
-                              fontSize: 16,
-                              fontWeight: 700,
-                              color: "#ff6f61",
-                              marginBottom: 8,
-                            }}
-                          >
-                            {service.name}
+                          <h4 style={{ margin: 0, color: "#ff6f61" }}>
+                            Đã chọn: {cageTypes.find(c => c.id === selectedCageId)?.typeName}
                           </h4>
-                          <p
-                            style={{
-                              fontSize: 14,
-                              color: "#666",
-                              marginBottom: 12,
-                              minHeight: 40,
-                            }}
-                          >
-                            {service.description}
-                          </p>
-                          <p
-                            style={{
-                              fontSize: 16,
-                              fontWeight: 600,
-                              color: "#333",
-                              margin: 0,
-                            }}
-                          >
-                            {service.pricePerDay.toLocaleString("vi-VN")} đ/ngày
+                          <p style={{ margin: 0, color: "#666", fontSize: 14 }}>
+                            {cageTypes.find(c => c.id === selectedCageId)?.pricePerDay.toLocaleString("vi-VN")} đ/ngày
                           </p>
                         </div>
-                        {selectedServiceIds.includes(service.id) && (
-                          <div className="selected-checkmark">✓</div>
-                        )}
-                      </Card>
-                    </Col>
-                  ))}
-                </Row>
-              </div>
+                      </div>
+                    </Card>
+                  )}
+
+                  {/* Discount Information */}
+                  <Alert
+                    message="Ưu đãi theo thời gian gửi thú"
+                    description={
+                      <ul style={{ margin: 0, paddingLeft: 20 }}>
+                        <li>Từ 3-6 ngày: Giảm 5% tổng hóa đơn</li>
+                        <li>Từ 7-13 ngày: Giảm 10% tổng hóa đơn</li>
+                        <li>Từ 14-29 ngày: Giảm 15% tổng hóa đơn</li>
+                        <li>Từ 30 ngày trở lên: Giảm 20% tổng hóa đơn</li>
+                      </ul>
+                    }
+                    type="success"
+                    showIcon
+                    style={{ marginBottom: 16 }}
+                  />
+
+                  <Alert
+                    message="Phụ thu ngày lễ"
+                    description="Các ngày lễ, Tết sẽ có phụ thu 20% trên giá dịch vụ hàng ngày"
+                    type="warning"
+                    showIcon
+                    style={{ marginBottom: 24 }}
+                  />
+
+                  {/* Date Picker */}
+                  <div style={{ marginBottom: 24 }}>
+                    <label style={{ display: "block", marginBottom: 8, fontWeight: 600, color: "#333" }}>
+                      Chọn ngày gửi và nhận hamster:
+                    </label>
+                    <Spin spinning={loadingAvailability} tip="Đang kiểm tra tình trạng chuồng...">
+                      <RangePicker
+                        style={{ width: "100%", borderRadius: 8 }}
+                        format="DD-MM-YYYY"
+                        placeholder={["Ngày gửi", "Ngày nhận"]}
+                        onChange={handleDateChange}
+                        disabledDate={(current) => current && current < dayjs().startOf("day")}
+                      />
+                    </Spin>
+                  </div>
+
+                  {/* Display Total Days and Discount */}
+                  {totalDays > 0 && (
+                    <Row gutter={16} style={{ marginBottom: 24 }}>
+                      <Col span={12}>
+                        <Card style={{ textAlign: "center", borderRadius: 8 }}>
+                          <Statistic
+                            title="Tổng số ngày"
+                            value={totalDays}
+                            suffix="ngày"
+                            valueStyle={{ color: "#ff6f61" }}
+                          />
+                        </Card>
+                      </Col>
+                      <Col span={12}>
+                        <Card style={{ textAlign: "center", borderRadius: 8 }}>
+                          <Statistic
+                            title="Giảm giá"
+                            value={discount}
+                            suffix="%"
+                            valueStyle={{ color: "#52c41a" }}
+                          />
+                        </Card>
+                      </Col>
+                    </Row>
+                  )}
+
+                  {/* Availability Information */}
+                  {renderAvailabilityInfo()}
+
+                  {/* Additional Services Section */}
+                  <div className="services-section" style={{ marginTop: 40 }}>
+                    <h3 style={{ color: "#ff6f61", marginBottom: 8, fontSize: 20 }}>
+                      ✨ Dịch Vụ Bổ Sung (Tùy chọn)
+                    </h3>
+                    <p style={{ color: "#999", marginBottom: 24, fontSize: 14 }}>
+                      Chọn các dịch vụ bổ sung để chăm sóc hamster tốt hơn
+                    </p>
+
+                    <Row gutter={[16, 16]}>
+                      {additionalServices.map((service) => (
+                        <Col xs={24} sm={12} md={8} key={service.id}>
+                          <Card
+                            hoverable
+                            className={`service__card ${
+                              selectedServiceIds.includes(service.id) ? "selected" : ""
+                            }`}
+                            onClick={() => handleToggleService(service.id)}
+                            style={{
+                              borderRadius: 12,
+                              border: selectedServiceIds.includes(service.id)
+                                ? "2px solid #ff6f61"
+                                : "1px solid #f0f0f0",
+                              cursor: "pointer",
+                              position: "relative",
+                              height: "100%",
+                            }}
+                          >
+                            <div>
+                              <h4
+                                style={{
+                                  fontSize: 16,
+                                  fontWeight: 700,
+                                  color: "#ff6f61",
+                                  marginBottom: 8,
+                                }}
+                              >
+                                {service.name}
+                              </h4>
+                              <p
+                                style={{
+                                  fontSize: 14,
+                                  color: "#666",
+                                  marginBottom: 12,
+                                  minHeight: 40,
+                                }}
+                              >
+                                {service.description}
+                              </p>
+                              <p
+                                style={{
+                                  fontSize: 16,
+                                  fontWeight: 600,
+                                  color: "#333",
+                                  margin: 0,
+                                }}
+                              >
+                                {service.pricePerDay.toLocaleString("vi-VN")} đ/ngày
+                              </p>
+                            </div>
+                            {selectedServiceIds.includes(service.id) && (
+                              <div className="selected-checkmark">✓</div>
+                            )}
+                          </Card>
+                        </Col>
+                      ))}
+                    </Row>
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
@@ -628,20 +913,57 @@ function BoardingHamster() {
                   <Col xs={24} md={12}>
                     <div className="info-group">
                       <h4 style={{ color: "#ff6f61", marginBottom: 12 }}>Thông tin chủ nhân:</h4>
-                      <p><strong>Họ tên:</strong> Nguyễn Văn A</p>
-                      <p><strong>Email:</strong> nguyenvana@email.com</p>
-                      <p><strong>Số điện thoại:</strong> 0123 456 789</p>
+                      {customerProfile ? (
+                        <>
+                          <p><strong>Họ tên:</strong> {customerProfile.fullName}</p>
+                          <p><strong>Email:</strong> {customerProfile.email}</p>
+                          <p><strong>Số điện thoại:</strong> {customerProfile.phone}</p>
+                        </>
+                      ) : (
+                        <p>Đang tải thông tin khách hàng...</p>
+                      )}
                     </div>
                   </Col>
                   <Col xs={24} md={12}>
                     {selectedHamster && (
                       <div className="info-group">
                         <h4 style={{ color: "#ff6f61", marginBottom: 12 }}>Thông tin hamster:</h4>
-                        <p><strong>Tên:</strong> {selectedHamster.name}</p>
-                        <p><strong>Loài:</strong> {selectedHamster.species}</p>
-                        <p><strong>Giới tính:</strong> {selectedHamster.gender}</p>
-                        <p><strong>Cân nặng:</strong> {selectedHamster.weight}g</p>
-                        <p><strong>Ngày sinh:</strong> {selectedHamster.dob}</p>
+                        <div style={{ display: "flex", gap: 16, alignItems: "flex-start" }}>
+                          <div style={{ flexShrink: 0 }}>
+                            <Image
+                              src={selectedHamster.profilePicture}
+                              alt={selectedHamster.name}
+                              width={120}
+                              height={120}
+                              style={{ 
+                                borderRadius: 12, 
+                                objectFit: "cover",
+                                border: "2px solid #ff6f61"
+                              }}
+                              placeholder={
+                                <div style={{
+                                  width: 120,
+                                  height: 120,
+                                  display: "flex",
+                                  alignItems: "center",
+                                  justifyContent: "center",
+                                  background: "#f5f5f5",
+                                  borderRadius: 12,
+                                  color: "#ccc"
+                                }}>
+                                  🐹
+                                </div>
+                              }
+                            />
+                          </div>
+                          <div style={{ flex: 1 }}>
+                            <p><strong>Tên:</strong> {selectedHamster.name}</p>
+                            <p><strong>Loài:</strong> {selectedHamster.species}</p>
+                            <p><strong>Giới tính:</strong> {selectedHamster.gender}</p>
+                            <p><strong>Cân nặng:</strong> {selectedHamster.weight}g</p>
+                            <p><strong>Ngày sinh:</strong> {selectedHamster.dob}</p>
+                          </div>
+                        </div>
                       </div>
                     )}
                   </Col>
@@ -833,13 +1155,13 @@ function BoardingHamster() {
         <div className="boarding__actions">
           <Button
             onClick={handlePrevious}
-            disabled={currentStep === 0}
+            disabled={currentStep === 0 && cageSelectionStep === 0}
             style={{
               marginRight: 12,
               borderRadius: 8,
             }}
           >
-            Quay lại
+            {currentStep === 1 && cageSelectionStep === 1 ? "Chọn lại chuồng" : "Quay lại"}
           </Button>
           <Button
             type="primary"
@@ -851,7 +1173,12 @@ function BoardingHamster() {
               boxShadow: "0 4px 12px rgba(0, 0, 0, 0.2)",
             }}
           >
-            {currentStep === 2 ? "Xác nhận đặt phòng" : "Tiếp theo"}
+            {currentStep === 2 
+              ? "Xác nhận đặt phòng" 
+              : currentStep === 1 && cageSelectionStep === 0
+              ? "Chọn ngày gửi" 
+              : "Tiếp theo"
+            }
           </Button>
         </div>
       </Spin>
