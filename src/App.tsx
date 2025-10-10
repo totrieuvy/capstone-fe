@@ -24,6 +24,7 @@ import ProductDetail from "./pages/product-detail/ProductDetail";
 import { clearCart } from "./redux/features/cartSlice";
 import Checkout from "./pages/customer/checkout/Checkout";
 import PaymentSuccess from "./pages/customer/payment-success/PaymentSuccess";
+import CageType from "./pages/admin/CageType/CageType";
 
 interface User {
   id: number;
@@ -131,6 +132,7 @@ const App = () => {
             { path: "thong-ke", element: <Dashboard /> },
             { path: "quan-li-loai-hamster", element: <Species /> },
             { path: "quan-li-danh-muc-san-pham", element: <Category /> },
+            { path: "quan-li-loai-chuong", element: <CageType /> },
             {
               path: "quan-li-san-pham",
               element: <ManageProduct />,
