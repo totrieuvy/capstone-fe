@@ -141,6 +141,7 @@ const App = () => {
             { path: "thong-ke", element: <Dashboard /> },
             { path: "quan-li-loai-hamster", element: <Species /> },
             { path: "quan-li-danh-muc-san-pham", element: <Category /> },
+            { path: "quan-li-loai-chuong", element: <CageType /> },
             {
               path: "quan-li-san-pham",
               element: <ManageProduct />,

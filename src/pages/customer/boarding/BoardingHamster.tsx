@@ -24,6 +24,8 @@ import {
 import dayjs, { Dayjs } from "dayjs";
 import "./BoardingHamster.scss";
 import ProfileHamsterService from "../../../services/ProfileHamsterService";
+import cageTypeService from "../../../services/CageTypeService";
+import { useNavigate } from "react-router-dom";
 
 const { RangePicker } = DatePicker;
 
@@ -46,6 +48,8 @@ interface CageType {
   pricePerDay: number;
   size: string;
   image: string;
+  material?: string;
+  isActive?: boolean;
 }
 
 interface AdditionalService {
@@ -54,42 +58,6 @@ interface AdditionalService {
   description: string;
   pricePerDay: number;
 }
-
-// Mock data for cage types
-const mockCageTypes: CageType[] = [
-  {
-    id: "1",
-    typeName: "Standard",
-    description: "Chuồng tiêu chuẩn với đầy đủ tiện nghi cơ bản cho hamster. Bao gồm lồng rộng rãi, bình nước, chén ăn và bánh xe chạy.",
-    pricePerDay: 50000,
-    size: "40cm x 30cm x 25cm",
-    image: "https://images.unsplash.com/photo-1548767797-d8c844163c4c?w=600",
-  },
-  {
-    id: "2",
-    typeName: "Premium",
-    description: "Chuồng cao cấp với không gian rộng rãi hơn, có thêm khu vực vui chơi, đường hầm và nhiều đồ chơi thú vị cho hamster.",
-    pricePerDay: 80000,
-    size: "60cm x 40cm x 35cm",
-    image: "https://images.unsplash.com/photo-1425082661705-1834bfd09dca?w=600",
-  },
-  {
-    id: "3",
-    typeName: "Family",
-    description: "Chuồng gia đình dành cho 2-3 hamster cùng ở. Không gian siêu rộng với nhiều khu vực riêng biệt và đồ chơi phong phú.",
-    pricePerDay: 120000,
-    size: "80cm x 50cm x 40cm",
-    image: "https://images.unsplash.com/photo-1452857297128-d9c29adba80b?w=600",
-  },
-  {
-    id: "4",
-    typeName: "VIP",
-    description: "Chuồng VIP sang trọng nhất với thiết kế đặc biệt, camera quan sát 24/7, hệ thống điều hòa riêng và chăm sóc đặc biệt.",
-    pricePerDay: 200000,
-    size: "100cm x 60cm x 50cm",
-    image: "https://images.unsplash.com/photo-1548767797-d8c844163c4c?w=600",
-  },
-];
 
 // Mock data for additional services
 const mockAdditionalServices: AdditionalService[] = [
@@ -114,6 +82,7 @@ const mockAdditionalServices: AdditionalService[] = [
 ];
 
 function BoardingHamster() {
+  const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState(0);
   const [profiles, setProfiles] = useState<HamsterProfile[]>([]);
   const [cageTypes, setCageTypes] = useState<CageType[]>([]);
@@ -149,10 +118,29 @@ function BoardingHamster() {
 
   const fetchCageTypes = async () => {
     try {
-      await new Promise((resolve) => setTimeout(resolve, 500));
-      setCageTypes(mockCageTypes);
-    } catch {
+      setLoading(true);
+      const response = await cageTypeService.getCageTypes();
+      
+      // Map API response to component interface
+      const mappedCageTypes: CageType[] = response
+        .filter(cageType => cageType.isActive) // Only show active cage types
+        .map(cageType => ({
+          id: cageType.id,
+          typeName: cageType.typeName,
+          description: cageType.description,
+          pricePerDay: cageType.price,
+          size: cageType.sizeDimensions,
+          image: cageType.imageUrl,
+          material: cageType.material,
+          isActive: cageType.isActive,
+        }));
+      
+      setCageTypes(mappedCageTypes);
+    } catch (error) {
+      console.error("Error fetching cage types:", error);
       message.error("Không thể tải danh sách loại chuồng");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -308,7 +296,19 @@ function BoardingHamster() {
                     fontWeight: 500,
                   }}
                 >
-                  🐹 Chưa có hồ sơ hamster nào. Vui lòng tạo hồ sơ trước.
+                  🐹 Chưa có hồ sơ hamster nào. Vui lòng tạo hồ sơ trước{" "}
+                  <span
+                    style={{
+                      textDecoration: "underline",
+                      cursor: "pointer",
+                      color: "#ff6f61",
+                      fontWeight: 600,
+                    }}
+                    onClick={() => navigate("/profile/your-hamster")}
+                  >
+                    tại đây
+                  </span>
+                  .
                 </div>
               ) : (
                 <Row gutter={[16, 16]}>
