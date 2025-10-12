@@ -16,7 +16,7 @@ interface OrderItem {
 interface OrderDetail {
   id: string;
   orderDate: string;
-  status: "PENDING" | "PAID" | "SHIPPING" | "DELIVERED" | "CANCELLED";
+  status: "PENDING" | "PAID" | "SHIPPING" | "DELIVERED" | "CANCELLED" | "REFUNDED";
   totalAmount: number;
   discountPercent: number;
   shippingFee: number;
@@ -62,6 +62,8 @@ const TrackOrderDetail = () => {
         return <Tag color="purple">ĐÃ GIAO</Tag>;
       case "CANCELLED":
         return <Tag color="red">ĐÃ HỦY</Tag>;
+      case "REFUNDED":
+        return <Tag color="orange">ĐÃ HOÀN TIỀN</Tag>;
       default:
         return <Tag color="gold">ĐANG CHỜ</Tag>;
     }

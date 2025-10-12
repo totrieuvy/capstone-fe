@@ -28,6 +28,8 @@ import TrackOrder from "./pages/customer/track-order/track-order-overall/TrackOr
 import TrackOrderDetail from "./pages/customer/track-order/track-order-detail/TrackOrderDetail";
 import CageType from "./pages/admin/CageType/CageType";
 import ViewProfile from "./pages/customer/profile/ProfileCustomer";
+import WalletCustomer from "./pages/customer/wallet-customer/WalletCustomer";
+import PaymentFail from "./pages/customer/payment-fail/PaymentFail";
 
 interface User {
   id: number;
@@ -110,6 +112,7 @@ const App = () => {
         { path: "/reset-password", element: <ResetPassword /> },
         { path: "/checkout", element: <Checkout /> },
         { path: "/payment-success", element: <PaymentSuccess /> },
+        { path: "/payment-failure", element: <PaymentFail /> },
         {
           path: "/profile",
           element: <Panel />,
@@ -129,6 +132,16 @@ const App = () => {
           ],
         },
         { path: "/dat-lich-giu-ho", element: <BoardingHamster /> },
+        {
+          path: "/profile/wallet",
+          element: <Panel />,
+          children: [
+            {
+              path: "",
+              element: <WalletCustomer />,
+            },
+          ],
+        },
         {
           path: "/profile/your-hamster",
           element: <Panel />,

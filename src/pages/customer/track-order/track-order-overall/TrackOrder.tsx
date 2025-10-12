@@ -1,12 +1,12 @@
 import { useEffect, useState } from "react";
-import { Table, Tag, message, Button, Pagination, Spin, Card } from "antd"; // Import Card
-import { EyeOutlined } from "@ant-design/icons";
+import { Table, Tag, message, Button, Pagination, Spin, Card, Popconfirm } from "antd";
+import { EyeOutlined, StopOutlined, ClockCircleOutlined } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
 import type { ColumnsType } from "antd/es/table";
+import dayjs from "dayjs";
 import api from "../../../../config/axios";
 import "./TrackOrder.scss";
 
-// ... (Interfaces và các hàm fetchOrders, handlePageChange, getStatusTag không đổi)
 interface Order {
   id: string;
   orderDate: string;
@@ -31,6 +31,7 @@ const TrackOrder = () => {
     totalPages: 0,
     totalItems: 0,
   });
+  const [countdowns, setCountdowns] = useState<Record<string, string>>({});
 
   const pageSize = 10;
 
@@ -38,6 +39,12 @@ const TrackOrder = () => {
     document.title = "Lịch sử đơn hàng";
     fetchOrders(pagination.currentPage);
   }, [pagination.currentPage]);
+
+  useEffect(() => {
+    const interval = setInterval(() => updateCountdowns(), 1000);
+    return () => clearInterval(interval);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [orders]);
 
   const fetchOrders = async (page: number) => {
     setLoading(true);
@@ -55,9 +62,44 @@ const TrackOrder = () => {
         });
       }
     } catch (error) {
-      message.error("Không thể tải lịch sử đơn hàng. Vui lòng thử lại!" + (error as Error).message);
+      message.error("Không thể tải lịch sử đơn hàng. " + (error as Error).message);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const updateCountdowns = () => {
+    const newCountdowns: Record<string, string> = {};
+    orders.forEach((order) => {
+      if (order.status.toUpperCase() === "PAID") {
+        const orderTime = dayjs(order.orderDate);
+        const diff = 12 * 60 * 60 * 1000 - (Date.now() - orderTime.valueOf());
+        if (diff > 0) {
+          const hours = Math.floor(diff / (1000 * 60 * 60));
+          const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+          const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+          newCountdowns[order.id] = `${hours.toString().padStart(2, "0")}:${minutes
+            .toString()
+            .padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
+        } else {
+          newCountdowns[order.id] = "expired";
+        }
+      }
+    });
+    setCountdowns(newCountdowns);
+  };
+
+  const handleCancelOrder = async (orderId: string) => {
+    try {
+      const { data } = await api.patch(`/api/order/cancel/${orderId}`);
+      if (data.code === 200) {
+        message.success("Đã hủy đơn hàng. Bạn sẽ được hoàn 75% vào ví.");
+        fetchOrders(pagination.currentPage);
+      } else {
+        message.error(data.message || "Không thể hủy đơn hàng.");
+      }
+    } catch {
+      message.error("Lỗi khi hủy đơn hàng.");
     }
   };
 
@@ -94,7 +136,7 @@ const TrackOrder = () => {
       title: "Ngày đặt",
       dataIndex: "orderDate",
       key: "orderDate",
-      render: (date: string) => new Date(date).toLocaleDateString("vi-VN"),
+      render: (date: string) => dayjs(date).format("DD/MM/YYYY HH:mm"),
     },
     {
       title: "Tổng tiền",
@@ -111,15 +153,41 @@ const TrackOrder = () => {
     {
       title: "Hành động",
       key: "action",
-      render: (_, record) => (
-        <Button
-          className="view-detail-button"
-          icon={<EyeOutlined />}
-          onClick={() => navigate(`/your-orders/${record.id}`)}
-        >
-          Xem chi tiết
-        </Button>
-      ),
+      render: (_, record) => {
+        const countdown = countdowns[record.id];
+        const canCancel = record.status === "PAID" && countdown && countdown !== "expired";
+
+        return (
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            <Button
+              className="view-detail-button"
+              icon={<EyeOutlined />}
+              onClick={() => navigate(`/your-orders/${record.id}`)}
+            >
+              Xem chi tiết
+            </Button>
+
+            {canCancel && (
+              <>
+                <Popconfirm
+                  title="Xác nhận hủy đơn?"
+                  description="Nếu bạn hủy trong vòng 12 tiếng, bạn sẽ được hoàn 75% vào ví ảo."
+                  okText="Xác nhận"
+                  cancelText="Hủy"
+                  onConfirm={() => handleCancelOrder(record.id)}
+                >
+                  <Button danger icon={<StopOutlined />}>
+                    Hủy đơn
+                  </Button>
+                </Popconfirm>
+                <div className="countdown-timer">
+                  <ClockCircleOutlined /> <span style={{ color: "#ff6f61", fontWeight: 600 }}>{countdown}</span>
+                </div>
+              </>
+            )}
+          </div>
+        );
+      },
     },
   ];
 
@@ -128,8 +196,6 @@ const TrackOrder = () => {
       <div className="container">
         <h1 className="page-title">Lịch sử Mua hàng</h1>
         <Card className="order-list-card">
-          {" "}
-          {/* Bọc nội dung trong Card */}
           {loading ? (
             <div className="loading-spinner">
               <Spin size="large" />

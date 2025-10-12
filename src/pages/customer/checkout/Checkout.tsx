@@ -217,8 +217,6 @@ const Checkout = () => {
       deliveryAddress: fullAddress,
       orderItem: orderItems,
       paymentMethod,
-      customerName: fullName,
-      customerPhone: phone,
       districtName,
       wardName,
       weight: totalWeight,

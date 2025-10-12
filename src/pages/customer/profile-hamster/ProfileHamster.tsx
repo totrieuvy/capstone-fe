@@ -20,6 +20,8 @@ import type { UploadFile } from "antd/es/upload/interface";
 import dayjs from "dayjs";
 import api from "../../../config/axios";
 import "./ProfileHamster.scss";
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { storage } from "../../../config/firebase";
 
 const { Option } = Select;
 
@@ -76,6 +78,14 @@ function ProfileHamster() {
     }
   };
 
+  // --- Upload ảnh lên Firebase Storage ---
+  const uploadImageToFirebase = async (file: File): Promise<string> => {
+    const imageRef = ref(storage, `images/${Date.now()}_${file.name}`);
+    await uploadBytes(imageRef, file);
+    const downloadURL = await getDownloadURL(imageRef);
+    return downloadURL;
+  };
+
   const fetchSpecies = async () => {
     try {
       const { data } = await api.get("/api/species");
@@ -119,12 +129,8 @@ function ProfileHamster() {
         return;
       }
 
-      const formData = new FormData();
-      formData.append("file", fileObj);
-      const { data: uploadRes } = await api.post("/api/file/upload", formData, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
-      if (uploadRes.code !== 200) throw new Error("Upload failed");
+      // 🚀 Upload ảnh lên Firebase
+      const downloadURL = await uploadImageToFirebase(fileObj);
 
       const payload = {
         name: values.name,
@@ -133,7 +139,7 @@ function ProfileHamster() {
         gender: values.gender,
         weight: parseFloat(values.weight),
         speciesId: values.speciesId,
-        profilePicture: uploadRes.data,
+        profilePicture: downloadURL, // ✅ link Firebase
         healthNote: values.healthNote?.trim() || "Không có",
       };
 
@@ -146,8 +152,8 @@ function ProfileHamster() {
       } else {
         message.error(data.message || "Không thể tạo hồ sơ hamster");
       }
-    } catch {
-      message.error("Lỗi khi tạo hồ sơ hamster");
+    } catch (error) {
+      message.error("Lỗi khi tạo hồ sơ hamster" + (error as Error).message);
     } finally {
       setLoading(false);
     }
@@ -304,7 +310,9 @@ function ProfileHamster() {
               <DatePicker
                 format="DD-MM-YYYY"
                 style={{ width: "100%", borderRadius: 8 }}
-                disabledDate={(current) => current && current > dayjs().endOf("day")}
+                disabledDate={(current) =>
+                  !!current && current.startOf("day").valueOf() >= dayjs().startOf("day").valueOf()
+                }
               />
             </Form.Item>
             <Form.Item label="Giới tính" name="gender" rules={[{ required: true, message: "Chọn giới tính" }]}>
