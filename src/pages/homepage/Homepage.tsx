@@ -131,6 +131,15 @@ function Homepage() {
       return;
     }
 
+    if (product.stockQuantity === 0) {
+      toast.error("Sản phẩm đã hết hàng, không thể mua!", {
+        position: "top-right",
+        autoClose: 3000,
+        theme: "colored",
+      });
+      return;
+    }
+
     dispatch(
       addToCart({
         id: product.id,

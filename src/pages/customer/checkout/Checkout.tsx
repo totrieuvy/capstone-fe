@@ -50,19 +50,6 @@ interface OrderItemPayload {
   totalPrice: number;
 }
 
-interface OrderPayload {
-  totalAmount: number;
-  discountPercent: number;
-  finalAmount: number;
-  shippingFee: number;
-  deliveryAddress: string;
-  orderItem: OrderItemPayload[];
-  paymentMethod: string;
-  // Added customer info
-  customerName: string;
-  customerPhone: string;
-}
-
 interface OrderResponse {
   code: number;
   message: string;
@@ -222,7 +209,7 @@ const Checkout = () => {
       totalPrice: (item.price || 0) * item.quantity,
     }));
 
-    const payload: OrderPayload = {
+    const payload = {
       totalAmount,
       discountPercent,
       finalAmount,
@@ -232,6 +219,9 @@ const Checkout = () => {
       paymentMethod,
       customerName: fullName,
       customerPhone: phone,
+      districtName,
+      wardName,
+      weight: totalWeight,
     };
 
     setLoading(true);
