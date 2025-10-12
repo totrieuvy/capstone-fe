@@ -17,13 +17,9 @@ const PaymentSuccess = () => {
       <Result
         status="success"
         title="Thanh toán thành công!"
-        subTitle="Cảm ơn bạn đã mua hàng. Đơn hàng của bạn đang được xử lý."
         extra={[
           <Button type="primary" key="home" onClick={() => navigate("/")}>
             Về trang chủ
-          </Button>,
-          <Button key="order" onClick={() => navigate("/order-history")}>
-            Xem đơn hàng
           </Button>,
         ]}
       />

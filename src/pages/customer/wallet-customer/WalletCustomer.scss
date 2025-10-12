@@ -1,0 +1,152 @@
+.wallet-container {
+  padding: 24px;
+  background: #fffaf5;
+  min-height: 100vh;
+
+  .wallet__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 24px;
+
+    h2 {
+      color: #ff6f61;
+      text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
+      font-weight: 600;
+    }
+  }
+
+  .wallet__card {
+    background: linear-gradient(135deg, #fff5e6, #ffe6cc);
+    border-radius: 16px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    border: none;
+    transition: all 0.3s ease;
+    animation: fadeIn 0.5s ease-in-out;
+    margin-bottom: 24px;
+
+    &:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 20px rgba(255, 111, 97, 0.2);
+    }
+
+    h3 {
+      color: #ff6f61;
+      font-weight: 600;
+      margin-bottom: 12px;
+    }
+  }
+
+  /* === Khung số dư đẹp mắt === */
+  .wallet__balance-card {
+    text-align: center;
+    padding: 40px 24px;
+    background: linear-gradient(135deg, #fff1e6, #ffe6cc);
+
+    .wallet__balance-content {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .wallet__icon-container {
+      width: 70px;
+      height: 70px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #ff6f61, #ffcc5c);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      animation: pulse 2s infinite;
+      box-shadow: 0 0 20px rgba(255, 111, 97, 0.4);
+    }
+
+    .wallet__icon {
+      font-size: 32px;
+      color: white;
+    }
+
+    .wallet__balance-label {
+      font-size: 16px;
+      color: #777;
+      margin: 0;
+    }
+
+    .wallet__balance-amount {
+      font-size: 34px;
+      font-weight: 700;
+      color: #ff6f61;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+      margin-bottom: 0;
+    }
+
+    .wallet__add-btn {
+      margin-top: 10px;
+      background: linear-gradient(45deg, #ff6f61, #ffcc5c);
+      border: none;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+      font-weight: 500;
+
+      &:hover {
+        background: linear-gradient(45deg, #ffcc5c, #ff6f61);
+      }
+    }
+
+    .wallet__created {
+      margin-top: 16px;
+      font-size: 14px;
+      color: #666;
+    }
+  }
+
+  .wallet__transaction-card {
+    h3 {
+      margin-bottom: 16px;
+    }
+
+    .ant-table-thead > tr > th {
+      background: #ffe6cc;
+      color: #ff6f61;
+      font-weight: 600;
+    }
+  }
+
+  .wallet__tag {
+    border-radius: 8px;
+    font-weight: 500;
+  }
+
+  .wallet__amount {
+    color: #ff6f61;
+    font-weight: 600;
+  }
+}
+
+/* === Hiệu ứng === */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+    box-shadow: 0 0 20px rgba(255, 111, 97, 0.4);
+  }
+  50% {
+    transform: scale(1.05);
+    box-shadow: 0 0 30px rgba(255, 111, 97, 0.6);
+  }
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 20px rgba(255, 111, 97, 0.4);
+  }
+}
