@@ -1,0 +1,30 @@
+.ManageOrderDetail {
+  padding: 24px;
+
+  .manage-order-detail__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+
+    .back-btn {
+      background: #f5f5f5;
+      border: none;
+      color: #333;
+      font-weight: 500;
+    }
+  }
+
+  .manage-order-detail__card {
+    margin-bottom: 20px;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  }
+
+  .manage-order-detail__loading {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 80vh;
+  }
+}

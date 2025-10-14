@@ -77,6 +77,7 @@ const SideBar: React.FC = () => {
         getItem("Thống kê", "thong-ke", <AreaChartOutlined />),
         getItem("Quản lí tài khoản", "quan-li-tai-khoan", <UserOutlined />),
         getItem("Quản lí đơn hàng", "quan-li-don-hang", <ShoppingOutlined />),
+        getItem("Quản lí giao dịch", "quan-li-giao-dich", <ShoppingOutlined />),
       ];
     } else if (user?.role === "STAFF") {
       items = [
