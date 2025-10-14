@@ -1,0 +1,287 @@
+.boarding-detail {
+  padding: 20px;
+  max-width: 1400px;
+  margin: 0 auto;
+
+  &-loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 400px;
+    
+    p {
+      margin-top: 16px;
+      color: #666;
+    }
+  }
+
+  &-error {
+    padding: 40px;
+    display: flex;
+    justify-content: center;
+  }
+
+  &-header {
+    margin-bottom: 24px;
+    
+    .back-button {
+      font-size: 16px;
+      height: auto;
+      padding: 8px 16px;
+      
+      &:hover {
+        background-color: #f5f5f5;
+      }
+    }
+  }
+}
+
+.hamster-info-card {
+  margin-bottom: 24px;
+  
+  .hamster-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    
+    .hamster-avatar {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      font-weight: bold;
+      font-size: 24px;
+    }
+    
+    .hamster-details {
+      flex: 1;
+      
+      .hamster-name {
+        margin: 0;
+        display: flex;
+        align-items: center;
+      }
+    }
+  }
+}
+
+.booking-info-card {
+  margin-bottom: 24px;
+  
+  .info-item {
+    .info-value {
+      margin-top: 4px;
+      font-weight: 500;
+      font-size: 16px;
+      display: flex;
+      align-items: center;
+    }
+  }
+  
+  .service-info {
+    margin-top: 16px;
+    
+    .service-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 0;
+      border-bottom: 1px solid #f0f0f0;
+      
+      &:last-child {
+        border-bottom: none;
+      }
+      
+      .service-price {
+        font-weight: 500;
+        color: #1890ff;
+      }
+    }
+  }
+  
+  .status-tag {
+    font-weight: 500;
+  }
+}
+
+.payment-card {
+  margin-bottom: 24px;
+  
+  .payment-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    
+    &.total {
+      font-size: 16px;
+      
+      .total-amount {
+        color: #1890ff;
+        font-size: 18px;
+      }
+    }
+    
+    &.discount {
+      .discount-amount {
+        color: #52c41a;
+      }
+    }
+    
+    &.final-total {
+      .final-amount {
+        color: #f5222d;
+        margin: 0;
+      }
+      
+      h4 {
+        margin: 0;
+      }
+    }
+  }
+}
+
+.camera-card {
+  margin-bottom: 24px;
+  
+  .camera-container {
+    text-align: center;
+    margin-bottom: 16px;
+    
+    .camera-placeholder {
+      background: #fafafa;
+      border: 2px dashed #d9d9d9;
+      border-radius: 8px;
+      padding: 40px;
+      margin-bottom: 16px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+    }
+    
+    .camera-button {
+      width: 100%;
+      height: 40px;
+      font-size: 16px;
+    }
+  }
+  
+  .camera-info {
+    background: #f6f8fa;
+    padding: 16px;
+    border-radius: 8px;
+    font-size: 14px;
+    line-height: 1.6;
+  }
+}
+
+.book-service-button {
+  width: 100%;
+  height: 48px;
+  font-size: 16px;
+  font-weight: 500;
+  background: linear-gradient(135deg, #ff7a45 0%, #ff4d4f 100%);
+  border: none;
+  
+  &:hover {
+    background: linear-gradient(135deg, #ff4d4f 0%, #ff7a45 100%);
+  }
+}
+
+.daily-reports-card {
+  height: fit-content;
+  
+  .daily-timeline {
+    padding-top: 16px;
+    
+    .timeline-item {
+      padding-bottom: 32px;
+      
+      .report-date {
+        font-weight: 500;
+        color: #1890ff;
+        margin-bottom: 8px;
+        display: flex;
+        align-items: center;
+      }
+      
+      .report-content {
+        margin-bottom: 12px;
+        font-size: 15px;
+        line-height: 1.6;
+      }
+      
+      .report-image {
+        .ant-image {
+          border-radius: 8px;
+          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+      }
+    }
+  }
+}
+
+.video-modal {
+  .video-container {
+    .video-placeholder {
+      background: #000;
+      height: 450px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      border-radius: 8px;
+      color: white;
+      gap: 16px;
+    }
+  }
+}
+
+// Responsive design
+@media (max-width: 768px) {
+  .boarding-detail {
+    padding: 16px;
+    
+    .hamster-header {
+      flex-direction: column;
+      text-align: center;
+      gap: 12px;
+    }
+    
+    .camera-card .camera-placeholder {
+      padding: 20px;
+    }
+    
+    .daily-reports-card {
+      margin-top: 24px;
+      
+      .report-image .ant-image {
+        width: 100% !important;
+        height: auto !important;
+      }
+    }
+  }
+}
+
+@media (max-width: 576px) {
+  .booking-info-card {
+    .ant-row {
+      .ant-col {
+        margin-bottom: 16px;
+      }
+    }
+  }
+  
+  .payment-card {
+    .payment-item {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 4px;
+      
+      &.final-total {
+        flex-direction: row;
+        align-items: center;
+      }
+    }
+  }
+}

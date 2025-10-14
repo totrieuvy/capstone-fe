@@ -1,0 +1,332 @@
+import React, { useState, useEffect } from 'react';
+import {
+  Card,
+  Tag,
+  Space,
+  Typography,
+  Spin,
+  Alert,
+  Select,
+  Input,
+  Row,
+  Col,
+  Statistic,
+  Button
+} from 'antd';
+import {
+  CalendarOutlined,
+  HomeOutlined,
+  DollarOutlined,
+  SearchOutlined,
+  FilterOutlined
+} from '@ant-design/icons';
+import { useNavigate } from 'react-router-dom';
+import { boardingService } from '../../../../services/BoardingService';
+import type { BookingHistoryItem } from '../../../../services/BoardingService';
+import { getFormattedPrice } from '../../../../utils/formatPrice';
+import './BoardingHistory.scss';
+
+const { Title } = Typography;
+const { Option } = Select;
+const { Search } = Input;
+
+const BoardingHistory: React.FC = () => {
+  const navigate = useNavigate();
+  const [bookingHistory, setBookingHistory] = useState<BookingHistoryItem[]>([]);
+  const [filteredHistory, setFilteredHistory] = useState<BookingHistoryItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [searchText, setSearchText] = useState('');
+  const [statusFilter, setStatusFilter] = useState<string>('all');
+
+  useEffect(() => {
+    fetchBookingHistory();
+  }, []);
+
+  useEffect(() => {
+    filterBookings();
+  }, [bookingHistory, searchText, statusFilter]);
+
+  const fetchBookingHistory = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const history = await boardingService.getBookingHistory();
+      setBookingHistory(history);
+    } catch (err) {
+      setError('Failed to fetch booking history. Please try again.');
+      console.error('Error fetching booking history:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const filterBookings = () => {
+    let filtered = [...bookingHistory];
+
+    // Filter by search text (hamster name or booking ID)
+    if (searchText) {
+      filtered = filtered.filter(
+        booking =>
+          booking.hamsterName.toLowerCase().includes(searchText.toLowerCase()) ||
+          booking.bookingId.toLowerCase().includes(searchText.toLowerCase()) ||
+          booking.cageTypeName.toLowerCase().includes(searchText.toLowerCase())
+      );
+    }
+
+    // Filter by status
+    if (statusFilter !== 'all') {
+      filtered = filtered.filter(booking => booking.status === statusFilter);
+    }
+
+    setFilteredHistory(filtered);
+  };
+
+  const getStatusColor = (status: string) => {
+    const statusColors = {
+      'CONFIRMED': 'success',
+      'PENDING': 'warning',
+      'CANCELLED': 'error',
+      'FAILED': 'error',
+      'COMPLETED': 'blue',
+      'IN_PROGRESS': 'processing'
+    };
+    return statusColors[status as keyof typeof statusColors] || 'default';
+  };
+
+  const getStatusText = (status: string) => {
+    const statusTexts = {
+      'CONFIRMED': 'Confirmed',
+      'PENDING': 'Pending',
+      'CANCELLED': 'Cancelled',
+      'FAILED': 'Failed',
+      'COMPLETED': 'Completed',
+      'IN_PROGRESS': 'In Progress'
+    };
+    return statusTexts[status as keyof typeof statusTexts] || status;
+  };
+
+  const handleViewDetails = (booking: BookingHistoryItem) => {
+    navigate(`/boarding-schedule/${booking.bookingId}`);
+  };
+
+  const renderBookingCard = (booking: BookingHistoryItem) => (
+    <Card
+      key={booking.bookingId}
+      className="booking-card"
+      hoverable
+      style={{ marginBottom: 16 }}
+    >
+      <Row gutter={[16, 16]} align="middle">
+        {/* Hamster Name */}
+        <Col xs={24} sm={4}>
+          <div className="booking-info-section">
+            <div className="info-label">Tên hamster</div>
+            <div className="hamster-name">{booking.hamsterName}</div>
+          </div>
+        </Col>
+
+        {/* Cage Type */}
+        <Col xs={24} sm={4}>
+          <div className="booking-info-section">
+            <div className="info-label">Loại chuồng</div>
+            <Tag color="blue" icon={<HomeOutlined />} className="cage-tag">
+              {booking.cageTypeName}
+            </Tag>
+          </div>
+        </Col>
+
+        {/* Check-in Date */}
+        <Col xs={12} sm={4}>
+          <div className="booking-info-section">
+            <div className="info-label">
+              <CalendarOutlined style={{ marginRight: 4, color: '#1890ff' }} />
+              Ngày nhận
+            </div>
+            <div className="info-value">
+              {new Date(booking.startDate).toLocaleDateString('vi-VN')}
+            </div>
+          </div>
+        </Col>
+
+        {/* Check-out Date */}
+        <Col xs={12} sm={4}>
+          <div className="booking-info-section">
+            <div className="info-label">
+              <CalendarOutlined style={{ marginRight: 4, color: '#52c41a' }} />
+              Ngày trả
+            </div>
+            <div className="info-value">
+              {new Date(booking.endDate).toLocaleDateString('vi-VN')}
+            </div>
+          </div>
+        </Col>
+
+        {/* Status */}
+        <Col xs={12} sm={4}>
+          <div className="booking-info-section">
+            <div className="info-label">Trạng thái</div>
+            <Tag 
+              color={getStatusColor(booking.status)} 
+              style={{ 
+                minWidth: '80px', 
+                textAlign: 'center',
+                fontSize: '13px',
+                padding: '4px 8px'
+              }}
+            >
+              {getStatusText(booking.status)}
+            </Tag>
+          </div>
+        </Col>
+
+        {/* Action Button */}
+        <Col xs={12} sm={4}>
+          <div className="booking-actions">
+            <Button 
+              type="primary" 
+              size="middle"
+              style={{ width: '100%' }}
+              onClick={() => handleViewDetails(booking)}
+            >
+              Chi tiết
+            </Button>
+          </div>
+        </Col>
+      </Row>
+    </Card>
+  );
+
+  const getStatistics = () => {
+    const total = filteredHistory.length;
+    const confirmed = filteredHistory.filter(b => b.status === 'CONFIRMED').length;
+    const pending = filteredHistory.filter(b => b.status === 'PENDING').length;
+    const totalAmount = filteredHistory.reduce((sum, booking) => sum + booking.totalAmountAfter, 0);
+
+    return { total, confirmed, pending, totalAmount };
+  };
+
+  const stats = getStatistics();
+
+  if (loading) {
+    return (
+      <div className="boarding-history-loading">
+        <Spin size="large" />
+        <p>Loading booking history...</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="boarding-history">
+      <Card>
+        <div className="boarding-history-header">
+          <Title level={2}>Hamster Boarding History</Title>
+        </div>
+
+        {error && (
+          <Alert
+            message="Error"
+            description={error}
+            type="error"
+            closable
+            style={{ marginBottom: 16 }}
+          />
+        )}
+
+        {/* Statistics Cards */}
+        <Row gutter={16} style={{ marginBottom: 24 }}>
+          <Col xs={24} sm={6}>
+            <Card>
+              <Statistic
+                title="Total Bookings"
+                value={stats.total}
+                prefix={<CalendarOutlined />}
+              />
+            </Card>
+          </Col>
+          <Col xs={24} sm={6}>
+            <Card>
+              <Statistic
+                title="Confirmed"
+                value={stats.confirmed}
+                valueStyle={{ color: '#3f8600' }}
+              />
+            </Card>
+          </Col>
+          <Col xs={24} sm={6}>
+            <Card>
+              <Statistic
+                title="Pending"
+                value={stats.pending}
+                valueStyle={{ color: '#cf1322' }}
+              />
+            </Card>
+          </Col>
+          <Col xs={24} sm={6}>
+            <Card>
+              <Statistic
+                title="Total Spent"
+                value={stats.totalAmount}
+                formatter={(value) => getFormattedPrice(Number(value))}
+                prefix={<DollarOutlined />}
+              />
+            </Card>
+          </Col>
+        </Row>
+
+        {/* Filters */}
+        <Card size="small" style={{ marginBottom: 16 }}>
+          <Row gutter={16} align="middle">
+            <Col xs={24} sm={8}>
+              <Search
+                placeholder="Search by hamster name, booking ID, or cage type"
+                allowClear
+                value={searchText}
+                onChange={(e) => setSearchText(e.target.value)}
+                prefix={<SearchOutlined />}
+              />
+            </Col>
+            <Col xs={24} sm={6}>
+              <Select
+                style={{ width: '100%' }}
+                placeholder="Filter by Status"
+                value={statusFilter}
+                onChange={setStatusFilter}
+                suffixIcon={<FilterOutlined />}
+              >
+                <Option value="all">All Status</Option>
+                <Option value="CONFIRMED">Confirmed</Option>
+                <Option value="PENDING">Pending</Option>
+                <Option value="COMPLETED">Completed</Option>
+                <Option value="CANCELLED">Cancelled</Option>
+                <Option value="FAILED">Failed</Option>
+              </Select>
+            </Col>
+          </Row>
+        </Card>
+
+        {/* Booking Cards */}
+        <div className="booking-cards-container">
+          {filteredHistory.length === 0 ? (
+            <Card style={{ textAlign: 'center', padding: '40px' }}>
+              <Space direction="vertical" size="large">
+                <CalendarOutlined style={{ fontSize: '48px', color: '#d9d9d9' }} />
+                <div>
+                  <Title level={4} type="secondary">Không có lịch sử đặt phòng</Title>
+                  <Typography.Text type="secondary">
+                    Bạn chưa có bất kỳ đặt phòng nào. Hãy đặt phòng cho hamster của bạn ngay!
+                  </Typography.Text>
+                </div>
+              </Space>
+            </Card>
+          ) : (
+            filteredHistory.map(booking => renderBookingCard(booking))
+          )}
+        </div>
+      </Card>
+    </div>
+  );
+};
+
+export default BoardingHistory;

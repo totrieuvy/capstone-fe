@@ -8,7 +8,7 @@ const Panel: React.FC = () => {
   const menuItems = [
     { key: "1", to: "/service-history", text: "Lịch sử đặt dịch vụ" },
     { key: "2", to: "/appointment", text: "Lịch khám" },
-    { key: "3", to: "/send-schedule", text: "Lịch gửi hồ" },
+    { key: "3", to: "/boarding-schedule", text: "Lịch gửi hộ" },
   ];
 
   return (
