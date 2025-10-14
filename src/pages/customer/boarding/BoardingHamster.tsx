@@ -26,7 +26,7 @@ import "./BoardingHamster.scss";
 import ProfileHamsterService from "../../../services/ProfileHamsterService";
 import cageTypeService from "../../../services/CageTypeService";
 import boardingService from "../../../services/BoardingService";
-import type { DailyAvailability } from "../../../services/BoardingService";
+import type { DailyAvailability, CalculateBookingCostResponse, CreateBookingRequest } from "../../../services/BoardingService";
 import { customerService } from "../../../services/CustomerService";
 import type { CustomerProfile } from "../../../services/CustomerService";
 import { useNavigate } from "react-router-dom";
@@ -105,6 +105,10 @@ function BoardingHamster() {
   const [cageSelectionStep, setCageSelectionStep] = useState(0); // 0: select cage, 1: select dates
   const [availability, setAvailability] = useState<DailyAvailability[]>([]);
   const [loadingAvailability, setLoadingAvailability] = useState(false);
+  
+  // New state for booking cost calculation
+  const [bookingCostData, setBookingCostData] = useState<CalculateBookingCostResponse | null>(null);
+  const [loadingCostCalculation, setLoadingCostCalculation] = useState(false);
 
   useEffect(() => {
     document.title = "Đặt Phòng Hamster";
@@ -113,6 +117,13 @@ function BoardingHamster() {
     fetchAdditionalServices();
     fetchCustomerProfile();
   }, []);
+
+  // Recalculate costs when in step 3 and services change
+  useEffect(() => {
+    if (currentStep === 2 && selectedHamsterId && selectedCageId && dateRange[0] && dateRange[1]) {
+      calculateBookingCost();
+    }
+  }, [selectedServiceIds, currentStep]);
 
   const fetchProfiles = async () => {
     setLoading(true);
@@ -265,7 +276,7 @@ function BoardingHamster() {
         )}
 
         {/* Detailed Availability Table */}
-        {/* <Card 
+        <Card 
           title="Chi tiết tình trạng theo ngày" 
           size="small"
           headStyle={{ background: "#fafafa", color: "#ff6f61" }}
@@ -343,7 +354,7 @@ function BoardingHamster() {
               </tbody>
             </table>
           </div>
-        </Card> */}
+        </Card>
 
         {/* Success message if all days are available */}
         {!hasUnavailableDays && (
@@ -413,6 +424,102 @@ function BoardingHamster() {
     });
   };
 
+  // Function to calculate booking cost using the API
+  const calculateBookingCost = async () => {
+    if (!selectedHamsterId || !selectedCageId || !dateRange[0] || !dateRange[1]) {
+      return;
+    }
+
+    setLoadingCostCalculation(true);
+    try {
+      const request = {
+        startDate: dateRange[0].format("YYYY-MM-DD"),
+        endDate: dateRange[1].format("YYYY-MM-DD"),
+        cageTypeId: selectedCageId,
+        hamsterId: selectedHamsterId,
+        paymentMethod: "VNPAY", // Default payment method
+        serviceIds: selectedServiceIds,
+        notes: "", // Can be added if needed
+      };
+
+      const response = await boardingService.calculateBookingCost(request);
+      setBookingCostData(response);
+    } catch (error) {
+      console.error("Error calculating booking cost:", error);
+      message.error("Không thể tính toán chi phí đặt phòng. Vui lòng thử lại.");
+    } finally {
+      setLoadingCostCalculation(false);
+    }
+  };
+
+  // Function to create booking and redirect to payment
+  const handleCreateBooking = async () => {
+    if (!selectedHamsterId || !selectedCageId || !dateRange[0] || !dateRange[1]) {
+      message.error("Thiếu thông tin cần thiết để tạo đặt phòng");
+      return;
+    }
+
+    // Validate customer profile and membership
+    if (!customerProfile) {
+      message.error("Không thể tải thông tin khách hàng. Vui lòng thử lại.");
+      // Try to fetch customer profile again
+      await fetchCustomerProfile();
+      return;
+    }
+
+    // Check if membership information is available
+    if (!customerProfile.rank || !customerProfile.currentPoint) {
+      message.error("Thông tin thành viên không đầy đủ. Vui lòng liên hệ hỗ trợ.");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const request: CreateBookingRequest = {
+        startDate: dateRange[0].format("YYYY-MM-DD"),
+        endDate: dateRange[1].format("YYYY-MM-DD"),
+        cageTypeId: selectedCageId,
+        hamsterId: selectedHamsterId,
+        paymentMethod: "VNPAY",
+        serviceIds: selectedServiceIds.length > 0 ? selectedServiceIds : undefined,
+        notes: "", // Can be expanded to include user notes
+      };
+
+      message.loading("Đang tạo đặt phòng...", 0);
+      const response = await boardingService.createBooking(request);
+      message.destroy();
+      
+      if (response.paymentUrl) {
+        message.success("Đặt phòng thành công! Đang chuyển đến trang thanh toán...");
+        // Small delay to show success message before redirect
+        setTimeout(() => {
+          window.location.href = response.paymentUrl;
+        }, 1000);
+      } else {
+        throw new Error("Không nhận được URL thanh toán");
+      }
+      
+    } catch (error: any) {
+      message.destroy();
+      console.error("Error creating booking:", error);
+      
+      // More specific error messages based on error type
+      if (error.response?.status === 400) {
+        message.error("Thông tin đặt phòng không hợp lệ. Vui lòng kiểm tra lại.");
+      } else if (error.response?.status === 409) {
+        message.error("Chuồng đã được đặt trong khoảng thời gian này. Vui lòng chọn ngày khác.");
+      } else if (error.response?.status === 500) {
+        message.error("Lỗi hệ thống. Vui lòng thử lại sau ít phút.");
+      } else if (error.message?.includes("Network")) {
+        message.error("Lỗi kết nối mạng. Vui lòng kiểm tra kết nối internet và thử lại.");
+      } else {
+        message.error("Không thể tạo đặt phòng. Vui lòng thử lại hoặc liên hệ hỗ trợ.");
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleNext = () => {
     if (currentStep === 0 && !selectedHamsterId) {
       message.warning("Vui lòng chọn một hamster");
@@ -448,10 +555,16 @@ function BoardingHamster() {
         message.warning("Vui lòng đồng ý với điều khoản dịch vụ");
         return;
       }
-      // Handle booking submission here
-      message.success("Đặt phòng thành công!");
+      // Create booking and redirect to payment
+      handleCreateBooking();
       return;
     }
+
+    // Calculate booking cost when moving to step 3 (confirmation)
+    if (currentStep === 1 && cageSelectionStep === 1) {
+      calculateBookingCost();
+    }
+
     setCurrentStep(currentStep + 1);
   };
 
@@ -498,15 +611,16 @@ function BoardingHamster() {
     selectedServiceIds.includes(s.id)
   );
 
-  // Calculate pricing
-  const cageTotal = selectedCage ? selectedCage.pricePerDay * totalDays : 0;
-  const servicesTotal = selectedServices.reduce(
+  // Calculate pricing - Use API data if available, otherwise fallback to local calculations
+  const cageTotal = bookingCostData ? bookingCostData.cagePrice : (selectedCage ? selectedCage.pricePerDay * totalDays : 0);
+  const servicesTotal = bookingCostData ? bookingCostData.servicesPrice : selectedServices.reduce(
     (sum, service) => sum + service.pricePerDay * totalDays,
     0
   );
-  const subtotal = cageTotal + servicesTotal;
-  const discountAmount = (subtotal * discount) / 100;
-  const finalTotal = subtotal - discountAmount;
+  const holidayTotal = bookingCostData ? bookingCostData.holidayPrice : 0;
+  const subtotal = bookingCostData ? (bookingCostData.cagePrice + bookingCostData.servicesPrice) : (cageTotal + servicesTotal);
+  const discountAmount = bookingCostData ? (subtotal - bookingCostData.totalAmount) : ((subtotal * discount) / 100);
+  const finalTotal = bookingCostData ? bookingCostData.totalAmount : (subtotal - discountAmount);
 
   return (
     <div className="boarding-container">
@@ -918,6 +1032,18 @@ function BoardingHamster() {
                           <p><strong>Họ tên:</strong> {customerProfile.fullName}</p>
                           <p><strong>Email:</strong> {customerProfile.email}</p>
                           <p><strong>Số điện thoại:</strong> {customerProfile.phone}</p>
+                          <p><strong>Hạng thành viên:</strong> 
+                            <span style={{ 
+                              color: customerProfile.rank === 'PLATINUM' ? '#722ed1' : 
+                                     customerProfile.rank === 'GOLD' ? '#faad14' :
+                                     customerProfile.rank === 'SILVER' ? '#52c41a' : '#1890ff',
+                              fontWeight: 600,
+                              marginLeft: 8
+                            }}>
+                              {customerProfile.rank}
+                            </span>
+                          </p>
+                          <p><strong>Điểm tích lũy:</strong> {customerProfile.currentPoint} điểm</p>
                         </>
                       ) : (
                         <p>Đang tải thông tin khách hàng...</p>
@@ -1051,47 +1177,138 @@ function BoardingHamster() {
 
                   {/* Right Column - Price Breakdown */}
                   <Col xs={24} md={12}>
-                    <div className="price-breakdown">
-                      <h4 style={{ color: "#ff6f61", marginBottom: 16 }}>💰 Chi Tiết Giá:</h4>
-                      
-                      <div className="price-item">
-                        <span>Tiền chuồng ({totalDays} ngày):</span>
-                        <span>{cageTotal.toLocaleString("vi-VN")} đ</span>
-                      </div>
-
-                      {selectedServices.length > 0 && (
+                    <Spin spinning={loadingCostCalculation} tip="Đang tính toán chi phí...">
+                      <div className="price-breakdown">
+                        <h4 style={{ color: "#ff6f61", marginBottom: 16 }}>💰 Chi Tiết Giá:</h4>
+                        
                         <div className="price-item">
-                          <span>Dịch vụ bổ sung ({totalDays} ngày):</span>
-                          <span>{servicesTotal.toLocaleString("vi-VN")} đ</span>
+                          <span>Tiền chuồng ({totalDays} ngày):</span>
+                          <span>{cageTotal.toLocaleString("vi-VN")} đ</span>
                         </div>
-                      )}
 
-                      <Divider style={{ margin: "12px 0" }} />
+                        {selectedServices.length > 0 && (
+                          <div className="price-item">
+                            <span>Dịch vụ bổ sung ({totalDays} ngày):</span>
+                            <span>{servicesTotal.toLocaleString("vi-VN")} đ</span>
+                          </div>
+                        )}
 
-                      <div className="price-item">
-                        <span>Tạm tính:</span>
-                        <span style={{ fontWeight: 600 }}>
-                          {subtotal.toLocaleString("vi-VN")} đ
-                        </span>
-                      </div>
+                        {holidayTotal > 0 && (
+                          <div className="price-item" style={{ color: "#fa8c16" }}>
+                            <span>Phụ thu ngày lễ:</span>
+                            <span>{holidayTotal.toLocaleString("vi-VN")} đ</span>
+                          </div>
+                        )}
 
-                      {discount > 0 && (
-                        <div className="price-item" style={{ color: "#52c41a" }}>
-                          <span>Giảm giá ({discount}%):</span>
-                          <span>-{discountAmount.toLocaleString("vi-VN")} đ</span>
+                        <Divider style={{ margin: "12px 0" }} />
+
+                        <div className="price-item">
+                          <span>Tạm tính:</span>
+                          <span style={{ fontWeight: 600 }}>
+                            {subtotal.toLocaleString("vi-VN")} đ
+                          </span>
                         </div>
-                      )}
 
-                      <Divider style={{ margin: "12px 0" }} />
+                        {discountAmount > 0 && (
+                          <div className="price-item" style={{ color: "#52c41a" }}>
+                            <span>
+                              Giảm giá {bookingCostData ? 
+                                `(${((discountAmount / subtotal) * 100).toFixed(0)}%)` : 
+                                `(${discount}%)`
+                              }:
+                            </span>
+                            <span>-{discountAmount.toLocaleString("vi-VN")} đ</span>
+                          </div>
+                        )}
 
-                      <div className="price-item total">
-                        <span>Tổng cộng:</span>
-                        <span>{finalTotal.toLocaleString("vi-VN")} đ</span>
+                        <Divider style={{ margin: "12px 0" }} />
+
+                        <div className="price-item total">
+                          <span>Tổng cộng:</span>
+                          <span>{finalTotal.toLocaleString("vi-VN")} đ</span>
+                        </div>
                       </div>
-                    </div>
+                    </Spin>
                   </Col>
                 </Row>
               </Card>
+
+              {/* Daily Breakdown Section - Show if API data is available */}
+              {/* {bookingCostData && bookingCostData.dailyBreakdown && (
+                <Card
+                  title={
+                    <span style={{ color: "#ff6f61", fontSize: 18, fontWeight: 600 }}>
+                      📊 Chi Tiết Theo Ngày
+                    </span>
+                  }
+                  style={{ marginBottom: 24, borderRadius: 12 }}
+                >
+                  <div style={{ maxHeight: 300, overflowY: "auto" }}>
+                    {bookingCostData.dailyBreakdown.map((day) => (
+                      <div 
+                        key={day.date} 
+                        style={{ 
+                          padding: "12px 16px", 
+                          border: "1px solid #f0f0f0", 
+                          borderRadius: 8, 
+                          marginBottom: 8,
+                          background: day.isHoliday ? "#fff7e6" : "#fafafa"
+                        }}
+                      >
+                        <Row gutter={16} align="middle">
+                          <Col xs={24} sm={8}>
+                            <div style={{ fontWeight: 600, color: "#333" }}>
+                              {new Date(day.date).toLocaleDateString("vi-VN")}
+                              {day.isHoliday && (
+                                <span style={{ color: "#fa8c16", fontSize: 12, marginLeft: 8 }}>
+                                  🎉 {day.holidayName}
+                                </span>
+                              )}
+                            </div>
+                          </Col>
+                          <Col xs={24} sm={16}>
+                            <div style={{ display: "flex", justifyContent: "space-between", fontSize: 14 }}>
+                              <span>Chuồng: {day.cagePrice.toLocaleString("vi-VN")}đ</span>
+                              {day.servicesPrice > 0 && (
+                                <span>DV: {day.servicesPrice.toLocaleString("vi-VN")}đ</span>
+                              )}
+                              {day.holidaySurcharge > 0 && (
+                                <span style={{ color: "#fa8c16" }}>
+                                  Phụ thu: {day.holidaySurcharge.toLocaleString("vi-VN")}đ
+                                </span>
+                              )}
+                              <span style={{ fontWeight: 600, color: "#ff6f61" }}>
+                                Tổng: {day.totalPrice.toLocaleString("vi-VN")}đ
+                              </span>
+                            </div>
+                          </Col>
+                        </Row>
+                      </div>
+                    ))}
+                  </div>
+                </Card>
+              )} */}
+
+              {/* Membership Status Alert */}
+              {!customerProfile && (
+                <Alert
+                  message="Đang tải thông tin thành viên"
+                  description="Vui lòng đợi trong khi chúng tôi tải thông tin thành viên của bạn..."
+                  type="info"
+                  showIcon
+                  style={{ marginBottom: 24 }}
+                />
+              )}
+
+              {customerProfile && (!customerProfile.rank || !customerProfile.currentPoint) && (
+                <Alert
+                  message="Thông tin thành viên không đầy đủ"
+                  description="Thông tin thành viên của bạn chưa đầy đủ. Vui lòng liên hệ hỗ trợ để hoàn tất thông tin trước khi đặt phòng."
+                  type="warning"
+                  showIcon
+                  style={{ marginBottom: 24 }}
+                />
+              )}
 
               {/* Terms of Service Section */}
               <Card
@@ -1166,6 +1383,8 @@ function BoardingHamster() {
           <Button
             type="primary"
             onClick={handleNext}
+            loading={currentStep === 2 && loading}
+            disabled={currentStep === 2 && (!termsAccepted || loading || !customerProfile)}
             style={{
               background: "linear-gradient(45deg, #ff6f61, #ffcc5c)",
               border: "none",
@@ -1174,7 +1393,7 @@ function BoardingHamster() {
             }}
           >
             {currentStep === 2 
-              ? "Xác nhận đặt phòng" 
+              ? (loading ? "Đang xử lý..." : !customerProfile ? "Đang tải thông tin..." : "Xác nhận đặt phòng")
               : currentStep === 1 && cageSelectionStep === 0
               ? "Chọn ngày gửi" 
               : "Tiếp theo"

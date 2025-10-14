@@ -29,7 +29,7 @@ export const cageTypeService = {
   // Create a new cage type
   createCageType: async (data: CreateCageTypeReq): Promise<CageTypeResponse> => {
     try {
-      const response = await api.post("/api/cage-types", data);
+      const response = await api.post("/api/cage-types/create", data);
       return response.data.data || response.data;
     } catch (error) {
       console.error("Error creating cage type:", error);

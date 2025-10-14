@@ -33,6 +33,8 @@ import PaymentFail from "./pages/customer/payment-fail/PaymentFail";
 import ManageOrder from "./pages/admin/manage-orders/orders/ManageOrder";
 import ManageOrderDetail from "./pages/admin/manage-orders/detail-orders/ManageOrderDetail";
 import ManageTransaction from "./pages/admin/manage-transaction/ManageTransaction";
+import BoardingHistory from "./pages/customer/boarding/BoardingHistory/BoardingHistory";
+import BoardingDetail from "./pages/customer/boarding/BoardingDetail/BoardingDetail";
 
 interface User {
   id: number;
@@ -155,6 +157,20 @@ const App = () => {
             },
           ],
         },
+        {
+          path: "/boarding-schedule",
+          element: <Panel />,
+          children: [
+            {
+              path: "",
+              element: <BoardingHistory />,
+            },
+            {
+              path: ":bookingId",
+              element: <BoardingDetail />,
+            },
+          ],
+        }
       ],
     },
     {

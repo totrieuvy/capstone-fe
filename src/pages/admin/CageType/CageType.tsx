@@ -9,7 +9,6 @@ import {
   Switch,
   Space,
   message,
-  Popconfirm,
   Image,
   Upload,
   Spin,
@@ -17,8 +16,6 @@ import {
 } from "antd";
 import {
   PlusOutlined,
-  EditOutlined,
-  DeleteOutlined,
   SearchOutlined,
 } from "@ant-design/icons";
 import type { ColumnsType } from "antd/es/table";
@@ -131,16 +128,6 @@ const CageType: React.FC = () => {
   }
 };
 
-  // Handle delete
-  const handleDelete = async (id: string) => {
-    try {
-      await cageTypeService.deleteCageType(id);
-      message.success("Xóa loại chuồng thành công!");
-      fetchCageTypes();
-    } catch (error) {
-      message.error("Xóa thất bại!");
-    }
-  };
 
   // Open modal for create
   const handleOpenAdd = () => {
@@ -210,12 +197,12 @@ const CageType: React.FC = () => {
       key: "typeName",
       sorter: (a, b) => a.typeName.localeCompare(b.typeName),
     },
-    {
-      title: "Mô tả",
-      dataIndex: "description",
-      key: "description",
-      ellipsis: true,
-    },
+    // {
+    //   title: "Mô tả",
+    //   dataIndex: "description",
+    //   key: "description",
+    //   ellipsis: true,
+    // },
     {
       title: "Kích thước",
       dataIndex: "sizeDimensions",
@@ -251,22 +238,12 @@ const CageType: React.FC = () => {
         <Space>
           <Button
             type="primary"
-            icon={<EditOutlined />}
+            // icon={<EditOutlined />}
             onClick={() => handleOpenEdit(record)}
           >
             Cập nhật
           </Button>
-          <Popconfirm
-            title="Xóa loại chuồng?"
-            description="Bạn có chắc muốn xóa loại chuồng này?"
-            onConfirm={() => handleDelete(record.id)}
-            okText="Có"
-            cancelText="Không"
-          >
-            <Button danger icon={<DeleteOutlined />}>
-              Xóa
-            </Button>
-          </Popconfirm>
+      
         </Space>
       ),
     },
