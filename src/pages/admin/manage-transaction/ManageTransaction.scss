@@ -1,0 +1,31 @@
+.ManageTransaction {
+  padding: 24px;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+
+  h1 {
+    font-size: 24px;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 20px;
+  }
+
+  .manageTransaction__toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    gap: 12px;
+
+    .ant-input-search {
+      max-width: 400px;
+    }
+  }
+
+  .ant-table {
+    background-color: #fff;
+    border-radius: 8px;
+    overflow: hidden;
+  }
+}

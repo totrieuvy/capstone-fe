@@ -1,0 +1,122 @@
+.ManageOrder {
+  padding: 24px;
+  background-color: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  min-height: calc(100vh - 120px);
+
+  h1 {
+    font-size: 24px;
+    font-weight: 600;
+    color: #2c3e50;
+    margin-bottom: 24px;
+  }
+
+  /* Thanh công cụ (Search, Button, ... ) */
+  .manageOrder__toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    gap: 12px;
+
+    .ant-input-search {
+      max-width: 400px;
+    }
+
+    .ant-btn-primary {
+      background-color: #1677ff;
+      border-color: #1677ff;
+      font-weight: 500;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(22, 119, 255, 0.25);
+      transition: all 0.3s ease;
+
+      &:hover {
+        background-color: #4096ff;
+        border-color: #4096ff;
+        transform: translateY(-1px);
+      }
+    }
+  }
+
+  /* Bảng đơn hàng */
+  .ant-table {
+    background: #fff;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 1px 6px rgba(0, 0, 0, 0.06);
+
+    .ant-table-thead > tr > th {
+      background: #f5f7fa;
+      font-weight: 600;
+      color: #34495e;
+      font-size: 14px;
+      padding: 12px 16px;
+      border-bottom: 1px solid #e8e8e8;
+    }
+
+    .ant-table-tbody > tr > td {
+      padding: 12px 16px;
+      font-size: 14px;
+      color: #333;
+      vertical-align: middle;
+      border-bottom: 1px solid #f0f0f0;
+    }
+
+    .ant-table-tbody > tr:hover > td {
+      background: #f8fbff;
+    }
+  }
+
+  /* Tag trạng thái */
+  .ant-tag {
+    font-size: 13px;
+    font-weight: 500;
+    border-radius: 6px;
+    padding: 3px 8px;
+
+    &.ant-tag-orange {
+      background-color: #fff7e6;
+      color: #fa8c16;
+      border: 1px solid #ffd591;
+    }
+
+    &.ant-tag-blue {
+      background-color: #e6f4ff;
+      color: #1677ff;
+      border: 1px solid #91caff;
+    }
+
+    &.ant-tag-cyan {
+      background-color: #e6fffb;
+      color: #13c2c2;
+      border: 1px solid #87e8de;
+    }
+
+    &.ant-tag-green {
+      background-color: #f6ffed;
+      color: #52c41a;
+      border: 1px solid #b7eb8f;
+    }
+
+    &.ant-tag-red {
+      background-color: #fff1f0;
+      color: #f5222d;
+      border: 1px solid #ffa39e;
+    }
+  }
+
+  /* Pagination */
+  .ant-pagination {
+    margin-top: 16px;
+    text-align: right;
+
+    .ant-pagination-item-active {
+      border-color: #1677ff;
+      a {
+        color: #1677ff;
+      }
+    }
+  }
+}

@@ -30,6 +30,9 @@ import CageType from "./pages/admin/CageType/CageType";
 import ViewProfile from "./pages/customer/profile/ProfileCustomer";
 import WalletCustomer from "./pages/customer/wallet-customer/WalletCustomer";
 import PaymentFail from "./pages/customer/payment-fail/PaymentFail";
+import ManageOrder from "./pages/admin/manage-orders/orders/ManageOrder";
+import ManageOrderDetail from "./pages/admin/manage-orders/detail-orders/ManageOrderDetail";
+import ManageTransaction from "./pages/admin/manage-transaction/ManageTransaction";
 
 interface User {
   id: number;
@@ -170,6 +173,17 @@ const App = () => {
             {
               path: "quan-li-san-pham",
               element: <ManageProduct />,
+            },
+            {
+              path: "quan-li-don-hang",
+              children: [
+                { path: "", element: <ManageOrder /> },
+                { path: ":orderId", element: <ManageOrderDetail /> },
+              ],
+            },
+            {
+              path: "quan-li-giao-dich",
+              element: <ManageTransaction />,
             },
           ],
         },
