@@ -1,4 +1,5 @@
 import api from "../config/axios";
+import type { Service } from "./AdditionService";
 
 // Type definitions for availability check
 export interface CheckAvailabilityRequest {
@@ -25,7 +26,7 @@ export interface CalculateBookingCostRequest {
   cageTypeId: string;
   hamsterId: string;
   paymentMethod: string;
-  serviceIds?: string[];
+  serviceIds?: string[]; // IDs from Service interface in AddtionService.ts
   notes?: string;
 }
 
@@ -34,18 +35,28 @@ export interface DailyBreakdown {
   cagePrice: number;
   servicesPrice: number;
   holidaySurcharge: number;
-  totalPrice: number;
+  membershipDiscount: number;
+  dailyTotal: number;
   isHoliday: boolean;
   holidayName: string | null;
 }
 
+export interface HolidayDetail {
+  // Add holiday detail properties as needed based on API response
+  name: string;
+  date: string;
+  surchargePercent?: number;
+}
+
 export interface CalculateBookingCostResponse {
-  cagePrice: number;
-  servicesPrice: number;
-  holidayPrice: number;
+  totalCageAmount: number;
+  totalServicesAmount: number;
+  totalHolidaySurcharge: number;
+  totalMembershipDiscount: number;
+  membershipDiscountPercent: number;
   totalAmount: number;
-  dailyBreakdown: DailyBreakdown[];
-  appliedHolidays: any[];
+  dailyBreakdowns: DailyBreakdown[];
+  holidayDetails: HolidayDetail[];
 }
 
 export interface CreateBookingRequest {
@@ -54,7 +65,7 @@ export interface CreateBookingRequest {
   cageTypeId: string;
   hamsterId: string;
   paymentMethod: string;
-  serviceIds?: string[];
+  serviceIds?: string[]; // IDs from Service interface in AddtionService.ts
   notes?: string;
 }
 
@@ -76,6 +87,8 @@ export interface BookingHistoryItem {
   status: string;
   notes: string;
   createdAt: string; // ISO string format
+  serviceIds?: string[]; // IDs from Service interface in AddtionService.ts
+  services?: Service[]; // Full service objects for display purposes
 }
 
 export interface BookingHistoryResponse {
@@ -87,6 +100,7 @@ export interface ApiResponse<T> {
   message: string;
   data: T;
 }
+
 
 // Boarding service for handling boarding-related API calls
 export const boardingService = {
@@ -108,7 +122,7 @@ export const boardingService = {
   calculateBookingCost: async (request: CalculateBookingCostRequest): Promise<CalculateBookingCostResponse> => {
     try {
       const response = await api.post<ApiResponse<CalculateBookingCostResponse>>(
-        "api/booking/calculate",
+        "/api/booking/calculate",
         request
       );
       return response.data.data;
