@@ -19,6 +19,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { logout } from "../../redux/features/userSlice";
 import logo from "../../assets/logo.png";
 import "./Sidebar.scss";
+import { GiCage } from "react-icons/gi";
 
 interface User {
   id: number;
@@ -73,7 +74,7 @@ const SideBar: React.FC = () => {
         getItem("Quản lí loài hamster", "quan-li-loai-hamster", <GiPawPrint />),
         getItem("Quản lí danh mục sản phẩm", "quan-li-danh-muc-san-pham", <BiCategory />),
         getItem("Quản lí sản phẩm", "quan-li-san-pham", <TagOutlined />),
-        getItem("Quản lí loại chuồng", "quan-li-loai-chuong", <GiPawPrint />),
+        getItem("Quản lí loại chuồng", "quan-li-loai-chuong", <GiCage />),
         getItem("Thống kê", "thong-ke", <AreaChartOutlined />),
         getItem("Quản lí tài khoản", "quan-li-tai-khoan", <UserOutlined />),
         getItem("Quản lí đơn hàng", "quan-li-don-hang", <ShoppingOutlined />),

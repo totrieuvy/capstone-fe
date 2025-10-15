@@ -95,6 +95,27 @@ export interface BookingHistoryResponse {
   bookingHistory: BookingHistoryItem[];
 }
 
+// Type definitions for bookings by date range
+export interface GetBookingsByDateRangeRequest {
+  startDate: string; // Format: YYYY-MM-DD
+  endDate: string;   // Format: YYYY-MM-DD
+}
+
+export interface BookingByDateRange {
+  bookingId: string;
+  startDate: string; // Format: YYYY-MM-DD
+  endDate: string;   // Format: YYYY-MM-DD
+  status: string;
+  cageTypeId: string;
+  cageTypeName: string;
+  customerName: string;
+  hamsterName: string;
+}
+
+export interface GetBookingsByDateRangeResponse {
+  bookings: BookingByDateRange[];
+}
+
 export interface ApiResponse<T> {
   code: number;
   message: string;
@@ -155,6 +176,25 @@ export const boardingService = {
       return response.data.data;
     } catch (error) {
       console.error("Error fetching booking history:", error);
+      throw error;
+    }
+  },
+
+  // Get bookings by date range
+  getBookingsByDateRange: async (request: GetBookingsByDateRangeRequest): Promise<BookingByDateRange[]> => {
+    try {
+      const response = await api.get<ApiResponse<BookingByDateRange[]>>(
+        "/api/booking/date-range",
+        {
+          params: {
+            startDate: request.startDate,
+            endDate: request.endDate
+          }
+        }
+      );
+      return response.data.data;
+    } catch (error) {
+      console.error("Error fetching bookings by date range:", error);
       throw error;
     }
   },
