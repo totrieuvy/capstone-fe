@@ -1,0 +1,246 @@
+.boarding-schedule {
+  min-height: 100vh;
+  background-color: #f3f4f6;
+  padding: 24px;
+}
+
+.schedule-container {
+  max-width: 1600px;
+  margin: 0 auto;
+}
+
+.page-header {
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+  padding: 32px;
+  margin-bottom: 24px;
+}
+
+.page-title {
+  font-size: 30px;
+  font-weight: bold;
+  color: #1f2937;
+  margin-bottom: 8px;
+}
+
+.page-subtitle {
+  color: #4b5563;
+}
+
+.schedule-card {
+  margin-bottom: 32px;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  
+  .card-title {
+    font-size: 20px;
+    font-weight: bold;
+    color: white;
+  }
+}
+
+.table-container {
+  overflow-x: auto;
+}
+
+.table-wrapper {
+  display: inline-block;
+  min-width: 100%;
+}
+
+.header-row {
+  display: flex;
+  background-color: #f3f4f6;
+  border-bottom: 2px solid #d1d5db;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.cage-id-header {
+  width: 128px;
+  padding: 12px 16px;
+  font-weight: 600;
+  font-size: 14px;
+  border-right: 1px solid #d1d5db;
+  flex-shrink: 0;
+}
+
+.date-cell {
+  padding: 12px 8px;
+  text-align: center;
+  font-weight: 600;
+  font-size: 14px;
+  border-right: 1px solid #d1d5db;
+  flex-shrink: 0;
+}
+
+.cage-type-row {
+  display: flex;
+  
+  &.cage-type-basic {
+    background-color: #a5f3fc;
+  }
+  
+  &.cage-type-standard {
+    background-color: #93c5fd;
+  }
+  
+  &.cage-type-full {
+    background-color: #c084fc;
+  }
+  
+  &.cage-type-vip {
+    background-color: #f9a8d4;
+  }
+}
+
+.cage-type-label {
+  width: 128px;
+  padding: 8px 16px;
+  font-size: 14px;
+  font-weight: bold;
+  border-right: 1px solid #d1d5db;
+  flex-shrink: 0;
+}
+
+.empty-cell {
+  padding: 8px;
+  border-right: 1px solid #d1d5db;
+  flex-shrink: 0;
+}
+
+.cage-row {
+  display: flex;
+  border-bottom: 1px solid #e5e7eb;
+  min-height: 48px;
+  transition: background-color 0.2s;
+  
+  &:hover {
+    background-color: #f9fafb;
+  }
+}
+
+.cage-id-cell {
+  width: 128px;
+  padding: 12px 16px;
+  font-size: 14px;
+  font-weight: 500;
+  border-right: 1px solid #d1d5db;
+  flex-shrink: 0;
+  background-color: white;
+  display: flex;
+  align-items: center;
+}
+
+.cage-type-cell {
+  width: 128px;
+  padding: 12px 16px;
+  font-size: 14px;
+  font-weight: 500;
+  border-right: 1px solid #d1d5db;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  
+  &.cage-type-basic {
+    background-color: #a5f3fc;
+  }
+  
+  &.cage-type-standard {
+    background-color: #93c5fd;
+  }
+  
+  &.cage-type-full {
+    background-color: #c084fc;
+  }
+  
+  &.cage-type-vip {
+    background-color: #f9a8d4;
+  }
+}
+
+.date-grid {
+  display: flex;
+  flex: 1;
+  position: relative;
+}
+
+.grid-cell {
+  border-right: 1px solid #e5e7eb;
+  flex-shrink: 0;
+}
+
+.booking-bar {
+  position: absolute;
+  border-radius: 6px;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  padding: 0 8px;
+  top: 4px;
+  bottom: 4px;
+  
+  &:hover {
+    filter: brightness(0.9);
+    
+    .booking-tooltip {
+      display: block;
+    }
+  }
+  
+  &.booking-bar-green {
+    background-color: #22c55e;
+  }
+  
+  &.booking-bar-orange {
+    background-color: #f97316;
+  }
+}
+
+.booking-text {
+  font-size: 12px;
+  color: white;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.booking-tooltip {
+  display: none;
+  position: absolute;
+  background-color: #111827;
+  color: white;
+  font-size: 12px;
+  border-radius: 4px;
+  padding: 8px 12px;
+  z-index: 20;
+  top: -64px;
+  left: 50%;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+}
+
+.tooltip-title {
+  font-weight: 600;
+}
+
+.tooltip-date {
+  color: #d1d5db;
+}
+
+.tooltip-arrow {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translate(-50%, 100%);
+  width: 0;
+  height: 0;
+  border-left: 8px solid transparent;
+  border-right: 8px solid transparent;
+  border-top: 8px solid #111827;
+}

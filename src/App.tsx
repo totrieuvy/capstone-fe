@@ -35,6 +35,7 @@ import ManageOrderDetail from "./pages/admin/manage-orders/detail-orders/ManageO
 import ManageTransaction from "./pages/admin/manage-transaction/ManageTransaction";
 import BoardingHistory from "./pages/customer/boarding/BoardingHistory/BoardingHistory";
 import BoardingDetail from "./pages/customer/boarding/BoardingDetail/BoardingDetail";
+import BoardingSchedule from "./pages/staff/boarding/BoardingSchedule";
 
 interface User {
   id: number;
@@ -208,7 +209,15 @@ const App = () => {
     {
       path: "/STAFF",
       element: <PrivateRoute role="STAFF" />,
-      children: [{ path: "", element: <SideBar /> }],
+      children: [
+        {
+         path: "",
+          element: <SideBar />,
+          children: [
+            { path: "lich-dat-boarding", element: <BoardingSchedule /> },
+          ],
+        }
+      ],
     },
     {
       path: "/VETERINARIAN",
