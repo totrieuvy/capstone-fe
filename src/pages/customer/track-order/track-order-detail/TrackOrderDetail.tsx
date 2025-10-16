@@ -2,9 +2,13 @@ import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Card, Descriptions, Table, Button, message, Spin, Tag, Row, Col } from "antd";
 import { ArrowLeftOutlined } from "@ant-design/icons";
-import type { ColumnsType } from "antd/es/table"; // ✅ Thêm dòng này
+import type { ColumnsType } from "antd/es/table";
 import api from "../../../../config/axios";
 import "./TrackOrderDetail.scss";
+import customParseFormat from "dayjs/plugin/customParseFormat";
+import dayjs from "dayjs";
+import { StopOutlined, ClockCircleOutlined } from "@ant-design/icons";
+dayjs.extend(customParseFormat);
 
 interface OrderItem {
   productId: string;
@@ -32,6 +36,8 @@ const TrackOrderDetail = () => {
   const navigate = useNavigate();
   const [order, setOrder] = useState<OrderDetail | null>(null);
   const [loading, setLoading] = useState(true);
+  const [countdown, setCountdown] = useState<string>("");
+  const [cancelDisabled, setCancelDisabled] = useState(false);
 
   useEffect(() => {
     document.title = `Chi tiết đơn hàng ${orderId ? `...${orderId.slice(-6)}` : ""}`;
@@ -39,6 +45,47 @@ const TrackOrderDetail = () => {
       fetchOrderDetail(orderId);
     }
   }, [orderId]);
+
+  useEffect(() => {
+    if (order && order.status === "PAID") {
+      const orderTime = dayjs(order.orderDate, "DD-MM-YYYY HH:mm:ss");
+      const interval = setInterval(() => {
+        const diff = 12 * 60 * 60 * 1000 - (Date.now() - orderTime.valueOf());
+        if (diff > 0) {
+          const hours = Math.floor(diff / (1000 * 60 * 60));
+          const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+          const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+          setCountdown(
+            `${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}:${seconds
+              .toString()
+              .padStart(2, "0")}`
+          );
+          setCancelDisabled(false);
+        } else {
+          setCountdown("Hết thời gian hủy");
+          setCancelDisabled(true);
+          clearInterval(interval);
+        }
+      }, 1000);
+
+      return () => clearInterval(interval);
+    }
+  }, [order]);
+
+  const handleCancelOrder = async () => {
+    if (!order) return;
+    try {
+      const { data } = await api.patch(`/api/order/cancel/${order.id}`);
+      if (data.code === 200) {
+        message.success("Đã hủy đơn hàng. Bạn sẽ được hoàn 75% vào ví.");
+        fetchOrderDetail(order.id);
+      } else {
+        message.error(data.message || "Không thể hủy đơn hàng.");
+      }
+    } catch {
+      message.error("Lỗi khi hủy đơn hàng.");
+    }
+  };
 
   const fetchOrderDetail = async (id: string) => {
     setLoading(true);
@@ -108,32 +155,73 @@ const TrackOrderDetail = () => {
   return (
     <div className="track-order-detail-page">
       <div className="container">
+        {/* Nút quay lại */}
         <Button icon={<ArrowLeftOutlined />} onClick={() => navigate("/your-orders")} className="back-button">
           Quay lại danh sách
         </Button>
+
         <h1 className="page-title">Chi Tiết Đơn Hàng</h1>
 
         <Row gutter={[24, 24]}>
+          {/* Bảng sản phẩm */}
           <Col xs={24} md={16}>
             <Card title="Các sản phẩm trong đơn" bordered={false} className="detail-card">
               <Table columns={itemColumns} dataSource={order.items} rowKey="productId" pagination={false} />
             </Card>
           </Col>
+
+          {/* Thông tin đơn hàng */}
           <Col xs={24} md={8}>
             <Card title="Thông tin đơn hàng" bordered={false} className="detail-card">
               <Descriptions column={1} bordered>
                 <Descriptions.Item label="Mã đơn hàng">{order.id}</Descriptions.Item>
+
                 <Descriptions.Item label="Ngày đặt">
-                  {new Date(order.orderDate).toLocaleDateString("vi-VN")}
+                  {dayjs(order.orderDate, "DD-MM-YYYY HH:mm:ss").format("DD/MM/YYYY HH:mm")}
                 </Descriptions.Item>
+
                 <Descriptions.Item label="Trạng thái">{getStatusTag(order.status)}</Descriptions.Item>
+
                 <Descriptions.Item label="Tạm tính">{order.totalAmount.toLocaleString()}đ</Descriptions.Item>
+
                 <Descriptions.Item label="Phí vận chuyển">{order.shippingFee.toLocaleString()}đ</Descriptions.Item>
+
                 <Descriptions.Item label="Giảm giá">{order.discountPercent}%</Descriptions.Item>
+
                 <Descriptions.Item label="Tổng cộng" className="final-amount">
                   <strong>{order.finalAmount.toLocaleString()}đ</strong>
                 </Descriptions.Item>
               </Descriptions>
+
+              {/* Nút hủy đơn hàng và đồng hồ đếm ngược */}
+              {order.status === "PAID" && (
+                <div
+                  style={{
+                    marginTop: 20,
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                    gap: 10,
+                  }}
+                >
+                  <Button danger icon={<StopOutlined />} disabled={cancelDisabled} onClick={handleCancelOrder}>
+                    {cancelDisabled ? "Hết thời gian hủy" : "Hủy đơn hàng"}
+                  </Button>
+
+                  <div
+                    style={{
+                      color: cancelDisabled ? "#999" : "#ff6f61",
+                      fontWeight: 600,
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 6,
+                    }}
+                  >
+                    <ClockCircleOutlined />
+                    <span>{countdown}</span>
+                  </div>
+                </div>
+              )}
             </Card>
           </Col>
         </Row>
