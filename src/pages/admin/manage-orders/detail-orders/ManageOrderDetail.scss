@@ -1,30 +1,51 @@
 .ManageOrderDetail {
   padding: 24px;
 
-  .manage-order-detail__header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 16px;
-
-    .back-btn {
-      background: #f5f5f5;
-      border: none;
-      color: #333;
-      font-weight: 500;
-    }
-  }
-
-  .manage-order-detail__card {
-    margin-bottom: 20px;
-    border-radius: 12px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-  }
-
   .manage-order-detail__loading {
     display: flex;
     justify-content: center;
     align-items: center;
-    height: 80vh;
+    height: 70vh;
+  }
+
+  .manage-order-detail__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+
+    .back-btn {
+      background: #f5f5f5;
+      border-color: #d9d9d9;
+      &:hover {
+        background: #e8e8e8;
+      }
+    }
+
+    .action-buttons {
+      display: flex;
+      gap: 12px;
+
+      button {
+        min-width: 120px;
+        font-weight: 500;
+        border-radius: 8px;
+      }
+
+      .ant-btn-dangerous {
+        background-color: #ff7875;
+        border-color: #ff7875;
+        &:hover {
+          background-color: #ff4d4f;
+          border-color: #ff4d4f;
+        }
+      }
+    }
+  }
+
+  .manage-order-detail__card {
+    margin-bottom: 24px;
+    border-radius: 10px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
   }
 }

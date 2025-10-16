@@ -1,7 +1,6 @@
-// src/pages/admin/manage-orders/ManageOrderDetail.tsx
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { Card, Descriptions, Button, Spin, Table, Tag, message } from "antd";
+import { Card, Descriptions, Button, Spin, Table, Tag, message, Popconfirm } from "antd";
 import api from "../../../../config/axios";
 import { toast } from "react-toastify";
 import "./ManageOrderDetail.scss";
@@ -40,6 +39,7 @@ function ManageOrderDetail() {
   const { orderId } = useParams<{ orderId: string }>();
   const [order, setOrder] = useState<OrderDetail | null>(null);
   const [loading, setLoading] = useState(false);
+  const [deliverLoading, setDeliverLoading] = useState(false);
   const navigate = useNavigate();
 
   const fetchOrderDetail = async () => {
@@ -72,6 +72,8 @@ function ManageOrderDetail() {
         return <Tag color="blue">Đã thanh toán</Tag>;
       case "DELIVERING":
         return <Tag color="cyan">Đang giao</Tag>;
+      case "DELIVERED":
+        return <Tag color="purple">Đã giao</Tag>;
       case "COMPLETED":
         return <Tag color="green">Hoàn thành</Tag>;
       case "CANCELLED":
@@ -81,17 +83,35 @@ function ManageOrderDetail() {
     }
   };
 
-  // ✅ Hàm in hóa đơn (chỉ in file trong invoiceUrl)
+  // ✅ In hóa đơn
   const handlePrint = () => {
     if (!order?.invoiceUrl) {
       message.error("Không có hóa đơn để in!");
       return;
     }
 
-    // Mở file hóa đơn trong tab mới và tự động in
     const printWindow = window.open(order.invoiceUrl, "_blank");
     if (printWindow) {
       printWindow.print();
+    }
+  };
+
+  // ✅ Gọi API cập nhật “ĐÃ GIAO”
+  const confirmDelivered = async () => {
+    if (!orderId) return;
+    setDeliverLoading(true);
+    try {
+      const response = await api.patch(`/api/order/${orderId}`, { status: "DELIVERED" });
+      if (response.data.code === 200) {
+        toast.success("Cập nhật trạng thái thành công!");
+        fetchOrderDetail();
+      } else {
+        toast.error(response.data.message || "Không thể cập nhật đơn hàng!");
+      }
+    } catch (error) {
+      toast.error("Lỗi khi cập nhật đơn hàng: " + (error as Error).message);
+    } finally {
+      setDeliverLoading(false);
     }
   };
 
@@ -108,9 +128,27 @@ function ManageOrderDetail() {
         <Button onClick={() => navigate(-1)} className="back-btn">
           ← Quay lại
         </Button>
-        <Button type="primary" onClick={handlePrint}>
-          🖨️ In hóa đơn
-        </Button>
+
+        <div className="action-buttons">
+          <Button type="primary" onClick={handlePrint}>
+            🖨️ In hóa đơn
+          </Button>
+
+          {/* ✅ Nút ĐÃ GIAO (có PopConfirm + loading) */}
+          {order.status !== "DELIVERED" && order.status !== "CANCELLED" && (
+            <Popconfirm
+              title="Xác nhận giao hàng"
+              description="Bạn có chắc chắn muốn đánh dấu đơn hàng này là ĐÃ GIAO không?"
+              okText="Xác nhận"
+              cancelText="Hủy"
+              onConfirm={confirmDelivered}
+            >
+              <Button type="primary" danger loading={deliverLoading} disabled={deliverLoading}>
+                🚚 Đã giao
+              </Button>
+            </Popconfirm>
+          )}
+        </div>
       </div>
 
       <Card title={`Đơn hàng #${order.id}`} className="manage-order-detail__card">

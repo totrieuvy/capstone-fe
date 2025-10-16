@@ -6,6 +6,8 @@ import type { ColumnsType } from "antd/es/table";
 import dayjs from "dayjs";
 import api from "../../../../config/axios";
 import "./TrackOrder.scss";
+import customParseFormat from "dayjs/plugin/customParseFormat";
+dayjs.extend(customParseFormat);
 
 interface Order {
   id: string;
@@ -136,8 +138,9 @@ const TrackOrder = () => {
       title: "Ngày đặt",
       dataIndex: "orderDate",
       key: "orderDate",
-      render: (date: string) => dayjs(date).format("DD/MM/YYYY HH:mm"),
+      render: (date: string) => dayjs(date, "DD-MM-YYYY HH:mm:ss").format("DD/MM/YYYY HH:mm"),
     },
+
     {
       title: "Tổng tiền",
       dataIndex: "finalAmount",

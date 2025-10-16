@@ -220,6 +220,7 @@ const Checkout = () => {
       districtName,
       wardName,
       weight: totalWeight,
+      shippingMethod: "GHTK",
     };
 
     setLoading(true);
