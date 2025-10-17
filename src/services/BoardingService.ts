@@ -116,6 +116,37 @@ export interface GetBookingsByDateRangeResponse {
   bookings: BookingByDateRange[];
 }
 
+// Type definitions for booking details
+export interface BookingDetailService {
+  serviceId: string;
+  serviceName: string;
+  serviceType: string;
+  price: number;
+}
+
+export interface BookingDetail {
+  bookingId: string;
+  hamsterId: string;
+  hamsterName: string;
+  hamsterProfilePicture: string;
+  species: string;
+  dob: string; // Format: YYYY-MM-DD
+  hamsterWeight: number;
+  customerName: string;
+  phoneNumber: string;
+  customerMail: string;
+  cageTypeId: string;
+  cageTypeName: string;
+  startDate: string; // Format: YYYY-MM-DD
+  endDate: string;   // Format: YYYY-MM-DD
+  totalAmount: number;
+  totalAmountAfter: number;
+  status: string;
+  notes: string;
+  createdAt: string; // ISO string format
+  services: BookingDetailService[];
+}
+
 export interface ApiResponse<T> {
   code: number;
   message: string;
@@ -198,17 +229,30 @@ export const boardingService = {
       throw error;
     }
   },
+
+  // Get booking details by booking ID
+  getBookingDetails: async (bookingId: string): Promise<BookingDetail> => {
+    try {
+      const response = await api.get<ApiResponse<BookingDetail>>(
+        `/api/booking/${bookingId}`
+      );
+      return response.data.data;
+    } catch (error) {
+      console.error("Error fetching booking details:", error);
+      throw error;
+    }
+  },
 };
 
-// Get booking history details by booking ID
-export const getBookingHistoryDetails = async (bookingId: string): Promise<BookingHistoryItem> => {
+// Get booking details by booking ID (legacy function - consider using boardingService.getBookingDetails instead)
+export const getBookingHistoryDetails = async (bookingId: string): Promise<BookingDetail> => {
   try {
-    const response = await api.get<ApiResponse<BookingHistoryItem>>(
+    const response = await api.get<ApiResponse<BookingDetail>>(
       `/api/booking/${bookingId}`
     );
     return response.data.data;
   } catch (error) {
-    console.error("Error fetching booking history details:", error);
+    console.error("Error fetching booking details:", error);
     throw error;
   }
 };

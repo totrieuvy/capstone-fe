@@ -23,14 +23,14 @@ import {
 } from "@ant-design/icons";
 import dayjs, { Dayjs } from "dayjs";
 import "./BoardingHamster.scss";
-import ProfileHamsterService from "../../../services/ProfileHamsterService";
-import cageTypeService from "../../../services/CageTypeService";
-import boardingService from "../../../services/BoardingService";
-import type { DailyAvailability, CalculateBookingCostResponse, CreateBookingRequest } from "../../../services/BoardingService";
-import { customerService } from "../../../services/CustomerService";
-import type { CustomerProfile } from "../../../services/CustomerService";
-import { getServicesByType, ServiceType } from "../../../services/AdditionService";
-import type { Service } from "../../../services/AdditionService";
+import ProfileHamsterService from "../../../../services/ProfileHamsterService";
+import cageTypeService from "../../../../services/CageTypeService";
+import boardingService from "../../../../services/BoardingService";
+import type { DailyAvailability, CalculateBookingCostResponse, CreateBookingRequest } from "../../../../services/BoardingService";
+import { customerService } from "../../../../services/CustomerService";
+import type { CustomerProfile } from "../../../../services/CustomerService";
+import { getServicesByType, ServiceType } from "../../../../services/AdditionService";
+import type { Service } from "../../../../services/AdditionService";
 import { useNavigate } from "react-router-dom";
 
 const { RangePicker } = DatePicker;

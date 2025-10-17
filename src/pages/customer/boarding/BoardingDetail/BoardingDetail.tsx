@@ -18,14 +18,16 @@ import {
   ArrowLeftOutlined,
   CalendarOutlined,
   HomeOutlined,
+  UserOutlined,
+  PhoneOutlined,
   VideoCameraOutlined,
   PlayCircleOutlined,
   EyeOutlined,
   StarOutlined
 } from '@ant-design/icons';
 import { useParams, useNavigate } from 'react-router-dom';
-import { getBookingHistoryDetails } from '../../../../services/BoardingService';
-import type { BookingHistoryItem } from '../../../../services/BoardingService';
+import { boardingService } from '../../../../services/BoardingService';
+import type { BookingDetail } from '../../../../services/BoardingService';
 import { getFormattedPrice } from '../../../../utils/formatPrice';
 import './BoardingDetail.scss';
 
@@ -40,7 +42,7 @@ interface DailyReport {
 const BoardingDetail: React.FC = () => {
   const { bookingId } = useParams<{ bookingId: string }>();
   const navigate = useNavigate();
-  const [booking, setBooking] = useState<BookingHistoryItem | null>(null);
+  const [booking, setBooking] = useState<BookingDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isVideoModalVisible, setIsVideoModalVisible] = useState(false);
@@ -69,7 +71,7 @@ const BoardingDetail: React.FC = () => {
     try {
       setLoading(true);
       setError(null);
-      const details = await getBookingHistoryDetails(bookingId!);
+      const details = await boardingService.getBookingDetails(bookingId!);
       setBooking(details);
     } catch (err) {
       setError('Failed to fetch booking details. Please try again.');
@@ -101,13 +103,6 @@ const BoardingDetail: React.FC = () => {
       'IN_PROGRESS': 'Đang thực hiện'
     };
     return statusTexts[status as keyof typeof statusTexts] || status;
-  };
-
-  const calculateDays = (startDate: string, endDate: string) => {
-    const start = new Date(startDate);
-    const end = new Date(endDate);
-    const diffTime = Math.abs(end.getTime() - start.getTime());
-    return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
   };
 
   const handleBookService = () => {
@@ -142,8 +137,6 @@ const BoardingDetail: React.FC = () => {
     );
   }
 
-  const numberOfDays = calculateDays(booking.startDate, booking.endDate);
-
   return (
     <div className="boarding-detail">
       {/* Header */}
@@ -164,19 +157,59 @@ const BoardingDetail: React.FC = () => {
           {/* Hamster Information */}
           <Card className="hamster-info-card">
             <div className="hamster-header">
-              <Avatar size={64} className="hamster-avatar">
-                {booking.hamsterName.charAt(0)}
+              <Avatar 
+                size={64} 
+                src={booking.hamsterProfilePicture} 
+                className="hamster-avatar"
+              >
+                {!booking.hamsterProfilePicture && booking.hamsterName.charAt(0)}
               </Avatar>
               <div className="hamster-details">
                 <Title level={3} className="hamster-name">
                   {booking.hamsterName}
                   <Tag color="blue" style={{ marginLeft: 8 }}>
-                    Đang theo dõi
+                    {booking.species}
                   </Tag>
                 </Title>
-                <Text type="secondary">Chuồng tại chuồn cho hamster</Text>
+                <Text type="secondary">
+                  Ngày sinh: {new Date(booking.dob).toLocaleDateString('vi-VN')} | 
+                  Cân nặng: {booking.hamsterWeight}g
+                </Text>
               </div>
             </div>
+          </Card>
+
+          {/* Customer Information */}
+          <Card title="Thông tin khách hàng" className="customer-info-card">
+            <Row gutter={[16, 16]}>
+              <Col span={24}>
+                <div className="info-item">
+                  <Text type="secondary">Tên khách hàng</Text>
+                  <div className="info-value">
+                    <UserOutlined style={{ marginRight: 8, color: '#1890ff' }} />
+                    {booking.customerName}
+                  </div>
+                </div>
+              </Col>
+              <Col span={12}>
+                <div className="info-item">
+                  <Text type="secondary">Số điện thoại</Text>
+                  <div className="info-value">
+                    <PhoneOutlined style={{ marginRight: 8, color: '#52c41a' }} />
+                    {booking.phoneNumber}
+                  </div>
+                </div>
+              </Col>
+              <Col span={12}>
+                <div className="info-item">
+                  <Text type="secondary">Email</Text>
+                  <div className="info-value">
+                    {/* <MailOutlined style={{ marginRight: 8, color: '#ff7a45' }} /> */}
+                    {booking.customerMail}
+                  </div>
+                </div>
+              </Col>
+            </Row>
           </Card>
 
           {/* Booking Details */}
@@ -202,8 +235,11 @@ const BoardingDetail: React.FC = () => {
               </Col>
               <Col span={12}>
                 <div className="info-item">
-                  <Text type="secondary">Số ngày</Text>
-                  <div className="info-value">{numberOfDays} ngày</div>
+                  <Text type="secondary">Loại chuồng</Text>
+                  <div className="info-value">
+                    <HomeOutlined style={{ marginRight: 8, color: '#fa8c16' }} />
+                    {booking.cageTypeName}
+                  </div>
                 </div>
               </Col>
               <Col span={12}>
@@ -218,61 +254,58 @@ const BoardingDetail: React.FC = () => {
               </Col>
             </Row>
 
-            <Divider />
+            {booking.notes && (
+              <>
+                <Divider />
+                <div className="info-item">
+                  <Text type="secondary">Ghi chú</Text>
+                  <div className="info-value">
+                    <Text>{booking.notes}</Text>
+                  </div>
+                </div>
+              </>
+            )}
 
-            <div className="service-info">
-              <Text type="secondary">Dịch vụ đã chọn</Text>
-              <div className="service-item">
-                <HomeOutlined style={{ marginRight: 8 }} />
-                <span>Snack hạt mix</span>
-                <span className="service-price">20.000đ</span>
-              </div>
-              <div className="service-item">
-                <HomeOutlined style={{ marginRight: 8 }} />
-                <span>Đồ chơi</span>
-                <span className="service-price">20.000đ</span>
-              </div>
-            </div>
+            {booking.services && booking.services.length > 0 && (
+              <>
+                <Divider />
+                <div className="service-info">
+                  <Text type="secondary">Dịch vụ đã chọn</Text>
+                  {booking.services.map((service) => (
+                    <div key={service.serviceId} className="service-item">
+                      <span>{service.serviceName}</span>
+                      <span className="service-price">{getFormattedPrice(service.price)}</span>
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
           </Card>
 
           {/* Payment Summary */}
           <Card title="Chi tiết thanh toán" className="payment-card">
             <div className="payment-item">
-              <Text>Tiền giữ</Text>
-              <Text strong>4 ngày</Text>
-            </div>
-            <div className="payment-item">
-              <Text>Chi phí theo ngày</Text>
-              <Text>40.000đ</Text>
-            </div>
-            <div className="payment-item">
-              <Text>Dịch vụ</Text>
-              <Text>160.000đ</Text>
-            </div>
-            <div className="payment-item">
-              <Text>Tiền/ngày</Text>
-              <Text>200.000đ</Text>
+              <Text>Ngày tạo</Text>
+              <Text>{new Date(booking.createdAt).toLocaleDateString('vi-VN')}</Text>
             </div>
             <Divider />
             <div className="payment-item total">
-              <Text strong>Tổng tiền (thành tiền)</Text>
+              <Text strong>Tổng tiền (trước giảm giá)</Text>
               <Text strong className="total-amount">
-                {getFormattedPrice(booking.totalAmountAfter)}
+                {getFormattedPrice(booking.totalAmount)}
               </Text>
             </div>
-            <div className="payment-item discount">
-              <Text>Giảm giá (10%)</Text>
-              <Text className="discount-amount">100.000đ</Text>
-            </div>
-            <Divider />
             <div className="payment-item final-total">
               <Title level={4}>Tổng cộng</Title>
               <Title level={4} className="final-amount">
-                {getFormattedPrice(booking.totalAmount)}
+                {getFormattedPrice(booking.totalAmountAfter)}
               </Title>
             </div>
           </Card>
+        </Col>
 
+        {/* Right Column - Camera and Daily Reports */}
+        <Col xs={24} lg={12}>
           {/* Live Camera */}
           <Card title="Camera trực tiếp" className="camera-card">
             <div className="camera-container">
@@ -316,10 +349,8 @@ const BoardingDetail: React.FC = () => {
           >
             Đặt dịch vụ làm đẹp
           </Button>
-        </Col>
 
-        {/* Right Column - Daily Reports */}
-        <Col xs={24} lg={12}>
+          {/* Daily Reports */}
           <Card title="Báo cáo hàng ngày từ nhân viên" className="daily-reports-card">
             <Timeline className="daily-timeline">
               {dailyReports.map((report, index) => (

@@ -1,7 +1,7 @@
 .boarding-history {
   padding: 24px;
   background: linear-gradient(135deg, #fff5f5 0%, #ffe6e6 100%);
-  min-height: 100vh;
+  overflow: visible;
   
   // Override global CSS reset for specific elements
   * {
@@ -11,6 +11,13 @@
   .ant-card,
   .ant-card * {
     box-sizing: border-box;
+  }
+  
+  // Ensure the main card doesn't create its own scroll
+  > .ant-card {
+    overflow: visible;
+    height: auto;
+    max-height: none;
   }
   
   &-loading {
