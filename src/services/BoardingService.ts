@@ -147,6 +147,42 @@ export interface BookingDetail {
   services: BookingDetailService[];
 }
 
+// Type definitions for file upload
+export interface FileUploadRequest {
+  file: File;
+}
+
+export interface FileUploadResponse {
+  url: string;
+}
+
+// Type definitions for booking check-in
+export interface BookingCheckInRequest {
+  bookingId: string;
+  checkInImage: string;
+}
+
+export interface BookingCheckInResponse {
+  bookingId: string;
+  actualCheckInDate: string; // Format: YYYY-MM-DD
+  status: string;
+  checkInImageUrl: string;
+  message: string;
+}
+
+// Type definitions for cage assignment
+export interface AssignCageRequest {
+  bookingId: string;
+  cageId: string;
+}
+
+export interface AssignCageResponse {
+  bookingId: string;
+  cageId: string;
+  totalDetailsAssigned: number;
+  message: string;
+}
+
 export interface ApiResponse<T> {
   code: number;
   message: string;
@@ -239,6 +275,56 @@ export const boardingService = {
       return response.data.data;
     } catch (error) {
       console.error("Error fetching booking details:", error);
+      throw error;
+    }
+  },
+
+  // Upload a file and get the URL
+  uploadFile: async (file: File): Promise<FileUploadResponse> => {
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      
+      const response = await api.post<ApiResponse<FileUploadResponse>>(
+        "/api/file/upload",
+        formData,
+        {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        }
+      );
+      return response.data.data;
+    } catch (error) {
+      console.error("Error uploading file:", error);
+      throw error;
+    }
+  },
+
+  // Check in a booking with image
+  checkInBooking: async (request: BookingCheckInRequest): Promise<BookingCheckInResponse> => {
+    try {
+      const response = await api.post<ApiResponse<BookingCheckInResponse>>(
+        "/api/booking/check-in",
+        request
+      );
+      return response.data.data;
+    } catch (error) {
+      console.error("Error checking in booking:", error);
+      throw error;
+    }
+  },
+
+  // Assign a cage to a booking
+  assignCage: async (request: AssignCageRequest): Promise<AssignCageResponse> => {
+    try {
+      const response = await api.post<ApiResponse<AssignCageResponse>>(
+        "/api/booking/assign-cage",
+        request
+      );
+      return response.data.data;
+    } catch (error) {
+      console.error("Error assigning cage to booking:", error);
       throw error;
     }
   },

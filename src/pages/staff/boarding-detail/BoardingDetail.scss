@@ -404,3 +404,98 @@
     background: #a0aec0;
   }
 }
+
+// Check-in Button Styles
+.check-in-button {
+  background: linear-gradient(135deg, #52c41a, #73d13d);
+  border: none;
+  border-radius: 8px;
+  height: 48px;
+  padding: 0 32px;
+  font-size: 16px;
+  font-weight: 600;
+  box-shadow: 0 4px 12px rgba(82, 196, 26, 0.3);
+  transition: all 0.3s ease;
+
+  &:hover {
+    background: linear-gradient(135deg, #73d13d, #52c41a);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(82, 196, 26, 0.4);
+  }
+
+  &:active {
+    transform: translateY(0);
+  }
+}
+
+// Check-in Modal Styles
+.modal-title {
+  display: flex;
+  align-items: center;
+  font-size: 18px;
+  font-weight: 600;
+  color: #262626;
+}
+
+.check-in-form {
+  .upload-area {
+    &:hover {
+      border-color: #1890ff;
+      background-color: #f6ffed;
+    }
+  }
+}
+
+// Upload area hover effects
+.ant-upload {
+  display: block;
+  width: 100%;
+}
+
+// Cage Assignment Modal Styles
+.cage-assign-form {
+  .ant-list-item {
+    &:hover {
+      background-color: #f0f9ff !important;
+      border-color: #1890ff !important;
+    }
+  }
+
+  .ant-radio-group {
+    width: 100%;
+    
+    .ant-list {
+      .ant-list-item {
+        transition: all 0.3s ease;
+        
+        &:hover {
+          transform: translateY(-1px);
+          box-shadow: 0 2px 8px rgba(24, 144, 255, 0.15);
+        }
+      }
+    }
+  }
+}
+
+// Cage Assignment Button Styles
+.cage-assign-button {
+  background: linear-gradient(135deg, #1890ff, #40a9ff);
+  border: none;
+  border-radius: 8px;
+  height: 48px;
+  padding: 0 32px;
+  font-size: 16px;
+  font-weight: 600;
+  box-shadow: 0 4px 12px rgba(24, 144, 255, 0.3);
+  transition: all 0.3s ease;
+
+  &:hover {
+    background: linear-gradient(135deg, #40a9ff, #1890ff);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(24, 144, 255, 0.4);
+  }
+
+  &:active {
+    transform: translateY(0);
+  }
+}

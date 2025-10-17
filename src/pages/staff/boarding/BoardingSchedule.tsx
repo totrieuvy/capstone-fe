@@ -47,20 +47,28 @@ const BoardingSchedule = () => {
   };
 
   // Create context menu items
-  const getContextMenuItems = (booking: Booking): MenuProps['items'] => [
-    {
-      key: 'viewDetails',
-      label: 'Xem chi tiết',
-      icon: <EyeOutlined />,
-      onClick: () => handleViewDetails(booking),
-    },
-    {
-      key: 'extend',
-      label: 'Gia hạn',
-      icon: <ClockCircleOutlined />,
-      onClick: () => handleExtend(booking),
-    },
-  ];
+  const getContextMenuItems = (booking: Booking): MenuProps['items'] => {
+    const items: MenuProps['items'] = [
+      {
+        key: 'viewDetails',
+        label: 'Xem chi tiết',
+        icon: <EyeOutlined />,
+        onClick: () => handleViewDetails(booking),
+      },
+    ];
+
+    // Only show extend button if status is not PAID, CONFIRMED, CHECK_IN or CHECK_OUT
+    if (booking.status !== 'PAID' && booking.status !== 'CONFIRMED' && booking.status !== 'CHECK_IN' && booking.status !== 'CHECK_OUT') {
+      items.push({
+        key: 'extend',
+        label: 'Gia hạn',
+        icon: <ClockCircleOutlined />,
+        onClick: () => handleExtend(booking),
+      });
+    }
+
+    return items;
+  };
 
   // Fetch bookings for the current month
   const fetchBookings = async (month: Dayjs) => {
@@ -138,7 +146,6 @@ const BoardingSchedule = () => {
   // First table: Bookings that are checked in or in progress (CHECKED_IN, IN_PROGRESS, CHECK_OUT)
   const checkedInBookings = convertToDisplayBookings(
     bookings.filter(booking => 
-      booking.status === 'CHECK_IN' || 
       booking.status === 'IN_PROGRESS' || 
       booking.status === 'CHECK_OUT'
     )
@@ -148,6 +155,7 @@ const BoardingSchedule = () => {
   const notCheckedInBookings = convertToDisplayBookings(
     bookings.filter(booking => 
       booking.status === 'PAID' || 
+      booking.status === 'CHECK_IN' ||
       booking.status === 'CONFIRMED'
     )
   );
@@ -197,61 +205,68 @@ const BoardingSchedule = () => {
             </div>
 
             {/* Cage Type Sections */}
-            {Object.entries(cagesByType).map(([cageType, cages]) => (
-              <div key={cageType}>
-                {/* Cage Type Header Row */}
-                <div className={`cage-type-row ${getCageTypeClass(cageType)}`}>
-                  <div className="cage-type-label">{cageType}</div>
-                  {dates.map(date => (
-                    <div key={date} className="empty-cell" style={{ width: `${CELL_WIDTH}px` }} />
-                  ))}
-                </div>
+            {Object.entries(cagesByType).map(([cageType, cages]) => {
+              // Filter cages that have bookings for this cage type
+              const cagesWithBookings = cages.filter(cageId => 
+                checkedInBookings.some(booking => booking.cageId === cageId)
+              );
+              
+              return (
+                <div key={cageType}>
+                  {/* Cage Type Header Row - Always show */}
+                  <div className={`cage-type-row ${getCageTypeClass(cageType)}`}>
+                    <div className="cage-type-label">{cageType}</div>
+                    {dates.map(date => (
+                      <div key={date} className="empty-cell" style={{ width: `${CELL_WIDTH}px` }} />
+                    ))}
+                  </div>
 
-                {/* Cage Rows */}
-                {cages.map((cageId) => {
-                  const cageBookings = checkedInBookings.filter(b => b.cageId === cageId);
-                  
-                  return (
-                    <div key={cageId} className="cage-row">
-                      <div className="cage-id-cell">{cageId}</div>
-                      <div className="date-grid">
-                        {/* Date cells as background */}
-                        {dates.map(date => (
-                          <div key={date} className="grid-cell" style={{ width: `${CELL_WIDTH}px` }} />
-                        ))}
-                        
-                        {/* Booking bars as overlays */}
-                        {cageBookings.map(booking => {
-                          const duration = booking.endDate - booking.startDate + 1;
-                          const leftPosition = (booking.startDate - 1) * CELL_WIDTH;
-                          const barWidth = duration * CELL_WIDTH;
+                  {/* Cage Rows - Only show cages with bookings */}
+                  {cagesWithBookings.map((cageId) => {
+                    const cageBookings = checkedInBookings.filter(b => b.cageId === cageId);
+                    
+                    return (
+                      <div key={cageId} className="cage-row">
+                        <div className="cage-id-cell">{cageId}</div>
+                        <div className="date-grid">
+                          {/* Date cells as background */}
+                          {dates.map(date => (
+                            <div key={date} className="grid-cell" style={{ width: `${CELL_WIDTH}px` }} />
+                          ))}
                           
-                          return (
-                            <Dropdown
-                              key={booking.id}
-                              menu={{ items: getContextMenuItems(booking) }}
-                              trigger={['contextMenu']}
-                            >
-                              <div
-                                className="booking-bar booking-bar-green"
-                                style={{
-                                  left: `${leftPosition + 4}px`,
-                                  width: `${barWidth - 8}px`,
-                                }}
+                          {/* Booking bars as overlays */}
+                          {cageBookings.map(booking => {
+                            const duration = booking.endDate - booking.startDate + 1;
+                            const leftPosition = (booking.startDate - 1) * CELL_WIDTH;
+                            const barWidth = duration * CELL_WIDTH;
+                            
+                            return (
+                              <Dropdown
+                                key={booking.id}
+                                menu={{ items: getContextMenuItems(booking) }}
+                                trigger={['contextMenu']}
                               >
-                                <div className="booking-text">
-                                  {booking.customerName} - {booking.hamsterName}
+                                <div
+                                  className="booking-bar booking-bar-green"
+                                  style={{
+                                    left: `${leftPosition + 4}px`,
+                                    width: `${barWidth - 8}px`,
+                                  }}
+                                >
+                                  <div className="booking-text">
+                                    {booking.customerName} - {booking.hamsterName}
+                                  </div>
                                 </div>
-                              </div>
-                            </Dropdown>
-                          );
-                        })}
+                              </Dropdown>
+                            );
+                          })}
+                        </div>
                       </div>
-                    </div>
-                  );
-                })}
-              </div>
-            ))}
+                    );
+                  })}
+                </div>
+              );
+            })}
           </div>
         </div>
       </Card>
@@ -301,7 +316,7 @@ const BoardingSchedule = () => {
                       trigger={['contextMenu']}
                     >
                       <div
-                        className="booking-bar booking-bar-orange"
+                        className={`booking-bar ${booking.status === 'CHECK_IN' ? 'booking-bar-green' : 'booking-bar-orange'}`}
                         style={{
                           left: `${leftPosition + 4}px`,
                           width: `${barWidth - 8}px`,

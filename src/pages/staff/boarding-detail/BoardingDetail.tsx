@@ -1,8 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Card, Spin, Alert, Button, Tag, Descriptions, Avatar } from 'antd';
-import { ArrowLeftOutlined, UserOutlined, CalendarOutlined, ShoppingOutlined } from '@ant-design/icons';
+import { Card, Spin, Alert, Button, Tag, Descriptions, Avatar, Modal, Upload, message, List, Radio } from 'antd';
+import { ArrowLeftOutlined, UserOutlined, CalendarOutlined, ShoppingOutlined, UploadOutlined, CameraOutlined, HomeOutlined } from '@ant-design/icons';
 import { boardingService, type BookingDetail } from '../../../services/BoardingService';
+import { cageService, type Cage } from '../../../services/CageService';
+import { storage } from '../../../config/firebase';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import type { UploadProps } from 'antd/es/upload/interface';
+import { toast } from 'react-toastify';
 import './BoardingDetail.scss';
 
 const BoardingDetail: React.FC = () => {
@@ -11,6 +16,17 @@ const BoardingDetail: React.FC = () => {
   const [bookingDetail, setBookingDetail] = useState<BookingDetail | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [checkInModalVisible, setCheckInModalVisible] = useState<boolean>(false);
+  const [checkInLoading, setCheckInLoading] = useState<boolean>(false);
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string>('');
+  
+  // Cage assignment states
+  const [cageAssignModalVisible, setCageAssignModalVisible] = useState<boolean>(false);
+  const [availableCages, setAvailableCages] = useState<Cage[]>([]);
+  const [selectedCageId, setSelectedCageId] = useState<string>('');
+  const [cageLoading, setCageLoading] = useState<boolean>(false);
+  const [assignCageLoading, setAssignCageLoading] = useState<boolean>(false);
 
   useEffect(() => {
     if (bookingId) {
@@ -35,6 +51,8 @@ const BoardingDetail: React.FC = () => {
   const getStatusColor = (status: string) => {
     const statusColors: Record<string, string> = {
       'PAID': 'green',
+      'CONFIRMED': 'cyan',
+      'CHECK_IN': 'blue',
       'CHECKED_IN': 'blue',
       'CHECKED_OUT': 'orange',
       'CANCELLED': 'red',
@@ -46,6 +64,8 @@ const BoardingDetail: React.FC = () => {
   const getStatusText = (status: string) => {
     const statusTexts: Record<string, string> = {
       'PAID': 'Đã thanh toán',
+      'CONFIRMED': 'Đã xác nhận',
+      'CHECK_IN': 'Đã check-in',
       'CHECKED_IN': 'Đã check-in',
       'CHECKED_OUT': 'Đã check-out',
       'CANCELLED': 'Đã hủy',
@@ -63,6 +83,173 @@ const BoardingDetail: React.FC = () => {
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('vi-VN');
+  };
+
+  // Handle image file selection
+  const handleImageUpload: UploadProps['customRequest'] = ({ file, onSuccess, onError }) => {
+    if (file instanceof File) {
+      // Validate file type
+      const isImage = file.type.startsWith('image/');
+      if (!isImage) {
+        message.error('Chỉ được phép tải lên file hình ảnh!');
+        onError?.(new Error('Invalid file type'));
+        return;
+      }
+
+      // Validate file size (max 5MB)
+      const isLt5M = file.size / 1024 / 1024 < 5;
+      if (!isLt5M) {
+        message.error('Kích thước file phải nhỏ hơn 5MB!');
+        onError?.(new Error('File too large'));
+        return;
+      }
+
+      setImageFile(file);
+      
+      // Create preview
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setImagePreview(e.target?.result as string);
+      };
+      reader.readAsDataURL(file);
+      
+      onSuccess?.(file);
+    }
+  };
+
+  // Handle check-in process
+  const handleCheckIn = async () => {
+    if (!imageFile || !bookingId) {
+      message.error('Vui lòng chọn hình ảnh check-in!');
+      return;
+    }
+
+    try {
+      setCheckInLoading(true);
+
+      // Upload image to Firebase Storage
+      const timestamp = Date.now();
+      const storageRef = ref(storage, `check-in-images/${bookingId}_${timestamp}`);
+      const snapshot = await uploadBytes(storageRef, imageFile);
+      const imageUrl = await getDownloadURL(snapshot.ref);
+
+      // Call check-in API
+      await boardingService.checkInBooking({
+        bookingId: bookingId,
+        checkInImage: imageUrl
+      });
+
+      // Show toast success notification
+      toast.success('Check in thành công!', {
+        position: 'top-right',
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      });
+      
+      setCheckInModalVisible(false);
+      
+      // Refresh booking details
+      await fetchBookingDetail(bookingId);
+      
+      // Reset form
+      setImageFile(null);
+      setImagePreview('');
+    } catch (error) {
+      console.error('Check-in error:', error);
+      message.error('Có lỗi xảy ra khi check-in. Vui lòng thử lại!');
+    } finally {
+      setCheckInLoading(false);
+    }
+  };
+
+  // Reset modal state when closing
+  const handleModalCancel = () => {
+    setCheckInModalVisible(false);
+    setImageFile(null);
+    setImagePreview('');
+  };
+
+  // Fetch available cages for the booking's cage type and start date
+  const fetchAvailableCages = async () => {
+    if (!bookingDetail) return;
+    
+    try {
+      setCageLoading(true);
+      const response = await cageService.getCagesByTypeAndDate({
+        cageTypeId: bookingDetail.cageTypeId,
+        date: bookingDetail.startDate
+      });
+      
+      // Filter only available cages
+      const availableCages = response.cages.filter(cage => cage.status === 'Available');
+      setAvailableCages(availableCages);
+      
+      if (availableCages.length === 0) {
+        message.warning('Không có chuồng trống cho loại chuồng này trong ngày bắt đầu!');
+      }
+    } catch (error) {
+      console.error('Error fetching available cages:', error);
+      message.error('Không thể tải danh sách chuồng. Vui lòng thử lại!');
+    } finally {
+      setCageLoading(false);
+    }
+  };
+
+  // Handle cage assignment modal opening
+  const handleOpenCageAssignModal = () => {
+    setCageAssignModalVisible(true);
+    setSelectedCageId('');
+    fetchAvailableCages();
+  };
+
+  // Handle cage assignment modal closing
+  const handleCageAssignModalCancel = () => {
+    setCageAssignModalVisible(false);
+    setSelectedCageId('');
+    setAvailableCages([]);
+  };
+
+  // Handle cage assignment confirmation
+  const handleAssignCage = async () => {
+    if (!selectedCageId || !bookingId) {
+      message.error('Vui lòng chọn một chuồng!');
+      return;
+    }
+
+    try {
+      setAssignCageLoading(true);
+      
+      await boardingService.assignCage({
+        bookingId: bookingId,
+        cageId: selectedCageId
+      });
+
+      toast.success('Nhập chuồng thành công!', {
+        position: 'top-right',
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      });
+
+      setCageAssignModalVisible(false);
+      
+      // Refresh booking details
+      await fetchBookingDetail(bookingId);
+      
+      // Reset form
+      setSelectedCageId('');
+      setAvailableCages([]);
+    } catch (error) {
+      console.error('Cage assignment error:', error);
+      message.error('Có lỗi xảy ra khi phân chuồng. Vui lòng thử lại!');
+    } finally {
+      setAssignCageLoading(false);
+    }
   };
 
   if (loading) {
@@ -271,6 +458,215 @@ const BoardingDetail: React.FC = () => {
             )}
           </Card>
         </div>
+
+        {/* Check-in Button for CONFIRMED and PAID bookings */}
+        {(bookingDetail.status === 'CONFIRMED' || bookingDetail.status === 'PAID') && (
+          <div className="info-section">
+            <div style={{ textAlign: 'center' }}>
+              <Button
+                type="primary"
+                size="large"
+                icon={<CameraOutlined />}
+                onClick={() => setCheckInModalVisible(true)}
+                className="check-in-button"
+              >
+                Check In
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {/* Cage Assignment Button for CHECK_IN bookings */}
+        {bookingDetail.status === 'CHECK_IN' && (
+          <div className="info-section">
+            <div style={{ textAlign: 'center' }}>
+              <Button
+                type="primary"
+                size="large"
+                icon={<HomeOutlined />}
+                onClick={handleOpenCageAssignModal}
+                className="check-in-button"
+                style={{ 
+                  background: 'linear-gradient(135deg, #1890ff, #40a9ff)',
+                  borderColor: '#1890ff'
+                }}
+              >
+                Nhập chuồng
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {/* Check-in Modal */}
+        <Modal
+          title={
+            <div className="modal-title">
+              <CameraOutlined />
+              <span style={{ marginLeft: 8 }}>Check-in Booking</span>
+            </div>
+          }
+          open={checkInModalVisible}
+          onCancel={handleModalCancel}
+          footer={[
+            <Button key="cancel" onClick={handleModalCancel}>
+              Hủy
+            </Button>,
+            <Button
+              key="checkin"
+              type="primary"
+              loading={checkInLoading}
+              onClick={handleCheckIn}
+              disabled={!imageFile}
+            >
+              Xác nhận Check-in
+            </Button>
+          ]}
+          width={500}
+        >
+          <div className="check-in-form">
+            <p style={{ marginBottom: 16, color: '#666' }}>
+              Vui lòng tải lên hình ảnh check-in để xác nhận hamster đã được gửi vào chuồng.
+            </p>
+            
+            <Upload
+              accept="image/*"
+              customRequest={handleImageUpload}
+              showUploadList={false}
+              maxCount={1}
+            >
+              <div className="upload-area" style={{
+                border: '2px dashed #d9d9d9',
+                borderRadius: 8,
+                padding: '40px 20px',
+                textAlign: 'center',
+                cursor: 'pointer',
+                transition: 'border-color 0.3s',
+                backgroundColor: '#fafafa'
+              }}>
+                {imagePreview ? (
+                  <div>
+                    <img
+                      src={imagePreview}
+                      alt="Preview"
+                      style={{
+                        maxWidth: '100%',
+                        maxHeight: 200,
+                        marginBottom: 16,
+                        borderRadius: 8
+                      }}
+                    />
+                    <p style={{ margin: 0, color: '#666' }}>
+                      Click để thay đổi hình ảnh
+                    </p>
+                  </div>
+                ) : (
+                  <div>
+                    <UploadOutlined style={{ fontSize: 48, color: '#999', marginBottom: 16 }} />
+                    <p style={{ margin: 0, fontSize: 16, color: '#666' }}>
+                      Click hoặc kéo thả file vào đây
+                    </p>
+                    <p style={{ margin: '8px 0 0 0', fontSize: 14, color: '#999' }}>
+                      Hỗ trợ: JPG, PNG, GIF (tối đa 5MB)
+                    </p>
+                  </div>
+                )}
+              </div>
+            </Upload>
+          </div>
+        </Modal>
+
+        {/* Cage Assignment Modal */}
+        <Modal
+          title={
+            <div className="modal-title">
+              <HomeOutlined />
+              <span style={{ marginLeft: 8 }}>Phân chuồng cho Hamster</span>
+            </div>
+          }
+          open={cageAssignModalVisible}
+          onCancel={handleCageAssignModalCancel}
+          footer={[
+            <Button key="cancel" onClick={handleCageAssignModalCancel}>
+              Hủy
+            </Button>,
+            <Button
+              key="assign"
+              type="primary"
+              loading={assignCageLoading}
+              onClick={handleAssignCage}
+              disabled={!selectedCageId}
+            >
+              Xác nhận phân chuồng
+            </Button>
+          ]}
+          width={600}
+        >
+          <div className="cage-assign-form">
+            <p style={{ marginBottom: 16, color: '#666' }}>
+              Chọn chuồng trống cho <strong>{bookingDetail?.hamsterName}</strong> 
+              ({bookingDetail?.cageTypeName})
+            </p>
+            
+            {cageLoading ? (
+              <div style={{ textAlign: 'center', padding: '40px 0' }}>
+                <Spin size="large" />
+                <p style={{ marginTop: 16, color: '#666' }}>Đang tải danh sách chuồng...</p>
+              </div>
+            ) : availableCages.length > 0 ? (
+              <Radio.Group
+                value={selectedCageId}
+                onChange={(e) => setSelectedCageId(e.target.value)}
+                style={{ width: '100%' }}
+              >
+                <List
+                  dataSource={availableCages}
+                  renderItem={(cage) => (
+                    <List.Item
+                      key={cage.cageId}
+                      style={{
+                        padding: '12px 16px',
+                        border: selectedCageId === cage.cageId ? '2px solid #1890ff' : '1px solid #f0f0f0',
+                        borderRadius: 8,
+                        marginBottom: 8,
+                        backgroundColor: selectedCageId === cage.cageId ? '#f6ffed' : '#fafafa',
+                        cursor: 'pointer',
+                        transition: 'all 0.3s ease'
+                      }}
+                      onClick={() => setSelectedCageId(cage.cageId)}
+                    >
+                      <List.Item.Meta
+                        avatar={
+                          <Radio value={cage.cageId} />
+                        }
+                        title={
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                            <HomeOutlined style={{ color: '#1890ff' }} />
+                            <span>Chuồng {cage.cageId}</span>
+                          </div>
+                        }
+                        description={
+                          <Tag color="green">
+                            {cage.status === 'Available' ? 'Trống' : cage.status}
+                          </Tag>
+                        }
+                      />
+                    </List.Item>
+                  )}
+                />
+              </Radio.Group>
+            ) : (
+              <div style={{ textAlign: 'center', padding: '40px 20px' }}>
+                <HomeOutlined style={{ fontSize: 48, color: '#ccc', marginBottom: 16 }} />
+                <p style={{ color: '#666', margin: 0 }}>
+                  Không có chuồng trống cho loại chuồng này
+                </p>
+                <p style={{ color: '#999', margin: '8px 0 0 0', fontSize: 14 }}>
+                  Thử lại sau hoặc chọn ngày khác
+                </p>
+              </div>
+            )}
+          </div>
+        </Modal>
       </div>
     </div>
   );
