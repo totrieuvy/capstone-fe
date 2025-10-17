@@ -1,18 +1,28 @@
-import  { useState } from 'react';
-import { Card } from 'antd';
+import { useState, useEffect } from 'react';
+import { Card, Spin, Alert, Button, Dropdown, type MenuProps } from 'antd';
+import { LeftOutlined, RightOutlined, EyeOutlined, ClockCircleOutlined } from '@ant-design/icons';
+import { useNavigate } from 'react-router-dom';
+import dayjs, { Dayjs } from 'dayjs';
+import 'dayjs/locale/vi';
+import { boardingService, type BookingByDateRange } from '../../../services/BoardingService';
+
+// Set Vietnamese locale for dayjs
+dayjs.locale('vi');
 import './BoardingSchedule.scss';
 
 interface Booking {
   id: string;
   cageId: string;
-  cageType: 'Cơ bản' | 'Tiêu chuẩn' | 'Đầy đủ' | 'Vip';
+  cageType: string;
   startDate: number;
   endDate: number;
   customerName: string;
   hamsterName: string;
+  status: string;
 }
 
 const BoardingSchedule = () => {
+  const navigate = useNavigate();
   const cagesByType = {
     'Cơ bản': ['CB-001', 'CB-002', 'CB-003'],
     'Tiêu chuẩn': ['TC-001', 'TC-002', 'TC-003'],
@@ -20,45 +30,141 @@ const BoardingSchedule = () => {
     'Vip': ['VIP-001', 'VIP-002', 'VIP-003']
   };
 
-  // const allCages = [
-  //   ...cagesByType['Cơ bản'].map(id => ({ id, type: 'Cơ bản' as const })),
-  //   ...cagesByType['Tiêu chuẩn'].map(id => ({ id, type: 'Tiêu chuẩn' as const })),
-  //   ...cagesByType['Đầy đủ'].map(id => ({ id, type: 'Đầy đủ' as const })),
-  //   ...cagesByType['Vip'].map(id => ({ id, type: 'Vip' as const })),
-  // ];
+  // State for current month and API data
+  const [currentMonth, setCurrentMonth] = useState<Dayjs>(dayjs());
+  const [bookings, setBookings] = useState<BookingByDateRange[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const [checkedInBookings] = useState<Booking[]>([
-    { id: 'B1', cageId: 'CB-001', cageType: 'Cơ bản', startDate: 1, endDate: 4, customerName: 'Nguyễn Văn A', hamsterName: 'Mochi' },
-    { id: 'B2', cageId: 'CB-002', cageType: 'Cơ bản', startDate: 1, endDate: 4, customerName: 'Trần Thị B', hamsterName: 'Bông' },
-    { id: 'B3', cageId: 'CB-003', cageType: 'Cơ bản', startDate: 2, endDate: 5, customerName: 'Lê Văn C', hamsterName: 'Peanut' },
-    { id: 'B4', cageId: 'TC-001', cageType: 'Tiêu chuẩn', startDate: 2, endDate: 11, customerName: 'Phạm Thị D', hamsterName: 'Bubble' },
-    { id: 'B5', cageId: 'TC-002', cageType: 'Tiêu chuẩn', startDate: 2, endDate: 3, customerName: 'Hoàng Văn E', hamsterName: 'Cookie' },
-    { id: 'B6', cageId: 'TC-003', cageType: 'Tiêu chuẩn', startDate: 2, endDate: 4, customerName: 'Võ Thị F', hamsterName: 'Oreo' },
-    { id: 'B7', cageId: 'DD-001', cageType: 'Đầy đủ', startDate: 3, endDate: 5, customerName: 'Đặng Văn G', hamsterName: 'Fluffy' },
-    { id: 'B8', cageId: 'DD-002', cageType: 'Đầy đủ', startDate: 3, endDate: 6, customerName: 'Bùi Thị H', hamsterName: 'Coco' },
-    { id: 'B9', cageId: 'DD-003', cageType: 'Đầy đủ', startDate: 2, endDate: 4, customerName: 'Dương Văn I', hamsterName: 'Marshmallow' },
-    { id: 'B10', cageId: 'VIP-001', cageType: 'Vip', startDate: 2, endDate: 4, customerName: 'Mai Thị K', hamsterName: 'Prince' },
-    { id: 'B11', cageId: 'VIP-002', cageType: 'Vip', startDate: 3, endDate: 5, customerName: 'Chu Văn L', hamsterName: 'Princess' },
-    { id: 'B12', cageId: 'VIP-003', cageType: 'Vip', startDate: 4, endDate: 6, customerName: 'Lý Thị M', hamsterName: 'Cupcake' },
-  ]);
+  // Context menu handlers
+  const handleViewDetails = (booking: Booking) => {
+    navigate(`/STAFF/booking-detail/${booking.id}`);
+  };
 
-  const [notCheckedInBookings] = useState<Booking[]>([
-    { id: 'B13', cageId: 'CB-001', cageType: 'Cơ bản', startDate: 5, endDate: 6, customerName: 'Phan Văn N', hamsterName: 'Butter' },
-    { id: 'B14', cageId: 'CB-002', cageType: 'Cơ bản', startDate: 5, endDate: 8, customerName: 'Tô Thị O', hamsterName: 'Snowball' },
-    { id: 'B15', cageId: 'CB-003', cageType: 'Cơ bản', startDate: 6, endDate: 10, customerName: 'Cao Văn P', hamsterName: 'Nugget' },
-    { id: 'B16', cageId: 'TC-001', cageType: 'Tiêu chuẩn', startDate: 4, endDate: 5, customerName: 'Hồ Thị Q', hamsterName: 'Dumpling' },
-    { id: 'B17', cageId: 'TC-002', cageType: 'Tiêu chuẩn', startDate: 4, endDate: 9, customerName: 'Đinh Văn R', hamsterName: 'Tofu' },
-    { id: 'B18', cageId: 'TC-003', cageType: 'Tiêu chuẩn', startDate: 5, endDate: 6, customerName: 'Vũ Thị S', hamsterName: 'Pudding' },
-    { id: 'B19', cageId: 'DD-001', cageType: 'Đầy đủ', startDate: 5, endDate: 6, customerName: 'Trịnh Văn T', hamsterName: 'Brownie' },
-    { id: 'B20', cageId: 'DD-002', cageType: 'Đầy đủ', startDate: 5, endDate: 7, customerName: 'Lưu Thị U', hamsterName: 'Muffin' },
-    { id: 'B21', cageId: 'DD-003', cageType: 'Đầy đủ', startDate: 5, endDate: 10, customerName: 'Đỗ Văn V', hamsterName: 'Waffle' },
-    { id: 'B22', cageId: 'VIP-001', cageType: 'Vip', startDate: 5, endDate: 6, customerName: 'Ngô Thị W', hamsterName: 'Truffle' },
-    { id: 'B23', cageId: 'VIP-002', cageType: 'Vip', startDate: 5, endDate: 6, customerName: 'Hà Văn X', hamsterName: 'Caramel' },
-    { id: 'B24', cageId: 'VIP-003', cageType: 'Vip', startDate: 5, endDate: 8, customerName: 'Lâm Thị Y', hamsterName: 'Biscuit' },
-  ]);
+  const handleExtend = (booking: Booking) => {
+    console.log('Extend booking:', booking);
+    // TODO: Implement extend booking functionality
+  };
 
-  const dates = Array.from({ length: 11 }, (_, i) => i + 1);
+  // Create context menu items
+  const getContextMenuItems = (booking: Booking): MenuProps['items'] => [
+    {
+      key: 'viewDetails',
+      label: 'Xem chi tiết',
+      icon: <EyeOutlined />,
+      onClick: () => handleViewDetails(booking),
+    },
+    {
+      key: 'extend',
+      label: 'Gia hạn',
+      icon: <ClockCircleOutlined />,
+      onClick: () => handleExtend(booking),
+    },
+  ];
+
+  // Fetch bookings for the current month
+  const fetchBookings = async (month: Dayjs) => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      const startDate = month.startOf('month').format('YYYY-MM-DD');
+      const endDate = month.endOf('month').format('YYYY-MM-DD');
+      
+      const data = await boardingService.getBookingsByDateRange({
+        startDate,
+        endDate
+      });
+      
+      setBookings(data);
+    } catch (err) {
+      setError('Không thể tải dữ liệu lịch ký gửi. Vui lòng thử lại.');
+      console.error('Error fetching bookings:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Map cage type names to standard types
+  const mapCageType = (apiCageTypeName: string): string => {
+    const lowerName = apiCageTypeName.toLowerCase();
+    if (lowerName.includes('cơ bản') || lowerName.includes('basic')) return 'Cơ bản';
+    if (lowerName.includes('tiêu chuẩn') || lowerName.includes('standard')) return 'Tiêu chuẩn';
+    if (lowerName.includes('đầy đủ') || lowerName.includes('full')) return 'Đầy đủ';
+    if (lowerName.includes('vip')) return 'Vip';
+    return 'Cơ bản'; // Default fallback
+  };
+
+  // Convert API data to display format
+  const convertToDisplayBookings = (apiBookings: BookingByDateRange[]): Booking[] => {
+    const cageAssignments: { [key: string]: number } = {};
+    
+    return apiBookings.map(booking => {
+      const startDay = dayjs(booking.startDate).date();
+      const endDay = dayjs(booking.endDate).date();
+      const cageType = mapCageType(booking.cageTypeName);
+      
+      // Assign virtual cage IDs based on cage type
+      const typePrefix = cageType === 'Cơ bản' ? 'CB' : 
+                        cageType === 'Tiêu chuẩn' ? 'TC' : 
+                        cageType === 'Đầy đủ' ? 'DD' : 'VIP';
+      
+      if (!cageAssignments[cageType]) {
+        cageAssignments[cageType] = 1;
+      }
+      
+      const cageNumber = cageAssignments[cageType];
+      cageAssignments[cageType]++;
+      
+      return {
+        id: booking.bookingId,
+        cageId: `${typePrefix}-${String(cageNumber).padStart(3, '0')}`,
+        cageType,
+        startDate: startDay,
+        endDate: endDay,
+        customerName: booking.customerName,
+        hamsterName: booking.hamsterName,
+        status: booking.status
+      };
+    });
+  };
+
+  // Initialize data on component mount
+  useEffect(() => {
+    fetchBookings(currentMonth);
+  }, [currentMonth]);
+
+  // Separate bookings by status
+  // First table: Bookings that are checked in or in progress (CHECKED_IN, IN_PROGRESS, CHECK_OUT)
+  const checkedInBookings = convertToDisplayBookings(
+    bookings.filter(booking => 
+      booking.status === 'CHECK_IN' || 
+      booking.status === 'IN_PROGRESS' || 
+      booking.status === 'CHECK_OUT'
+    )
+  );
+  
+  // Second table: Bookings that are paid or confirmed but not yet checked in (PAID, CONFIRMED)
+  const notCheckedInBookings = convertToDisplayBookings(
+    bookings.filter(booking => 
+      booking.status === 'PAID' || 
+      booking.status === 'CONFIRMED'
+    )
+  );
+
+  // Generate dates for the current month
+  const daysInMonth = currentMonth.daysInMonth();
+  const dates = Array.from({ length: daysInMonth }, (_, i) => i + 1);
   const CELL_WIDTH = 80;
+
+  // Month navigation functions
+  const goToPreviousMonth = () => {
+    setCurrentMonth(prev => prev.subtract(1, 'month'));
+  };
+
+  const goToNextMonth = () => {
+    setCurrentMonth(prev => prev.add(1, 'month'));
+  };
   
   const getCageTypeClass = (cageType: string) => {
     const classes: Record<string, string> = {
@@ -85,7 +191,7 @@ const BoardingSchedule = () => {
               <div className="cage-id-header">Mã Lồng</div>
               {dates.map(date => (
                 <div key={date} className="date-cell" style={{ width: `${CELL_WIDTH}px` }}>
-                  <div>{String(date).padStart(2, '0')}/01</div>
+                  <div>{String(date).padStart(2, '0')}/{String(currentMonth.month() + 1).padStart(2, '0')}</div>
                 </div>
               ))}
             </div>
@@ -121,18 +227,23 @@ const BoardingSchedule = () => {
                           const barWidth = duration * CELL_WIDTH;
                           
                           return (
-                            <div
+                            <Dropdown
                               key={booking.id}
-                              className="booking-bar booking-bar-green"
-                              style={{
-                                left: `${leftPosition + 4}px`,
-                                width: `${barWidth - 8}px`,
-                              }}
+                              menu={{ items: getContextMenuItems(booking) }}
+                              trigger={['contextMenu']}
                             >
-                              <div className="booking-text">
-                                {booking.customerName} - {booking.hamsterName}
+                              <div
+                                className="booking-bar booking-bar-green"
+                                style={{
+                                  left: `${leftPosition + 4}px`,
+                                  width: `${barWidth - 8}px`,
+                                }}
+                              >
+                                <div className="booking-text">
+                                  {booking.customerName} - {booking.hamsterName}
+                                </div>
                               </div>
-                            </div>
+                            </Dropdown>
                           );
                         })}
                       </div>
@@ -162,7 +273,7 @@ const BoardingSchedule = () => {
               <div className="cage-id-header">Loại Lồng</div>
               {dates.map(date => (
                 <div key={date} className="date-cell" style={{ width: `${CELL_WIDTH}px` }}>
-                  <div>{String(date).padStart(2, '0')}/01</div>
+                  <div>{String(date).padStart(2, '0')}/{String(currentMonth.month() + 1).padStart(2, '0')}</div>
                 </div>
               ))}
             </div>
@@ -185,17 +296,22 @@ const BoardingSchedule = () => {
                     ))}
                     
                     {/* Booking bar as overlay */}
-                    <div
-                      className="booking-bar booking-bar-orange"
-                      style={{
-                        left: `${leftPosition + 4}px`,
-                        width: `${barWidth - 8}px`,
-                      }}
+                    <Dropdown
+                      menu={{ items: getContextMenuItems(booking) }}
+                      trigger={['contextMenu']}
                     >
-                      <div className="booking-text">
-                        {booking.customerName} - {booking.hamsterName}
+                      <div
+                        className="booking-bar booking-bar-orange"
+                        style={{
+                          left: `${leftPosition + 4}px`,
+                          width: `${barWidth - 8}px`,
+                        }}
+                      >
+                        <div className="booking-text">
+                          {booking.customerName} - {booking.hamsterName}
+                        </div>
                       </div>
-                    </div>
+                    </Dropdown>
                   </div>
                 </div>
               );
@@ -206,12 +322,72 @@ const BoardingSchedule = () => {
     );
   };
 
+  if (loading) {
+    return (
+      <div className="boarding-schedule">
+        <div className="schedule-container">
+          <div style={{ textAlign: 'center', padding: '50px' }}>
+            <Spin size="large" />
+            <p style={{ marginTop: '16px' }}>Đang tải dách sách lịch ký gửi...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="boarding-schedule">
+        <div className="schedule-container">
+          <Alert
+            message="Lỗi"
+            description={error}
+            type="error"
+            showIcon
+            action={
+              <Button size="small" onClick={() => fetchBookings(currentMonth)}>
+                Thử lại
+              </Button>
+            }
+          />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="boarding-schedule">
       <div className="schedule-container">
         <div className="page-header">
           <h1 className="page-title">Quản Lý Lịch Ký Gửi Hamster</h1>
           <p className="page-subtitle">Theo dõi và quản lý lịch trình ký gửi theo thời gian thực</p>
+          
+          {/* Month Navigation */}
+          <div className="month-navigation" style={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            justifyContent: 'center', 
+            gap: '16px', 
+            marginTop: '16px' 
+          }}>
+            <Button 
+              type="default" 
+              icon={<LeftOutlined />} 
+              onClick={goToPreviousMonth}
+            >
+              Tháng trước
+            </Button>
+            <h2 style={{ margin: 0, minWidth: '200px', textAlign: 'center' }}>
+              {currentMonth.format('MMMM YYYY')}
+            </h2>
+            <Button 
+              type="default" 
+              icon={<RightOutlined />} 
+              onClick={goToNextMonth}
+            >
+              Tháng sau
+            </Button>
+          </div>
         </div>
         
         {renderCheckedInGrid()}

@@ -1,6 +1,5 @@
 .Panel {
   display: flex;
-  height: 100vh;
   background-color: #f5f6f7;
 
   &__left {
@@ -98,14 +97,13 @@
     flex: 1;
     padding: 24px;
     background-color: #f5f6f7;
-    overflow-y: auto;
+    overflow: visible;
   }
 
   /* 🌐 Responsive */
   @media (max-width: 992px) {
     flex-direction: column;
-    height: auto;
-    min-height: 100vh;
+    min-height: auto;
 
     &__left {
       width: 100%;

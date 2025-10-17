@@ -19,7 +19,7 @@ import Species from "./pages/admin/species/Species";
 import ResetPassword from "./pages/reset-password/ResetPassword";
 import Category from "./pages/admin/category-product/Category";
 import ManageProduct from "./pages/admin/product/ManageProduct";
-import BoardingHamster from "./pages/customer/boarding/BoardingHamster";
+import BoardingHamster from "./pages/customer/boarding/BoardingBooking/BoardingHamster";
 import ProductDetail from "./pages/product-detail/ProductDetail";
 import { clearCart } from "./redux/features/cartSlice";
 import Checkout from "./pages/customer/checkout/Checkout";
@@ -36,6 +36,7 @@ import ManageTransaction from "./pages/admin/manage-transaction/ManageTransactio
 import BoardingHistory from "./pages/customer/boarding/BoardingHistory/BoardingHistory";
 import BoardingDetail from "./pages/customer/boarding/BoardingDetail/BoardingDetail";
 import BoardingSchedule from "./pages/staff/boarding/BoardingSchedule";
+import StaffBoardingDetail from "./pages/staff/boarding-detail/BoardingDetail";
 
 interface User {
   id: number;
@@ -215,6 +216,7 @@ const App = () => {
           element: <SideBar />,
           children: [
             { path: "lich-dat-boarding", element: <BoardingSchedule /> },
+            { path: "booking-detail/:bookingId", element: <StaffBoardingDetail /> },
           ],
         }
       ],

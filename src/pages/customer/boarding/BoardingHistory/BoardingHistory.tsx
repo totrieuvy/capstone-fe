@@ -10,20 +10,17 @@ import {
   Input,
   Row,
   Col,
-  Statistic,
+  
   Button
 } from 'antd';
 import {
   CalendarOutlined,
-  HomeOutlined,
-  DollarOutlined,
   SearchOutlined,
   FilterOutlined
 } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import { boardingService } from '../../../../services/BoardingService';
 import type { BookingHistoryItem } from '../../../../services/BoardingService';
-import { getFormattedPrice } from '../../../../utils/formatPrice';
 import './BoardingHistory.scss';
 
 const { Title } = Typography;
@@ -38,6 +35,7 @@ const BoardingHistory: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [searchText, setSearchText] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [cageTypeFilter, setCageTypeFilter] = useState<string>('all');
 
   useEffect(() => {
     fetchBookingHistory();
@@ -45,7 +43,7 @@ const BoardingHistory: React.FC = () => {
 
   useEffect(() => {
     filterBookings();
-  }, [bookingHistory, searchText, statusFilter]);
+  }, [bookingHistory, searchText, statusFilter, cageTypeFilter]);
 
   const fetchBookingHistory = async () => {
     try {
@@ -64,13 +62,12 @@ const BoardingHistory: React.FC = () => {
   const filterBookings = () => {
     let filtered = [...bookingHistory];
 
-    // Filter by search text (hamster name or booking ID)
+    // Filter by search text (hamster name or booking ID only)
     if (searchText) {
       filtered = filtered.filter(
         booking =>
           booking.hamsterName.toLowerCase().includes(searchText.toLowerCase()) ||
-          booking.bookingId.toLowerCase().includes(searchText.toLowerCase()) ||
-          booking.cageTypeName.toLowerCase().includes(searchText.toLowerCase())
+          booking.bookingId.toLowerCase().includes(searchText.toLowerCase())
       );
     }
 
@@ -79,17 +76,22 @@ const BoardingHistory: React.FC = () => {
       filtered = filtered.filter(booking => booking.status === statusFilter);
     }
 
+    // Filter by cage type
+    if (cageTypeFilter !== 'all') {
+      filtered = filtered.filter(booking => booking.cageTypeName === cageTypeFilter);
+    }
+
     setFilteredHistory(filtered);
   };
 
   const getStatusColor = (status: string) => {
     const statusColors = {
       'CONFIRMED': 'success',
-      'PENDING': 'warning',
-      'CANCELLED': 'error',
-      'FAILED': 'error',
-      'COMPLETED': 'blue',
-      'IN_PROGRESS': 'processing'
+      'PAID': 'blue',
+      'CHECK_IN': 'processing',
+      'IN_PROGRESS': 'processing',
+      'CHECK_OUT': 'success',
+      'NO_SHOW': 'error'
     };
     return statusColors[status as keyof typeof statusColors] || 'default';
   };
@@ -97,17 +99,23 @@ const BoardingHistory: React.FC = () => {
   const getStatusText = (status: string) => {
     const statusTexts = {
       'CONFIRMED': 'Confirmed',
-      'PENDING': 'Pending',
-      'CANCELLED': 'Cancelled',
-      'FAILED': 'Failed',
-      'COMPLETED': 'Completed',
-      'IN_PROGRESS': 'In Progress'
+      'PAID': 'Paid',
+      'CHECK_IN': 'Check-in',
+      'IN_PROGRESS': 'In Progress',
+      'CHECK_OUT': 'Check-out',
+      'NO_SHOW': 'No Show'
     };
     return statusTexts[status as keyof typeof statusTexts] || status;
   };
 
   const handleViewDetails = (booking: BookingHistoryItem) => {
     navigate(`/boarding-schedule/${booking.bookingId}`);
+  };
+
+  // Get unique cage types for filter dropdown
+  const getUniqueCageTypes = () => {
+    const cageTypes = [...new Set(bookingHistory.map(booking => booking.cageTypeName))];
+    return cageTypes.sort();
   };
 
   const renderBookingCard = (booking: BookingHistoryItem) => (
@@ -130,7 +138,7 @@ const BoardingHistory: React.FC = () => {
         <Col xs={24} sm={4}>
           <div className="booking-info-section">
             <div className="info-label">Loại chuồng</div>
-            <Tag color="blue" icon={<HomeOutlined />} className="cage-tag">
+            <Tag color="blue"  className="cage-tag">
               {booking.cageTypeName}
             </Tag>
           </div>
@@ -165,7 +173,7 @@ const BoardingHistory: React.FC = () => {
         {/* Status */}
         <Col xs={12} sm={4}>
           <div className="booking-info-section">
-            <div className="info-label">Trạng thái</div>
+            {/* <div className="info-label">Trạng thái</div> */}
             <Tag 
               color={getStatusColor(booking.status)} 
               style={{ 
@@ -197,16 +205,9 @@ const BoardingHistory: React.FC = () => {
     </Card>
   );
 
-  const getStatistics = () => {
-    const total = filteredHistory.length;
-    const confirmed = filteredHistory.filter(b => b.status === 'CONFIRMED').length;
-    const pending = filteredHistory.filter(b => b.status === 'PENDING').length;
-    const totalAmount = filteredHistory.reduce((sum, booking) => sum + booking.totalAmountAfter, 0);
 
-    return { total, confirmed, pending, totalAmount };
-  };
 
-  const stats = getStatistics();
+  // const stats = getStatistics();
 
   if (loading) {
     return (
@@ -219,7 +220,7 @@ const BoardingHistory: React.FC = () => {
 
   return (
     <div className="boarding-history">
-      <Card>
+      <Card style={{ overflow: 'visible', height: 'auto' }}>
         <div className="boarding-history-header">
           <Title level={2}>Hamster Boarding History</Title>
         </div>
@@ -235,7 +236,7 @@ const BoardingHistory: React.FC = () => {
         )}
 
         {/* Statistics Cards */}
-        <Row gutter={16} style={{ marginBottom: 24 }}>
+        {/* <Row gutter={16} style={{ marginBottom: 24 }}>
           <Col xs={24} sm={6}>
             <Card>
               <Statistic
@@ -273,14 +274,14 @@ const BoardingHistory: React.FC = () => {
               />
             </Card>
           </Col>
-        </Row>
+        </Row> */}
 
         {/* Filters */}
         <Card size="small" style={{ marginBottom: 16 }}>
           <Row gutter={16} align="middle">
             <Col xs={24} sm={8}>
               <Search
-                placeholder="Search by hamster name, booking ID, or cage type"
+                placeholder="Search by hamster name or booking ID"
                 allowClear
                 value={searchText}
                 onChange={(e) => setSearchText(e.target.value)}
@@ -297,10 +298,27 @@ const BoardingHistory: React.FC = () => {
               >
                 <Option value="all">All Status</Option>
                 <Option value="CONFIRMED">Confirmed</Option>
-                <Option value="PENDING">Pending</Option>
-                <Option value="COMPLETED">Completed</Option>
-                <Option value="CANCELLED">Cancelled</Option>
-                <Option value="FAILED">Failed</Option>
+                <Option value="PAID">Paid</Option>
+                <Option value="CHECK_IN">Check-in</Option>
+                <Option value="IN_PROGRESS">In Progress</Option>
+                <Option value="CHECK_OUT">Check-out</Option>
+                <Option value="NO_SHOW">No Show</Option>
+              </Select>
+            </Col>
+            <Col xs={24} sm={6}>
+              <Select
+                style={{ width: '100%' }}
+                placeholder="Filter by Cage Type"
+                value={cageTypeFilter}
+                onChange={setCageTypeFilter}
+                suffixIcon={<FilterOutlined />}
+              >
+                <Option value="all">All Cage Types</Option>
+                {getUniqueCageTypes().map(cageType => (
+                  <Option key={cageType} value={cageType}>
+                    {cageType}
+                  </Option>
+                ))}
               </Select>
             </Col>
           </Row>
