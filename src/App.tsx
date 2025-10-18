@@ -37,6 +37,8 @@ import BoardingHistory from "./pages/customer/boarding/BoardingHistory/BoardingH
 import BoardingDetail from "./pages/customer/boarding/BoardingDetail/BoardingDetail";
 import BoardingSchedule from "./pages/staff/boarding/BoardingSchedule";
 import StaffBoardingDetail from "./pages/staff/boarding-detail/BoardingDetail";
+import GroomingPage from "./pages/customer/grooming/dich-vu-lam-dep/GroomingPage";
+import ManageGroomingService from "./pages/admin/manage-grooming-service/ManageGroomingService";
 
 interface User {
   id: number;
@@ -120,6 +122,7 @@ const App = () => {
         { path: "/checkout", element: <Checkout /> },
         { path: "/payment-success", element: <PaymentSuccess /> },
         { path: "/payment-failure", element: <PaymentFail /> },
+        { path: "/dich-vu-lam-dep", element: <GroomingPage /> },
         {
           path: "/profile",
           element: <Panel />,
@@ -172,7 +175,7 @@ const App = () => {
               element: <BoardingDetail />,
             },
           ],
-        }
+        },
       ],
     },
     {
@@ -188,6 +191,7 @@ const App = () => {
             { path: "quan-li-loai-hamster", element: <Species /> },
             { path: "quan-li-danh-muc-san-pham", element: <Category /> },
             { path: "quan-li-loai-chuong", element: <CageType /> },
+            { path: "quan-li-dich-vu-grooming", element: <ManageGroomingService /> },
             {
               path: "quan-li-san-pham",
               element: <ManageProduct />,
@@ -212,13 +216,13 @@ const App = () => {
       element: <PrivateRoute role="STAFF" />,
       children: [
         {
-         path: "",
+          path: "",
           element: <SideBar />,
           children: [
             { path: "lich-dat-boarding", element: <BoardingSchedule /> },
             { path: "booking-detail/:bookingId", element: <StaffBoardingDetail /> },
           ],
-        }
+        },
       ],
     },
     {

@@ -1,0 +1,96 @@
+.ManageGroomingService {
+  padding: 24px;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+
+  h1 {
+    font-size: 22px;
+    font-weight: 600;
+    margin-bottom: 24px;
+    color: #2c3e50;
+  }
+
+  .toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+    gap: 12px;
+
+    .ant-input-search {
+      border-radius: 8px !important;
+    }
+
+    .ant-btn-primary {
+      border-radius: 8px;
+      height: 38px;
+      font-weight: 500;
+      box-shadow: 0 2px 6px rgba(24, 144, 255, 0.3);
+    }
+  }
+
+  // Bảng dịch vụ
+  .ant-table {
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 1px 6px rgba(0, 0, 0, 0.05);
+  }
+
+  // Căn chỉnh hàng "Giá theo loài"
+  .species-price-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 10px;
+    flex-wrap: wrap;
+
+    .ant-form-item {
+      margin-bottom: 0;
+    }
+
+    .ant-select,
+    .ant-input-number {
+      border-radius: 8px;
+    }
+
+    .ant-btn-dangerous {
+      flex-shrink: 0;
+      height: 36px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      transition: all 0.2s ease;
+      padding: 0 12px;
+
+      svg {
+        font-size: 14px;
+      }
+
+      &:hover {
+        background-color: #ff4d4f !important;
+        color: #fff !important;
+        box-shadow: 0 2px 8px rgba(255, 77, 79, 0.3);
+      }
+    }
+  }
+
+  // Modal form
+  .ant-modal-content {
+    border-radius: 12px;
+  }
+
+  .ant-form-item-label > label {
+    font-weight: 500;
+    color: #34495e;
+  }
+
+  .ant-btn-primary {
+    border-radius: 8px;
+    height: 40px;
+    font-weight: 500;
+  }
+}
