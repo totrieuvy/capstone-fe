@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Card, Spin, Alert, Button, Dropdown, type MenuProps } from 'antd';
+import { Card, Spin, Alert, Button, Dropdown, Modal, DatePicker, message, type MenuProps } from 'antd';
 import { LeftOutlined, RightOutlined, EyeOutlined, ClockCircleOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import dayjs, { Dayjs } from 'dayjs';
@@ -24,7 +24,7 @@ interface Booking {
 const BoardingSchedule = () => {
   const navigate = useNavigate();
   const cagesByType = {
-    'Cơ bản': ['CB-001', 'CB-002', 'CB-003'],
+    'Cơ bản': ['CB-001', 'CB-002', 'CB-003', 'CB-004', 'CB-005', 'CB-006', 'CB-007', 'CB-008', 'CB-009', 'CB-010'],
     'Tiêu chuẩn': ['TC-001', 'TC-002', 'TC-003'],
     'Đầy đủ': ['DD-001', 'DD-002', 'DD-003'],
     'Vip': ['VIP-001', 'VIP-002', 'VIP-003']
@@ -36,14 +36,72 @@ const BoardingSchedule = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
+  // State for extend booking modal
+  const [extendModalVisible, setExtendModalVisible] = useState<boolean>(false);
+  const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
+  const [newEndDate, setNewEndDate] = useState<Dayjs | null>(null);
+  const [extendLoading, setExtendLoading] = useState<boolean>(false);
+
   // Context menu handlers
   const handleViewDetails = (booking: Booking) => {
     navigate(`/STAFF/booking-detail/${booking.id}`);
   };
 
   const handleExtend = (booking: Booking) => {
-    console.log('Extend booking:', booking);
-    // TODO: Implement extend booking functionality
+    setSelectedBooking(booking);
+    setNewEndDate(null);
+    setExtendModalVisible(true);
+  };
+
+  // Handle extend booking submission
+  const handleExtendBooking = async () => {
+    if (!selectedBooking || !newEndDate) {
+      message.error('Vui lòng chọn ngày kết thúc mới');
+      return;
+    }
+
+    // Check if new end date is after current end date
+    const currentEndDate = dayjs().year(currentMonth.year()).month(currentMonth.month()).date(selectedBooking.endDate);
+    if (!newEndDate.isAfter(currentEndDate)) {
+      message.error('Ngày kết thúc mới phải sau ngày kết thúc hiện tại');
+      return;
+    }
+
+    try {
+      setExtendLoading(true);
+      
+      const extendResponse = await boardingService.extendBooking({
+        bookingId: selectedBooking.id,
+        newEndDate: newEndDate.format('YYYY-MM-DD')
+      });
+
+      // Update local state immediately with the new end date from API response
+      setBookings(prevBookings => 
+        prevBookings.map(booking => 
+          booking.bookingId === selectedBooking.id 
+            ? { ...booking, endDate: extendResponse.newEndDate }
+            : booking
+        )
+      );
+
+      message.success('Gia hạn thành công');
+      setExtendModalVisible(false);
+      setSelectedBooking(null);
+      setNewEndDate(null);
+      
+    } catch (error) {
+      console.error('Error extending booking:', error);
+      message.error('Không thể gia hạn đặt lịch. Vui lòng thử lại.');
+    } finally {
+      setExtendLoading(false);
+    }
+  };
+
+  // Handle modal cancel
+  const handleExtendModalCancel = () => {
+    setExtendModalVisible(false);
+    setSelectedBooking(null);
+    setNewEndDate(null);
   };
 
   // Create context menu items
@@ -408,6 +466,55 @@ const BoardingSchedule = () => {
         {renderCheckedInGrid()}
         {renderNotCheckedInGrid()}
       </div>
+
+      {/* Extend Booking Modal */}
+      <Modal
+        title="Gia hạn đặt lịch"
+        open={extendModalVisible}
+        onOk={handleExtendBooking}
+        onCancel={handleExtendModalCancel}
+        confirmLoading={extendLoading}
+        okText="Gia hạn"
+        cancelText="Hủy"
+        width={500}
+      >
+        {selectedBooking && (
+          <div style={{ marginBottom: '20px' }}>
+            <p><strong>Khách hàng:</strong> {selectedBooking.customerName}</p>
+            <p><strong>Hamster:</strong> {selectedBooking.hamsterName}</p>
+            <p><strong>Loại lồng:</strong> {selectedBooking.cageType}</p>
+            <p><strong>Ngày kết thúc hiện tại:</strong> {
+              dayjs().year(currentMonth.year()).month(currentMonth.month()).date(selectedBooking.endDate).format('DD/MM/YYYY')
+            }</p>
+          </div>
+        )}
+        
+        <div style={{ marginBottom: '16px' }}>
+          <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>
+            Chọn ngày kết thúc mới:
+          </label>
+          <DatePicker
+            value={newEndDate}
+            onChange={setNewEndDate}
+            format="DD/MM/YYYY"
+            placeholder="Chọn ngày kết thúc mới"
+            style={{ width: '100%' }}
+            disabledDate={(current) => {
+              if (!selectedBooking) return true;
+              const currentEndDate = dayjs().year(currentMonth.year()).month(currentMonth.month()).date(selectedBooking.endDate);
+              return current && current.isBefore(currentEndDate, 'day');
+            }}
+          />
+        </div>
+        
+        <Alert
+          message="Lưu ý"
+          description="Ngày kết thúc mới phải sau ngày kết thúc hiện tại. Phí gia hạn sẽ được tính theo số ngày gia hạn."
+          type="info"
+          showIcon
+          style={{ marginTop: '16px' }}
+        />
+      </Modal>
     </div>
   );
 };
