@@ -39,6 +39,7 @@ import BoardingSchedule from "./pages/staff/boarding/BoardingSchedule";
 import StaffBoardingDetail from "./pages/staff/boarding-detail/BoardingDetail";
 import GroomingPage from "./pages/customer/grooming/dich-vu-lam-dep/GroomingPage";
 import ManageGroomingService from "./pages/admin/manage-grooming-service/ManageGroomingService";
+import CageManagement from "./pages/staff/cage/CageManagement";
 
 interface User {
   id: number;
@@ -221,6 +222,7 @@ const App = () => {
           children: [
             { path: "lich-dat-boarding", element: <BoardingSchedule /> },
             { path: "booking-detail/:bookingId", element: <StaffBoardingDetail /> },
+            { path: "quan-li-chuong", element: <CageManagement /> },
           ],
         },
       ],

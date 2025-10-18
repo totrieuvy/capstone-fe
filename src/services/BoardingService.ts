@@ -156,30 +156,86 @@ export interface FileUploadResponse {
   url: string;
 }
 
-// Type definitions for booking check-in
+// Type definitions for booking check-in with cage assignment
 export interface BookingCheckInRequest {
   bookingId: string;
   checkInImage: string;
+  cageId: string;
+}
+
+export interface DayAssignment {
+  bookingDetailId: string;
+  date: string; // Format: YYYY-MM-DD
+  assigned: boolean;
+  assignmentMessage: string;
 }
 
 export interface BookingCheckInResponse {
   bookingId: string;
   actualCheckInDate: string; // Format: YYYY-MM-DD
+  checkOutDate: string; // Format: YYYY-MM-DD
   status: string;
   checkInImageUrl: string;
+  cageId: string;
+  totalDaysAssigned: number;
+  totalDays: number;
+  dayAssignments: DayAssignment[];
   message: string;
 }
 
-// Type definitions for cage assignment
-export interface AssignCageRequest {
+// Type definitions for booking extension
+export interface ExtendBookingRequest {
   bookingId: string;
-  cageId: string;
+  newEndDate: string; // Format: YYYY-MM-DD
+  serviceIds?: string[]; // Optional service IDs for the extended period
 }
 
-export interface AssignCageResponse {
+export interface ExtendedDayDetail {
+  bookingDetailId: string;
+  date: string; // Format: YYYY-MM-DD
+  cagePrice: number;
+  servicesPrice: number;
+  holidaySurcharge: number;
+  membershipDiscount: number;
+  dailyTotal: number;
+}
+
+export interface ExtendBookingResponse {
   bookingId: string;
-  cageId: string;
-  totalDetailsAssigned: number;
+  originalEndDate: string; // Format: YYYY-MM-DD
+  newEndDate: string; // Format: YYYY-MM-DD
+  extendedDays: number;
+  extensionAmount: number;
+  membershipDiscount: number;
+  totalAmountAfter: number;
+  paymentStatus: string;
+  extendedDayDetails: ExtendedDayDetail[];
+  message: string;
+}
+
+// Type definitions for adding services to existing booking
+export interface AddServiceToBookingRequest {
+  bookingId: string;
+  serviceDate: string; // Format: YYYY-MM-DD
+  serviceIds: string[];
+}
+
+export interface ServiceAdded {
+  serviceId: string;
+  serviceName: string;
+  serviceType: string;
+  price: number;
+}
+
+export interface AddServiceToBookingResponse {
+  bookingId: string;
+  bookingDetailId: string;
+  serviceDate: string;
+  servicesAdded: ServiceAdded[];
+  additionalAmount: number;
+  membershipDiscount: number;
+  totalAdditionalAmount: number;
+  newTotalAmountAfter: number;
   message: string;
 }
 
@@ -301,7 +357,7 @@ export const boardingService = {
     }
   },
 
-  // Check in a booking with image
+  // Check in a booking with image and assign cage
   checkInBooking: async (request: BookingCheckInRequest): Promise<BookingCheckInResponse> => {
     try {
       const response = await api.post<ApiResponse<BookingCheckInResponse>>(
@@ -310,21 +366,35 @@ export const boardingService = {
       );
       return response.data.data;
     } catch (error) {
-      console.error("Error checking in booking:", error);
+      console.error("Error checking in booking and assigning cage:", error);
       throw error;
     }
   },
 
-  // Assign a cage to a booking
-  assignCage: async (request: AssignCageRequest): Promise<AssignCageResponse> => {
+  // Extend a booking with new end date and optional services
+  extendBooking: async (request: ExtendBookingRequest): Promise<ExtendBookingResponse> => {
     try {
-      const response = await api.post<ApiResponse<AssignCageResponse>>(
-        "/api/booking/assign-cage",
+      const response = await api.post<ApiResponse<ExtendBookingResponse>>(
+        "/api/booking/extend",
         request
       );
       return response.data.data;
     } catch (error) {
-      console.error("Error assigning cage to booking:", error);
+      console.error("Error extending booking:", error);
+      throw error;
+    }
+  },
+
+  // Add services to an existing booking for a specific date
+  addServiceToBooking: async (request: AddServiceToBookingRequest): Promise<AddServiceToBookingResponse> => {
+    try {
+      const response = await api.post<ApiResponse<AddServiceToBookingResponse>>(
+        "/api/booking/add-service",
+        request
+      );
+      return response.data.data;
+    } catch (error) {
+      console.error("Error adding services to booking:", error);
       throw error;
     }
   },
