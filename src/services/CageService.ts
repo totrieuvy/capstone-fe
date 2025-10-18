@@ -3,6 +3,7 @@ import api from "../config/axios";
 // Type definitions for cage data
 export interface Cage {
   cageId: string;
+  cageName: string;
   status: "Available" | "In Use";
 }
 

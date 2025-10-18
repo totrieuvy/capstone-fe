@@ -128,7 +128,8 @@ function BoardingHamster() {
           image: cageType.imageUrl,
           material: cageType.material,
           isActive: cageType.isActive,
-        }));
+        }))
+        .sort((a, b) => a.pricePerDay - b.pricePerDay); // Sort by price lowest to highest
       
       setCageTypes(mappedCageTypes);
     } catch (error) {
