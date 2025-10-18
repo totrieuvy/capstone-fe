@@ -1,51 +1,35 @@
 .banner {
   position: relative;
   width: 100%;
-  height: 75vh;
+  height: 400px; // hoặc auto nếu responsive
   overflow: hidden;
 
   img {
-    position: absolute;
-    top: 0;
-    left: 0;
     width: 100%;
     height: 100%;
     object-fit: cover;
-
     opacity: 0;
+    position: absolute;
+    top: 0;
+    left: 0;
     transition: opacity 1s ease-in-out;
-    z-index: 0;
-  }
 
-  img.active {
-    opacity: 1;
-    z-index: 10;
+    &.active {
+      opacity: 1;
+      z-index: 1;
+    }
   }
 
   .banner-text {
     position: absolute;
     top: 50%;
     left: 50%;
-    transform: translate(-50%, -50%);
-    color: #ffeb3b;
-    font-size: 3rem;
-    font-weight: 800;
+    transform: translate(-50%, -50%); // ✅ căn giữa cả dọc & ngang
+    color: yellow;
+    font-weight: bold;
+    font-size: 2rem;
     text-align: center;
-    text-transform: uppercase;
-    text-shadow: 0 0 15px rgba(255, 235, 59, 0.8), 0 0 30px rgba(255, 235, 59, 0.6);
-    letter-spacing: 2px;
-    z-index: 20;
-    animation: fadeInUp 1.5s ease-out forwards;
-
-    @keyframes fadeInUp {
-      0% {
-        opacity: 0;
-        transform: translate(-50%, -40%);
-      }
-      100% {
-        opacity: 1;
-        transform: translate(-50%, -50%);
-      }
-    }
+    z-index: 2;
+    white-space: pre-wrap; // đảm bảo xuống dòng đúng
   }
 }
