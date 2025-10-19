@@ -15,7 +15,7 @@ import {
   VideoCameraOutlined,
   PlayCircleOutlined,
   EyeOutlined,
-  StarOutlined,,
+  StarOutlined,
   ScissorOutlined
 } from "@ant-design/icons";
 import { useParams, useNavigate } from "react-router-dom";
@@ -565,7 +565,11 @@ const BoardingDetail: React.FC = () => {
             <Spin size="large" />
             <p style={{ marginTop: "10px" }}>Đang kết nối camera...</p>
           </div>
-        </div>
+        ) : (
+          <div className="video-container">
+            <video ref={videoRef} style={{ width: "100%", height: "400px" }} controls />
+          </div>
+        )}
       </Modal>
 
       {/* Grooming Service Modal */}
