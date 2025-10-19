@@ -53,10 +53,11 @@ const BoardingDetail: React.FC = () => {
           videoElement.play().catch((e) => console.error("Autoplay bị chặn", e));
         });
         hls.on(Hls.Events.ERROR, (event, data) => {
+          console.log(event);
           console.error("HLS.js Error:", data);
         });
       } else if (videoElement.canPlayType("application/vnd.apple.mpegurl")) {
-        videoElement.src = hlsUrl; 
+        videoElement.src = hlsUrl;
         videoElement.play().catch((e) => console.error("Autoplay native bị chặn", e));
       }
     }
@@ -83,14 +84,14 @@ const BoardingDetail: React.FC = () => {
       const result = response.data;
 
       if (result.code === 200 && result.data && result.data.url) {
-        setHlsUrl(result.data.url); 
+        setHlsUrl(result.data.url);
       } else {
         throw new Error(result.message || "Invalid API response structure");
       }
     } catch (error) {
       console.error("Failed to fetch HLS URL:", error);
       setIsVideoModalVisible(false);
-      setHlsUrl(null); 
+      setHlsUrl(null);
     } finally {
       setIsModalLoading(false);
     }
