@@ -105,9 +105,11 @@ export interface BookingByDateRange {
   bookingId: string;
   startDate: string; // Format: YYYY-MM-DD
   endDate: string;   // Format: YYYY-MM-DD
+  newEndDate: string | null; // Format: YYYY-MM-DD or null
   status: string;
   cageTypeId: string;
   cageTypeName: string;
+  cageName: string;
   customerName: string;
   hamsterName: string;
 }
@@ -136,9 +138,12 @@ export interface BookingDetail {
   phoneNumber: string;
   customerMail: string;
   cageTypeId: string;
+  cageName: string;
   cageTypeName: string;
   startDate: string; // Format: YYYY-MM-DD
   endDate: string;   // Format: YYYY-MM-DD
+  newEndDate: string | null; // Format: YYYY-MM-DD or null
+  checkInImage: string;
   totalAmount: number;
   totalAmountAfter: number;
   status: string;
