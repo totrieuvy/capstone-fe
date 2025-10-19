@@ -1,6 +1,11 @@
 import React, { useState, useEffect, useRef } from "react";
 import Hls from "hls.js";
-import { Card, Tag, Typography, Spin, Alert, Row, Col, Button, Divider, Timeline, Image, Modal, Avatar } from "antd";
+import { Card, Tag, Typography, Spin, Alert, Row, Col, Button, Divider, Timeline, Image, Modal, Avatar,
+  List,
+  Radio,
+  DatePicker,
+  message,
+  Space } from "antd";
 import {
   ArrowLeftOutlined,
   CalendarOutlined,
@@ -11,11 +16,15 @@ import {
   PlayCircleOutlined,
   EyeOutlined,
   StarOutlined,
+  ScissorOutlined
 } from "@ant-design/icons";
 import { useParams, useNavigate } from "react-router-dom";
 import { boardingService } from "../../../../services/BoardingService";
 import type { BookingDetail } from "../../../../services/BoardingService";
+import { getServicesByType, ServiceType } from '../../../../services/AdditionService';
+import type { Service } from '../../../../services/AdditionService';
 import { getFormattedPrice } from "../../../../utils/formatPrice";
+import dayjs from 'dayjs';
 import "./BoardingDetail.scss";
 import api from "../../../../config/axios";
 
@@ -96,6 +105,14 @@ const BoardingDetail: React.FC = () => {
       setIsModalLoading(false);
     }
   };
+  
+  // Grooming service modal states
+  const [isGroomingModalVisible, setIsGroomingModalVisible] = useState(false);
+  const [groomingServices, setGroomingServices] = useState<Service[]>([]);
+  const [selectedServiceId, setSelectedServiceId] = useState<string>('');
+  const [selectedDate, setSelectedDate] = useState<string>('');
+  const [groomingLoading, setGroomingLoading] = useState(false);
+  const [addingService, setAddingService] = useState(false);
 
   // Mock daily reports data
   const [dailyReports] = useState<DailyReport[]>([
@@ -155,9 +172,72 @@ const BoardingDetail: React.FC = () => {
     return statusTexts[status as keyof typeof statusTexts] || status;
   };
 
-  const handleBookService = () => {
-    // Navigate to service booking page
-    console.log("Navigate to service booking");
+  const handleBookService = async () => {
+    try {
+      setGroomingLoading(true);
+      const response = await getServicesByType(ServiceType.GROOMING);
+      setGroomingServices(response.data);
+      setIsGroomingModalVisible(true);
+    } catch (error) {
+      message.error('Không thể tải danh sách dịch vụ. Vui lòng thử lại.');
+      console.error('Error fetching grooming services:', error);
+    } finally {
+      setGroomingLoading(false);
+    }
+  };
+
+  const handleAddServiceToBooking = async () => {
+    if (!selectedServiceId || !selectedDate) {
+      message.warning('Vui lòng chọn dịch vụ và ngày thực hiện.');
+      return;
+    }
+
+    try {
+      setAddingService(true);
+      await boardingService.addServiceToBooking({
+        bookingId: bookingId!,
+        serviceDate: selectedDate,
+        serviceIds: [selectedServiceId]
+      });
+
+      message.success('Thêm dịch vụ thành công');
+      
+      // Refresh booking details
+      await fetchBookingDetails();
+      
+      // Reset modal state
+      setIsGroomingModalVisible(false);
+      setSelectedServiceId('');
+      setSelectedDate('');
+    } catch (error) {
+      message.error('Không thể thêm dịch vụ. Vui lòng thử lại.');
+      console.error('Error adding service to booking:', error);
+    } finally {
+      setAddingService(false);
+    }
+  };
+
+  const handleCloseGroomingModal = () => {
+    setIsGroomingModalVisible(false);
+    setSelectedServiceId('');
+    setSelectedDate('');
+  };
+
+  const getDateRange = () => {
+    if (!booking) return { start: null, end: null };
+    
+    const startDate = dayjs(booking.startDate);
+    const endDate = dayjs(booking.endDate);
+    
+    return { start: startDate, end: endDate };
+  };
+
+  const disabledDate = (current: any) => {
+    const { start, end } = getDateRange();
+    if (!start || !end) return true;
+    
+    // Disable dates outside the booking period
+    return current && (current < start.startOf('day') || current > end.endOf('day'));
   };
 
   if (loading) {
@@ -284,6 +364,15 @@ const BoardingDetail: React.FC = () => {
               </Col>
               <Col span={12}>
                 <div className="info-item">
+                  <Text type="secondary">Tên chuồng</Text>
+                  <div className="info-value">
+                    <HomeOutlined style={{ marginRight: 8, color: '#fa8c16' }} />
+                    {booking.cageName || 'Chưa phân chuồng'}
+                  </div>
+                </div>
+              </Col>
+              <Col span={12}>
+                <div className="info-item">
                   <Text type="secondary">Trạng thái</Text>
                   <div className="info-value">
                     <Tag color={getStatusColor(booking.status)} className="status-tag">
@@ -310,7 +399,7 @@ const BoardingDetail: React.FC = () => {
               <>
                 <Divider />
                 <div className="service-info">
-                  <Text type="secondary">Dịch vụ đã chọn</Text>
+                  <Text type="secondary">Chọn</Text>
                   {booking.services.map((service) => (
                     <div key={service.serviceId} className="service-item">
                       <span>{service.serviceName}</span>
@@ -318,9 +407,55 @@ const BoardingDetail: React.FC = () => {
                     </div>
                   ))}
                 </div>
+                <div style={{ marginTop: 16, textAlign: 'center' }}>
+                  <Button 
+                    type="primary" 
+                    size="middle"
+                    className="book-service-button"
+                    onClick={handleBookService}
+                  >
+                    Đặt dịch vụ làm đẹp
+                  </Button>
+                </div>
               </>
             )}
           </Card>
+
+          {/* Check-in Image Section */}
+          {booking.checkInImage && (
+            <Card title="Hình ảnh check-in" className="checkin-image-card">
+              <div className="checkin-image-container">
+                <Image
+                  width="100%"
+                  height={300}
+                  src={booking.checkInImage}
+                  alt="Check-in"
+                  style={{ 
+                    borderRadius: 8,
+                    objectFit: 'cover'
+                  }}
+                  placeholder={
+                    <div style={{ 
+                      width: '100%', 
+                      height: 300, 
+                      background: '#f0f0f0',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      borderRadius: 8
+                    }}>
+                      <EyeOutlined style={{ fontSize: 32, color: '#d9d9d9' }} />
+                    </div>
+                  }
+                />
+                <div style={{ marginTop: 12, textAlign: 'center' }}>
+                  <Text type="secondary">
+                    Hình ảnh được chụp khi hamster check-in vào chuồng
+                  </Text>
+                </div>
+              </div>
+            </Card>
+          )}
 
           {/* Payment Summary */}
           <Card title="Chi tiết thanh toán" className="payment-card">
@@ -367,10 +502,6 @@ const BoardingDetail: React.FC = () => {
               <Text type="secondary">Bấm phát để xem hamster của bạn sẽ đang hoạt động.</Text>
             </div>
           </Card>
-
-          <Button type="primary" size="large" className="book-service-button" onClick={handleBookService}>
-            Đặt dịch vụ làm đẹp
-          </Button>
 
           {/* Daily Reports */}
           <Card title="Báo cáo hàng ngày từ nhân viên" className="daily-reports-card">
@@ -435,15 +566,96 @@ const BoardingDetail: React.FC = () => {
             <p style={{ marginTop: "10px" }}>Đang kết nối camera...</p>
           </div>
         ) : (
-          <video
-            ref={videoRef}
-            controls
-            autoPlay
-            muted
-            width="100%"
-            style={{ backgroundColor: "#000", borderRadius: "8px" }}
-          />
+          <div className="video-container">
+            <video ref={videoRef} style={{ width: "100%", height: "400px" }} controls />
+          </div>
         )}
+      </Modal>
+
+      {/* Grooming Service Modal */}
+      <Modal
+        title={
+          <Space>
+            <ScissorOutlined style={{ color: '#ff7a45' }} />
+            Chọn dịch vụ làm đẹp
+          </Space>
+        }
+        open={isGroomingModalVisible}
+        onCancel={handleCloseGroomingModal}
+        width={600}
+        footer={[
+          <Button key="cancel" onClick={handleCloseGroomingModal}>
+            Hủy
+          </Button>,
+          <Button
+            key="add"
+            type="primary"
+            loading={addingService}
+            disabled={!selectedServiceId || !selectedDate}
+            onClick={handleAddServiceToBooking}
+          >
+            Thêm dịch vụ
+          </Button>
+        ]}
+        className="grooming-modal"
+      >
+        <div className="grooming-modal-content">
+          {groomingLoading ? (
+            <div style={{ textAlign: 'center', padding: '40px 0' }}>
+              <Spin size="large" />
+              <p style={{ marginTop: 16 }}>Đang tải danh sách dịch vụ...</p>
+            </div>
+          ) : (
+            <>
+              <div className="service-selection">
+                <Title level={5}>Chọn dịch vụ:</Title>
+                <Radio.Group
+                  value={selectedServiceId}
+                  onChange={(e) => setSelectedServiceId(e.target.value)}
+                  className="service-radio-group"
+                >
+                  <List
+                    dataSource={groomingServices}
+                    renderItem={(service) => (
+                      <List.Item className="service-list-item">
+                        <Radio value={service.id} className="service-radio">
+                          <div className="service-info">
+                            <div className="service-header">
+                              <Text strong>{service.serviceName}</Text>
+                              <Tag color="blue">{service.displayPrice}</Tag>
+                            </div>
+                            <Text type="secondary" className="service-description">
+                              {service.description}
+                            </Text>
+                            <Text type="secondary" className="service-duration">
+                              Thời gian: {service.durationMinutes} phút
+                            </Text>
+                          </div>
+                        </Radio>
+                      </List.Item>
+                    )}
+                  />
+                </Radio.Group>
+              </div>
+
+              <Divider />
+
+              <div className="date-selection">
+                <Title level={5}>Chọn ngày thực hiện:</Title>
+                <DatePicker
+                  placeholder="Chọn ngày"
+                  value={selectedDate ? dayjs(selectedDate) : null}
+                  onChange={(date) => setSelectedDate(date ? date.format('YYYY-MM-DD') : '')}
+                  disabledDate={disabledDate}
+                  style={{ width: '100%' }}
+                />
+                <Text type="secondary" style={{ fontSize: 12, marginTop: 8, display: 'block' }}>
+                  * Chỉ có thể chọn ngày trong khoảng thời gian gửi gài
+                </Text>
+              </div>
+            </>
+          )}
+        </div>
       </Modal>
     </div>
   );

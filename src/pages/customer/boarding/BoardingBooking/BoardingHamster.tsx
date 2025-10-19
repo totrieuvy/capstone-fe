@@ -26,9 +26,9 @@ import "./BoardingHamster.scss";
 import ProfileHamsterService from "../../../../services/ProfileHamsterService";
 import cageTypeService from "../../../../services/CageTypeService";
 import boardingService from "../../../../services/BoardingService";
-import type { DailyAvailability, CalculateBookingCostResponse, CreateBookingRequest } from "../../../../services/BoardingService";
+import type { DailyAvailability, CreateBookingRequest } from "../../../../services/BoardingService";
 import { customerService } from "../../../../services/CustomerService";
-import type { CustomerProfile } from "../../../../services/CustomerService";
+import type { CustomerProfile, MembershipDetails } from "../../../../services/CustomerService";
 import { getServicesByType, ServiceType } from "../../../../services/AdditionService";
 import type { Service } from "../../../../services/AdditionService";
 import { useNavigate } from "react-router-dom";
@@ -58,6 +58,28 @@ interface CageType {
   isActive?: boolean;
 }
 
+// Frontend calculated booking cost interface
+interface CalculatedBookingCost {
+  totalCageAmount: number;
+  totalServicesAmount: number;
+  totalHolidaySurcharge: number;
+  totalMembershipDiscount: number;
+  membershipDiscountPercent: number;
+  totalAmount: number;
+  dailyBreakdowns: DailyBreakdown[];
+}
+
+interface DailyBreakdown {
+  date: string;
+  cagePrice: number;
+  servicesPrice: number;
+  holidaySurcharge: number;
+  membershipDiscount: number;
+  dailyTotal: number;
+  isHoliday: boolean;
+  holidayName: string | null;
+}
+
 function BoardingHamster() {
   const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState(0);
@@ -80,8 +102,9 @@ function BoardingHamster() {
   const [loadingAvailability, setLoadingAvailability] = useState(false);
   
   // New state for booking cost calculation
-  const [bookingCostData, setBookingCostData] = useState<CalculateBookingCostResponse | null>(null);
+  const [bookingCostData, setBookingCostData] = useState<CalculatedBookingCost | null>(null);
   const [loadingCostCalculation, setLoadingCostCalculation] = useState(false);
+  const [membershipDetails, setMembershipDetails] = useState<MembershipDetails | null>(null);
 
   useEffect(() => {
     document.title = "Đặt Phòng Hamster";
@@ -89,14 +112,22 @@ function BoardingHamster() {
     fetchCageTypes();
     fetchAdditionalServices();
     fetchCustomerProfile();
+    fetchMembershipDetails();
   }, []);
 
   // Recalculate costs when in step 3 and services change
   useEffect(() => {
-    if (currentStep === 2 && selectedHamsterId && selectedCageId && dateRange[0] && dateRange[1]) {
+    if (currentStep === 2 && selectedHamsterId && selectedCageId && dateRange[0] && dateRange[1] && membershipDetails) {
       calculateBookingCost();
     }
-  }, [selectedServiceIds, currentStep]);
+  }, [selectedServiceIds, currentStep, membershipDetails]);
+
+  // Trigger calculation when membership details are loaded
+  useEffect(() => {
+    if (membershipDetails && currentStep === 2 && selectedHamsterId && selectedCageId && dateRange[0] && dateRange[1]) {
+      calculateBookingCost();
+    }
+  }, [membershipDetails]);
 
   const fetchProfiles = async () => {
     setLoading(true);
@@ -160,6 +191,16 @@ function BoardingHamster() {
     } catch (error) {
       console.error("Error fetching customer profile:", error);
       message.error("Không thể tải thông tin khách hàng");
+    }
+  };
+
+  const fetchMembershipDetails = async () => {
+    try {
+      const details = await customerService.getMembershipDetails();
+      setMembershipDetails(details);
+    } catch (error) {
+      console.error("Error fetching membership details:", error);
+      message.error("Không thể tải thông tin thành viên");
     }
   };
 
@@ -266,26 +307,78 @@ function BoardingHamster() {
     });
   };
 
-  // Function to calculate booking cost using the API
+  // Function to calculate booking cost on frontend
   const calculateBookingCost = async () => {
-    if (!selectedHamsterId || !selectedCageId || !dateRange[0] || !dateRange[1]) {
+    if (!selectedHamsterId || !selectedCageId || !dateRange[0] || !dateRange[1] || !membershipDetails) {
       return;
     }
 
     setLoadingCostCalculation(true);
     try {
-      const request = {
-        startDate: dateRange[0].format("YYYY-MM-DD"),
-        endDate: dateRange[1].format("YYYY-MM-DD"),
-        cageTypeId: selectedCageId,
-        hamsterId: selectedHamsterId,
-        paymentMethod: "VNPAY", // Default payment method
-        serviceIds: selectedServiceIds,
-        notes: "", // Can be added if needed
+      const startDate = dateRange[0];
+      const endDate = dateRange[1];
+      const selectedCage = cageTypes.find(cage => cage.id === selectedCageId);
+      
+      if (!selectedCage) {
+        throw new Error("Selected cage type not found");
+      }
+
+      const dailyBreakdowns: DailyBreakdown[] = [];
+      let totalCageAmount = 0;
+      let totalServicesAmount = 0;
+      let totalHolidaySurcharge = 0;
+
+      // Calculate for each day in the date range (inclusive of both start and end date)
+      for (let current = startDate.clone(); current.isBefore(endDate) || current.isSame(endDate); current = current.add(1, 'day')) {
+        const dailyCagePrice = selectedCage.pricePerDay;
+        
+        // Calculate services price for this day
+        const dailyServicesPrice = selectedServiceIds.reduce((total, serviceId) => {
+          const service = additionalServices.find(s => s.id === serviceId);
+          return total + (service ? parseFloat(service.displayPrice.toString()) : 0);
+        }, 0);
+
+        // Check if it's a holiday (simplified - you may need to implement actual holiday checking)
+        const isHoliday = false; // You can implement holiday checking logic here
+        const holidayName = null;
+        const holidaySurcharge = isHoliday ? (dailyCagePrice + dailyServicesPrice) * 0.2 : 0;
+
+        // Calculate membership discount for this day
+        const dailySubtotal = dailyCagePrice + dailyServicesPrice + holidaySurcharge;
+        const membershipDiscount = dailySubtotal * (membershipDetails.discountPercent / 100);
+        const dailyTotal = dailySubtotal - membershipDiscount;
+
+        dailyBreakdowns.push({
+          date: current.format("YYYY-MM-DD"),
+          cagePrice: dailyCagePrice,
+          servicesPrice: dailyServicesPrice,
+          holidaySurcharge,
+          membershipDiscount,
+          dailyTotal,
+          isHoliday,
+          holidayName
+        });
+
+        totalCageAmount += dailyCagePrice;
+        totalServicesAmount += dailyServicesPrice;
+        totalHolidaySurcharge += holidaySurcharge;
+      }
+
+      const subtotal = totalCageAmount + totalServicesAmount + totalHolidaySurcharge;
+      const totalMembershipDiscount = subtotal * (membershipDetails.discountPercent / 100);
+      const totalAmount = subtotal - totalMembershipDiscount;
+
+      const calculatedCost: CalculatedBookingCost = {
+        totalCageAmount,
+        totalServicesAmount,
+        totalHolidaySurcharge,
+        totalMembershipDiscount,
+        membershipDiscountPercent: membershipDetails.discountPercent,
+        totalAmount,
+        dailyBreakdowns
       };
 
-      const response = await boardingService.calculateBookingCost(request);
-      setBookingCostData(response);
+      setBookingCostData(calculatedCost);
     } catch (error) {
       console.error("Error calculating booking cost:", error);
       message.error("Không thể tính toán chi phí đặt phòng. Vui lòng thử lại.");
@@ -713,20 +806,7 @@ function BoardingHamster() {
                     style={{ marginBottom: 16 }}
                   />
 
-                  <Alert
-                    message="Ưu đãi theo thời gian gửi thú"
-                    description={
-                      <ul style={{ margin: 0, paddingLeft: 20 }}>
-                        <li>Từ 3-6 ngày: Giảm 5% tổng hóa đơn</li>
-                        <li>Từ 7-13 ngày: Giảm 10% tổng hóa đơn</li>
-                        <li>Từ 14-29 ngày: Giảm 15% tổng hóa đơn</li>
-                        <li>Từ 30 ngày trở lên: Giảm 20% tổng hóa đơn</li>
-                      </ul>
-                    }
-                    type="success"
-                    showIcon
-                    style={{ marginBottom: 16 }}
-                  />
+              
 
                   <Alert
                     message="Phụ thu ngày lễ"
@@ -774,7 +854,7 @@ function BoardingHamster() {
                         <Card style={{ textAlign: "center", borderRadius: 8 }}>
                           <Statistic
                             title="Giảm giá thành viên"
-                            value={bookingCostData?.membershipDiscountPercent || 0}
+                            value={membershipDetails?.discountPercent || 0}
                             suffix="%"
                             valueStyle={{ color: "#52c41a" }}
                           />
@@ -843,7 +923,7 @@ function BoardingHamster() {
                                   margin: 0,
                                 }}
                               >
-                                {service.displayPrice.toLocaleString("vi-VN")} đ/ngày
+                                {parseFloat(service.displayPrice.toString()).toLocaleString("vi-VN")} đ/ngày
                               </p>
                             </div>
                             {selectedServiceIds.includes(service.id) && (
@@ -1017,7 +1097,7 @@ function BoardingHamster() {
                                   • {service.serviceName}
                                 </p>
                                 <p style={{ fontSize: 13, color: "#666", marginLeft: 12 }}>
-                                  {service.displayPrice.toLocaleString("vi-VN")} đ/ngày
+                                  {parseFloat(service.displayPrice.toString()).toLocaleString("vi-VN")} đ/ngày
                                 </p>
                               </div>
                             ))}
@@ -1064,7 +1144,7 @@ function BoardingHamster() {
                         {safeMembershipDiscount > 0 && (
                           <div className="price-item" style={{ color: "#52c41a" }}>
                             <span>
-                              Giảm giá thành viên {bookingCostData?.membershipDiscountPercent ? `(${bookingCostData.membershipDiscountPercent}%)` : ''}:
+                              Giảm giá thành viên {membershipDetails?.discountPercent ? `(${membershipDetails.discountPercent}%)` : ''}:
                             </span>
                             <span>-{safeMembershipDiscount.toLocaleString("vi-VN")} đ</span>
                           </div>

@@ -60,9 +60,13 @@ const BoardingSchedule = () => {
       return;
     }
 
-    // Check if new end date is after current end date
-    const currentEndDate = dayjs().year(currentMonth.year()).month(currentMonth.month()).date(selectedBooking.endDate);
-    if (!newEndDate.isAfter(currentEndDate)) {
+    // Get the current effective end date (prioritize newEndDate if exists)
+    const currentBookingData = bookings.find(b => b.bookingId === selectedBooking.id);
+    const currentEffectiveEndDate = currentBookingData?.newEndDate && currentBookingData.newEndDate !== null && currentBookingData.newEndDate !== '' 
+      ? dayjs(currentBookingData.newEndDate) 
+      : dayjs(currentBookingData?.endDate);
+    
+    if (!newEndDate.isAfter(currentEffectiveEndDate)) {
       message.error('Ngày kết thúc mới phải sau ngày kết thúc hiện tại');
       return;
     }
@@ -75,11 +79,11 @@ const BoardingSchedule = () => {
         newEndDate: newEndDate.format('YYYY-MM-DD')
       });
 
-      // Update local state immediately with the new end date from API response
+      // Update local state with the new end date from API response
       setBookings(prevBookings => 
         prevBookings.map(booking => 
           booking.bookingId === selectedBooking.id 
-            ? { ...booking, endDate: extendResponse.newEndDate }
+            ? { ...booking, newEndDate: extendResponse.newEndDate }
             : booking
         )
       );
@@ -115,8 +119,9 @@ const BoardingSchedule = () => {
       },
     ];
 
-    // Only show extend button if status is not PAID, CONFIRMED, CHECK_IN or CHECK_OUT
-    if (booking.status !== 'PAID' && booking.status !== 'CONFIRMED' && booking.status !== 'CHECK_IN' && booking.status !== 'CHECK_OUT') {
+    // Allow extending bookings that are in progress, checked out, or checked in
+    // These are the statuses where extension makes sense
+    if (booking.status === 'IN_PROGRESS' || booking.status === 'CHECK_OUT' || booking.status === 'CHECK_IN') {
       items.push({
         key: 'extend',
         label: 'Gia hạn',
@@ -163,28 +168,18 @@ const BoardingSchedule = () => {
 
   // Convert API data to display format
   const convertToDisplayBookings = (apiBookings: BookingByDateRange[]): Booking[] => {
-    const cageAssignments: { [key: string]: number } = {};
-    
     return apiBookings.map(booking => {
       const startDay = dayjs(booking.startDate).date();
-      const endDay = dayjs(booking.endDate).date();
+      // Prioritize newEndDate if it exists and is not null/empty, otherwise use endDate
+      const effectiveEndDate = booking.newEndDate && booking.newEndDate !== null && booking.newEndDate !== '' 
+        ? booking.newEndDate 
+        : booking.endDate;
+      const endDay = dayjs(effectiveEndDate).date();
       const cageType = mapCageType(booking.cageTypeName);
-      
-      // Assign virtual cage IDs based on cage type
-      const typePrefix = cageType === 'Cơ bản' ? 'CB' : 
-                        cageType === 'Tiêu chuẩn' ? 'TC' : 
-                        cageType === 'Đầy đủ' ? 'DD' : 'VIP';
-      
-      if (!cageAssignments[cageType]) {
-        cageAssignments[cageType] = 1;
-      }
-      
-      const cageNumber = cageAssignments[cageType];
-      cageAssignments[cageType]++;
       
       return {
         id: booking.bookingId,
-        cageId: `${typePrefix}-${String(cageNumber).padStart(3, '0')}`,
+        cageId: booking.cageName, // Use the actual cage name from API
         cageType,
         startDate: startDay,
         endDate: endDay,
@@ -242,6 +237,12 @@ const BoardingSchedule = () => {
     return classes[cageType] || 'cage-type-basic';
   };
 
+  // Helper function to check if a booking has been extended
+  const isBookingExtended = (bookingId: string): boolean => {
+    const booking = bookings.find(b => b.bookingId === bookingId);
+    return booking?.newEndDate !== null && booking?.newEndDate !== undefined && booking?.newEndDate !== '';
+  };
+
   const renderCheckedInGrid = () => {
     return (
       <Card 
@@ -254,7 +255,7 @@ const BoardingSchedule = () => {
           <div className="table-wrapper">
             {/* Date Header Row */}
             <div className="header-row">
-              <div className="cage-id-header">Mã Lồng</div>
+              <div className="cage-id-header">Tên chuồng</div>
               {dates.map(date => (
                 <div key={date} className="date-cell" style={{ width: `${CELL_WIDTH}px` }}>
                   <div>{String(date).padStart(2, '0')}/{String(currentMonth.month() + 1).padStart(2, '0')}</div>
@@ -263,23 +264,27 @@ const BoardingSchedule = () => {
             </div>
 
             {/* Cage Type Sections */}
-            {Object.entries(cagesByType).map(([cageType, cages]) => {
-              // Filter cages that have bookings for this cage type
-              const cagesWithBookings = cages.filter(cageId => 
-                checkedInBookings.some(booking => booking.cageId === cageId)
-              );
+            {Object.keys(cagesByType).map((cageType) => {
+              // Get unique cage names for this cage type from actual bookings
+              const cagesWithBookings = [...new Set(
+                checkedInBookings
+                  .filter(booking => booking.cageType === cageType)
+                  .map(booking => booking.cageId)
+              )].sort();
               
               return (
                 <div key={cageType}>
-                  {/* Cage Type Header Row - Always show */}
-                  <div className={`cage-type-row ${getCageTypeClass(cageType)}`}>
-                    <div className="cage-type-label">{cageType}</div>
-                    {dates.map(date => (
-                      <div key={date} className="empty-cell" style={{ width: `${CELL_WIDTH}px` }} />
-                    ))}
-                  </div>
+                  {/* Cage Type Header Row - Only show if there are bookings */}
+                  {cagesWithBookings.length > 0 && (
+                    <div className={`cage-type-row ${getCageTypeClass(cageType)}`}>
+                      <div className="cage-type-label">{cageType}</div>
+                      {dates.map(date => (
+                        <div key={date} className="empty-cell" style={{ width: `${CELL_WIDTH}px` }} />
+                      ))}
+                    </div>
+                  )}
 
-                  {/* Cage Rows - Only show cages with bookings */}
+                  {/* Cage Rows - Show actual cage names from API */}
                   {cagesWithBookings.map((cageId) => {
                     const cageBookings = checkedInBookings.filter(b => b.cageId === cageId);
                     
@@ -305,7 +310,7 @@ const BoardingSchedule = () => {
                                 trigger={['contextMenu']}
                               >
                                 <div
-                                  className="booking-bar booking-bar-green"
+                                  className={`booking-bar ${isBookingExtended(booking.id) ? 'booking-bar-extended' : 'booking-bar-green'}`}
                                   style={{
                                     left: `${leftPosition + 4}px`,
                                     width: `${barWidth - 8}px`,
@@ -313,6 +318,7 @@ const BoardingSchedule = () => {
                                 >
                                   <div className="booking-text">
                                     {booking.customerName} - {booking.hamsterName}
+                                    {isBookingExtended(booking.id) && <span className="extended-indicator"> (Đã gia hạn)</span>}
                                   </div>
                                 </div>
                               </Dropdown>
@@ -343,7 +349,7 @@ const BoardingSchedule = () => {
           <div className="table-wrapper">
             {/* Date Header Row */}
             <div className="header-row">
-              <div className="cage-id-header">Loại Lồng</div>
+              <div className="cage-id-header">Loại chuồng</div>
               {dates.map(date => (
                 <div key={date} className="date-cell" style={{ width: `${CELL_WIDTH}px` }}>
                   <div>{String(date).padStart(2, '0')}/{String(currentMonth.month() + 1).padStart(2, '0')}</div>
@@ -374,7 +380,11 @@ const BoardingSchedule = () => {
                       trigger={['contextMenu']}
                     >
                       <div
-                        className={`booking-bar ${booking.status === 'CHECK_IN' ? 'booking-bar-green' : 'booking-bar-orange'}`}
+                        className={`booking-bar ${
+                          booking.status === 'CHECK_IN' 
+                            ? (isBookingExtended(booking.id) ? 'booking-bar-extended' : 'booking-bar-green')
+                            : 'booking-bar-orange'
+                        }`}
                         style={{
                           left: `${leftPosition + 4}px`,
                           width: `${barWidth - 8}px`,
@@ -382,6 +392,7 @@ const BoardingSchedule = () => {
                       >
                         <div className="booking-text">
                           {booking.customerName} - {booking.hamsterName}
+                          {isBookingExtended(booking.id) && <span className="extended-indicator"> (Đã gia hạn)</span>}
                         </div>
                       </div>
                     </Dropdown>
@@ -483,9 +494,14 @@ const BoardingSchedule = () => {
             <p><strong>Khách hàng:</strong> {selectedBooking.customerName}</p>
             <p><strong>Hamster:</strong> {selectedBooking.hamsterName}</p>
             <p><strong>Loại lồng:</strong> {selectedBooking.cageType}</p>
-            <p><strong>Ngày kết thúc hiện tại:</strong> {
-              dayjs().year(currentMonth.year()).month(currentMonth.month()).date(selectedBooking.endDate).format('DD/MM/YYYY')
-            }</p>
+            <p><strong>Ngày kết thúc hiện tại:</strong> {(() => {
+              // Get the current booking data to check for newEndDate
+              const currentBookingData = bookings.find(b => b.bookingId === selectedBooking.id);
+              const effectiveEndDate = currentBookingData?.newEndDate && currentBookingData.newEndDate !== null && currentBookingData.newEndDate !== '' 
+                ? dayjs(currentBookingData.newEndDate) 
+                : dayjs().year(currentMonth.year()).month(currentMonth.month()).date(selectedBooking.endDate);
+              return effectiveEndDate.format('DD/MM/YYYY');
+            })()}</p>
           </div>
         )}
         
@@ -501,8 +517,12 @@ const BoardingSchedule = () => {
             style={{ width: '100%' }}
             disabledDate={(current) => {
               if (!selectedBooking) return true;
-              const currentEndDate = dayjs().year(currentMonth.year()).month(currentMonth.month()).date(selectedBooking.endDate);
-              return current && current.isBefore(currentEndDate, 'day');
+              // Get the current booking data to check for newEndDate
+              const currentBookingData = bookings.find(b => b.bookingId === selectedBooking.id);
+              const effectiveEndDate = currentBookingData?.newEndDate && currentBookingData.newEndDate !== null && currentBookingData.newEndDate !== '' 
+                ? dayjs(currentBookingData.newEndDate) 
+                : dayjs().year(currentMonth.year()).month(currentMonth.month()).date(selectedBooking.endDate);
+              return current && current.isBefore(effectiveEndDate, 'day');
             }}
           />
         </div>

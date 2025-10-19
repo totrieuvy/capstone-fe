@@ -17,6 +17,12 @@ export interface CustomerProfile {
   membershipHistoryList: MembershipHistory[];
 }
 
+export interface MembershipDetails {
+  discountPercent: number;
+  rankName: string;
+  currentPoint: number;
+}
+
 export interface ApiResponse<T> {
   code: number;
   message: string;
@@ -37,6 +43,22 @@ export const customerService = {
       }
     } catch (error) {
       console.error("Error fetching customer profile:", error);
+      throw error;
+    }
+  },
+
+  // Get customer membership details
+  getMembershipDetails: async (): Promise<MembershipDetails> => {
+    try {
+      const response = await api.get<ApiResponse<MembershipDetails>>("/api/membership");
+      
+      if (response.data.code === 200) {
+        return response.data.data;
+      } else {
+        throw new Error(response.data.message || "Failed to get membership details");
+      }
+    } catch (error) {
+      console.error("Error fetching membership details:", error);
       throw error;
     }
   },
