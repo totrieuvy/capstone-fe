@@ -34,12 +34,13 @@ import ManageOrder from "./pages/admin/manage-orders/orders/ManageOrder";
 import ManageOrderDetail from "./pages/admin/manage-orders/detail-orders/ManageOrderDetail";
 import ManageTransaction from "./pages/admin/manage-transaction/ManageTransaction";
 import BoardingHistory from "./pages/customer/boarding/BoardingHistory/BoardingHistory";
-import BoardingDetail from "./pages/customer/boarding/BoardingDetail/BoardingDetail";
+import BoardingDetail from "./pages/customer/boarding/BoardingDetail/CustomerBoardingDetail";
 import BoardingSchedule from "./pages/staff/boarding/BoardingSchedule";
-import StaffBoardingDetail from "./pages/staff/boarding-detail/BoardingDetail";
+import StaffBoardingDetail from "./pages/staff/boarding-detail/StaffBoardingDetail";
 import GroomingPage from "./pages/customer/grooming/dich-vu-lam-dep/GroomingPage";
 import ManageGroomingService from "./pages/admin/manage-grooming-service/ManageGroomingService";
 import CageManagement from "./pages/staff/cage/CageManagement";
+import CareLog from "./pages/staff/care-log/CareLog";
 
 interface User {
   id: number;
@@ -222,6 +223,7 @@ const App = () => {
           children: [
             { path: "lich-dat-boarding", element: <BoardingSchedule /> },
             { path: "booking-detail/:bookingId", element: <StaffBoardingDetail /> },
+            { path: "care-log/:bookingId", element: <CareLog /> },
             { path: "quan-li-chuong", element: <CageManagement /> },
           ],
         },

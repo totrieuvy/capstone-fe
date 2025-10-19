@@ -244,6 +244,37 @@ export interface AddServiceToBookingResponse {
   message: string;
 }
 
+// Type definitions for care logs
+export interface CreateCareLogRequest {
+  bookingId: string;
+  report: string;
+  photoUrl: string;
+}
+
+export interface CreateCareLogResponse {
+  logId: string;
+  bookingId: string;
+  bookingDetailId: string;
+  logDate: string; // Format: YYYY-MM-DD
+  logTime: string; // Format: HH:mm:ss.nnnnnnnnn
+  report: string;
+  photoUrl: string;
+  staffName: string;
+  message: string;
+}
+
+export interface CareLogItem {
+  logId: string;
+  bookingDetailId: string;
+  logDate: string; // Format: YYYY-MM-DD
+  logTime: string; // Format: HH:mm:ss.nnn
+  report: string;
+  photoUrl: string;
+  staffName: string;
+  hamsterName: string;
+  cageName: string;
+}
+
 export interface ApiResponse<T> {
   code: number;
   message: string;
@@ -400,6 +431,33 @@ export const boardingService = {
       return response.data.data;
     } catch (error) {
       console.error("Error adding services to booking:", error);
+      throw error;
+    }
+  },
+
+  // Create a care log for a booking
+  createCareLog: async (request: CreateCareLogRequest): Promise<CreateCareLogResponse> => {
+    try {
+      const response = await api.post<ApiResponse<CreateCareLogResponse>>(
+        "/api/care-logs",
+        request
+      );
+      return response.data.data;
+    } catch (error) {
+      console.error("Error creating care log:", error);
+      throw error;
+    }
+  },
+
+  // Get care logs for a specific booking
+  getCareLogsByBookingId: async (bookingId: string): Promise<CareLogItem[]> => {
+    try {
+      const response = await api.get<ApiResponse<CareLogItem[]>>(
+        `/api/care-logs/booking/${bookingId}`
+      );
+      return response.data.data;
+    } catch (error) {
+      console.error("Error fetching care logs:", error);
       throw error;
     }
   },

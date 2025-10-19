@@ -16,11 +16,11 @@ import {
   PlayCircleOutlined,
   EyeOutlined,
   StarOutlined,
-  ScissorOutlined
+  ScissorOutlined,
 } from "@ant-design/icons";
 import { useParams, useNavigate } from "react-router-dom";
 import { boardingService } from "../../../../services/BoardingService";
-import type { BookingDetail } from "../../../../services/BoardingService";
+import type { BookingDetail, CareLogItem } from "../../../../services/BoardingService";
 import { getServicesByType, ServiceType } from '../../../../services/AdditionService';
 import type { Service } from '../../../../services/AdditionService';
 import { getFormattedPrice } from "../../../../utils/formatPrice";
@@ -29,12 +29,6 @@ import "./BoardingDetail.scss";
 import api from "../../../../config/axios";
 
 const { Title, Text } = Typography;
-
-interface DailyReport {
-  date: string;
-  description: string;
-  image: string;
-}
 
 const BoardingDetail: React.FC = () => {
   const { bookingId } = useParams<{ bookingId: string }>();
@@ -45,6 +39,11 @@ const BoardingDetail: React.FC = () => {
   const [isVideoModalVisible, setIsVideoModalVisible] = useState(false);
   const [hlsUrl, setHlsUrl] = useState<string | null>(null);
   const [isModalLoading, setIsModalLoading] = useState(false);
+  
+  // Care logs state
+  const [careLogs, setCareLogs] = useState<CareLogItem[]>([]);
+  const [careLogsLoading, setCareLogsLoading] = useState(false);
+  const [careLogsError, setCareLogsError] = useState<string | null>(null);
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const hlsInstanceRef = useRef<Hls | null>(null);
@@ -114,23 +113,12 @@ const BoardingDetail: React.FC = () => {
   const [groomingLoading, setGroomingLoading] = useState(false);
   const [addingService, setAddingService] = useState(false);
 
-  // Mock daily reports data
-  const [dailyReports] = useState<DailyReport[]>([
-    {
-      date: "2024-02-01",
-      description: "Hamster Ti đã thích nghi tốt với môi trường mới",
-      image: "/api/placeholder/300/200",
-    },
-    {
-      date: "2024-02-02",
-      description: "Chơi với đồ chơi gỗ và tích trữ thức ăn",
-      image: "/api/placeholder/300/200",
-    },
-  ]);
+
 
   useEffect(() => {
     if (bookingId) {
       fetchBookingDetails();
+      fetchCareLogs();
     }
   }, [bookingId]);
 
@@ -145,6 +133,22 @@ const BoardingDetail: React.FC = () => {
       console.error("Error fetching booking details:", err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchCareLogs = async () => {
+    if (!bookingId) return;
+    
+    try {
+      setCareLogsLoading(true);
+      setCareLogsError(null);
+      const logs = await boardingService.getCareLogsByBookingId(bookingId);
+      setCareLogs(logs);
+    } catch (err) {
+      setCareLogsError("Failed to fetch care logs. Please try again.");
+      console.error("Error fetching care logs:", err);
+    } finally {
+      setCareLogsLoading(false);
     }
   };
 
@@ -505,43 +509,69 @@ const BoardingDetail: React.FC = () => {
 
           {/* Daily Reports */}
           <Card title="Báo cáo hàng ngày từ nhân viên" className="daily-reports-card">
-            <Timeline className="daily-timeline">
-              {dailyReports.map((report, index) => (
-                <Timeline.Item key={index} dot={<StarOutlined style={{ fontSize: 16 }} />} className="timeline-item">
-                  <div className="report-date">
-                    <CalendarOutlined style={{ marginRight: 8 }} />
-                    {new Date(report.date).toLocaleDateString("vi-VN")}
-                  </div>
-                  <div className="report-content">
-                    <Text>{report.description}</Text>
-                  </div>
-                  <div className="report-image">
-                    <Image
-                      width={300}
-                      height={200}
-                      src={report.image}
-                      alt={`Daily report ${report.date}`}
-                      style={{ borderRadius: 8 }}
-                      placeholder={
-                        <div
-                          style={{
-                            width: 300,
-                            height: 200,
-                            background: "#f0f0f0",
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            borderRadius: 8,
-                          }}
-                        >
-                          <EyeOutlined style={{ fontSize: 32, color: "#d9d9d9" }} />
-                        </div>
-                      }
-                    />
-                  </div>
-                </Timeline.Item>
-              ))}
-            </Timeline>
+            {careLogsLoading ? (
+              <div style={{ textAlign: 'center', padding: '40px 0' }}>
+                <Spin size="large" />
+                <p style={{ marginTop: 16 }}>Đang tải báo cáo...</p>
+              </div>
+            ) : careLogsError ? (
+              <Alert
+                message="Lỗi"
+                description={careLogsError}
+                type="error"
+                showIcon
+                style={{ marginBottom: 16 }}
+              />
+            ) : careLogs.length === 0 ? (
+              <div style={{ textAlign: 'center', padding: '40px 0' }}>
+                <Text type="secondary">Chưa có báo cáo nào từ nhân viên</Text>
+              </div>
+            ) : (
+              <Timeline className="daily-timeline">
+                {careLogs.map((log) => (
+                  <Timeline.Item key={log.logId} dot={<StarOutlined style={{ fontSize: 16 }} />} className="timeline-item">
+                    <div className="report-date">
+                      <CalendarOutlined style={{ marginRight: 8 }} />
+                      {new Date(log.logDate).toLocaleDateString("vi-VN")} - {log.logTime.slice(0, 8)}
+                    </div>
+                    <div className="report-content">
+                      <Text>{log.report}</Text>
+                    </div>
+                    <div style={{ marginTop: 8 }}>
+                      <Text type="secondary" style={{ fontSize: 12 }}>
+                        Nhân viên: {log.staffName} | Chuồng: {log.cageName}
+                      </Text>
+                    </div>
+                    {log.photoUrl && (
+                      <div className="report-image" style={{ marginTop: 12 }}>
+                        <Image
+                          width={300}
+                          height={200}
+                          src={log.photoUrl}
+                          alt={`Care log ${log.logDate}`}
+                          style={{ borderRadius: 8 }}
+                          placeholder={
+                            <div
+                              style={{
+                                width: 300,
+                                height: 200,
+                                background: "#f0f0f0",
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                borderRadius: 8,
+                              }}
+                            >
+                              <EyeOutlined style={{ fontSize: 32, color: "#d9d9d9" }} />
+                            </div>
+                          }
+                        />
+                      </div>
+                    )}
+                  </Timeline.Item>
+                ))}
+              </Timeline>
+            )}
           </Card>
         </Col>
       </Row>
