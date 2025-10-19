@@ -1,19 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import {
-  Card,
-  Tag,
-  Typography,
-  Spin,
-  Alert,
-  Row,
-  Col,
-  Button,
-  Divider,
-  Timeline,
-  Image,
-  Modal,
-  Avatar
-} from 'antd';
+import React, { useState, useEffect, useRef } from "react";
+import Hls from "hls.js";
+import { Card, Tag, Typography, Spin, Alert, Row, Col, Button, Divider, Timeline, Image, Modal, Avatar } from "antd";
 import {
   ArrowLeftOutlined,
   CalendarOutlined,
@@ -23,13 +10,14 @@ import {
   VideoCameraOutlined,
   PlayCircleOutlined,
   EyeOutlined,
-  StarOutlined
-} from '@ant-design/icons';
-import { useParams, useNavigate } from 'react-router-dom';
-import { boardingService } from '../../../../services/BoardingService';
-import type { BookingDetail } from '../../../../services/BoardingService';
-import { getFormattedPrice } from '../../../../utils/formatPrice';
-import './BoardingDetail.scss';
+  StarOutlined,
+} from "@ant-design/icons";
+import { useParams, useNavigate } from "react-router-dom";
+import { boardingService } from "../../../../services/BoardingService";
+import type { BookingDetail } from "../../../../services/BoardingService";
+import { getFormattedPrice } from "../../../../utils/formatPrice";
+import "./BoardingDetail.scss";
+import api from "../../../../config/axios";
 
 const { Title, Text } = Typography;
 
@@ -46,19 +34,81 @@ const BoardingDetail: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isVideoModalVisible, setIsVideoModalVisible] = useState(false);
+  const [hlsUrl, setHlsUrl] = useState<string | null>(null);
+  const [isModalLoading, setIsModalLoading] = useState(false);
+
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const hlsInstanceRef = useRef<Hls | null>(null);
+
+  useEffect(() => {
+    if (hlsUrl && videoRef.current) {
+      const videoElement = videoRef.current;
+
+      if (Hls.isSupported()) {
+        const hls = new Hls();
+        hlsInstanceRef.current = hls;
+        hls.loadSource(hlsUrl);
+        hls.attachMedia(videoElement);
+        hls.on(Hls.Events.MANIFEST_PARSED, () => {
+          videoElement.play().catch((e) => console.error("Autoplay bị chặn", e));
+        });
+        hls.on(Hls.Events.ERROR, (event, data) => {
+          console.log(event);
+          console.error("HLS.js Error:", data);
+        });
+      } else if (videoElement.canPlayType("application/vnd.apple.mpegurl")) {
+        videoElement.src = hlsUrl;
+        videoElement.play().catch((e) => console.error("Autoplay native bị chặn", e));
+      }
+    }
+
+    return () => {
+      if (hlsInstanceRef.current) {
+        hlsInstanceRef.current.destroy();
+        hlsInstanceRef.current = null;
+      }
+      if (videoRef.current) {
+        videoRef.current.pause();
+        videoRef.current.src = "";
+      }
+    };
+  }, [hlsUrl]);
+
+  const handleOpenCamera = async () => {
+    setIsModalLoading(true);
+    setIsVideoModalVisible(true);
+    try {
+      const randomParam = Math.floor(Math.random() * 1000000);
+      const response = await api.get(`/api/camera/play?url=${randomParam}`);
+
+      const result = response.data;
+
+      if (result.code === 200 && result.data && result.data.url) {
+        setHlsUrl(result.data.url);
+      } else {
+        throw new Error(result.message || "Invalid API response structure");
+      }
+    } catch (error) {
+      console.error("Failed to fetch HLS URL:", error);
+      setIsVideoModalVisible(false);
+      setHlsUrl(null);
+    } finally {
+      setIsModalLoading(false);
+    }
+  };
 
   // Mock daily reports data
   const [dailyReports] = useState<DailyReport[]>([
     {
-      date: '2024-02-01',
-      description: 'Hamster Ti đã thích nghi tốt với môi trường mới',
-      image: '/api/placeholder/300/200'
+      date: "2024-02-01",
+      description: "Hamster Ti đã thích nghi tốt với môi trường mới",
+      image: "/api/placeholder/300/200",
     },
     {
-      date: '2024-02-02', 
-      description: 'Chơi với đồ chơi gỗ và tích trữ thức ăn',
-      image: '/api/placeholder/300/200'
-    }
+      date: "2024-02-02",
+      description: "Chơi với đồ chơi gỗ và tích trữ thức ăn",
+      image: "/api/placeholder/300/200",
+    },
   ]);
 
   useEffect(() => {
@@ -74,8 +124,8 @@ const BoardingDetail: React.FC = () => {
       const details = await boardingService.getBookingDetails(bookingId!);
       setBooking(details);
     } catch (err) {
-      setError('Failed to fetch booking details. Please try again.');
-      console.error('Error fetching booking details:', err);
+      setError("Failed to fetch booking details. Please try again.");
+      console.error("Error fetching booking details:", err);
     } finally {
       setLoading(false);
     }
@@ -83,31 +133,31 @@ const BoardingDetail: React.FC = () => {
 
   const getStatusColor = (status: string) => {
     const statusColors = {
-      'CONFIRMED': 'success',
-      'PENDING': 'warning', 
-      'CANCELLED': 'error',
-      'FAILED': 'error',
-      'COMPLETED': 'blue',
-      'IN_PROGRESS': 'processing'
+      CONFIRMED: "success",
+      PENDING: "warning",
+      CANCELLED: "error",
+      FAILED: "error",
+      COMPLETED: "blue",
+      IN_PROGRESS: "processing",
     };
-    return statusColors[status as keyof typeof statusColors] || 'default';
+    return statusColors[status as keyof typeof statusColors] || "default";
   };
 
   const getStatusText = (status: string) => {
     const statusTexts = {
-      'CONFIRMED': 'Đã xác nhận',
-      'PENDING': 'Đang chờ',
-      'CANCELLED': 'Đã hủy',
-      'FAILED': 'Thất bại',
-      'COMPLETED': 'Hoàn thành',
-      'IN_PROGRESS': 'Đang thực hiện'
+      CONFIRMED: "Đã xác nhận",
+      PENDING: "Đang chờ",
+      CANCELLED: "Đã hủy",
+      FAILED: "Thất bại",
+      COMPLETED: "Hoàn thành",
+      IN_PROGRESS: "Đang thực hiện",
     };
     return statusTexts[status as keyof typeof statusTexts] || status;
   };
 
   const handleBookService = () => {
     // Navigate to service booking page
-    console.log('Navigate to service booking');
+    console.log("Navigate to service booking");
   };
 
   if (loading) {
@@ -124,7 +174,7 @@ const BoardingDetail: React.FC = () => {
       <div className="boarding-detail-error">
         <Alert
           message="Lỗi"
-          description={error || 'Không tìm thấy thông tin đặt phòng'}
+          description={error || "Không tìm thấy thông tin đặt phòng"}
           type="error"
           showIcon
           action={
@@ -141,12 +191,7 @@ const BoardingDetail: React.FC = () => {
     <div className="boarding-detail">
       {/* Header */}
       <div className="boarding-detail-header">
-        <Button 
-          type="text" 
-          icon={<ArrowLeftOutlined />}
-          onClick={() => navigate(-1)}
-          className="back-button"
-        >
+        <Button type="text" icon={<ArrowLeftOutlined />} onClick={() => navigate(-1)} className="back-button">
           Quay về
         </Button>
       </div>
@@ -157,11 +202,7 @@ const BoardingDetail: React.FC = () => {
           {/* Hamster Information */}
           <Card className="hamster-info-card">
             <div className="hamster-header">
-              <Avatar 
-                size={64} 
-                src={booking.hamsterProfilePicture} 
-                className="hamster-avatar"
-              >
+              <Avatar size={64} src={booking.hamsterProfilePicture} className="hamster-avatar">
                 {!booking.hamsterProfilePicture && booking.hamsterName.charAt(0)}
               </Avatar>
               <div className="hamster-details">
@@ -172,8 +213,7 @@ const BoardingDetail: React.FC = () => {
                   </Tag>
                 </Title>
                 <Text type="secondary">
-                  Ngày sinh: {new Date(booking.dob).toLocaleDateString('vi-VN')} | 
-                  Cân nặng: {booking.hamsterWeight}g
+                  Ngày sinh: {new Date(booking.dob).toLocaleDateString("vi-VN")} | Cân nặng: {booking.hamsterWeight}g
                 </Text>
               </div>
             </div>
@@ -186,7 +226,7 @@ const BoardingDetail: React.FC = () => {
                 <div className="info-item">
                   <Text type="secondary">Tên khách hàng</Text>
                   <div className="info-value">
-                    <UserOutlined style={{ marginRight: 8, color: '#1890ff' }} />
+                    <UserOutlined style={{ marginRight: 8, color: "#1890ff" }} />
                     {booking.customerName}
                   </div>
                 </div>
@@ -195,7 +235,7 @@ const BoardingDetail: React.FC = () => {
                 <div className="info-item">
                   <Text type="secondary">Số điện thoại</Text>
                   <div className="info-value">
-                    <PhoneOutlined style={{ marginRight: 8, color: '#52c41a' }} />
+                    <PhoneOutlined style={{ marginRight: 8, color: "#52c41a" }} />
                     {booking.phoneNumber}
                   </div>
                 </div>
@@ -219,8 +259,8 @@ const BoardingDetail: React.FC = () => {
                 <div className="info-item">
                   <Text type="secondary">Ngày vào</Text>
                   <div className="info-value">
-                    <CalendarOutlined style={{ marginRight: 8, color: '#1890ff' }} />
-                    {new Date(booking.startDate).toLocaleDateString('vi-VN')}
+                    <CalendarOutlined style={{ marginRight: 8, color: "#1890ff" }} />
+                    {new Date(booking.startDate).toLocaleDateString("vi-VN")}
                   </div>
                 </div>
               </Col>
@@ -228,8 +268,8 @@ const BoardingDetail: React.FC = () => {
                 <div className="info-item">
                   <Text type="secondary">Ngày ra</Text>
                   <div className="info-value">
-                    <CalendarOutlined style={{ marginRight: 8, color: '#52c41a' }} />
-                    {new Date(booking.endDate).toLocaleDateString('vi-VN')}
+                    <CalendarOutlined style={{ marginRight: 8, color: "#52c41a" }} />
+                    {new Date(booking.endDate).toLocaleDateString("vi-VN")}
                   </div>
                 </div>
               </Col>
@@ -237,7 +277,7 @@ const BoardingDetail: React.FC = () => {
                 <div className="info-item">
                   <Text type="secondary">Loại chuồng</Text>
                   <div className="info-value">
-                    <HomeOutlined style={{ marginRight: 8, color: '#fa8c16' }} />
+                    <HomeOutlined style={{ marginRight: 8, color: "#fa8c16" }} />
                     {booking.cageTypeName}
                   </div>
                 </div>
@@ -286,7 +326,7 @@ const BoardingDetail: React.FC = () => {
           <Card title="Chi tiết thanh toán" className="payment-card">
             <div className="payment-item">
               <Text>Ngày tạo</Text>
-              <Text>{new Date(booking.createdAt).toLocaleDateString('vi-VN')}</Text>
+              <Text>{new Date(booking.createdAt).toLocaleDateString("vi-VN")}</Text>
             </div>
             <Divider />
             <div className="payment-item total">
@@ -310,43 +350,25 @@ const BoardingDetail: React.FC = () => {
           <Card title="Camera trực tiếp" className="camera-card">
             <div className="camera-container">
               <div className="camera-placeholder">
-                <VideoCameraOutlined style={{ fontSize: 48, color: '#d9d9d9' }} />
+                <VideoCameraOutlined style={{ fontSize: 48, color: "#d9d9d9" }} />
                 <Text type="secondary">Nhấn để xem camera trực tiếp</Text>
               </div>
-              <Button 
-                type="primary" 
-                icon={<PlayCircleOutlined />}
-                className="camera-button"
-                onClick={() => setIsVideoModalVisible(true)}
-              >
+              <Button type="primary" icon={<PlayCircleOutlined />} className="camera-button" onClick={handleOpenCamera}>
                 Bật camera
               </Button>
             </div>
             <div className="camera-info">
-              <Text type="secondary">
-                Camera hoạt động 24/7 trong thời gian gửi gài
-              </Text>
+              <Text type="secondary">Camera hoạt động 24/7 trong thời gian gửi gài</Text>
               <br />
-              <Text type="secondary">
-                Chỉ người sở hữu mới đăng nhập thành công.
-              </Text>
+              <Text type="secondary">Chỉ người sở hữu mới đăng nhập thành công.</Text>
               <br />
-              <Text type="secondary">
-                Chế động có thể xem thống tin thời gian thực.
-              </Text>
+              <Text type="secondary">Chế động có thể xem thống tin thời gian thực.</Text>
               <br />
-              <Text type="secondary">
-                Bấm phát để xem hamster của bạn sẽ đang hoạt động.
-              </Text>
+              <Text type="secondary">Bấm phát để xem hamster của bạn sẽ đang hoạt động.</Text>
             </div>
           </Card>
 
-          <Button 
-            type="primary" 
-            size="large" 
-            className="book-service-button"
-            onClick={handleBookService}
-          >
+          <Button type="primary" size="large" className="book-service-button" onClick={handleBookService}>
             Đặt dịch vụ làm đẹp
           </Button>
 
@@ -354,14 +376,10 @@ const BoardingDetail: React.FC = () => {
           <Card title="Báo cáo hàng ngày từ nhân viên" className="daily-reports-card">
             <Timeline className="daily-timeline">
               {dailyReports.map((report, index) => (
-                <Timeline.Item
-                  key={index}
-                  dot={<StarOutlined style={{ fontSize: 16 }} />}
-                  className="timeline-item"
-                >
+                <Timeline.Item key={index} dot={<StarOutlined style={{ fontSize: 16 }} />} className="timeline-item">
                   <div className="report-date">
                     <CalendarOutlined style={{ marginRight: 8 }} />
-                    {new Date(report.date).toLocaleDateString('vi-VN')}
+                    {new Date(report.date).toLocaleDateString("vi-VN")}
                   </div>
                   <div className="report-content">
                     <Text>{report.description}</Text>
@@ -374,16 +392,18 @@ const BoardingDetail: React.FC = () => {
                       alt={`Daily report ${report.date}`}
                       style={{ borderRadius: 8 }}
                       placeholder={
-                        <div style={{ 
-                          width: 300, 
-                          height: 200, 
-                          background: '#f0f0f0',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          borderRadius: 8
-                        }}>
-                          <EyeOutlined style={{ fontSize: 32, color: '#d9d9d9' }} />
+                        <div
+                          style={{
+                            width: 300,
+                            height: 200,
+                            background: "#f0f0f0",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            borderRadius: 8,
+                          }}
+                        >
+                          <EyeOutlined style={{ fontSize: 32, color: "#d9d9d9" }} />
                         </div>
                       }
                     />
@@ -399,18 +419,31 @@ const BoardingDetail: React.FC = () => {
       <Modal
         title="Camera trực tiếp"
         open={isVideoModalVisible}
-        onCancel={() => setIsVideoModalVisible(false)}
+        onCancel={() => {
+          setIsVideoModalVisible(false);
+          setHlsUrl(null); // <- Thêm dòng này để kích hoạt cleanup
+        }}
         width={800}
         footer={null}
         className="video-modal"
+        destroyOnClose
       >
-        <div className="video-container">
-          <div className="video-placeholder">
-            <VideoCameraOutlined style={{ fontSize: 80, color: '#d9d9d9' }} />
-            <Title level={4} type="secondary">Camera đang kết nối...</Title>
-            <Text type="secondary">Vui lòng đợi trong giây lát</Text>
+        {/* Thêm logic loading */}
+        {isModalLoading ? (
+          <div style={{ textAlign: "center", padding: "100px 0" }}>
+            <Spin size="large" />
+            <p style={{ marginTop: "10px" }}>Đang kết nối camera...</p>
           </div>
-        </div>
+        ) : (
+          <video
+            ref={videoRef}
+            controls
+            autoPlay
+            muted
+            width="100%"
+            style={{ backgroundColor: "#000", borderRadius: "8px" }}
+          />
+        )}
       </Modal>
     </div>
   );
