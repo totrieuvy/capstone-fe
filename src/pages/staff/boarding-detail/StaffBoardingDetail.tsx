@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Card, Spin, Alert, Button, Tag, Descriptions, Avatar, Modal, Upload, message, List, Radio } from 'antd';
-import { ArrowLeftOutlined, UserOutlined, CalendarOutlined, ShoppingOutlined, UploadOutlined, CameraOutlined, HomeOutlined } from '@ant-design/icons';
+import { ArrowLeftOutlined, UserOutlined, CalendarOutlined, ShoppingOutlined, UploadOutlined, CameraOutlined, HomeOutlined, EditOutlined } from '@ant-design/icons';
 import { boardingService, type BookingDetail } from '../../../services/BoardingService';
 import { cageService, type Cage } from '../../../services/CageService';
 import { storage } from '../../../config/firebase';
@@ -53,7 +53,8 @@ const BoardingDetail: React.FC = () => {
       'CHECK_IN': 'blue',
       'CHECKED_OUT': 'orange',
       'CANCELLED': 'red',
-      'PENDING': 'gold'
+      'PENDING': 'gold',
+      'IN_PROGRESS': 'purple'
     };
     return statusColors[status] || 'default';
   };
@@ -486,6 +487,23 @@ const BoardingDetail: React.FC = () => {
                 className="check-in-button"
               >
                 Check In & Phân chuồng
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {/* Create Care Log Button for IN_PROGRESS bookings */}
+        {bookingDetail.status === 'IN_PROGRESS' && (
+          <div className="info-section">
+            <div style={{ textAlign: 'center' }}>
+              <Button
+                type="primary"
+                size="large"
+                icon={<EditOutlined />}
+                onClick={() => navigate(`/STAFF/care-log/${bookingId}`)}
+                className="care-log-button"
+              >
+                Tạo báo cáo
               </Button>
             </div>
           </div>
