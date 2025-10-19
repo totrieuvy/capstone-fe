@@ -8,6 +8,14 @@ import api from "../../../../config/axios";
 import { toast } from "react-toastify";
 import { getFormattedPrice } from "../../../../utils/formatPrice";
 import "./ManageOrder.scss";
+import dayjs from "dayjs";
+import utc from "dayjs/plugin/utc";
+import timezone from "dayjs/plugin/timezone";
+import customParseFormat from "dayjs/plugin/customParseFormat";
+
+dayjs.extend(utc);
+dayjs.extend(timezone);
+dayjs.extend(customParseFormat);
 
 const { Search } = Input;
 
@@ -118,6 +126,8 @@ function ManageOrder() {
       title: "Ngày đặt",
       dataIndex: "orderDate",
       key: "orderDate",
+      render: (date: string) =>
+        date ? dayjs(date, "DD-MM-YYYY HH:mm:ss").add(7, "hour").format("DD/MM/YYYY HH:mm") : "---",
     },
     {
       title: "Tổng tiền",

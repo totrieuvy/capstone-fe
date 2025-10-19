@@ -7,7 +7,12 @@ import dayjs from "dayjs";
 import api from "../../../../config/axios";
 import "./TrackOrder.scss";
 import customParseFormat from "dayjs/plugin/customParseFormat";
+import utc from "dayjs/plugin/utc";
+import timezone from "dayjs/plugin/timezone";
+
 dayjs.extend(customParseFormat);
+dayjs.extend(utc);
+dayjs.extend(timezone);
 
 interface Order {
   id: string;
@@ -138,7 +143,7 @@ const TrackOrder = () => {
       title: "Ngày đặt",
       dataIndex: "orderDate",
       key: "orderDate",
-      render: (date: string) => dayjs(date, "DD-MM-YYYY HH:mm:ss").format("DD/MM/YYYY HH:mm"),
+      render: (date: string) => dayjs(date, "DD-MM-YYYY HH:mm:ss").add(7, "hour").format("DD/MM/YYYY HH:mm"),
     },
 
     {

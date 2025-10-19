@@ -5,10 +5,16 @@ import { ArrowLeftOutlined } from "@ant-design/icons";
 import type { ColumnsType } from "antd/es/table";
 import api from "../../../../config/axios";
 import "./TrackOrderDetail.scss";
-import customParseFormat from "dayjs/plugin/customParseFormat";
 import dayjs from "dayjs";
 import { StopOutlined, ClockCircleOutlined } from "@ant-design/icons";
+
+import utc from "dayjs/plugin/utc";
+import timezone from "dayjs/plugin/timezone";
+import customParseFormat from "dayjs/plugin/customParseFormat";
+
 dayjs.extend(customParseFormat);
+dayjs.extend(utc);
+dayjs.extend(timezone);
 
 interface OrderItem {
   productId: string;
@@ -177,7 +183,7 @@ const TrackOrderDetail = () => {
                 <Descriptions.Item label="Mã đơn hàng">{order.id}</Descriptions.Item>
 
                 <Descriptions.Item label="Ngày đặt">
-                  {dayjs(order.orderDate, "DD-MM-YYYY HH:mm:ss").format("DD/MM/YYYY HH:mm")}
+                  {dayjs(order.orderDate, "DD-MM-YYYY HH:mm:ss").add(7, "hour").format("DD/MM/YYYY HH:mm")}
                 </Descriptions.Item>
 
                 <Descriptions.Item label="Trạng thái">{getStatusTag(order.status)}</Descriptions.Item>

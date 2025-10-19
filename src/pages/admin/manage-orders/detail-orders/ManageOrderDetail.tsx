@@ -3,6 +3,8 @@ import { useParams, useNavigate } from "react-router-dom";
 import { Card, Descriptions, Button, Spin, Table, Tag, message, Popconfirm } from "antd";
 import api from "../../../../config/axios";
 import { toast } from "react-toastify";
+import dayjs from "dayjs";
+
 import "./ManageOrderDetail.scss";
 
 interface OrderItem {
@@ -154,7 +156,9 @@ function ManageOrderDetail() {
       <Card title={`Đơn hàng #${order.id}`} className="manage-order-detail__card">
         <Descriptions bordered column={1}>
           <Descriptions.Item label="Trạng thái">{renderStatusTag(order.status)}</Descriptions.Item>
-          <Descriptions.Item label="Ngày đặt hàng">{order.orderDate || "Không rõ"}</Descriptions.Item>
+          <Descriptions.Item label="Ngày đặt hàng">
+            {dayjs(order.orderDate, "DD-MM-YYYY HH:mm:ss").add(7, "hour").format("DD/MM/YYYY HH:mm")}
+          </Descriptions.Item>{" "}
           <Descriptions.Item label="Địa chỉ giao hàng">{order.deliveryAddress}</Descriptions.Item>
           <Descriptions.Item label="Phí vận chuyển">{order.shippingFee.toLocaleString("vi-VN")} đ</Descriptions.Item>
           <Descriptions.Item label="Giảm giá">{order.discountPercent}%</Descriptions.Item>

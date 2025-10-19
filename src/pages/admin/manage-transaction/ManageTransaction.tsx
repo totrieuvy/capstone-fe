@@ -6,7 +6,13 @@ import type { TableColumnsType, TablePaginationConfig } from "antd";
 import api from "../../../config/axios";
 import { toast } from "react-toastify";
 import { getFormattedPrice } from "../../../utils/formatPrice";
+import dayjs from "dayjs";
+import utc from "dayjs/plugin/utc";
+import timezone from "dayjs/plugin/timezone";
 import "./ManageTransaction.scss";
+
+dayjs.extend(utc);
+dayjs.extend(timezone);
 
 const { Search } = Input;
 
@@ -116,6 +122,7 @@ function ManageTransaction() {
       title: "Thời gian giao dịch",
       dataIndex: "transactionTime",
       key: "transactionTime",
+      render: (time: string) => dayjs(time, "DD-MM-YYYY HH:mm:ss").add(7, "hour").format("DD/MM/YYYY HH:mm"),
     },
   ];
 
