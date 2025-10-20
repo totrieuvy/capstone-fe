@@ -5,6 +5,7 @@ import type { TableColumnsType } from "antd";
 import api from "../../../config/axios";
 import { toast } from "react-toastify";
 import "./ManageGroomingService.scss";
+import { Link } from "react-router-dom";
 
 const { Search } = Input;
 const { Option } = Select;
@@ -104,7 +105,6 @@ function ManageGroomingService() {
     }
   };
 
-  // 🐹 Lấy danh sách loài hamster
   const fetchSpecies = async (): Promise<void> => {
     try {
       const response = await api.get("/api/species");
@@ -122,13 +122,11 @@ function ManageGroomingService() {
     fetchSpecies();
   }, []);
 
-  // 🔍 Tìm kiếm dịch vụ theo tên
   const handleSearch = (value: string): void => {
     const filtered = services.filter((item) => item.serviceName.toLowerCase().includes(value.toLowerCase()));
     setFilteredServices(filtered);
   };
 
-  // 🧾 Gửi form tạo/cập nhật
   const handleSubmit = async (values: ServiceFormValues): Promise<void> => {
     setLoading(true);
     try {
@@ -188,6 +186,14 @@ function ManageGroomingService() {
       dataIndex: "serviceName",
       key: "serviceName",
       sorter: (a, b) => a.serviceName.localeCompare(b.serviceName),
+      render: (text: string, record: GroomingService) => (
+        <Link
+          to={`/ADMIN/quan-li-dich-vu-grooming/grooming-le/${record.id}`}
+          style={{ color: "#1890ff", fontWeight: "500" }}
+        >
+          {text}
+        </Link>
+      ),
     },
     {
       title: "Mô tả",

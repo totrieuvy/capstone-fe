@@ -46,6 +46,9 @@ import GroomingPage from "./pages/customer/grooming/dich-vu-lam-dep/GroomingPage
 import ManageGroomingService from "./pages/admin/manage-grooming-service/ManageGroomingService";
 import CageManagement from "./pages/staff/cage/CageManagement";
 import CareLog from "./pages/staff/care-log/CareLog";
+import ManageComboGrooming from "./pages/admin/manage-grooming-service/manage-combo-grooming/ManageComboGrooming";
+import ManageComboGroomingDetail from "./pages/admin/manage-grooming-service/manage-combo-grooming-detail/ManageComboGroomingDetail";
+import ManageGroomingServiceDetail from "./pages/admin/manage-grooming-service/manage-grooming-single-detail/ManageGroomingServiceDetail";
 
 interface User {
   id: number;
@@ -198,7 +201,16 @@ const App = () => {
             { path: "quan-li-loai-hamster", element: <Species /> },
             { path: "quan-li-danh-muc-san-pham", element: <Category /> },
             { path: "quan-li-loai-chuong", element: <CageType /> },
-            { path: "quan-li-dich-vu-grooming", element: <ManageGroomingService /> },
+            { path: "quan-li-dich-vu-grooming/grooming-le", element: <ManageGroomingService /> },
+            { path: "quan-li-dich-vu-grooming/grooming-le/:id", element: <ManageGroomingServiceDetail /> },
+            {
+              path: "quan-li-dich-vu-grooming/grooming-combo",
+              element: <ManageComboGrooming />,
+            },
+            {
+              path: "quan-li-dich-vu-grooming/grooming-combo/:id",
+              element: <ManageComboGroomingDetail />,
+            },
             {
               path: "quan-li-san-pham",
               element: <ManageProduct />,

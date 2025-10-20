@@ -1,0 +1,112 @@
+.ManageComboGroomingDetail {
+  padding: 24px;
+  background-color: #f9fafc; // Light background
+  min-height: calc(100vh - 120px);
+
+  .detail-loading,
+  .detail-error {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 400px;
+    flex-direction: column; // Center content vertically
+    gap: 16px; // Space between spinner/icon and text
+  }
+
+  .detail-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between; // Push title and status apart
+    margin-bottom: 24px;
+    background-color: #fff;
+    padding: 16px 24px;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+
+    .back-button {
+      font-size: 16px;
+      // Style the back button if needed
+    }
+
+    .combo-title {
+      font-size: 24px;
+      font-weight: 600;
+      color: #f58232; // Theme color
+      margin: 0;
+    }
+
+    // Status Tag styling in header
+    .ant-tag {
+      font-size: 14px;
+      padding: 4px 12px;
+      border-radius: 6px;
+    }
+  }
+
+  .detail-card {
+    margin-bottom: 24px;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    background-color: #fff;
+
+    .ant-card-head {
+      background-color: #fff6f0; // Light orange header
+      border-bottom: 1px solid #ffe6d1;
+      border-radius: 12px 12px 0 0;
+
+      .ant-card-head-title {
+        color: #f58232; // Theme color
+        font-weight: 600;
+        font-size: 18px;
+        display: flex; // Align icon and text
+        align-items: center;
+        gap: 8px; // Space between icon and text
+      }
+    }
+
+    // Styling for Descriptions component
+    .ant-descriptions-item-label {
+      font-weight: 500;
+      color: #555;
+      background-color: #fafafa; // Slight background for labels
+    }
+    .ant-descriptions-item-content {
+      color: #333;
+    }
+
+    // Styling for Service List
+    .service-list-item {
+      border-bottom: 1px solid #f0f0f0;
+      padding: 12px 0;
+      &:last-child {
+        border-bottom: none;
+      }
+
+      .service-name {
+        font-weight: 500;
+      }
+      .service-description {
+        color: #777;
+        font-size: 0.9em;
+        margin-top: 4px;
+      }
+    }
+
+    // Styling for Price Table
+    .price-table {
+      th {
+        background-color: #fafafa !important;
+        font-weight: 600;
+      }
+      .price-original {
+        text-decoration: line-through;
+        color: #999;
+        margin-right: 8px;
+      }
+      .price-after {
+        font-weight: 600;
+        color: #52c41a; // Green for final price
+      }
+    }
+  }
+}
