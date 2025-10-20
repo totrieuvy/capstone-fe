@@ -75,7 +75,10 @@ const SideBar: React.FC = () => {
         getItem("Quản lí danh mục sản phẩm", "quan-li-danh-muc-san-pham", <BiCategory />),
         getItem("Quản lí sản phẩm", "quan-li-san-pham", <TagOutlined />),
         getItem("Quản lí loại chuồng", "quan-li-loai-chuong", <GiCage />),
-        getItem("Quản lí dịch vụ grooming", "quan-li-dich-vu-grooming", <GiCage />),
+        getItem("Quản lí dịch vụ grooming", "quan-li-dich-vu-grooming", <GiCage />, [
+          getItem("Grooming lẻ", "quan-li-dich-vu-grooming/grooming-le"),
+          getItem("Grooming combo", "quan-li-dich-vu-grooming/grooming-combo"),
+        ]),
         getItem("Thống kê", "thong-ke", <AreaChartOutlined />),
         getItem("Quản lí tài khoản", "quan-li-tai-khoan", <UserOutlined />),
         getItem("Quản lí đơn hàng", "quan-li-don-hang", <ShoppingOutlined />),

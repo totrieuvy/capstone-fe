@@ -25,12 +25,46 @@
 
   .grooming-content {
     max-width: 1200px;
-    margin: 60px auto;
+    margin: 40px auto 60px;
     padding: 0 20px;
     text-align: center;
-    background: none; // bỏ khung trắng ngoài
-    box-shadow: none; // bỏ bóng
-    border: none; // không viền
+    background: none;
+    box-shadow: none;
+    border: none;
+
+    // --- Tab Switcher Styles ---
+    .view-switcher {
+      margin-bottom: 40px;
+
+      .ant-tabs-nav {
+        margin-bottom: 30px !important; // Increased space
+
+        &::before {
+          border-bottom: 1px solid #ffece6;
+        }
+      }
+      .ant-tabs-tab {
+        font-size: 18px;
+        font-weight: 500;
+        color: #888;
+        padding: 14px 24px;
+        margin: 0 10px !important;
+
+        &:hover {
+          color: #ff7f50;
+        }
+      }
+      .ant-tabs-tab-active .ant-tabs-tab-btn {
+        color: #ff6347;
+        font-weight: 600;
+      }
+      .ant-tabs-ink-bar {
+        background: #ff6347;
+        height: 3px;
+        border-radius: 2px;
+      }
+    }
+    // --- End Tab Styles ---
 
     .section-title {
       font-size: 28px;
@@ -39,12 +73,14 @@
       color: #333;
     }
 
+    // --- Service Card Styles ---
     .service-card {
       border: none;
       border-radius: 20px;
       box-shadow: 0 8px 18px rgba(0, 0, 0, 0.1);
       transition: all 0.3s ease;
       background: #fff;
+      height: 100%;
 
       &:hover {
         transform: translateY(-5px);
@@ -52,7 +88,7 @@
       }
 
       .service-icon-container {
-        background: linear-gradient(135deg, #ffa07a, #ff7f50);
+        background: linear-gradient(135deg, #ffa07a, #ff7f50); // Orange gradient
         color: #fff;
         font-size: 36px;
         width: 80px;
@@ -67,12 +103,17 @@
 
       .service-info {
         padding: 10px 20px 25px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        flex-grow: 1;
 
         .service-name {
           font-size: 20px;
           font-weight: 600;
-          color: #333;
+          color: #333; // Service name color
           margin-bottom: 6px;
+          min-height: 48px;
         }
 
         .service-description {
@@ -80,6 +121,7 @@
           color: #777;
           margin-bottom: 15px;
           min-height: 40px;
+          flex-grow: 1;
         }
 
         .service-details {
@@ -97,20 +139,105 @@
         }
 
         .book-button {
-          background: linear-gradient(135deg, #ffa07a, #ff7f50);
+          background: linear-gradient(135deg, #ffa07a, #ff7f50); // Orange gradient
           border: none;
           font-weight: 600;
           padding: 8px 20px;
           border-radius: 20px;
           transition: all 0.3s ease;
+          margin-top: auto;
 
           &:hover {
-            background: linear-gradient(135deg, #ff7f50, #ff6347);
+            background: linear-gradient(135deg, #ff7f50, #ff6347); // Darker orange
             transform: scale(1.05);
           }
         }
       }
     }
+
+    // --- Combo Card Styles (Updated to Orange) ---
+    .combo-card {
+      border: none;
+      border-radius: 20px;
+      box-shadow: 0 8px 18px rgba(0, 0, 0, 0.1);
+      transition: all 0.3s ease;
+      background: #fff;
+      height: 100%;
+      border-left: 5px solid #ffa07a; // Light orange border accent
+
+      &:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 30px rgba(255, 127, 80, 0.2); // Orange shadow on hover
+      }
+
+      .combo-icon-container {
+        background: linear-gradient(135deg, #ffa07a, #ff7f50); // Orange gradient
+        color: #fff;
+        font-size: 36px;
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        margin: 25px auto 15px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+      }
+
+      .combo-info {
+        padding: 10px 20px 25px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        flex-grow: 1;
+
+        .combo-name {
+          font-size: 20px;
+          font-weight: 600;
+          color: #ff7f50; // Main orange color for name
+          margin-bottom: 6px;
+          min-height: 48px;
+        }
+
+        .combo-description {
+          font-size: 14px;
+          color: #777;
+          margin-bottom: 15px;
+          min-height: 40px;
+          flex-grow: 1;
+        }
+
+        .combo-details {
+          display: flex;
+          justify-content: space-between;
+          margin-bottom: 15px;
+          font-size: 14px;
+          color: #666;
+
+          span {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+          }
+        }
+
+        .book-button {
+          background: linear-gradient(135deg, #ffa07a, #ff7f50); // Orange gradient
+          border: none;
+          font-weight: 600;
+          padding: 8px 20px;
+          border-radius: 20px;
+          transition: all 0.3s ease;
+          margin-top: auto;
+
+          &:hover {
+            background: linear-gradient(135deg, #ff7f50, #ff6347); // Darker orange
+            transform: scale(1.05);
+          }
+        }
+      }
+    }
+    // --- End Combo Card ---
 
     .loading-container {
       text-align: center;

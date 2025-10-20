@@ -1,0 +1,92 @@
+.ManageGroomingServiceDetail {
+  padding: 24px;
+  background-color: #f9fafc; // Light background
+  min-height: calc(100vh - 120px);
+
+  .detail-loading,
+  .detail-error {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 400px;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .detail-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 24px;
+    background-color: #fff;
+    padding: 16px 24px;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+
+    .back-button {
+      font-size: 16px;
+      // Style as needed
+    }
+
+    .service-title {
+      font-size: 24px;
+      font-weight: 600;
+      color: #f58232; // Theme color
+      margin: 0;
+    }
+
+    .ant-tag {
+      font-size: 14px;
+      padding: 4px 12px;
+      border-radius: 6px;
+    }
+  }
+
+  .detail-card {
+    margin-bottom: 24px;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    background-color: #fff;
+
+    .ant-card-head {
+      background-color: #fff6f0; // Light orange header
+      border-bottom: 1px solid #ffe6d1;
+      border-radius: 12px 12px 0 0;
+
+      .ant-card-head-title {
+        color: #f58232; // Theme color
+        font-weight: 600;
+        font-size: 18px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+    }
+
+    .ant-card-body {
+      padding: 24px; // Consistent padding
+    }
+
+    // Descriptions Styling
+    .ant-descriptions-item-label {
+      font-weight: 500;
+      color: #555;
+      background-color: #fafafa;
+    }
+    .ant-descriptions-item-content {
+      color: #333;
+    }
+
+    // Price Table Styling
+    .price-table {
+      th {
+        background-color: #fafafa !important;
+        font-weight: 600;
+        color: #444;
+      }
+      td {
+        padding: 10px 12px; // Adjust padding
+      }
+    }
+  }
+}

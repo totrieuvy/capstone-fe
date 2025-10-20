@@ -1,0 +1,128 @@
+.ManageComboGrooming {
+  padding: 24px;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  min-height: calc(100vh - 120px); // Adjust based on your layout
+
+  h1 {
+    font-size: 24px;
+    font-weight: 600;
+    margin-bottom: 24px;
+    color: #2c3e50; // Dark blue-gray
+    text-align: center;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  .toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+    gap: 12px;
+
+    .ant-input-search {
+      max-width: 400px;
+      border-radius: 8px !important;
+    }
+
+    .ant-btn-primary {
+      background-color: #f58232; // Orange theme color
+      border-color: #f58232;
+      border-radius: 8px;
+      height: 38px;
+      font-weight: 500;
+      box-shadow: 0 2px 6px rgba(245, 130, 50, 0.3);
+
+      &:hover {
+        background-color: #ff9447;
+        border-color: #ff9447;
+      }
+    }
+  }
+
+  // Table Styles
+  .ant-table {
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 1px 6px rgba(0, 0, 0, 0.05);
+
+    .ant-table-thead > tr > th {
+      background: #f0f2f5; // Light gray header
+      font-weight: 600;
+      color: #444;
+      text-align: center;
+    }
+
+    .ant-table-tbody > tr > td {
+      text-align: center;
+      padding: 12px;
+      font-size: 14px;
+      color: #333;
+    }
+
+    .ant-table-tbody > tr:hover > td {
+      background: #fff6f0; // Light orange hover
+      cursor: pointer;
+    }
+  }
+
+  // Modal Specific Styles
+  .ant-modal {
+    .ant-modal-header {
+      background: linear-gradient(135deg, #f58232 0%, #ff9447 100%);
+      border-radius: 12px 12px 0 0;
+
+      .ant-modal-title {
+        color: #fff;
+        font-weight: 600;
+        font-size: 18px;
+      }
+    }
+
+    .ant-modal-close-x {
+      color: #fff;
+    }
+
+    .ant-form-item-label > label {
+      font-weight: 500;
+      color: #444;
+    }
+  }
+
+  // Form List for Prices
+  .species-price-row {
+    display: flex;
+    align-items: flex-start; // Align items top for better spacing with validation messages
+    gap: 12px;
+    margin-bottom: 12px; // Space between rows
+    padding: 12px;
+    border: 1px solid #e8e8e8;
+    border-radius: 8px;
+    background-color: #fafafa;
+
+    .ant-form-item {
+      margin-bottom: 0; // Remove default margin
+      flex: 1; // Allow items to grow
+    }
+
+    .ant-select,
+    .ant-input-number {
+      border-radius: 8px;
+    }
+
+    .remove-price-btn {
+      flex-shrink: 0; // Prevent button from shrinking
+      margin-top: 5px; // Align button slightly lower if needed
+      border-radius: 8px;
+      height: 36px;
+    }
+  }
+
+  .add-price-btn {
+    margin-top: 10px;
+    border-radius: 8px;
+  }
+}
