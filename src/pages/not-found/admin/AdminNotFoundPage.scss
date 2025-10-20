@@ -1,0 +1,30 @@
+.content {
+  background: #fff;
+  padding: 24px;
+  min-height: 280px;
+  text-align: center;
+
+  .ant-result {
+    padding: 40px 0;
+
+    .ant-result-title {
+      font-size: 48px;
+      color: #faad14;
+    }
+
+    .ant-result-subtitle {
+      font-size: 20px;
+      color: #666;
+    }
+
+    .ant-btn {
+      background: #faad14;
+      border-color: #faad14;
+
+      &:hover {
+        background: #ffc107;
+        border-color: #ffc107;
+      }
+    }
+  }
+}

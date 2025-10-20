@@ -23,7 +23,7 @@ import {
   EyeOutlined,
   StarOutlined
 } from '@ant-design/icons';
-import type { UploadFile } from 'antd/es/upload/interface';
+import type { UploadFile, UploadProps } from 'antd/es/upload/interface';
 import type { RcFile } from 'antd/es/upload';
 import { boardingService, type CareLogItem } from '../../../services/BoardingService';
 import { storage } from '../../../config/firebase';
@@ -45,6 +45,7 @@ const CareLog: React.FC = () => {
   const [fileList, setFileList] = useState<UploadFile[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [imagePreview, setImagePreview] = useState<string>(''); // Add image preview like StaffBoardingDetail
 
   useEffect(() => {
     if (bookingId) {
@@ -65,14 +66,29 @@ const CareLog: React.FC = () => {
     }
   };
 
+  // Handle image file selection and upload (similar to StaffBoardingDetail approach)
   const handleImageUpload = async (file: RcFile | File): Promise<string> => {
     try {
       setUploading(true);
       console.log('Starting image upload for file:', file.name);
       
-      // Create a unique filename with timestamp
+      // Validate file type
+      const isImage = file.type.startsWith('image/');
+      if (!isImage) {
+        message.error('Chỉ được phép tải lên file hình ảnh!');
+        throw new Error('Invalid file type');
+      }
+
+      // Validate file size (max 5MB)
+      const isLt5M = file.size / 1024 / 1024 < 5;
+      if (!isLt5M) {
+        message.error('Kích thước file phải nhỏ hơn 5MB!');
+        throw new Error('File too large');
+      }
+      
+      // Create a unique filename with timestamp (consistent with StaffBoardingDetail)
       const timestamp = Date.now();
-      const fileName = `care-logs/${bookingId}_${timestamp}_${file.name}`;
+      const fileName = `care-logs/${bookingId}_${timestamp}`;
       console.log('Upload path:', fileName);
       
       // Create a storage reference
@@ -99,39 +115,39 @@ const CareLog: React.FC = () => {
     }
   };
 
-  const beforeUpload = (file: RcFile): boolean => {
-    // Validate file type
-    const isImage = file.type.startsWith('image/');
-    if (!isImage) {
-      message.error('Chỉ được phép tải lên file hình ảnh!');
-      return false;
-    }
 
-    // Validate file size (max 5MB)
-    const isLt5M = file.size / 1024 / 1024 < 5;
-    if (!isLt5M) {
-      message.error('Kích thước file phải nhỏ hơn 5MB!');
-      return false;
-    }
-    
-    return false; // Prevent automatic upload, we'll handle it manually
-  };
 
-  const handleCustomUpload = async ({ file, onSuccess, onError }: any) => {
+  const handleCustomUpload: UploadProps['customRequest'] = async ({ file, onSuccess, onError }) => {
     try {
-      console.log('Custom upload triggered, file:', file);
+      console.log('🔵 Custom upload triggered');
+      console.log('📁 File object:', file);
+      console.log('📋 File type:', typeof file);
+      console.log('✅ Is File instance:', file instanceof File);
       
-      // Check if file exists and has required properties
-      if (!file || !file.name) {
-        const errorMsg = 'Invalid file object';
-        console.error(errorMsg);
+      // File should always be a File object from Ant Design Upload
+      if (!(file instanceof File)) {
+        const errorMsg = 'Invalid file object - not a File instance';
+        console.error('❌', errorMsg, typeof file, file);
         message.error(errorMsg);
-        onError?.(new Error(errorMsg));
+        onError?.(new Error(errorMsg) as any);
         return;
       }
 
-      // Upload the file
-      const url = await handleImageUpload(file as RcFile);
+      console.log('📊 File details:', {
+        name: file.name,
+        size: file.size,
+        type: file.type
+      });
+
+      // Create preview (similar to StaffBoardingDetail)
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setImagePreview(e.target?.result as string);
+      };
+      reader.readAsDataURL(file);
+
+      // Upload the file to Firebase
+      const url = await handleImageUpload(file);
       
       // Update file list with the uploaded file
       setFileList([{
@@ -147,7 +163,8 @@ const CareLog: React.FC = () => {
       console.error('Error in custom upload:', error);
       setFileList([]);
       setUploadedImageUrl('');
-      onError?.(error);
+      setImagePreview(''); // Reset preview on error
+      onError?.(error as any);
     }
   };
 
@@ -180,6 +197,7 @@ const CareLog: React.FC = () => {
       form.resetFields();
       setFileList([]);
       setUploadedImageUrl('');
+      setImagePreview(''); // Reset preview like StaffBoardingDetail
       
       // Refresh care logs
       await fetchCareLogs();
@@ -251,18 +269,51 @@ const CareLog: React.FC = () => {
                   name="image"
                   listType="picture-card"
                   className="care-log-uploader"
-                  showUploadList={true}
-                  beforeUpload={beforeUpload}
+                  showUploadList={false}
                   customRequest={handleCustomUpload}
                   fileList={fileList}
                   maxCount={1}
                   accept="image/*"
+                  onChange={(info) => {
+                    console.log('🔄 Upload onChange triggered:', info);
+                    console.log('📋 File list:', info.fileList);
+                  }}
                   onRemove={() => {
+                    console.log('🗑️ Remove triggered');
                     setFileList([]);
                     setUploadedImageUrl('');
+                    setImagePreview(''); // Reset preview when removing file
                   }}
                 >
-                  {fileList.length >= 1 ? null : uploadButton}
+                  <div className="upload-area" style={{
+                    border: '2px dashed #d9d9d9',
+                    borderRadius: 8,
+                    padding: imagePreview ? '20px' : '40px 20px',
+                    textAlign: 'center',
+                    cursor: 'pointer',
+                    transition: 'border-color 0.3s',
+                    backgroundColor: '#fafafa'
+                  }}>
+                    {imagePreview ? (
+                      <div>
+                        <img
+                          src={imagePreview}
+                          alt="Preview"
+                          style={{
+                            maxWidth: '100%',
+                            maxHeight: 200,
+                            marginBottom: 16,
+                            borderRadius: 8
+                          }}
+                        />
+                        <p style={{ margin: 0, color: '#666' }}>
+                          Click để thay đổi hình ảnh
+                        </p>
+                      </div>
+                    ) : (
+                      uploadButton
+                    )}
+                  </div>
                 </Upload>
                 <Text type="secondary" style={{ fontSize: 12 }}>
                   Chấp nhận file hình ảnh. Kích thước tối đa 5MB.
