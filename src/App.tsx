@@ -1,7 +1,7 @@
 import { Navigate, Outlet, RouterProvider, createBrowserRouter } from "react-router-dom";
 import Layout from "./layouts/Layout";
 import Homepage from "./pages/homepage/Homepage";
-import NotFoundPage from "./pages/not-found/NotFoundPage";
+import NotFoundPage from "./pages/not-found/customer/NotFoundPage";
 import Login from "./pages/login/Login";
 import Register from "./pages/register/Register";
 import ForgotPassword from "./pages/forgot-password/ForgotPassword";
@@ -37,6 +37,11 @@ import BoardingHistory from "./pages/customer/boarding/BoardingHistory/BoardingH
 import BoardingDetail from "./pages/customer/boarding/BoardingDetail/CustomerBoardingDetail";
 import BoardingSchedule from "./pages/staff/boarding/BoardingSchedule";
 import StaffBoardingDetail from "./pages/staff/boarding-detail/StaffBoardingDetail";
+import StaffCheckOut from "./pages/staff/checkout/StaffCheckOut";
+import StaffNotFoundPage from "./pages/not-found/staff/StaffNotFoundPage";
+import AdminNotFoundPage from "./pages/not-found/admin/AdminNotFoundPage";
+import BoardingPaymentSuccess from "./pages/staff/BoardingPaymentSuccess";
+import BoardingPaymentFailure from "./pages/staff/BoardingPaymentFailure";
 import GroomingPage from "./pages/customer/grooming/dich-vu-lam-dep/GroomingPage";
 import ManageGroomingService from "./pages/admin/manage-grooming-service/ManageGroomingService";
 import CageManagement from "./pages/staff/cage/CageManagement";
@@ -209,6 +214,9 @@ const App = () => {
               path: "quan-li-giao-dich",
               element: <ManageTransaction />,
             },
+            {
+              path: "*", element: <AdminNotFoundPage />
+            }
           ],
         },
       ],
@@ -224,9 +232,19 @@ const App = () => {
             { path: "lich-dat-boarding", element: <BoardingSchedule /> },
             { path: "booking-detail/:bookingId", element: <StaffBoardingDetail /> },
             { path: "care-log/:bookingId", element: <CareLog /> },
+            { path: "checkout", element: <StaffCheckOut /> },
             { path: "quan-li-chuong", element: <CageManagement /> },
+            { path: "*", element: <StaffNotFoundPage /> }
           ],
         },
+        {
+          path: 'boardingpayment-success',
+          element: <BoardingPaymentSuccess />,
+        },
+        {
+          path: 'boardingpayment-failure',
+          element: <BoardingPaymentFailure />,
+        }
       ],
     },
     {

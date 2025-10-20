@@ -275,6 +275,28 @@ export interface CareLogItem {
   cageName: string;
 }
 
+// Type definitions for booking check-out
+export interface BookingCheckOutRequest {
+  bookingId: string;
+  checkOutImage: string;
+  paymentMethod: string; // Default: "VNPAY"
+}
+
+export interface BookingCheckOutResponse {
+  bookingId: string;
+  actualCheckOutDate: string; // Format: YYYY-MM-DD
+  status: string;
+  checkOutImageUrl: string;
+  totalAmount: number;
+  totalAmountAfter: number;
+  additionalPayment: number;
+  requiresPayment: boolean;
+  paymentUrl?: string;
+  transactionId?: string;
+  paymentMethod: string;
+  message: string;
+}
+
 export interface ApiResponse<T> {
   code: number;
   message: string;
@@ -458,6 +480,20 @@ export const boardingService = {
       return response.data.data;
     } catch (error) {
       console.error("Error fetching care logs:", error);
+      throw error;
+    }
+  },
+
+  // Check out a booking with image and process payment if additional charges exist
+  checkOutBooking: async (request: BookingCheckOutRequest): Promise<BookingCheckOutResponse> => {
+    try {
+      const response = await api.post<ApiResponse<BookingCheckOutResponse>>(
+        "/api/booking/check-out",
+        request
+      );
+      return response.data.data;
+    } catch (error) {
+      console.error("Error checking out booking:", error);
       throw error;
     }
   },

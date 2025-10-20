@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Card, Spin, Alert, Button, Tag, Descriptions, Avatar, Modal, Upload, message, List, Radio } from 'antd';
-import { ArrowLeftOutlined, UserOutlined, CalendarOutlined, ShoppingOutlined, UploadOutlined, CameraOutlined, HomeOutlined, EditOutlined } from '@ant-design/icons';
+import { ArrowLeftOutlined, UserOutlined, CalendarOutlined, ShoppingOutlined, UploadOutlined, CameraOutlined, HomeOutlined, EditOutlined, LogoutOutlined } from '@ant-design/icons';
 import { boardingService, type BookingDetail } from '../../../services/BoardingService';
 import { cageService, type Cage } from '../../../services/CageService';
 import { storage } from '../../../config/firebase';
@@ -25,6 +25,12 @@ const BoardingDetail: React.FC = () => {
   const [availableCages, setAvailableCages] = useState<Cage[]>([]);
   const [selectedCageId, setSelectedCageId] = useState<string>('');
   const [cageLoading, setCageLoading] = useState<boolean>(false);
+
+  // Check-out states
+  const [checkOutModalVisible, setCheckOutModalVisible] = useState<boolean>(false);
+  const [checkOutLoading, setCheckOutLoading] = useState<boolean>(false);
+  const [checkOutImageFile, setCheckOutImageFile] = useState<File | null>(null);
+  const [checkOutImagePreview, setCheckOutImagePreview] = useState<string>('');
 
   useEffect(() => {
     if (bookingId) {
@@ -83,7 +89,7 @@ const BoardingDetail: React.FC = () => {
     return new Date(dateString).toLocaleDateString('vi-VN');
   };
 
-  // Handle image file selection
+  // Handle image file selection for check-in
   const handleImageUpload: UploadProps['customRequest'] = ({ file, onSuccess, onError }) => {
     if (file instanceof File) {
       // Validate file type
@@ -108,6 +114,38 @@ const BoardingDetail: React.FC = () => {
       const reader = new FileReader();
       reader.onload = (e) => {
         setImagePreview(e.target?.result as string);
+      };
+      reader.readAsDataURL(file);
+      
+      onSuccess?.(file);
+    }
+  };
+
+  // Handle image file selection for check-out
+  const handleCheckOutImageUpload: UploadProps['customRequest'] = ({ file, onSuccess, onError }) => {
+    if (file instanceof File) {
+      // Validate file type
+      const isImage = file.type.startsWith('image/');
+      if (!isImage) {
+        message.error('Chỉ được phép tải lên file hình ảnh!');
+        onError?.(new Error('Invalid file type'));
+        return;
+      }
+
+      // Validate file size (max 5MB)
+      const isLt5M = file.size / 1024 / 1024 < 5;
+      if (!isLt5M) {
+        message.error('Kích thước file phải nhỏ hơn 5MB!');
+        onError?.(new Error('File too large'));
+        return;
+      }
+
+      setCheckOutImageFile(file);
+      
+      // Create preview
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setCheckOutImagePreview(e.target?.result as string);
       };
       reader.readAsDataURL(file);
       
@@ -213,6 +251,70 @@ const BoardingDetail: React.FC = () => {
     setImagePreview('');
     setSelectedCageId('');
     fetchAvailableCages();
+  };
+
+  // Handle check-out process
+  const handleCheckOut = async () => {
+    if (!checkOutImageFile || !bookingId) {
+      message.error('Vui lòng chọn hình ảnh check-out!');
+      return;
+    }
+
+    try {
+      setCheckOutLoading(true);
+
+      // Upload image to Firebase Storage
+      const timestamp = Date.now();
+      const storageRef = ref(storage, `check-out-images/${bookingId}_${timestamp}`);
+      const snapshot = await uploadBytes(storageRef, checkOutImageFile);
+      const imageUrl = await getDownloadURL(snapshot.ref);
+
+      // Call check-out API
+      const checkOutResponse = await boardingService.checkOutBooking({
+        bookingId: bookingId,
+        checkOutImage: imageUrl,
+        paymentMethod: 'VNPAY'
+      });
+
+      // Show success message
+      toast.success('Check out thành công!', {
+        position: 'top-right',
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      });
+      
+      setCheckOutModalVisible(false);
+      
+      // Navigate to checkout page with the response data
+      navigate('/STAFF/checkout', {
+        state: {
+          checkOutData: checkOutResponse
+        }
+      });
+      
+    } catch (error) {
+      console.error('Check-out error:', error);
+      message.error('Có lỗi xảy ra khi check-out. Vui lòng thử lại!');
+    } finally {
+      setCheckOutLoading(false);
+    }
+  };
+
+  // Handle check-out modal opening
+  const handleOpenCheckOutModal = () => {
+    setCheckOutModalVisible(true);
+    setCheckOutImageFile(null);
+    setCheckOutImagePreview('');
+  };
+
+  // Reset check-out modal state when closing
+  const handleCheckOutModalCancel = () => {
+    setCheckOutModalVisible(false);
+    setCheckOutImageFile(null);
+    setCheckOutImagePreview('');
   };
 
   if (loading) {
@@ -492,10 +594,10 @@ const BoardingDetail: React.FC = () => {
           </div>
         )}
 
-        {/* Create Care Log Button for IN_PROGRESS bookings */}
+        {/* Create Care Log Button and Check Out Button for IN_PROGRESS bookings */}
         {bookingDetail.status === 'IN_PROGRESS' && (
           <div className="info-section">
-            <div style={{ textAlign: 'center' }}>
+            <div style={{ textAlign: 'center', display: 'flex', gap: '16px', justifyContent: 'center' }}>
               <Button
                 type="primary"
                 size="large"
@@ -504,6 +606,16 @@ const BoardingDetail: React.FC = () => {
                 className="care-log-button"
               >
                 Tạo báo cáo
+              </Button>
+              <Button
+                type="primary"
+                size="large"
+                icon={<LogoutOutlined />}
+                onClick={handleOpenCheckOutModal}
+                className="check-out-button"
+                style={{ backgroundColor: '#52c41a', borderColor: '#52c41a' }}
+              >
+                Check Out
               </Button>
             </div>
           </div>
@@ -659,6 +771,89 @@ const BoardingDetail: React.FC = () => {
                   </p>
                 </div>
               )}
+            </div>
+          </div>
+        </Modal>
+
+        {/* Check-out Modal */}
+        <Modal
+          title={
+            <div className="modal-title">
+              <LogoutOutlined />
+              <span style={{ marginLeft: 8 }}>Check-out</span>
+            </div>
+          }
+          open={checkOutModalVisible}
+          onCancel={handleCheckOutModalCancel}
+          footer={[
+            <Button key="cancel" onClick={handleCheckOutModalCancel}>
+              Hủy
+            </Button>,
+            <Button
+              key="checkout"
+              type="primary"
+              loading={checkOutLoading}
+              onClick={handleCheckOut}
+              disabled={!checkOutImageFile}
+            >
+              Xác nhận Check-out
+            </Button>
+          ]}
+          width={600}
+        >
+          <div className="check-out-form">
+            <div style={{ marginBottom: 24 }}>
+              <h4 style={{ marginBottom: 16, color: '#262626', fontWeight: 600 }}>
+                Tải lên hình ảnh check-out
+              </h4>
+              <p style={{ marginBottom: 16, color: '#666' }}>
+                Vui lòng tải lên hình ảnh check-out để xác nhận hamster đã được trả về cho khách hàng.
+              </p>
+              
+              <Upload
+                accept="image/*"
+                customRequest={handleCheckOutImageUpload}
+                showUploadList={false}
+                maxCount={1}
+              >
+                <div className="upload-area" style={{
+                  border: '2px dashed #d9d9d9',
+                  borderRadius: 8,
+                  padding: '40px 20px',
+                  textAlign: 'center',
+                  cursor: 'pointer',
+                  transition: 'border-color 0.3s',
+                  backgroundColor: '#fafafa'
+                }}>
+                  {checkOutImagePreview ? (
+                    <div>
+                      <img
+                        src={checkOutImagePreview}
+                        alt="Check-out Preview"
+                        style={{
+                          maxWidth: '100%',
+                          maxHeight: 200,
+                          marginBottom: 16,
+                          borderRadius: 8
+                        }}
+                      />
+                      <p style={{ margin: 0, color: '#666' }}>
+                        Click để thay đổi hình ảnh
+                      </p>
+                    </div>
+                  ) : (
+                    <div>
+                      <UploadOutlined style={{ fontSize: 48, color: '#999', marginBottom: 16 }} />
+                      <p style={{ margin: 0, fontSize: 16, color: '#666' }}>
+                        Click hoặc kéo thả file vào đây
+                      </p>
+                      <p style={{ margin: '8px 0 0 0', fontSize: 14, color: '#999' }}>
+                        Hỗ trợ: JPG, PNG, GIF (tối đa 5MB)
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </Upload>
             </div>
           </div>
         </Modal>
