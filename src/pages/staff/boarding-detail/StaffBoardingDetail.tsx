@@ -1,14 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Card, Spin, Alert, Button, Tag, Descriptions, Avatar, Modal, Upload, message, List, Radio } from 'antd';
-import { ArrowLeftOutlined, UserOutlined, CalendarOutlined, ShoppingOutlined, UploadOutlined, CameraOutlined, HomeOutlined, EditOutlined, LogoutOutlined } from '@ant-design/icons';
+import { ArrowLeftOutlined, UserOutlined, CalendarOutlined, ShoppingOutlined, UploadOutlined, CameraOutlined, HomeOutlined, EditOutlined, LogoutOutlined, BarChartOutlined } from '@ant-design/icons';
 import { boardingService, type BookingDetail } from '../../../services/BoardingService';
 import { cageService, type Cage } from '../../../services/CageService';
 import { storage } from '../../../config/firebase';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import type { UploadProps } from 'antd/es/upload/interface';
 import { toast } from 'react-toastify';
-import './BoardingDetail.scss';
+import './StaffBoardingDetail.scss';
 
 const BoardingDetail: React.FC = () => {
   const { bookingId } = useParams<{ bookingId: string }>();
@@ -598,6 +598,17 @@ const BoardingDetail: React.FC = () => {
         {bookingDetail.status === 'IN_PROGRESS' && (
           <div className="info-section">
             <div style={{ textAlign: 'center', display: 'flex', gap: '16px', justifyContent: 'center' }}>
+              <Button
+                type="default"
+                size="large"
+                icon={<BarChartOutlined />}
+                onClick={() => {
+                  navigate('/STAFF/thong-so-iot');
+                }}
+                className="statistics-button"
+              >
+                Thông số
+              </Button>
               <Button
                 type="primary"
                 size="large"

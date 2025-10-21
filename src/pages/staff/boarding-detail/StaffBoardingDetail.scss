@@ -499,3 +499,78 @@
     transform: translateY(0);
   }
 }
+
+// Statistics Button Styles
+.statistics-button {
+  background: linear-gradient(135deg, #722ed1, #9254de);
+  border: none;
+  border-radius: 8px;
+  height: 48px;
+  padding: 0 32px;
+  font-size: 16px;
+  font-weight: 600;
+  color: white;
+  box-shadow: 0 4px 12px rgba(114, 46, 209, 0.3);
+  transition: all 0.3s ease;
+
+  &:hover {
+    background: linear-gradient(135deg, #9254de, #722ed1) !important;
+    color: white !important;
+    border-color: transparent !important;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(114, 46, 209, 0.4);
+  }
+
+  &:active {
+    transform: translateY(0);
+  }
+
+  &:focus {
+    background: linear-gradient(135deg, #722ed1, #9254de);
+    color: white;
+    border-color: transparent;
+  }
+}
+
+// Care Log Button Styles
+.care-log-button {
+  background: linear-gradient(135deg, #1890ff, #40a9ff);
+  border: none;
+  border-radius: 8px;
+  height: 48px;
+  padding: 0 32px;
+  font-size: 16px;
+  font-weight: 600;
+  box-shadow: 0 4px 12px rgba(24, 144, 255, 0.3);
+  transition: all 0.3s ease;
+
+  &:hover {
+    background: linear-gradient(135deg, #40a9ff, #1890ff);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(24, 144, 255, 0.4);
+  }
+
+  &:active {
+    transform: translateY(0);
+  }
+}
+
+// Check Out Button Styles
+.check-out-button {
+  border-radius: 8px;
+  height: 48px;
+  padding: 0 32px;
+  font-size: 16px;
+  font-weight: 600;
+  box-shadow: 0 4px 12px rgba(82, 196, 26, 0.3);
+  transition: all 0.3s ease;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(82, 196, 26, 0.4);
+  }
+
+  &:active {
+    transform: translateY(0);
+  }
+}
