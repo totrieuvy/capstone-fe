@@ -169,16 +169,7 @@ const StaffCheckOut: React.FC = () => {
               )}
             </div>
 
-            {/* Payment Required Alert */}
-            {checkOutData.requiresPayment && (
-              <Alert
-                message="Cần thanh toán thêm"
-                description={checkOutData.message}
-                type="warning"
-                showIcon
-                style={{ marginTop: 16 }}
-              />
-            )}
+        
 
             {/* No Additional Payment Alert */}
             {!checkOutData.requiresPayment && (

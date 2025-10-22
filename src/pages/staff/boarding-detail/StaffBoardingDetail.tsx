@@ -57,7 +57,7 @@ const BoardingDetail: React.FC = () => {
       'PAID': 'green',
       'CONFIRMED': 'cyan',
       'CHECK_IN': 'blue',
-      'CHECKED_OUT': 'orange',
+      'CHECK_OUT': 'orange',
       'CANCELLED': 'red',
       'PENDING': 'gold',
       'IN_PROGRESS': 'purple'
@@ -464,6 +464,31 @@ const BoardingDetail: React.FC = () => {
                 <Descriptions.Item label="Ngày kết thúc">
                   <strong>{formatDate(bookingDetail.endDate)}</strong>
                 </Descriptions.Item>
+                {bookingDetail.newEndDate && bookingDetail.status === 'IN_PROGRESS' && (
+                  <Descriptions.Item label="Ngày kết thúc mới (Gia hạn)">
+                    <div style={{ 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      gap: '8px',
+                      flexWrap: 'wrap',
+                      minWidth: 0
+                    }}>
+                      <strong style={{ 
+                        color: '#52c41a',
+                        whiteSpace: 'nowrap',
+                        fontSize: '14px'
+                      }}>
+                        {formatDate(bookingDetail.newEndDate)}
+                      </strong>
+                      <Tag color="orange" style={{ 
+                        margin: 0,
+                        flexShrink: 0
+                      }}>
+                        Đã gia hạn
+                      </Tag>
+                    </div>
+                  </Descriptions.Item>
+                )}
                 <Descriptions.Item label="Tổng tiền">
                   <strong className="total-amount">
                     {formatPrice(bookingDetail.totalAmount)}
@@ -531,6 +556,73 @@ const BoardingDetail: React.FC = () => {
                       });
                     }}
                   />
+                </div>
+              </div>
+            )}
+
+            {/* Extension Information Section - Show for IN_PROGRESS bookings with newEndDate */}
+            {bookingDetail.newEndDate && bookingDetail.status === 'IN_PROGRESS' && (
+              <div className="extension-section" style={{ 
+                marginTop: '24px', 
+                paddingTop: '20px', 
+                borderTop: '1px solid #f0f0f0',
+                width: '100%'
+              }}>
+                <h4 style={{ 
+                  marginBottom: '16px', 
+                  color: '#262626', 
+                  fontWeight: 600,
+                  fontSize: '16px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px'
+                }}>
+                  <CalendarOutlined style={{ color: '#52c41a' }} />
+                  Thông tin gia hạn
+                </h4>
+                <div className="extension-info" style={{
+                  backgroundColor: '#f6ffed',
+                  border: '1px solid #b7eb8f',
+                  borderRadius: '8px',
+                  padding: '16px'
+                }}>
+                  <Descriptions column={2} size="small">
+                    <Descriptions.Item label="Ngày kết thúc ban đầu">
+                      <strong>{formatDate(bookingDetail.endDate)}</strong>
+                    </Descriptions.Item>
+                    <Descriptions.Item label="Ngày kết thúc mới">
+                      <strong style={{ color: '#52c41a' }}>
+                        {formatDate(bookingDetail.newEndDate)}
+                      </strong>
+                    </Descriptions.Item>
+                    <Descriptions.Item label="Số ngày gia hạn" span={2}>
+                      <strong style={{ color: '#fa8c16' }}>
+                        {(() => {
+                          const originalEnd = new Date(bookingDetail.endDate);
+                          const newEnd = new Date(bookingDetail.newEndDate);
+                          const diffTime = newEnd.getTime() - originalEnd.getTime();
+                          const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                          return `${diffDays} ngày`;
+                        })()}
+                      </strong>
+                    </Descriptions.Item>
+                  </Descriptions>
+                  <div style={{ 
+                    marginTop: '12px', 
+                    padding: '8px 12px', 
+                    backgroundColor: '#fff', 
+                    borderRadius: '6px',
+                    border: '1px solid #d9f7be'
+                  }}>
+                    <p style={{ 
+                      margin: 0, 
+                      fontSize: '14px', 
+                      color: '#389e0d',
+                      fontWeight: 500 
+                    }}>
+                      ✓ Booking đã được gia hạn thành công
+                    </p>
+                  </div>
                 </div>
               </div>
             )}
