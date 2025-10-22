@@ -1,5 +1,4 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
-import React, { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback } from "react";
 import {
   Table,
   Input,
@@ -114,7 +113,7 @@ function ManageComboGrooming() {
   const [submitLoading, setSubmitLoading] = useState(false);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [isUpdate, setIsUpdate] = useState(false);
-  const [editingRecord, setEditingRecord] = useState<ComboDetail | null>(null); // Use Detail interface for editing
+  const [, setEditingRecord] = useState<ComboDetail | null>(null); // Use Detail interface for editing
   const [searchText, setSearchText] = useState("");
   const [form] = Form.useForm<ComboFormValues>();
 

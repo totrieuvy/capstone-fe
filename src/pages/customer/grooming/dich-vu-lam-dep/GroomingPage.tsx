@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import { useEffect, useState, type ReactNode } from "react";
 import { Row, Col, Card, Button, Spin, Tabs } from "antd";
 import { useNavigate } from "react-router-dom";
@@ -41,7 +40,7 @@ function GroomingPage() {
   const [services, setServices] = useState<Service[]>([]);
   const [combos, setCombos] = useState<Combo[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
-  const [activeView, setActiveView] = useState<ActiveView>("services");
+  const [, setActiveView] = useState<ActiveView>("services");
 
   const navigate = useNavigate();
   const dispatch = useDispatch();
