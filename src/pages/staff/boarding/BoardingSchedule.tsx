@@ -288,20 +288,62 @@ const BoardingSchedule = () => {
                   {cagesWithBookings.map((cageId) => {
                     const cageBookings = checkedInBookings.filter(b => b.cageId === cageId);
                     
+                    // Function to detect overlapping bookings on the same date
+                    const getBookingLayers = (bookings: Booking[]) => {
+                      const layers: { [key: number]: Booking[] } = {};
+                      
+                      bookings.forEach(booking => {
+                        for (let date = booking.startDate; date <= booking.endDate; date++) {
+                          if (!layers[date]) {
+                            layers[date] = [];
+                          }
+                          layers[date].push(booking);
+                        }
+                      });
+                      
+                      return layers;
+                    };
+                    
+                    const bookingLayers = getBookingLayers(cageBookings);
+                    
+                    // Calculate maximum overlapping bookings for this cage to determine row height
+                    const maxOverlappingBookings = Math.max(
+                      1, // At least 1 booking
+                      ...Object.values(bookingLayers).map(bookingsOnDate => bookingsOnDate.length)
+                    );
+                    
+                    // Calculate row height based on number of overlapping bookings
+                    const baseRowHeight = 48; // Original row height
+                    const bookingBarHeight = 36; // Standard booking bar height
+                    const rowHeight = Math.max(baseRowHeight, maxOverlappingBookings * (bookingBarHeight + 4) + 8);
+                    
                     return (
-                      <div key={cageId} className="cage-row">
-                        <div className="cage-id-cell">{cageId}</div>
-                        <div className="date-grid">
+                      <div key={cageId} className="cage-row" style={{ minHeight: `${rowHeight}px` }}>
+                        <div className="cage-id-cell" style={{ minHeight: `${rowHeight}px` }}>{cageId}</div>
+                        <div className="date-grid" style={{ minHeight: `${rowHeight}px` }}>
                           {/* Date cells as background */}
                           {dates.map(date => (
-                            <div key={date} className="grid-cell" style={{ width: `${CELL_WIDTH}px` }} />
+                            <div key={date} className="grid-cell" style={{ width: `${CELL_WIDTH}px`, minHeight: `${rowHeight}px` }} />
                           ))}
                           
                           {/* Booking bars as overlays */}
-                          {cageBookings.map(booking => {
+                          {cageBookings.map((booking, index) => {
                             const duration = booking.endDate - booking.startDate + 1;
                             const leftPosition = (booking.startDate - 1) * CELL_WIDTH;
                             const barWidth = duration * CELL_WIDTH;
+                            
+                            // Calculate the layer position for this booking
+                            let bookingLayer = 0;
+                            for (let date = booking.startDate; date <= booking.endDate; date++) {
+                              const bookingsOnDate = bookingLayers[date] || [];
+                              if (bookingsOnDate.length > 1) {
+                                bookingLayer = bookingsOnDate.findIndex(b => b.id === booking.id);
+                                break;
+                              }
+                            }
+                            
+                            // Calculate vertical position based on layer
+                            const topOffset = 4 + (bookingLayer * (bookingBarHeight + 4));
                             
                             return (
                               <Dropdown
@@ -314,6 +356,10 @@ const BoardingSchedule = () => {
                                   style={{
                                     left: `${leftPosition + 4}px`,
                                     width: `${barWidth - 8}px`,
+                                    height: `${bookingBarHeight}px`,
+                                    top: `${topOffset}px`,
+                                    position: 'absolute',
+                                    zIndex: 10 + index,
                                   }}
                                 >
                                   <div className="booking-text">
@@ -522,7 +568,8 @@ const BoardingSchedule = () => {
               const effectiveEndDate = currentBookingData?.newEndDate && currentBookingData.newEndDate !== null && currentBookingData.newEndDate !== '' 
                 ? dayjs(currentBookingData.newEndDate) 
                 : dayjs().year(currentMonth.year()).month(currentMonth.month()).date(selectedBooking.endDate);
-              return current && current.isBefore(effectiveEndDate, 'day');
+              // Disable dates that are on or before the current end date
+              return current && (current.isBefore(effectiveEndDate, 'day') || current.isSame(effectiveEndDate, 'day'));
             }}
           />
         </div>
