@@ -39,6 +39,7 @@ import ProfileHamsterService, { type HamsterProfile } from "../../../../services
 import { getFormattedPrice } from "../../../../utils/formatPrice"; //
 
 import "./BookingGroomingService.scss"; // Giả sử file này tồn tại
+import type { AxiosError } from "axios";
 
 const { Title, Text } = Typography;
 
@@ -51,6 +52,10 @@ dayjs.locale("vi");
 interface Species {
   id: string;
   speciesName: string;
+}
+
+interface ApiError {
+  message: string;
 }
 interface GroomingPriceItem {
   id: string;
@@ -263,7 +268,7 @@ function BookingGroomingService() {
         setSlotsData(validData); // Update state
       } else {
         message.error("Không thể tải lịch hẹn (API Error).");
-        console.error("API Error fetching slots:", response.data.message); // DEBUG
+        console.error("API Error fetching slots:", response.data); // DEBUG
         setSlotsData([]);
       }
     } catch (error) {
@@ -352,6 +357,7 @@ function BookingGroomingService() {
         </Radio.Group>
       );
     },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [slotsData, loadingSlots, selectedDate, selectedTimeSlot]
   ); // Add loadingSlots dependency
 
@@ -412,9 +418,10 @@ function BookingGroomingService() {
       } else {
         throw new Error(response.data.message || "Đặt lịch thất bại.");
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error creating appointment:", error);
-      const apiErrorMessage = error.response?.data?.message || error.message || "Lỗi không xác định";
+      const err = error as AxiosError<ApiError>;
+      const apiErrorMessage = err.response?.data?.message || err.message || "Lỗi không xác định";
       message.error(`Đặt lịch thất bại: ${apiErrorMessage}`);
     } finally {
       setSubmittingBooking(false);
