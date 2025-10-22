@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Card, Descriptions, Tag, Spin, Alert, Button, List, Typography, Table, Space } from "antd";
 import { ArrowLeftOutlined, InfoCircleOutlined, TagsOutlined, AppstoreOutlined } from "@ant-design/icons";
