@@ -1,0 +1,508 @@
+.iot-container {
+  padding: 32px 40px;
+  background: #f8fafc;
+  min-height: 100vh;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+
+  .iot-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 40px;
+    background: #ffffff;
+    padding: 32px;
+    border-radius: 20px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    border: 1px solid rgba(226, 232, 240, 0.8);
+
+    .header-left {
+      display: flex;
+      align-items: flex-start;
+      gap: 16px;
+
+      .back-button {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-weight: 600;
+        color: #64748b;
+        padding: 8px 16px;
+        border-radius: 12px;
+        transition: all 0.2s;
+        height: auto;
+
+        &:hover {
+          background: #f1f5f9;
+          color: #3b82f6;
+        }
+      }
+    }
+
+    .header-right {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 12px;
+
+      .last-updated {
+        font-size: 13px;
+        white-space: nowrap;
+        color: #64748b;
+        background: #f1f5f9;
+        padding: 8px 16px;
+        border-radius: 12px;
+        font-weight: 500;
+        border: 1px solid #e2e8f0;
+      }
+
+      .auto-refresh-indicator {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 12px;
+        color: #64748b;
+
+        .pulse-dot {
+          width: 8px;
+          height: 8px;
+          background: #10b981;
+          border-radius: 50%;
+          animation: pulse 2s infinite;
+        }
+      }
+    }
+
+    .ant-typography {
+      margin: 0;
+      
+      h2 {
+        color: #1e293b;
+        font-weight: 700;
+        font-size: 28px;
+        margin-bottom: 8px;
+        
+        .anticon {
+          color: #3b82f6;
+          margin-right: 12px;
+        }
+      }
+      
+      &.ant-typography-caption {
+        color: #64748b;
+        font-size: 15px;
+        font-weight: 400;
+      }
+    }
+
+    @media (max-width: 768px) {
+      flex-direction: column;
+      gap: 20px;
+      align-items: stretch;
+      padding: 24px;
+
+      .header-left {
+        flex-direction: column;
+        gap: 12px;
+      }
+
+      .header-right {
+        align-items: flex-start;
+      }
+    }
+  }
+
+  .gauge-row {
+    .ant-col {
+      display: flex;
+      padding: 0 12px;
+    }
+  }
+
+  .sensor-card {
+    height: 100%;
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border: 1px solid rgba(226, 232, 240, 0.8);
+    background: #ffffff;
+
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+      border-color: rgba(59, 130, 246, 0.2);
+    }
+
+    .ant-card-head {
+      border-bottom: 1px solid #f1f5f9;
+      background: #ffffff;
+      padding: 24px 32px 20px;
+
+      .ant-card-head-title {
+        color: #1e293b;
+        font-weight: 700;
+        font-size: 18px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+
+        .anticon {
+          margin-right: 12px;
+          font-size: 22px;
+        }
+      }
+
+      .ant-card-extra {
+        .status-badge {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          background: #f8fafc;
+          padding: 8px 16px;
+          border-radius: 16px;
+          border: 1px solid #e2e8f0;
+
+          .status-indicator {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+          }
+
+          .ant-typography {
+            margin: 0;
+            font-weight: 600;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+          }
+        }
+      }
+    }
+
+    &.temperature-card {
+      .ant-card-head-title .anticon {
+        color: #ef4444;
+      }
+      
+      .status-badge {
+        .status-indicator {
+          background: #ef4444;
+        }
+        .ant-typography {
+          color: #ef4444 !important;
+        }
+      }
+    }
+
+    &.humidity-card {
+      .ant-card-head-title .anticon {
+        color: #3b82f6;
+      }
+      
+      .status-badge {
+        .status-indicator {
+          background: #3b82f6;
+        }
+        .ant-typography {
+          color: #3b82f6 !important;
+        }
+      }
+    }
+
+    .ant-card-body {
+      padding: 32px;
+      background: #ffffff;
+    }
+  }
+
+  .loading-container {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    height: 400px;
+    gap: 16px;
+
+    .ant-spin .ant-spin-dot {
+      font-size: 32px;
+      
+      .ant-spin-dot-item {
+        background-color: #3b82f6;
+      }
+    }
+
+    &::after {
+      content: 'Đang tải dữ liệu...';
+      color: #64748b;
+      font-size: 14px;
+      font-weight: 500;
+    }
+  }
+
+  .gauge-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 40px;
+    position: relative;
+
+    .custom-gauge {
+      position: relative;
+
+      .ant-progress-circle {
+        filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.04));
+
+        .ant-progress-text {
+          color: inherit !important;
+        }
+      }
+
+      .gauge-wrapper {
+        position: relative;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+
+        svg {
+          .progress-circle {
+            transition: stroke-dasharray 0.3s ease;
+          }
+        }
+      }
+
+      .gauge-content {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        text-align: center;
+
+        .gauge-value {
+          font-size: 42px;
+          font-weight: 800;
+          line-height: 1;
+          margin-bottom: 6px;
+          color: #1e293b;
+          font-family: 'Inter', sans-serif;
+        }
+
+        .gauge-unit {
+          font-size: 16px;
+          font-weight: 600;
+          color: #64748b;
+          text-transform: uppercase;
+          letter-spacing: 1px;
+        }
+      }
+    }
+  }
+
+  .gauge-info {
+    border-top: 1px solid #f1f5f9;
+    padding-top: 28px;
+    margin-top: 8px;
+
+    .ant-row {
+      .ant-col {
+        padding: 0 8px;
+      }
+    }
+
+    .info-item {
+      text-align: center;
+
+      .ant-typography {
+        margin-bottom: 12px;
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.8px;
+        font-weight: 600;
+        color: #64748b;
+      }
+
+      .info-value {
+        font-size: 14px;
+        font-weight: 700;
+        color: #1e293b;
+        background: #f8fafc;
+        padding: 12px 16px;
+        border-radius: 12px;
+        border: 1px solid #e2e8f0;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+
+        &:hover {
+          background: #f1f5f9;
+          border-color: #cbd5e1;
+          transform: translateY(-1px);
+        }
+      }
+    }
+  }
+
+  .error-alert {
+    margin-top: 32px;
+    border-radius: 16px;
+    border: 1px solid #fecaca;
+    background: #fef2f2;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  }
+
+  // Responsive design
+  @media (max-width: 992px) {
+    padding: 24px 32px;
+    
+    .gauge-container {
+      .custom-gauge {
+        .ant-progress-circle {
+          width: 240px !important;
+          height: 240px !important;
+        }
+      }
+    }
+  }
+
+  @media (max-width: 768px) {
+    padding: 20px;
+
+    .iot-header {
+      padding: 24px;
+      margin-bottom: 32px;
+
+      .ant-typography h2 {
+        font-size: 24px;
+      }
+    }
+
+    .gauge-row {
+      .ant-col {
+        padding: 0 8px;
+      }
+    }
+
+    .sensor-card {
+      .ant-card-head {
+        padding: 20px 24px 16px;
+      }
+
+      .ant-card-body {
+        padding: 28px 24px;
+      }
+    }
+
+    .gauge-container {
+      .custom-gauge {
+        .ant-progress-circle {
+          width: 200px !important;
+          height: 200px !important;
+        }
+
+        .gauge-content {
+          .gauge-value {
+            font-size: 36px;
+          }
+
+          .gauge-unit {
+            font-size: 14px;
+          }
+        }
+      }
+    }
+
+    .gauge-info {
+      .ant-row .ant-col {
+        padding: 0 6px;
+      }
+      
+      .info-item {
+        margin-bottom: 16px;
+
+        .info-value {
+          font-size: 13px;
+          padding: 10px 14px;
+        }
+      }
+    }
+  }
+
+  @media (max-width: 576px) {
+    padding: 16px;
+
+    .iot-header {
+      padding: 20px;
+      margin-bottom: 28px;
+
+      .ant-typography h2 {
+        font-size: 22px;
+      }
+    }
+
+    .gauge-container {
+      .custom-gauge {
+        .ant-progress-circle {
+          width: 180px !important;
+          height: 180px !important;
+        }
+
+        .gauge-content {
+          .gauge-value {
+            font-size: 32px;
+          }
+
+          .gauge-unit {
+            font-size: 13px;
+          }
+        }
+      }
+    }
+
+    .sensor-card {
+      .ant-card-head {
+        padding: 16px 20px 12px;
+
+        .ant-card-head-title {
+          font-size: 16px;
+        }
+      }
+
+      .ant-card-body {
+        padding: 24px 20px;
+      }
+    }
+  }
+
+  // Animation keyframes
+  @keyframes pulse {
+    0% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.7;
+    }
+    100% {
+      opacity: 1;
+    }
+  }
+
+  .status-indicator {
+    animation: pulse 2s infinite ease-in-out;
+  }
+
+  // Custom scrollbar
+  &::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 4px;
+
+    &:hover {
+      background: #a8a8a8;
+    }
+  }
+}

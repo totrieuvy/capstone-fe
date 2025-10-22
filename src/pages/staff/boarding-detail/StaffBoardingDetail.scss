@@ -209,6 +209,22 @@
       color: #374151;
       font-style: italic;
     }
+
+    // Fix for extended date display issue
+    .ant-descriptions-item-content {
+      min-width: 0;
+      word-break: keep-all;
+      
+      div {
+        min-width: 0;
+        
+        strong {
+          display: inline-block;
+          min-width: fit-content;
+          white-space: nowrap;
+        }
+      }
+    }
   }
 }
 
@@ -323,6 +339,22 @@
     .ant-descriptions {
       .ant-descriptions-item {
         padding-bottom: 12px;
+        
+        // Ensure proper text wrapping for extended date
+        .ant-descriptions-item-content {
+          div {
+            flex-wrap: wrap;
+            
+            strong {
+              min-width: auto;
+              font-size: 14px;
+            }
+            
+            .ant-tag {
+              margin-top: 4px;
+            }
+          }
+        }
       }
     }
   }
@@ -335,6 +367,35 @@
 
       .service-price {
         align-self: flex-end;
+      }
+    }
+  }
+
+  // Extension section responsive styles
+  .extension-section {
+    .extension-info {
+      .ant-descriptions {
+        .ant-descriptions-item {
+          padding-bottom: 8px;
+        }
+      }
+    }
+  }
+
+  // Extension section specific responsive styles for tablet
+  .extension-section {
+    .extension-info {
+      padding: 12px;
+
+      .ant-descriptions {
+        .ant-descriptions-item {
+          padding-bottom: 8px;
+        }
+      }
+
+      // Stack extension details vertically on smaller screens
+      .ant-descriptions-row {
+        flex-direction: column;
       }
     }
   }
@@ -363,6 +424,109 @@
     .ant-card-body {
       padding: 12px;
     }
+  }
+
+  // Extension section mobile responsive styles
+  .extension-section {
+    margin-top: 16px;
+    padding-top: 16px;
+
+    h4 {
+      font-size: 14px;
+      margin-bottom: 12px;
+      
+      .anticon {
+        font-size: 16px;
+      }
+    }
+
+    .extension-info {
+      padding: 12px;
+      border-radius: 6px;
+
+      .ant-descriptions {
+        .ant-descriptions-item {
+          padding-bottom: 6px;
+          
+          .ant-descriptions-item-label {
+            font-size: 13px;
+            font-weight: 500;
+          }
+
+          .ant-descriptions-item-content {
+            font-size: 14px;
+            
+            strong {
+              font-size: 14px;
+            }
+          }
+        }
+      }
+
+      // Success message container
+      > div:last-child {
+        margin-top: 8px;
+        padding: 6px 10px;
+        
+        p {
+          font-size: 12px;
+        }
+      }
+    }
+  }
+}
+
+// Extension Section Styles
+.extension-section {
+  .extension-info {
+    transition: all 0.3s ease;
+    
+    .ant-descriptions {
+      .ant-descriptions-item-label {
+        color: #374151;
+        font-weight: 500;
+      }
+
+      .ant-descriptions-item-content {
+        color: #1f2937;
+
+        strong {
+          font-weight: 600;
+        }
+      }
+    }
+
+    // Success message styling
+    > div:last-child {
+      transition: all 0.3s ease;
+      
+      p {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        
+        &::before {
+          content: '✓';
+          color: #389e0d;
+          font-weight: bold;
+          font-size: 16px;
+        }
+      }
+    }
+  }
+
+  // Animation for extension section
+  animation: slideInDown 0.4s ease-out;
+}
+
+@keyframes slideInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 
@@ -493,6 +657,81 @@
     background: linear-gradient(135deg, #40a9ff, #1890ff);
     transform: translateY(-2px);
     box-shadow: 0 6px 16px rgba(24, 144, 255, 0.4);
+  }
+
+  &:active {
+    transform: translateY(0);
+  }
+}
+
+// Statistics Button Styles
+.statistics-button {
+  background: linear-gradient(135deg, #722ed1, #9254de);
+  border: none;
+  border-radius: 8px;
+  height: 48px;
+  padding: 0 32px;
+  font-size: 16px;
+  font-weight: 600;
+  color: white;
+  box-shadow: 0 4px 12px rgba(114, 46, 209, 0.3);
+  transition: all 0.3s ease;
+
+  &:hover {
+    background: linear-gradient(135deg, #9254de, #722ed1) !important;
+    color: white !important;
+    border-color: transparent !important;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(114, 46, 209, 0.4);
+  }
+
+  &:active {
+    transform: translateY(0);
+  }
+
+  &:focus {
+    background: linear-gradient(135deg, #722ed1, #9254de);
+    color: white;
+    border-color: transparent;
+  }
+}
+
+// Care Log Button Styles
+.care-log-button {
+  background: linear-gradient(135deg, #1890ff, #40a9ff);
+  border: none;
+  border-radius: 8px;
+  height: 48px;
+  padding: 0 32px;
+  font-size: 16px;
+  font-weight: 600;
+  box-shadow: 0 4px 12px rgba(24, 144, 255, 0.3);
+  transition: all 0.3s ease;
+
+  &:hover {
+    background: linear-gradient(135deg, #40a9ff, #1890ff);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(24, 144, 255, 0.4);
+  }
+
+  &:active {
+    transform: translateY(0);
+  }
+}
+
+// Check Out Button Styles
+.check-out-button {
+  border-radius: 8px;
+  height: 48px;
+  padding: 0 32px;
+  font-size: 16px;
+  font-weight: 600;
+  box-shadow: 0 4px 12px rgba(82, 196, 26, 0.3);
+  transition: all 0.3s ease;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(82, 196, 26, 0.4);
   }
 
   &:active {

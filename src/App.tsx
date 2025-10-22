@@ -46,6 +46,7 @@ import GroomingPage from "./pages/customer/grooming/dich-vu-lam-dep/GroomingPage
 import ManageGroomingService from "./pages/admin/manage-grooming-service/ManageGroomingService";
 import CageManagement from "./pages/staff/cage/CageManagement";
 import CareLog from "./pages/staff/care-log/CareLog";
+import Iot from "./pages/staff/Iot/Iot";
 import ManageComboGrooming from "./pages/admin/manage-grooming-service/manage-combo-grooming/ManageComboGrooming";
 import ManageComboGroomingDetail from "./pages/admin/manage-grooming-service/manage-combo-grooming-detail/ManageComboGroomingDetail";
 import ManageGroomingServiceDetail from "./pages/admin/manage-grooming-service/manage-grooming-single-detail/ManageGroomingServiceDetail";
@@ -250,6 +251,8 @@ const App = () => {
             { path: "checkout", element: <StaffCheckOut /> },
             { path: "quan-li-chuong", element: <CageManagement /> },
             { path: "*", element: <StaffNotFoundPage /> },
+            { path: "thong-so-iot", element: <Iot /> },
+            { path: "*", element: <StaffNotFoundPage /> }
           ],
         },
         {

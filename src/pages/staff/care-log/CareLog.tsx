@@ -23,7 +23,7 @@ import {
   EyeOutlined,
   StarOutlined
 } from '@ant-design/icons';
-import type { UploadFile, UploadProps } from 'antd/es/upload/interface';
+import type { UploadProps } from 'antd/es/upload/interface';
 import type { RcFile } from 'antd/es/upload';
 import { boardingService, type CareLogItem } from '../../../services/BoardingService';
 import { storage } from '../../../config/firebase';
@@ -42,7 +42,6 @@ const CareLog: React.FC = () => {
   const [careLogs, setCareLogs] = useState<CareLogItem[]>([]);
   const [careLogsLoading, setCareLogsLoading] = useState(true);
   const [uploadedImageUrl, setUploadedImageUrl] = useState<string>('');
-  const [fileList, setFileList] = useState<UploadFile[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [imagePreview, setImagePreview] = useState<string>(''); // Add image preview like StaffBoardingDetail
@@ -147,21 +146,12 @@ const CareLog: React.FC = () => {
       reader.readAsDataURL(file);
 
       // Upload the file to Firebase
-      const url = await handleImageUpload(file);
-      
-      // Update file list with the uploaded file
-      setFileList([{
-        uid: '-1',
-        name: file.name,
-        status: 'done',
-        url: url,
-      }]);
+      await handleImageUpload(file);
       
       onSuccess?.(file);
       console.log('Upload completed successfully');
     } catch (error) {
       console.error('Error in custom upload:', error);
-      setFileList([]);
       setUploadedImageUrl('');
       setImagePreview(''); // Reset preview on error
       onError?.(error as any);
@@ -195,7 +185,6 @@ const CareLog: React.FC = () => {
       
       // Reset form and image
       form.resetFields();
-      setFileList([]);
       setUploadedImageUrl('');
       setImagePreview(''); // Reset preview like StaffBoardingDetail
       
@@ -265,57 +254,48 @@ const CareLog: React.FC = () => {
                 label="Hình ảnh minh họa"
                 required
               >
-                <Upload
-                  name="image"
-                  listType="picture-card"
-                  className="care-log-uploader"
-                  showUploadList={false}
-                  customRequest={handleCustomUpload}
-                  fileList={fileList}
-                  maxCount={1}
-                  accept="image/*"
-                  onChange={(info) => {
-                    console.log('🔄 Upload onChange triggered:', info);
-                    console.log('📋 File list:', info.fileList);
-                  }}
-                  onRemove={() => {
-                    console.log('🗑️ Remove triggered');
-                    setFileList([]);
-                    setUploadedImageUrl('');
-                    setImagePreview(''); // Reset preview when removing file
-                  }}
-                >
-                  <div className="upload-area" style={{
-                    border: '2px dashed #d9d9d9',
-                    borderRadius: 8,
-                    padding: imagePreview ? '20px' : '40px 20px',
-                    textAlign: 'center',
-                    cursor: 'pointer',
-                    transition: 'border-color 0.3s',
-                    backgroundColor: '#fafafa'
-                  }}>
-                    {imagePreview ? (
-                      <div>
-                        <img
-                          src={imagePreview}
-                          alt="Preview"
-                          style={{
-                            maxWidth: '100%',
-                            maxHeight: 200,
-                            marginBottom: 16,
-                            borderRadius: 8
-                          }}
-                        />
-                        <p style={{ margin: 0, color: '#666' }}>
-                          Click để thay đổi hình ảnh
-                        </p>
+                <div className="care-log-uploader">
+                  {imagePreview ? (
+                    <div className="image-preview-container">
+                      <img
+                        src={imagePreview}
+                        alt="Preview"
+                        style={{
+                          width: '100%',
+                          maxWidth: 400,
+                          maxHeight: 300,
+                          objectFit: 'cover',
+                          borderRadius: 8,
+                          border: '1px solid #d9d9d9'
+                        }}
+                      />
+                      <div style={{ marginTop: 12, textAlign: 'center' }}>
+                        <Upload
+                          name="image"
+                          showUploadList={false}
+                          customRequest={handleCustomUpload}
+                          accept="image/*"
+                        >
+                          <Button type="dashed" icon={<PlusOutlined />}>
+                            Thay đổi hình ảnh
+                          </Button>
+                        </Upload>
                       </div>
-                    ) : (
-                      uploadButton
-                    )}
-                  </div>
-                </Upload>
-                <Text type="secondary" style={{ fontSize: 12 }}>
+                    </div>
+                  ) : (
+                    <Upload
+                      name="image"
+                      listType="picture-card"
+                      showUploadList={false}
+                      customRequest={handleCustomUpload}
+                      accept="image/*"
+                      className="upload-dragger"
+                    >
+                      {uploadButton}
+                    </Upload>
+                  )}
+                </div>
+                <Text type="secondary" style={{ fontSize: 12, display: 'block', marginTop: 8 }}>
                   Chấp nhận file hình ảnh. Kích thước tối đa 5MB.
                 </Text>
               </Form.Item>
