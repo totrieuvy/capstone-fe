@@ -49,6 +49,7 @@ import CareLog from "./pages/staff/care-log/CareLog";
 import ManageComboGrooming from "./pages/admin/manage-grooming-service/manage-combo-grooming/ManageComboGrooming";
 import ManageComboGroomingDetail from "./pages/admin/manage-grooming-service/manage-combo-grooming-detail/ManageComboGroomingDetail";
 import ManageGroomingServiceDetail from "./pages/admin/manage-grooming-service/manage-grooming-single-detail/ManageGroomingServiceDetail";
+import BookingGroomingService from "./pages/customer/grooming/dat-dich-vu-lam-dep/BookingGroomingService";
 
 interface User {
   id: number;
@@ -133,6 +134,7 @@ const App = () => {
         { path: "/payment-success", element: <PaymentSuccess /> },
         { path: "/payment-failure", element: <PaymentFail /> },
         { path: "/dich-vu-lam-dep", element: <GroomingPage /> },
+        { path: "/dich-vu-lam-dep/dat-dich-vu", element: <BookingGroomingService /> },
         {
           path: "/profile",
           element: <Panel />,
@@ -227,8 +229,9 @@ const App = () => {
               element: <ManageTransaction />,
             },
             {
-              path: "*", element: <AdminNotFoundPage />
-            }
+              path: "*",
+              element: <AdminNotFoundPage />,
+            },
           ],
         },
       ],
@@ -246,17 +249,17 @@ const App = () => {
             { path: "care-log/:bookingId", element: <CareLog /> },
             { path: "checkout", element: <StaffCheckOut /> },
             { path: "quan-li-chuong", element: <CageManagement /> },
-            { path: "*", element: <StaffNotFoundPage /> }
+            { path: "*", element: <StaffNotFoundPage /> },
           ],
         },
         {
-          path: 'boardingpayment-success',
+          path: "boardingpayment-success",
           element: <BoardingPaymentSuccess />,
         },
         {
-          path: 'boardingpayment-failure',
+          path: "boardingpayment-failure",
           element: <BoardingPaymentFailure />,
-        }
+        },
       ],
     },
     {

@@ -1,6 +1,9 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { useEffect, useState, type ReactNode } from "react";
-import { Row, Col, Card, Button, Spin, Tabs } from "antd"; // Thêm Tabs
+import { Row, Col, Card, Button, Spin, Tabs } from "antd";
+import { useNavigate } from "react-router-dom";
+import { useDispatch } from "react-redux";
+import { selectGroomingItem } from "../../../../redux/features/SelectedGroomingItem";
 import api from "../../../../config/axios";
 import AOS from "aos";
 import "aos/dist/aos.css";
@@ -11,9 +14,8 @@ import {
   ScissorOutlined,
   AppstoreOutlined,
   GiftOutlined,
-} from "@ant-design/icons"; // Thêm icon
+} from "@ant-design/icons";
 
-// Interface cho Service (không đổi)
 interface Service {
   id: string;
   serviceType: string;
@@ -24,7 +26,6 @@ interface Service {
   isActive: boolean;
 }
 
-// Interface cho Combo (dựa trên response bạn cung cấp)
 interface Combo {
   id: string;
   comboName: string;
@@ -38,9 +39,12 @@ type ActiveView = "services" | "combos";
 
 function GroomingPage() {
   const [services, setServices] = useState<Service[]>([]);
-  const [combos, setCombos] = useState<Combo[]>([]); // State cho combos
+  const [combos, setCombos] = useState<Combo[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [activeView, setActiveView] = useState<ActiveView>("services");
+
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
 
   useEffect(() => {
     document.title = "Dịch vụ Grooming - The Hamster";
@@ -49,18 +53,15 @@ function GroomingPage() {
     const fetchData = async () => {
       setLoading(true);
       try {
-        // Gọi cả hai API song song
         const [serviceResponse, comboResponse] = await Promise.all([
           api.get("/api/services/type/GROOMING"),
-          api.get("/api/combo"), // Gọi API combo
+          api.get("/api/combo"),
         ]);
 
         if (serviceResponse.data && serviceResponse.data.code === 200) {
-          // Lọc chỉ lấy service active
           setServices(serviceResponse.data.data.filter((s: Service) => s.isActive));
         }
         if (comboResponse.data && comboResponse.data.code === 200) {
-          // Lọc chỉ lấy combo active
           setCombos(comboResponse.data.data.filter((c: Combo) => c.isActive));
         }
       } catch (error) {
@@ -74,9 +75,22 @@ function GroomingPage() {
   }, []);
 
   const serviceIcon: ReactNode = <ScissorOutlined />;
-  const comboIcon: ReactNode = <GiftOutlined />; // Icon cho combo
+  const comboIcon: ReactNode = <GiftOutlined />;
 
-  // --- Render Functions ---
+  const handleBookNowClick = (item: Service | Combo, type: "service" | "combo") => {
+    dispatch(
+      selectGroomingItem({
+        id: item.id,
+        name: type === "service" ? (item as Service).serviceName : (item as Combo).comboName,
+        type: type,
+        description: item.description,
+        displayPrice: item.displayPrice,
+        durationMinutes: type === "service" ? (item as Service).durationMinutes : undefined,
+      })
+    );
+    navigate("/dich-vu-lam-dep/dat-dich-vu");
+  };
+
   const renderServices = () => (
     <Row gutter={[24, 24]} justify="center">
       {services.map((service) => (
@@ -96,7 +110,7 @@ function GroomingPage() {
                   </span>
                 </div>
               </div>
-              <Button type="primary" className="book-button">
+              <Button type="primary" className="book-button" onClick={() => handleBookNowClick(service, "service")}>
                 Đặt lịch ngay
               </Button>
             </div>
@@ -125,7 +139,7 @@ function GroomingPage() {
                   </span>
                 </div>
               </div>
-              <Button type="primary" className="book-button">
+              <Button type="primary" className="book-button" onClick={() => handleBookNowClick(combo, "combo")}>
                 Đặt lịch ngay
               </Button>
             </div>
@@ -135,7 +149,6 @@ function GroomingPage() {
     </Row>
   );
 
-  // --- Tab Items ---
   const tabItems = [
     {
       key: "services",
@@ -175,9 +188,7 @@ function GroomingPage() {
               items={tabItems}
               onChange={(key) => setActiveView(key as ActiveView)}
               className="view-switcher"
-              // activeKey={activeView} // Không cần thiết nếu chỉ dùng defaultActiveKey
             />
-            {/* Content sẽ được render bởi Tabs component thông qua tabItems */}
           </>
         )}
       </div>
