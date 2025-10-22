@@ -1,0 +1,246 @@
+.booking-grooming-service {
+  max-width: 1200px;
+  margin: 40px auto;
+  padding: 24px;
+  background-color: #fff;
+  border-radius: 12px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+
+  .page-title {
+    text-align: center;
+    color: #ff6347; // Theme color
+    margin-bottom: 30px;
+  }
+
+  .booking-steps {
+    margin-bottom: 40px;
+    padding: 0 10%; // Add some padding
+  }
+
+  .steps-content {
+    min-height: 400px; // Ensure content area has height
+    margin-top: 16px;
+    padding: 24px;
+    background-color: #fafafa;
+    border: 1px dashed #e9e9e9;
+    border-radius: 8px;
+  }
+
+  .steps-action {
+    margin-top: 24px;
+    text-align: right;
+  }
+
+  // --- Step 1: Hamster Selection ---
+  .step-select-hamster {
+    .hamster-card {
+      position: relative;
+      border: 2px solid transparent;
+      transition: border-color 0.3s, box-shadow 0.3s;
+      &.selected {
+        border-color: #ff6347;
+        box-shadow: 0 0 10px rgba(255, 99, 71, 0.3);
+      }
+      .selected-checkmark {
+        position: absolute;
+        top: 8px;
+        right: 8px;
+        background: #ff6347;
+        color: white;
+        border-radius: 50%;
+        width: 24px;
+        height: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 14px;
+        font-weight: bold;
+      }
+    }
+  }
+
+  // --- Step 2: Calendar & Slots ---
+  .step-select-time {
+    // Container của Calendar
+    .ant-picker-calendar {
+      background-color: #fff; // Nền trắng cho lịch
+      border-radius: 8px; // Bo góc nhẹ
+      border: 1px solid #eee; // Viền mỏng
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    }
+
+    // Header của Calendar (Tháng, Năm, nút chuyển)
+    .ant-picker-calendar-header {
+      padding: 15px 20px;
+      border-bottom: 1px solid #eee;
+
+      .ant-picker-calendar-mode-switch,
+      .ant-picker-calendar-year-select,
+      .ant-picker-calendar-month-select {
+        // style nút chọn năm/tháng nếu cần
+      }
+      .ant-radio-group {
+        // Nút chuyển Tháng/Năm
+        .ant-radio-button-wrapper {
+          border-radius: 6px;
+          &:hover {
+            color: #ff6347; // Màu theme khi hover
+          }
+          &-checked {
+            background-color: #ff6347 !important;
+            border-color: #ff6347 !important;
+            color: #fff !important;
+            &:hover {
+              color: #fff !important;
+            }
+          }
+        }
+      }
+    }
+
+    // Các ô ngày trong tháng hiện tại
+    .ant-picker-cell-in-view.ant-picker-calendar-date {
+      border-top: 1px solid #f0f0f0; // Đường kẻ ngang giữa các tuần
+      border-inline-start: 1px solid #f0f0f0; // Đường kẻ dọc giữa các ngày
+      position: relative; // Để định vị nội dung bên trong
+
+      // Bỏ viền trái của cột đầu tiên và viền trên của hàng đầu tiên
+      &:first-child {
+        border-inline-start: none;
+      }
+      // Có thể cần selector phức tạp hơn để target hàng đầu tiên
+    }
+
+    // Nội dung bên trong ô ngày
+    .ant-picker-cell-inner.ant-picker-calendar-date-content {
+      height: auto;
+      min-height: 120px; // Tăng chiều cao tối thiểu để chứa nhiều slot
+      padding: 5px; // Padding nhỏ bên trong ô
+      display: flex; // Dùng flexbox cho nội dung
+      flex-direction: column; // Xếp chồng ngày và slots
+      align-items: stretch; // Kéo giãn slot group
+    }
+
+    // Phần hiển thị ngày (số)
+    .ant-picker-calendar-date-value {
+      text-align: right; // Đẩy số ngày sang phải
+      font-weight: 500;
+      margin-bottom: 5px; // Khoảng cách giữa số ngày và slots
+      color: #555;
+    }
+
+    // Ngày được chọn (highlight viền ngoài)
+    .ant-picker-cell-selected .ant-picker-cell-inner {
+      background-color: #fff0eb; // Màu nền nhẹ khi ô ngày được chọn (có slot được chọn)
+      border-radius: 4px;
+      // box-shadow: 0 0 0 1px #ff6347 inset; // Viền cam bên trong
+    }
+
+    // Ngày hôm nay
+    .ant-picker-cell-today .ant-picker-cell-inner .ant-picker-calendar-date-value {
+      color: #ff6347; // Màu cam cho ngày hôm nay
+      font-weight: bold;
+    }
+
+    // Ngày bị disable (quá khứ)
+    .ant-picker-cell-disabled {
+      background-color: #f8f8f8; // Nền xám nhạt
+      pointer-events: none; // Không cho click
+      .ant-picker-calendar-date-value {
+        color: #ccc !important; // Màu số ngày bị mờ
+      }
+      .disabled-day {
+        // Class bạn đã thêm
+        display: none; // Ẩn chữ "Không có lịch" cho ngày quá khứ
+      }
+    }
+
+    .no-slots {
+      // Chữ "Không có lịch"
+      text-align: center;
+      color: #aaa;
+      font-size: 0.8em;
+      padding-top: 20px; // Đẩy chữ xuống giữa ô
+    }
+
+    // Nhóm các nút radio slot
+    .slot-radio-group {
+      display: flex;
+      flex-direction: column;
+      gap: 5px; // Khoảng cách giữa các slot
+      margin-top: 5px;
+      flex-grow: 1; // Chiếm hết không gian còn lại
+
+      .slot-button {
+        width: 100%;
+        padding: 5px 8px; // Padding cho nút slot
+        height: auto;
+        line-height: 1.5;
+        border-radius: 6px; // Bo góc nút slot
+        text-align: left;
+        font-size: 13px; // Cỡ chữ slot
+        font-weight: 500;
+        white-space: normal;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        transition: all 0.2s ease; // Hiệu ứng chuyển động mượt
+
+        .slot-tag {
+          // Tag số lượng slot
+          margin-left: 5px;
+          font-size: 11px;
+          padding: 1px 5px;
+          border-radius: 4px;
+          line-height: 1; // Đảm bảo tag không quá cao
+        }
+
+        // --- Các trạng thái của nút slot ---
+        &.slot-available {
+          // Slot còn chỗ
+          border-color: #d9f7be;
+          background-color: #f6ffed;
+          color: #52c41a;
+          &:hover {
+            background-color: #e9ffdf;
+            border-color: #b7eb8f;
+          }
+        }
+
+        &.slot-full {
+          // Slot hết chỗ
+          border-color: #ffccc7;
+          background-color: #fff1f0;
+          color: #ff4d4f;
+          cursor: not-allowed;
+          opacity: 0.6;
+          &:hover {
+            background-color: #fff1f0; // Giữ nguyên màu khi hover slot full
+            border-color: #ffccc7;
+          }
+        }
+
+        &.slot-selected {
+          // Slot được chọn
+          border-color: #ff6347 !important; // Viền màu theme
+          background-color: #ffece6 !important; // Nền màu theme nhạt
+          color: #ff6347 !important; // Chữ màu theme
+          font-weight: bold;
+          box-shadow: 0 0 0 2px rgba(255, 99, 71, 0.2); // Hiệu ứng focus nhẹ
+          z-index: 1; // Nổi lên trên các slot khác
+        }
+      }
+    }
+  }
+
+  // --- Step 3: Confirmation ---
+  .step-confirmation {
+    .ant-card {
+      margin-bottom: 20px;
+    }
+    .ant-descriptions-item-label {
+      font-weight: 600;
+      background-color: #fff7f5;
+    }
+  }
+}
