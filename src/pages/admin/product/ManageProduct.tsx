@@ -25,7 +25,7 @@ import { toast } from "react-toastify";
 import { getFormattedPrice } from "../../../utils/formatPrice";
 import type { ProductType } from "../../../types/product";
 import "./ManageProduct.scss";
-import { storage } from "../../../config/firebase"; // đường dẫn tới file firebase
+import { storage } from "../../../config/firebase";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 
 const { Search } = Input;
@@ -47,6 +47,7 @@ function ManageProduct() {
   const [products, setProducts] = useState<ProductType[]>([]);
   const [filteredProducts, setFilteredProducts] = useState<ProductType[]>([]);
   const [categories, setCategories] = useState<{ id: string; name: string }[]>([]);
+  const [selectedCategory, setSelectedCategory] = useState<string>("ALL");
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [loading, setLoading] = useState(false);
   const [isUpdate, setIsUpdate] = useState(false);
@@ -84,27 +85,29 @@ function ManageProduct() {
     setFilteredProducts(filtered);
   };
 
+  const handleFilterCategory = (categoryId: string) => {
+    setSelectedCategory(categoryId);
+    if (categoryId === "ALL") {
+      setFilteredProducts(products);
+    } else {
+      const filtered = products.filter((item) => item.categoryId === categoryId);
+      setFilteredProducts(filtered);
+    }
+  };
+
   const handleSubmit = async (values: ProductFormValues) => {
     setLoading(true);
     try {
       let imageUrl = "";
-
-      // 🔹 Kiểm tra nếu có ảnh mới được chọn
       const newFile = values.imageUrl?.[0]?.originFileObj as File | undefined;
 
       if (newFile) {
-        // Tạo đường dẫn trong Firebase Storage (folder images)
         const storageRef = ref(storage, `images/${Date.now()}_${newFile.name}`);
-
-        // Upload file lên Firebase
         await uploadBytes(storageRef, newFile);
-
-        // Lấy URL công khai của ảnh sau khi upload
         imageUrl = await getDownloadURL(storageRef);
       } else {
-        // Không có ảnh mới
         if (isUpdate) {
-          imageUrl = ""; // giữ nguyên nếu cập nhật mà không đổi ảnh
+          imageUrl = "";
         } else {
           message.error("Vui lòng chọn ảnh sản phẩm!");
           setLoading(false);
@@ -112,7 +115,6 @@ function ManageProduct() {
         }
       }
 
-      // 🔹 Dữ liệu gửi về backend
       const payload = {
         name: values.name,
         description: values.description,
@@ -124,7 +126,6 @@ function ManageProduct() {
         isActive: values.isActive,
       };
 
-      // 🔹 Gửi request tạo hoặc cập nhật
       if (isUpdate && values.id) {
         await api.put(`/api/products/${values.id}`, payload);
         toast.success("Cập nhật sản phẩm thành công!");
@@ -253,6 +254,28 @@ function ManageProduct() {
     <div className="ManageProduct">
       <h1>Quản lí sản phẩm</h1>
 
+      <div className="filter-category">
+        <Button
+          type={selectedCategory === "ALL" ? "primary" : "default"}
+          shape="round"
+          className="category-btn"
+          onClick={() => handleFilterCategory("ALL")}
+        >
+          Tất cả
+        </Button>
+        {categories.map((cat) => (
+          <Button
+            key={cat.id}
+            type={selectedCategory === cat.id ? "primary" : "default"}
+            shape="round"
+            className="category-btn"
+            onClick={() => handleFilterCategory(cat.id)}
+          >
+            {cat.name}
+          </Button>
+        ))}
+      </div>
+
       <div className="manageProduct__toolbar">
         <Search
           placeholder="Tìm kiếm sản phẩm..."
@@ -365,10 +388,7 @@ function ManageProduct() {
         width={800}
       >
         {selectedProduct && (
-          <Card
-            bordered={false}
-            style={{ background: "#fff", borderRadius: 12, boxShadow: "0 2px 8px rgba(0, 0, 0, 0.08)" }}
-          >
+          <Card bordered={false} style={{ borderRadius: 12 }}>
             <Row gutter={[16, 16]} justify="center">
               <Col xs={24} md={8}>
                 <Image
@@ -379,10 +399,7 @@ function ManageProduct() {
                 />
               </Col>
               <Col xs={24} md={16}>
-                <div style={{ padding: "16px" }}>
-                  <p>
-                    <strong>ID:</strong> {selectedProduct.id}
-                  </p>
+                <div className="product-detail">
                   <p>
                     <strong>Tên sản phẩm:</strong> {selectedProduct.name}
                   </p>
@@ -399,16 +416,13 @@ function ManageProduct() {
                     <strong>Số lượng:</strong> {selectedProduct.stockQuantity}
                   </p>
                   <p>
-                    <strong>Trạng thái:</strong>{" "}
+                    <strong>Trạng thái:</strong>
                     <Tag color={selectedProduct.isActive ? "green" : "red"}>
                       {selectedProduct.isActive ? "Hoạt động" : "Không hoạt động"}
                     </Tag>
                   </p>
                   <p>
                     <strong>Mô tả:</strong> {selectedProduct.description}
-                  </p>
-                  <p>
-                    <strong>Ngày tạo:</strong> {new Date(selectedProduct.createdAt).toLocaleDateString("vi-VN")}
                   </p>
                 </div>
               </Col>
