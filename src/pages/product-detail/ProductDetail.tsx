@@ -1,21 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import {
-  Card,
-  Image,
-  Spin,
-  Typography,
-  Row,
-  Col,
-  Button,
-  Rate,
-  Tag,
-  Divider,
-  InputNumber,
-  Tabs,
-  Avatar,
-  Progress,
-} from "antd";
+import { Card, Image, Spin, Typography, Row, Col, Button, Rate, Tag, Divider, Tabs, Avatar, Progress } from "antd";
 import { ShoppingCartOutlined, HeartOutlined, UserOutlined } from "@ant-design/icons";
 import { getFormattedPrice } from "../../utils/formatPrice";
 import api from "../../config/axios";
@@ -41,7 +26,6 @@ function ProductDetail() {
   const { id } = useParams<{ id: string }>();
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
-  const [quantity, setQuantity] = useState(1);
 
   useEffect(() => {
     document.title = "Chi tiết sản phẩm";
