@@ -51,6 +51,7 @@ import ManageComboGrooming from "./pages/admin/manage-grooming-service/manage-co
 import ManageComboGroomingDetail from "./pages/admin/manage-grooming-service/manage-combo-grooming-detail/ManageComboGroomingDetail";
 import ManageGroomingServiceDetail from "./pages/admin/manage-grooming-service/manage-grooming-single-detail/ManageGroomingServiceDetail";
 import BookingGroomingService from "./pages/customer/grooming/dat-dich-vu-lam-dep/BookingGroomingService";
+import BookingSuccess from "./components/booking-success/BookingSuccess";
 
 interface User {
   id: number;
@@ -135,6 +136,10 @@ const App = () => {
         { path: "/payment-success", element: <PaymentSuccess /> },
         { path: "/payment-failure", element: <PaymentFail /> },
         { path: "/dich-vu-lam-dep", element: <GroomingPage /> },
+        {
+          path: "/booking-success",
+          element: <BookingSuccess />,
+        },
         { path: "/dich-vu-lam-dep/dat-dich-vu", element: <BookingGroomingService /> },
         {
           path: "/profile",
@@ -252,7 +257,7 @@ const App = () => {
             { path: "quan-li-chuong", element: <CageManagement /> },
             { path: "*", element: <StaffNotFoundPage /> },
             { path: "thong-so-iot", element: <Iot /> },
-            { path: "*", element: <StaffNotFoundPage /> }
+            { path: "*", element: <StaffNotFoundPage /> },
           ],
         },
         {
