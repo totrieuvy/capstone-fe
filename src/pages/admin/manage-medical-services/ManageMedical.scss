@@ -1,0 +1,142 @@
+.ManageMedical {
+  padding: 24px;
+  background-color: #f9fafc;
+  min-height: 100vh;
+
+  h1 {
+    font-size: 24px;
+    font-weight: bold;
+    margin-bottom: 20px;
+    color: #f58232;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    text-align: center;
+  }
+
+  .search-box {
+    margin-bottom: 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    .ant-space {
+      display: flex;
+      width: 100%;
+      justify-content: space-between;
+    }
+
+    .ant-btn-primary {
+      background-color: #f58232;
+      border-color: #f58232;
+      
+      &:hover {
+        background-color: #ff9447;
+        border-color: #ff9447;
+      }
+    }
+  }
+
+  .ant-table {
+    background: #fff;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+
+    .ant-table-thead > tr > th {
+      background: #f0f2f5;
+      color: #444;
+      font-weight: 600;
+      text-align: center;
+    }
+
+    .ant-table-tbody > tr > td {
+      text-align: center;
+      padding: 12px;
+      font-size: 14px;
+      color: #333;
+    }
+
+    .ant-table-tbody > tr:hover > td {
+      background: #fff6f0;
+      cursor: pointer;
+    }
+  }
+
+  .ant-modal {
+    .ant-modal-header {
+      background: linear-gradient(135deg, #f58232 0%, #ff9447 100%);
+      border-radius: 12px 12px 0 0;
+
+      .ant-modal-title {
+        color: #fff;
+        font-weight: 600;
+        font-size: 18px;
+      }
+    }
+
+    .ant-modal-close-x {
+      color: #fff;
+    }
+
+    .ant-form-item-label > label {
+      font-weight: 500;
+      color: #444;
+    }
+
+    .ant-btn-primary {
+      background-color: #f58232;
+      border-color: #f58232;
+
+      &:hover {
+        background-color: #ff9447;
+        border-color: #ff9447;
+      }
+    }
+  }
+
+  .ant-btn-link {
+    padding: 4px 8px;
+
+    &:hover {
+      color: #f58232;
+    }
+  }
+
+  .ant-switch-checked {
+    background-color: #52c41a;
+  }
+
+  .ant-pagination {
+    margin-top: 16px;
+    text-align: right;
+
+    .ant-pagination-item-active {
+      border-color: #f58232;
+
+      a {
+        color: #f58232;
+      }
+    }
+  }
+
+  // Additional styles for medical services specific elements
+  .ant-btn-primary.ant-btn-sm {
+    background-color: #f58232;
+    border-color: #f58232;
+
+    &:hover {
+      background-color: #ff9447;
+      border-color: #ff9447;
+    }
+  }
+
+  .ant-btn-primary.ant-btn-dangerous {
+    background-color: #ff4d4f;
+    border-color: #ff4d4f;
+
+    &:hover {
+      background-color: #ff7875;
+      border-color: #ff7875;
+    }
+  }
+}

@@ -11,7 +11,7 @@ import {
   TagOutlined,
 } from "@ant-design/icons";
 import { GiPawPrint } from "react-icons/gi";
-import { BiCategory } from "react-icons/bi";
+import { BiCategory,BiPlusMedical } from "react-icons/bi";
 import { Layout, Menu, Button, theme } from "antd";
 import type { ItemType } from "antd/es/menu/interface";
 import { Link, Outlet, useNavigate } from "react-router-dom";
@@ -75,6 +75,7 @@ const SideBar: React.FC = () => {
         getItem("Quản lí danh mục sản phẩm", "quan-li-danh-muc-san-pham", <BiCategory />),
         getItem("Quản lí sản phẩm", "quan-li-san-pham", <TagOutlined />),
         getItem("Quản lí loại chuồng", "quan-li-loai-chuong", <GiCage />),
+        getItem("Quản lí dịch vụ y tế", "quan-li-dich-vu-y-te", <BiPlusMedical />),
         getItem("Quản lí dịch vụ grooming", "quan-li-dich-vu-grooming", <GiCage />, [
           getItem("Grooming lẻ", "quan-li-dich-vu-grooming/grooming-le"),
           getItem("Grooming combo", "quan-li-dich-vu-grooming/grooming-combo"),

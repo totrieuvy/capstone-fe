@@ -8,6 +8,7 @@ import './Iot.scss';
 const { Title, Text } = Typography;
 
 interface TemperatureData {
+  iotId?: string;
   humidity: number;
   temperature: number;
 }
@@ -18,11 +19,13 @@ const Iot: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+  const [iotId] = useState<string>('esp32_dht22_01'); // Default IoT device ID
 
-  const fetchTemperatureData = async () => {
+  const manualRefresh = async () => {
     try {
       setError(null);
-      const temperatureData = await getTemperature();
+      setLoading(true);
+      const temperatureData = await getTemperature(iotId);
       setData(temperatureData);
       setLastUpdated(new Date());
       setLoading(false);
@@ -34,14 +37,28 @@ const Iot: React.FC = () => {
   };
 
   useEffect(() => {
+    const fetchTemperatureData = async () => {
+      try {
+        setError(null);
+        const temperatureData = await getTemperature(iotId);
+        setData(temperatureData);
+        setLastUpdated(new Date());
+        setLoading(false);
+      } catch (err) {
+        setError('Không thể tải dữ liệu cảm biến. Vui lòng thử lại.');
+        console.error('Error fetching temperature data:', err);
+        setLoading(false);
+      }
+    };
+
     // Initial fetch
     fetchTemperatureData();
     
-    // Set up continuous refresh every 2 seconds
-    const interval = setInterval(fetchTemperatureData, 2000);
-    
+    // Set up continuous refresh every 1 second for real-time data
+    const interval = setInterval(fetchTemperatureData, 1000);
+
     return () => clearInterval(interval);
-  }, []);
+  }, [iotId]);
 
   const getTemperatureStatus = (temp: number) => {
     if (temp < 18) return { status: 'Quá lạnh', color: '#1890ff', level: 'low' };
@@ -85,7 +102,7 @@ const Iot: React.FC = () => {
           type="error"
           showIcon
           action={
-            <Button size="small" danger onClick={fetchTemperatureData}>
+            <Button size="small" danger onClick={manualRefresh}>
               Thử lại
             </Button>
           }
@@ -117,6 +134,11 @@ const Iot: React.FC = () => {
           </div>
         </div>
         <div className="header-right">
+          {data?.iotId && (
+            <Text type="secondary" className="device-id">
+              Thiết bị: {data.iotId}
+            </Text>
+          )}
           {lastUpdated && (
             <Text type="secondary" className="last-updated">
               Cập nhật lần cuối: {lastUpdated.toLocaleTimeString('vi-VN')}

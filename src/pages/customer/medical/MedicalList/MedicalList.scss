@@ -1,0 +1,135 @@
+.MedicalList {
+  background-color: #f0f8ff;
+  min-height: 100vh;
+
+  .medical-banner {
+    text-align: center;
+    background: linear-gradient(135deg, #4fc3f7, #29b6f6);
+    padding: 80px 20px;
+    color: white;
+    border-radius: 0 0 40px 40px;
+    box-shadow: 0 6px 25px rgba(0, 0, 0, 0.2);
+
+    .banner-title {
+      font-size: 42px;
+      font-weight: 700;
+      margin-bottom: 10px;
+      letter-spacing: 1px;
+    }
+
+    .banner-subtitle {
+      font-size: 18px;
+      opacity: 0.9;
+    }
+  }
+
+  .medical-content {
+    max-width: 1200px;
+    margin: 40px auto 60px;
+    padding: 0 20px;
+    text-align: center;
+    background: none;
+    box-shadow: none;
+    border: none;
+
+    .section-title {
+      font-size: 28px;
+      font-weight: 600;
+      margin-bottom: 40px;
+      color: #333;
+    }
+
+    // --- Service Card Styles ---
+    .service-card {
+      border: none;
+      border-radius: 20px;
+      box-shadow: 0 8px 18px rgba(0, 0, 0, 0.1);
+      transition: all 0.3s ease;
+      background: #fff;
+      height: 100%;
+
+      &:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+      }
+
+      .service-icon-container {
+        background: linear-gradient(135deg, #4fc3f7, #29b6f6); // Blue gradient for medical
+        color: #fff;
+        font-size: 36px;
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        margin: 25px auto 15px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+      }
+
+      .service-info {
+        padding: 10px 20px 25px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        flex-grow: 1;
+
+        .service-name {
+          font-size: 20px;
+          font-weight: 600;
+          color: #333; // Service name color
+          margin-bottom: 6px;
+          min-height: 48px;
+        }
+
+        .service-description {
+          font-size: 14px;
+          color: #777;
+          margin-bottom: 15px;
+          min-height: 40px;
+          flex-grow: 1;
+        }
+
+        .service-details {
+          display: flex;
+          justify-content: space-between;
+          margin-bottom: 15px;
+          font-size: 14px;
+          color: #666;
+
+          span {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+          }
+        }
+
+        .book-button {
+          background: linear-gradient(135deg, #4fc3f7, #29b6f6); // Blue gradient for medical
+          border: none;
+          font-weight: 600;
+          padding: 8px 20px;
+          border-radius: 20px;
+          transition: all 0.3s ease;
+          margin-top: auto;
+
+          &:hover {
+            background: linear-gradient(135deg, #29b6f6, #1e88e5); // Darker blue
+            transform: scale(1.05);
+          }
+        }
+      }
+    }
+
+    .loading-container {
+      text-align: center;
+      margin-top: 80px;
+      color: #666;
+
+      p {
+        margin-top: 10px;
+        font-size: 16px;
+      }
+    }
+  }
+}
