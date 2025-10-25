@@ -21,12 +21,13 @@ const { Search } = Input;
 interface OrderType {
   id: string;
   orderDate: string;
-  status: "PENDING" | "PAID" | "PREPARED" | "DELIVERED" | "CANCELED" | "REFUNDED";
+  status: "PENDING" | "PAID" | "PENDING_DELIVERY" | "DELIVERED" | "REFUNDED";
   finalAmount: number;
   customerProfile: {
     fullName: string;
     email: string;
   };
+  paymentMethod: string;
 }
 
 function ManageOrder() {
@@ -90,12 +91,10 @@ function ManageOrder() {
         return <Tag color="orange">Chờ thanh toán</Tag>;
       case "PAID":
         return <Tag color="blue">Đã thanh toán</Tag>;
-      case "PREPARED":
-        return <Tag color="cyan">Đang chuẩn bị</Tag>;
+      case "PENDING_DELIVERY":
+        return <Tag color="cyan">Đang giao hàng</Tag>;
       case "DELIVERED":
         return <Tag color="green">Đã giao</Tag>;
-      case "CANCELED":
-        return <Tag color="red">Đã hủy</Tag>;
       case "REFUNDED":
         return <Tag color="purple">Đã hoàn tiền</Tag>;
       default:
@@ -108,6 +107,7 @@ function ManageOrder() {
       title: "Mã đơn hàng",
       dataIndex: "id",
       key: "id",
+      align: "center",
       render: (text) => (
         <Link to={`/ADMIN/quan-li-don-hang/${text}`} className="order__link">
           {text.substring(0, 8)}...
@@ -118,11 +118,13 @@ function ManageOrder() {
       title: "Khách hàng",
       dataIndex: ["customerProfile", "fullName"],
       key: "fullName",
+      align: "center",
     },
     {
       title: "Ngày đặt",
       dataIndex: "orderDate",
       key: "orderDate",
+      align: "center",
       render: (date: string) =>
         date ? dayjs(date, "DD-MM-YYYY HH:mm:ss").add(7, "hour").format("DD/MM/YYYY HH:mm") : "---",
     },
@@ -130,14 +132,40 @@ function ManageOrder() {
       title: "Tổng tiền",
       dataIndex: "finalAmount",
       key: "finalAmount",
+      align: "center",
       sorter: (a, b) => a.finalAmount - b.finalAmount,
-
       render: (price) => getFormattedPrice(price),
+    },
+    {
+      title: "Phương thức",
+      dataIndex: "paymentMethod",
+      key: "paymentMethod",
+      align: "center",
+      render: (method: string) => {
+        if (method === "VNPAY")
+          return (
+            <img
+              src="https://itviec.com/rails/active_storage/representations/proxy/eyJfcmFpbHMiOnsiZGF0YSI6NDAzODMzMCwicHVyIjoiYmxvYl9pZCJ9fQ==--d01b1b407f49d33d4ea19b9218e10da4dc7f231d/eyJfcmFpbHMiOnsiZGF0YSI6eyJmb3JtYXQiOiJwbmciLCJyZXNpemVfdG9fbGltaXQiOlszMDAsMzAwXX0sInB1ciI6InZhcmlhdGlvbiJ9fQ==--e1d036817a0840c585f202e70291f5cdd058753d/logo%20d%E1%BB%8Dc.png"
+              alt="VNPAY"
+              className="payment-logo"
+            />
+          );
+        if (method === "PAYOS")
+          return (
+            <img
+              src="https://media.zenfs.com/en/globenewswire.com/d572fcc587598e58786c3856ba2bc978"
+              alt="PAYOS"
+              className="payment-logo"
+            />
+          );
+        return <span>{method || "Chưa cập nhật"}</span>;
+      },
     },
     {
       title: "Trạng thái",
       dataIndex: "status",
       key: "status",
+      align: "center",
       render: renderStatusTag,
     },
   ];
@@ -146,9 +174,8 @@ function ManageOrder() {
     { key: "ALL", label: "Tất cả" },
     { key: "PENDING", label: "Chờ thanh toán" },
     { key: "PAID", label: "Đã thanh toán" },
-    { key: "PREPARED", label: "Đang chuẩn bị" },
+    { key: "PENDING_DELIVERY", label: "Đang giao hàng" },
     { key: "DELIVERED", label: "Đã giao" },
-    { key: "CANCELED", label: "Đã hủy" },
     { key: "REFUNDED", label: "Đã hoàn tiền" },
   ];
 

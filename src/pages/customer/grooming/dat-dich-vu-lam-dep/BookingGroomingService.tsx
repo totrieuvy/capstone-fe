@@ -1,27 +1,13 @@
 import { useState, useEffect, useCallback } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import {
-  Steps,
-  Button,
-  Card,
-  Row,
-  Col,
-  Spin,
-  message,
-  Calendar,
-  Tag,
-  Descriptions,
-  Image,
-  Empty,
-  Typography,
-  Input,
-} from "antd";
-import { UserOutlined, CalendarOutlined, CheckCircleOutlined } from "@ant-design/icons";
+import { Steps, Button, Card, Row, Col, Spin, message, Tag, Descriptions, Image, Empty, Typography, Input } from "antd";
+import { UserOutlined, CalendarOutlined, CheckCircleOutlined, LeftOutlined, RightOutlined } from "@ant-design/icons";
 import type { Dayjs } from "dayjs";
 import dayjs from "dayjs";
 import "dayjs/locale/vi";
 import customParseFormat from "dayjs/plugin/customParseFormat";
+import isoWeek from "dayjs/plugin/isoWeek";
 import type { RootState } from "../../../../redux/rootReducer";
 import { selectHamsterForGrooming } from "../../../../redux/features/selectedHamsterGroomingSlice";
 import api from "../../../../config/axios";
@@ -34,6 +20,7 @@ const { Title } = Typography;
 const { TextArea } = Input;
 
 dayjs.extend(customParseFormat);
+dayjs.extend(isoWeek);
 dayjs.locale("vi");
 
 interface Species {
@@ -59,6 +46,14 @@ interface Membership {
   rankName: string;
   currentPoint: number;
 }
+interface Staff {
+  id: string;
+  fullName: string;
+  email: string;
+  phone: string;
+  status: string;
+  gender: string;
+}
 
 function BookingGroomingService() {
   const navigate = useNavigate();
@@ -70,16 +65,17 @@ function BookingGroomingService() {
   const [selectedHamster, setSelectedHamster] = useState<HamsterProfile | null>(null);
   const [groomingPrice, setGroomingPrice] = useState<number | null>(null);
   const [slotsData, setSlotsData] = useState<SlotData[]>([]);
-  const [selectedDate, setSelectedDate] = useState<Dayjs | null>(null);
-  const [selectedTimeSlot, setSelectedTimeSlot] = useState<TimeSlot | null>(null);
-  const [calendarMonth, setCalendarMonth] = useState<Dayjs>(dayjs());
+  const [selectedSlot, setSelectedSlot] = useState<{ date: string; slot: TimeSlot } | null>(null);
   const [loading, setLoading] = useState(false);
   const [notes, setNotes] = useState("");
   const [membership, setMembership] = useState<Membership | null>(null);
+  const [currentWeek, setCurrentWeek] = useState(dayjs());
+  const [staffList, setStaffList] = useState<Staff[]>([]);
+  const [selectedStaff, setSelectedStaff] = useState<Staff | null>(null);
 
   const steps = [
     { title: "Chọn Hamster", icon: <UserOutlined /> },
-    { title: "Chọn Ngày và Giờ", icon: <CalendarOutlined /> },
+    { title: "Chọn Slot", icon: <CalendarOutlined /> },
     { title: "Xác Nhận", icon: <CheckCircleOutlined /> },
   ];
 
@@ -146,45 +142,75 @@ function BookingGroomingService() {
     if (foundSpecies?.id) fetchGroomingPrice(foundSpecies.id);
   };
 
-  const fetchSlots = useCallback(async (month: Dayjs) => {
+  const getWeekRange = (week: Dayjs) => {
+    const start = week.startOf("isoWeek");
+    const end = week.endOf("isoWeek");
+    return { start, end };
+  };
+
+  const fetchSlots = useCallback(async (week: Dayjs) => {
     setLoading(true);
-    const startDate = month.startOf("month").format("DD-MM-YYYY");
-    const endDate = month.endOf("month").format("DD-MM-YYYY");
+    const { start, end } = getWeekRange(week);
+    const startDate = start.format("DD-MM-YYYY");
+    const endDate = end.format("DD-MM-YYYY");
     const response = await api.get<{ code: number; data: SlotData[] }>("/api/slot", {
       params: { from: startDate, to: endDate, serviceType: "GROOMING" },
     });
     if (response.data.code === 200) setSlotsData(response.data.data);
+    else setSlotsData([]);
     setLoading(false);
   }, []);
 
+  const fetchStaffList = useCallback(async () => {
+    try {
+      const { data } = await api.get<{ code: number; data: Staff[] }>("/api/staff");
+      if (data.code === 200) setStaffList(data.data);
+    } catch {
+      setStaffList([]);
+    }
+  }, []);
+
   useEffect(() => {
-    if (currentStep === 1) fetchSlots(calendarMonth);
-  }, [currentStep, calendarMonth, fetchSlots]);
+    if (currentStep === 1) {
+      fetchSlots(currentWeek);
+      fetchStaffList();
+    }
+  }, [currentStep, currentWeek, fetchSlots, fetchStaffList]);
+
+  const handleWeekChange = (direction: "prev" | "next") => {
+    const newWeek = direction === "prev" ? currentWeek.subtract(1, "week") : currentWeek.add(1, "week");
+    setCurrentWeek(newWeek);
+  };
+
+  const handleSlotClick = (date: string, slot: TimeSlot) => {
+    const slotDate = dayjs(date, "DD-MM-YYYY");
+    if (slotDate.isSame(dayjs(), "day") || slotDate.isBefore(dayjs(), "day")) return;
+    if (slot.availableSlot === 0) return;
+    setSelectedSlot({ date, slot });
+  };
 
   const handleConfirmBooking = async () => {
-    if (!selectedHamster || !selectedDate || !selectedTimeSlot || !selectedGroomingItem) {
+    if (!selectedHamster || !selectedSlot || !selectedGroomingItem || !selectedStaff) {
       message.error("Vui lòng chọn đầy đủ thông tin!");
       return;
     }
-
     setLoading(true);
     try {
       const discountPercent = membership?.discountPercent || 0;
       const totalAmount = groomingPrice || 0;
       const totalAmountAfter = Math.round(totalAmount - (totalAmount * discountPercent) / 100);
-
       const isService = selectedGroomingItem.type === "service";
       const itemKey = isService ? "serviceId" : "serviceComboId";
-
       const payload = {
         hamsterId: selectedHamster.id,
-        appointmentDate: selectedDate.format("DD-MM-YYYY"),
+        staffId: selectedStaff.id,
+        appointmentDate: selectedSlot.date,
         notes: notes || "",
         totalAmount,
         totalAmountAfter,
         discountPercent,
-        slotStart: selectedTimeSlot.startTime,
-        slotEnd: selectedTimeSlot.endTime,
+        slotStart: selectedSlot.slot.startTime,
+        slotEnd: selectedSlot.slot.endTime,
         serviceType: "GROOMING",
         items: [
           {
@@ -193,7 +219,6 @@ function BookingGroomingService() {
           },
         ],
       };
-
       const res = await api.post("/api/appointment", payload);
       if (res.data.code === 200) {
         message.success("Đặt lịch thành công!");
@@ -209,37 +234,74 @@ function BookingGroomingService() {
     }
   };
 
-  const slotsForDay = () => {
-    if (!selectedDate) return [];
-    const daySlot = slotsData.find((d) => d.slotDate === selectedDate.format("DD-MM-YYYY"));
-    return daySlot ? daySlot.slots : [];
+  const getDaysOfWeek = (week: Dayjs) => {
+    const start = week.startOf("isoWeek");
+    return Array.from({ length: 5 }).map((_, i) => start.add(i, "day"));
   };
+
+  const allSlots = Array.from(
+    new Set(slotsData.flatMap((d) => d.slots.map((s) => `${s.startTime}-${s.endTime}`)))
+  ).sort();
 
   return (
     <div className="booking-grooming-service">
-      <Title level={2} className="page-title">
-        Đặt lịch Grooming
-      </Title>
-
-      <Steps current={currentStep} items={steps} className="booking-steps" />
-
+      <div className="header-section">
+        <Title level={2} className="page-title">
+          Đặt lịch Grooming
+        </Title>
+        <Steps current={currentStep} items={steps} className="booking-steps" />
+      </div>
       <Spin spinning={loading}>
         {currentStep === 0 && (
-          <div className="step">
+          <div className="step step-select-hamster">
             <Title level={4} className="step-title">
               Bước 1: Chọn Hamster
             </Title>
             {profiles.length ? (
               <Row gutter={[16, 16]}>
                 {profiles.map((hamster) => (
-                  <Col xs={24} sm={12} md={8} key={hamster.id}>
+                  <Col xs={24} sm={24} md={12} lg={8} key={hamster.id}>
                     <Card
                       hoverable
-                      className={`hamster-card ${selectedHamster?.id === hamster.id ? "selected" : ""}`}
-                      cover={<img alt={hamster.name} src={hamster.profilePicture} />}
+                      className={`hamster__card-compact ${selectedHamster?.id === hamster.id ? "selected" : ""}`}
                       onClick={() => handleSelectHamster(hamster)}
+                      bodyStyle={{ padding: 0 }}
                     >
-                      <Card.Meta title={hamster.name} description={hamster.species} />
+                      <div style={{ display: "flex", height: "100%" }}>
+                        <div style={{ width: 150, flexShrink: 0 }}>
+                          <img
+                            src={hamster.profilePicture}
+                            alt={hamster.name}
+                            style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: "10px 0 0 10px" }}
+                          />
+                        </div>
+                        <div style={{ flex: 1, padding: 16 }}>
+                          <h4 className="hamster__name">{hamster.name}</h4>
+                          <div className="hamster__info-compact">
+                            <p>
+                              <span className="label">Loài:</span>
+                              <span className="value">{hamster.species}</span>
+                            </p>
+                            <p>
+                              <span className="label">Ngày sinh:</span>
+                              <span className="value">{hamster.dob}</span>
+                            </p>
+                            <p>
+                              <span className="label">Màu:</span>
+                              <span className="value">{hamster.color}</span>
+                            </p>
+                            <p>
+                              <span className="label">Giới tính:</span>
+                              <span className="value">{hamster.gender === "Male" ? "Đực" : "Cái"}</span>
+                            </p>
+                            <p>
+                              <span className="label">Cân nặng:</span>
+                              <span className="value">{hamster.weight}g</span>
+                            </p>
+                          </div>
+                        </div>
+                        {selectedHamster?.id === hamster.id && <div className="selected-checkmark">✓</div>}
+                      </div>
                     </Card>
                   </Col>
                 ))}
@@ -251,79 +313,128 @@ function BookingGroomingService() {
         )}
 
         {currentStep === 1 && (
-          <div className="step">
+          <div className="step step-weekly-schedule">
             <Title level={4} className="step-title">
-              Bước 2: Chọn Ngày và Giờ
+              Bước 2: Chọn ngày, giờ và nhân viên
             </Title>
-            <Calendar
-              fullscreen={false}
-              value={calendarMonth}
-              onPanelChange={setCalendarMonth}
-              onSelect={(v) => setSelectedDate(v)}
-              disabledDate={(current) => current.isBefore(dayjs(), "day") || current.isSame(dayjs(), "day")}
-              dateFullCellRender={(current) => {
-                const isSelected = selectedDate?.isSame(current, "day");
-                const isToday = current.isSame(dayjs(), "day");
-                return (
-                  <div
-                    className={`ant-picker-cell-inner custom-cell ${isSelected ? "selected-day" : ""} ${
-                      isToday ? "today-disabled" : ""
-                    }`}
-                  >
-                    {current.date()}
+            <div className="week-header">
+              <Button icon={<LeftOutlined />} onClick={() => handleWeekChange("prev")} />
+              <Title level={5} className="week-title">
+                Tuần {currentWeek.isoWeek()} ({getWeekRange(currentWeek).start.format("DD/MM")} -{" "}
+                {getWeekRange(currentWeek).end.format("DD/MM")})
+              </Title>
+              <Button icon={<RightOutlined />} onClick={() => handleWeekChange("next")} />
+            </div>
+            <div className="legend">
+              <div className="legend-item">
+                <span className="dot available-dot" /> Còn trống
+              </div>
+              <div className="legend-item">
+                <span className="dot selected-dot" /> Đã chọn
+              </div>
+              <div className="legend-item">
+                <span className="dot full-dot" /> Hết chỗ
+              </div>
+              <div className="legend-item">
+                <span className="dot past-dot" /> Quá khứ
+              </div>
+            </div>
+            <div className="weekly-grid">
+              <div className="time-column">
+                <div className="time-cell-header">Giờ</div>
+                {allSlots.map((slot) => (
+                  <div key={slot} className="time-cell">
+                    {slot}
                   </div>
-                );
-              }}
-            />
-
-            <div className="slot-container">
-              {selectedDate ? (
-                slotsForDay().length ? (
-                  <div className="slot-grid">
-                    {slotsForDay().map((slot) => {
-                      const full = slot.availableSlot === 0;
-                      const selected = selectedTimeSlot?.startTime === slot.startTime;
+                ))}
+              </div>
+              {getDaysOfWeek(currentWeek).map((day) => {
+                const slotData = slotsData.find((s) => s.slotDate === day.format("DD-MM-YYYY"));
+                const isPastDay = day.isSame(dayjs(), "day") || day.isBefore(dayjs(), "day");
+                return (
+                  <div key={day.format()} className={`day-column ${isPastDay ? "disabled-day" : ""}`}>
+                    <div className="day-header">
+                      {day.format("dd")}
+                      <br />
+                      {day.format("DD/MM")}
+                    </div>
+                    {allSlots.map((slotRange) => {
+                      const found = slotData?.slots.find((s) => `${s.startTime}-${s.endTime}` === slotRange);
+                      if (!found) return <div key={slotRange} className="slot-cell empty"></div>;
+                      const isFull = found.availableSlot === 0;
+                      const isSelected =
+                        selectedSlot?.date === day.format("DD-MM-YYYY") &&
+                        selectedSlot?.slot.startTime === found.startTime;
                       return (
                         <div
-                          key={slot.startTime}
-                          className={`slot-card ${full ? "full" : ""} ${selected ? "selected" : ""}`}
-                          onClick={() => !full && setSelectedTimeSlot(slot)}
+                          key={slotRange}
+                          className={`slot-cell ${isPastDay ? "past" : isFull ? "full" : "available"} ${
+                            isSelected ? "selected" : ""
+                          }`}
+                          onClick={() => handleSlotClick(day.format("DD-MM-YYYY"), found)}
                         >
-                          <div className="time">
-                            {slot.startTime} - {slot.endTime}
-                          </div>
-                          <div className="meta">
-                            Còn: {slot.availableSlot} / Tổng: {slot.maxSlots}
-                          </div>
+                          {isPastDay
+                            ? ""
+                            : isFull
+                            ? "Hết chỗ"
+                            : isSelected
+                            ? "Đã chọn"
+                            : `Còn trống ${found.availableSlot} slot`}
                         </div>
                       );
                     })}
                   </div>
-                ) : (
-                  <Empty description="Không có khung giờ" />
-                )
-              ) : (
-                <div className="choose-day-hint">Hãy chọn ngày trên lịch để xem khung giờ</div>
-              )}
+                );
+              })}
             </div>
+
+            {selectedSlot && (
+              <div className="staff-section">
+                <Title level={5}>Chọn nhân viên</Title>
+                {staffList.length ? (
+                  <Row gutter={[16, 16]}>
+                    {staffList.map((staff) => (
+                      <Col xs={24} sm={12} md={8} lg={6} key={staff.id}>
+                        <Card
+                          hoverable
+                          className={`staff-card ${selectedStaff?.id === staff.id ? "selected" : ""}`}
+                          onClick={() => setSelectedStaff(staff)}
+                        >
+                          <img
+                            src="https://cdn-icons-png.flaticon.com/512/2202/2202112.png"
+                            alt={staff.fullName}
+                            className="staff-avatar"
+                          />
+                          <h4>{staff.fullName}</h4>
+                          <p>{staff.gender === "MALE" ? "Nam" : "Nữ"}</p>
+                        </Card>
+                      </Col>
+                    ))}
+                  </Row>
+                ) : (
+                  <Empty description="Không có nhân viên khả dụng" />
+                )}
+              </div>
+            )}
           </div>
         )}
 
-        {currentStep === 2 && selectedHamster && selectedDate && selectedTimeSlot && (
-          <div className="step">
+        {currentStep === 2 && selectedHamster && selectedSlot && (
+          <div className="step step-confirm">
             <Title level={4} className="step-title">
               Bước 3: Xác nhận thông tin
             </Title>
             <Card>
-              <Descriptions bordered column={1}>
+              <Descriptions bordered column={2}>
                 <Descriptions.Item label="Hamster">
                   <Image src={selectedHamster.profilePicture} width={50} preview={false} /> {selectedHamster.name} (
                   {selectedHamster.species})
                 </Descriptions.Item>
                 <Descriptions.Item label="Dịch vụ">{selectedGroomingItem?.name}</Descriptions.Item>
-                <Descriptions.Item label="Ngày hẹn">{selectedDate.format("dddd, DD/MM/YYYY")}</Descriptions.Item>
+                <Descriptions.Item label="Nhân viên">{selectedStaff?.fullName}</Descriptions.Item>
+                <Descriptions.Item label="Ngày hẹn">{selectedSlot.date}</Descriptions.Item>
                 <Descriptions.Item label="Giờ hẹn">
-                  {selectedTimeSlot.startTime} - {selectedTimeSlot.endTime}
+                  {selectedSlot.slot.startTime} - {selectedSlot.slot.endTime}
                 </Descriptions.Item>
                 <Descriptions.Item label="Giá gốc">
                   <Tag color="#ff6f61">{getFormattedPrice(String(groomingPrice || 0))}</Tag>
@@ -344,9 +455,9 @@ function BookingGroomingService() {
                     </Descriptions.Item>
                   </>
                 )}
-                <Descriptions.Item label="Ghi chú">
+                <Descriptions.Item label="Ghi chú" span={2}>
                   <TextArea
-                    rows={3}
+                    rows={2}
                     value={notes}
                     onChange={(e) => setNotes(e.target.value)}
                     placeholder="Nhập ghi chú (không bắt buộc)"
