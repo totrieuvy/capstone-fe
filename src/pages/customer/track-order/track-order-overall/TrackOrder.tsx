@@ -1,135 +1,199 @@
 import { useEffect, useState } from "react";
-import { Table, Tag, message, Button, Pagination, Spin, Card, Popconfirm } from "antd";
-import { EyeOutlined, StopOutlined, ClockCircleOutlined } from "@ant-design/icons";
+import { Table, Tag, message, Button, Pagination, Spin, Card, Popconfirm, DatePicker, Select, Row, Col } from "antd";
+import { EyeOutlined, StopOutlined, ClockCircleOutlined, ReloadOutlined } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
 import type { ColumnsType } from "antd/es/table";
-import dayjs from "dayjs";
+import dayjs, { Dayjs } from "dayjs";
 import api from "../../../../config/axios";
 import "./TrackOrder.scss";
+
 import customParseFormat from "dayjs/plugin/customParseFormat";
 import utc from "dayjs/plugin/utc";
 import timezone from "dayjs/plugin/timezone";
+import duration from "dayjs/plugin/duration";
 
 dayjs.extend(customParseFormat);
 dayjs.extend(utc);
 dayjs.extend(timezone);
+dayjs.extend(duration);
+
+const { RangePicker } = DatePicker;
+const { Option } = Select;
 
 interface Order {
   id: string;
   orderDate: string;
   status: string;
   totalAmount: number;
-  finalAmount: number | null;
+  finalAmount: number;
+  shippingFee: number;
+  discountPercent: number;
+  paymentMethod: string;
 }
 
 interface OrderApiResponse {
   content: Order[];
-  totalPages: number;
   totalElements: number;
+  totalPages: number;
   pageNumber: number;
+  pageSize: number;
 }
 
 const TrackOrder = () => {
   const navigate = useNavigate();
+
+  const [allOrders, setAllOrders] = useState<Order[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
+  const [countdowns, setCountdowns] = useState<Record<string, string>>({});
   const [pagination, setPagination] = useState({
     currentPage: 1,
-    totalPages: 0,
-    totalItems: 0,
+    pageSize: 10,
   });
-  const [countdowns, setCountdowns] = useState<Record<string, string>>({});
 
-  const pageSize = 10;
+  // Filters
+  const [statusFilter, setStatusFilter] = useState<string>("ALL");
+  const [dateRangeFilter, setDateRangeFilter] = useState<[Dayjs | null, Dayjs | null] | null>(null);
 
-  useEffect(() => {
-    document.title = "Lịch sử đơn hàng";
-    fetchOrders(pagination.currentPage);
-  }, [pagination.currentPage]);
-
-  useEffect(() => {
-    const interval = setInterval(() => updateCountdowns(), 1000);
-    return () => clearInterval(interval);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [orders]);
-
-  const fetchOrders = async (page: number) => {
+  // Fetch ALL pages of orders once
+  const fetchAllOrders = async () => {
     setLoading(true);
     try {
-      const response = await api.get<{ data: OrderApiResponse }>(
-        `/api/order?page=${page - 1}&size=${pageSize}&sortBy=createdAt&sortDir=desc`
-      );
-      const { data } = response.data;
-      if (data) {
-        setOrders(data.content);
-        setPagination({
-          currentPage: data.pageNumber + 1,
-          totalPages: data.totalPages,
-          totalItems: data.totalElements,
-        });
-      }
+      let all: Order[] = [];
+      let page = 0;
+      let totalPages = 1;
+
+      do {
+        const res = await api.get<{ data: OrderApiResponse }>(
+          `/api/order?page=${page}&size=10&sortBy=createdAt&sortDir=desc`
+        );
+        const { data } = res.data;
+        if (data && data.content) {
+          all = [...all, ...data.content];
+          totalPages = data.totalPages;
+        }
+        page++;
+      } while (page < totalPages);
+
+      setAllOrders(all);
+      setOrders(all);
     } catch (error) {
-      message.error("Không thể tải lịch sử đơn hàng. " + (error as Error).message);
+      message.error("Không thể tải danh sách đơn hàng!" + error);
     } finally {
       setLoading(false);
     }
   };
 
-  const updateCountdowns = () => {
-    const newCountdowns: Record<string, string> = {};
-    orders.forEach((order) => {
-      if (order.status.toUpperCase() === "PAID") {
-        const orderTime = dayjs(order.orderDate);
-        const diff = 12 * 60 * 60 * 1000 - (Date.now() - orderTime.valueOf());
-        if (diff > 0) {
-          const hours = Math.floor(diff / (1000 * 60 * 60));
-          const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-          const seconds = Math.floor((diff % (1000 * 60)) / 1000);
-          newCountdowns[order.id] = `${hours.toString().padStart(2, "0")}:${minutes
-            .toString()
-            .padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
-        } else {
-          newCountdowns[order.id] = "expired";
+  useEffect(() => {
+    document.title = "Lịch sử đơn hàng";
+    fetchAllOrders();
+  }, []);
+
+  // Countdown update
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const newCountdowns: Record<string, string> = {};
+      orders.forEach((order) => {
+        if (order.status === "PAID") {
+          const orderTime = dayjs.utc(order.orderDate, "DD-MM-YYYY HH:mm:ss").tz("Asia/Ho_Chi_Minh");
+
+          const diff = orderTime.add(12, "hour").diff(dayjs().tz("Asia/Ho_Chi_Minh"));
+
+          if (diff > 0) {
+            const dur = dayjs.duration(diff);
+            const hours = Math.floor(dur.asHours());
+            const minutes = dur.minutes();
+            const seconds = dur.seconds();
+            newCountdowns[order.id] = `${hours.toString().padStart(2, "0")}:${minutes
+              .toString()
+              .padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
+          } else {
+            newCountdowns[order.id] = "expired";
+          }
         }
-      }
-    });
-    setCountdowns(newCountdowns);
+      });
+      setCountdowns(newCountdowns);
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [orders]);
+
+  // Filter logic
+  const applyFilters = (status: string, dates: [Dayjs | null, Dayjs | null] | null) => {
+    let filtered = [...allOrders];
+
+    if (status !== "ALL") {
+      filtered = filtered.filter((o) => o.status === status);
+    }
+
+    if (dates && dates[0] && dates[1]) {
+      const start = dates[0].startOf("day");
+      const end = dates[1].endOf("day");
+      filtered = filtered.filter((o) => {
+        const date = dayjs(o.orderDate, "DD-MM-YYYY HH:mm:ss");
+        return date.isAfter(start) && date.isBefore(end);
+      });
+    }
+
+    setOrders(filtered);
+    setPagination((prev) => ({ ...prev, currentPage: 1 }));
+  };
+
+  const handleFilterStatus = (status: string) => {
+    setStatusFilter(status);
+    applyFilters(status, dateRangeFilter);
+  };
+
+  const handleDateRangeChange = (dates: [Dayjs | null, Dayjs | null] | null) => {
+    setDateRangeFilter(dates || null);
+    applyFilters(statusFilter, dates);
+  };
+
+  const handleResetFilters = () => {
+    setStatusFilter("ALL");
+    setDateRangeFilter(null);
+    setOrders(allOrders);
   };
 
   const handleCancelOrder = async (orderId: string) => {
     try {
+      message.loading({ content: "Đang hủy đơn hàng...", key: "cancel" });
       const { data } = await api.patch(`/api/order/cancel/${orderId}`);
+      message.destroy("cancel");
       if (data.code === 200) {
         message.success("Đã hủy đơn hàng. Bạn sẽ được hoàn 75% vào ví.");
-        fetchOrders(pagination.currentPage);
+        fetchAllOrders();
       } else {
         message.error(data.message || "Không thể hủy đơn hàng.");
       }
     } catch {
+      message.destroy("cancel");
       message.error("Lỗi khi hủy đơn hàng.");
     }
   };
 
-  const handlePageChange = (page: number) => {
-    setPagination((prev) => ({ ...prev, currentPage: page }));
+  const getStatusTag = (status: string) => {
+    const colorMap: Record<string, string> = {
+      PENDING: "gold",
+      PAID: "blue",
+      PENDING_DELIVERY: "cyan",
+      DELIVERED: "green",
+      REFUNDED: "purple",
+    };
+    const textMap: Record<string, string> = {
+      PENDING: "Chờ thanh toán",
+      PAID: "Đã thanh toán",
+      PENDING_DELIVERY: "Đang giao hàng",
+      DELIVERED: "Đã giao",
+      REFUNDED: "Đã hoàn tiền",
+    };
+    return <Tag color={colorMap[status]}>{textMap[status]}</Tag>;
   };
 
-  const getStatusTag = (status: string) => {
-    const upperCaseStatus = status.toUpperCase();
-    switch (upperCaseStatus) {
-      case "PAID":
-        return <Tag color="green">ĐÃ THANH TOÁN</Tag>;
-      case "SHIPPING":
-        return <Tag color="blue">ĐANG GIAO HÀNG</Tag>;
-      case "DELIVERED":
-        return <Tag color="purple">ĐÃ GIAO</Tag>;
-      case "CANCELLED":
-        return <Tag color="red">ĐÃ HỦY</Tag>;
-      case "PENDING":
-        return <Tag color="gold">ĐANG CHỜ</Tag>;
-      default:
-        return <Tag>{upperCaseStatus}</Tag>;
-    }
+  const startIndex = (pagination.currentPage - 1) * pagination.pageSize;
+  const paginatedOrders = orders.slice(startIndex, startIndex + pagination.pageSize);
+
+  const handlePageChange = (page: number) => {
+    setPagination((prev) => ({ ...prev, currentPage: page }));
   };
 
   const columns: ColumnsType<Order> = [
@@ -137,20 +201,20 @@ const TrackOrder = () => {
       title: "Mã đơn hàng",
       dataIndex: "id",
       key: "id",
-      render: (text: string) => <span className="order-id">...{text?.slice(-12)}</span>,
+      render: (id: string) => <span className="order-id">...{id.slice(-10)}</span>,
     },
     {
       title: "Ngày đặt",
       dataIndex: "orderDate",
       key: "orderDate",
-      render: (date: string) => dayjs(date, "DD-MM-YYYY HH:mm:ss").add(7, "hour").format("DD/MM/YYYY HH:mm"),
+      render: (date: string) =>
+        dayjs.utc(date, "DD-MM-YYYY HH:mm:ss").tz("Asia/Ho_Chi_Minh").format("DD/MM/YYYY HH:mm"),
     },
-
     {
       title: "Tổng tiền",
       dataIndex: "finalAmount",
       key: "finalAmount",
-      render: (amount: number | null) => `${(amount ?? 0).toLocaleString()}đ`,
+      render: (v: number) => `${v.toLocaleString()}đ`,
     },
     {
       title: "Trạng thái",
@@ -166,20 +230,14 @@ const TrackOrder = () => {
         const canCancel = record.status === "PAID" && countdown && countdown !== "expired";
 
         return (
-          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-            <Button
-              className="view-detail-button"
-              icon={<EyeOutlined />}
-              onClick={() => navigate(`/your-orders/${record.id}`)}
-            >
+          <div className="action-buttons">
+            <Button type="default" icon={<EyeOutlined />} onClick={() => navigate(`/your-orders/${record.id}`)}>
               Xem chi tiết
             </Button>
-
             {canCancel && (
               <>
                 <Popconfirm
                   title="Xác nhận hủy đơn?"
-                  description="Nếu bạn hủy trong vòng 12 tiếng, bạn sẽ được hoàn 75% vào ví ảo."
                   okText="Xác nhận"
                   cancelText="Hủy"
                   onConfirm={() => handleCancelOrder(record.id)}
@@ -188,7 +246,7 @@ const TrackOrder = () => {
                     Hủy đơn
                   </Button>
                 </Popconfirm>
-                <div className="countdown-timer">
+                <div className="countdown">
                   <ClockCircleOutlined /> <span style={{ color: "#ff6f61", fontWeight: 600 }}>{countdown}</span>
                 </div>
               </>
@@ -202,23 +260,59 @@ const TrackOrder = () => {
   return (
     <div className="track-order-page">
       <div className="container">
-        <h1 className="page-title">Lịch sử Mua hàng</h1>
+        <h1 className="page-title">Lịch sử đơn hàng</h1>
+
+        {/* Bộ lọc */}
+        <Card className="filter-card">
+          <Row gutter={[16, 16]}>
+            <Col xs={24} sm={12} md={8}>
+              <Select value={statusFilter} onChange={handleFilterStatus} style={{ width: "100%" }}>
+                <Option value="ALL">Tất cả trạng thái</Option>
+                <Option value="PENDING">Chờ thanh toán</Option>
+                <Option value="PAID">Đã thanh toán</Option>
+                <Option value="PENDING_DELIVERY">Đang giao hàng</Option>
+                <Option value="DELIVERED">Đã giao</Option>
+                <Option value="REFUNDED">Đã hoàn tiền</Option>
+              </Select>
+            </Col>
+
+            <Col xs={24} sm={12} md={10}>
+              <RangePicker
+                value={dateRangeFilter}
+                onChange={handleDateRangeChange}
+                format="DD/MM/YYYY"
+                style={{ width: "100%" }}
+              />
+            </Col>
+
+            <Col xs={24} md={6}>
+              <Button icon={<ReloadOutlined />} onClick={handleResetFilters} block>
+                Đặt lại bộ lọc
+              </Button>
+            </Col>
+          </Row>
+        </Card>
+
+        {/* Danh sách */}
         <Card className="order-list-card">
           {loading ? (
             <div className="loading-spinner">
-              <Spin size="large" />
+              <Spin size="large" tip="Đang tải đơn hàng..." />
             </div>
           ) : (
             <>
-              <Table columns={columns} dataSource={orders} rowKey="id" pagination={false} className="order-table" />
-              <Pagination
-                current={pagination.currentPage}
-                total={pagination.totalItems}
-                pageSize={pageSize}
-                onChange={handlePageChange}
-                showSizeChanger={false}
-                className="pagination"
-              />
+              <Table columns={columns} dataSource={paginatedOrders} pagination={false} rowKey="id" />
+              {orders.length > 0 && (
+                <Pagination
+                  current={pagination.currentPage}
+                  total={orders.length}
+                  pageSize={pagination.pageSize}
+                  onChange={handlePageChange}
+                  showTotal={(total) => `Tổng cộng ${total} đơn hàng`}
+                  className="pagination"
+                />
+              )}
+              {!loading && orders.length === 0 && <div className="no-data">Không tìm thấy đơn hàng phù hợp.</div>}
             </>
           )}
         </Card>

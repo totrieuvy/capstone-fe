@@ -20,7 +20,7 @@ interface CustomerProfile {
   citizenId: string;
 }
 
-type OrderStatus = "PENDING" | "PAID" | "PREPARED" | "DELIVERED" | "CANCELED";
+type OrderStatus = "PENDING" | "PAID" | "PENDING_DELIVERY" | "DELIVERED" | "REFUNDED";
 
 interface OrderDetail {
   id: string;
@@ -34,6 +34,7 @@ interface OrderDetail {
   deliveryAddress: string;
   deliveredAt: string | null;
   deliveryUrl: string | null;
+  paymentMethod: string;
   items: OrderItem[];
   customerProfile: CustomerProfile;
 }
@@ -44,7 +45,6 @@ function ManageOrderDetail() {
   const [order, setOrder] = useState<OrderDetail | null>(null);
   const [loading, setLoading] = useState(false);
   const [updating, setUpdating] = useState(false);
-  const [updatingCancel, setUpdatingCancel] = useState(false);
 
   const fetchOrderDetail = async (): Promise<void> => {
     if (!orderId) return;
@@ -60,14 +60,16 @@ function ManageOrderDetail() {
     }
   };
 
-  const handleUpdateStatus = async (newStatus: "PREPARED" | "DELIVERED"): Promise<void> => {
+  const handleUpdateStatus = async (newStatus: "PENDING_DELIVERY" | "DELIVERED"): Promise<void> => {
     if (!orderId) return;
     setUpdating(true);
     try {
-      const res = await api.patch<{ code: number; message: string }>(`/api/order/${orderId}`, { status: newStatus });
+      const res = await api.patch<{ code: number; message: string }>(`/api/order/${orderId}`, {
+        status: newStatus,
+      });
       if (res.data.code === 200) {
         toast.success("Cập nhật trạng thái thành công!");
-        void fetchOrderDetail();
+        await fetchOrderDetail();
       } else toast.error(res.data.message);
     } catch (error) {
       if (error instanceof Error) toast.error(error.message);
@@ -76,45 +78,39 @@ function ManageOrderDetail() {
     }
   };
 
-  const handleCancel = async (): Promise<void> => {
-    if (!orderId) return;
-    setUpdatingCancel(true);
-    try {
-      const res = await api.patch<{ code: number; message: string }>(`/api/order/${orderId}`, { status: "CANCELED" });
-      if (res.data.code === 200) {
-        toast.success("Đã hủy đơn hàng!");
-        void fetchOrderDetail();
-      } else toast.error(res.data.message);
-    } catch (error) {
-      if (error instanceof Error) toast.error(error.message);
-    } finally {
-      setUpdatingCancel(false);
-    }
-  };
-
   const statusMap: Record<OrderStatus, { color: string; text: string }> = {
     PENDING: { color: "orange", text: "Chờ thanh toán" },
     PAID: { color: "blue", text: "Đã thanh toán" },
-    PREPARED: { color: "cyan", text: "Đang chuẩn bị" },
+    PENDING_DELIVERY: { color: "cyan", text: "Đang giao hàng" },
     DELIVERED: { color: "green", text: "Đã giao" },
-    CANCELED: { color: "red", text: "Đã hủy" },
+    REFUNDED: { color: "purple", text: "Đã hoàn tiền" },
   };
 
   const renderStatusTag = (status: OrderStatus) => <Tag color={statusMap[status].color}>{statusMap[status].text}</Tag>;
 
   const renderStatusHistory = () => {
-    if (!order) return <></>;
+    if (!order) return null;
     const history: { text: string; time: string }[] = [];
+
     history.push({
       text: "Đặt hàng thành công",
       time: dayjs(order.orderDate, "DD-MM-YYYY HH:mm:ss").add(7, "hour").format("HH:mm DD/MM/YYYY"),
     });
+
+    if (order.status === "PENDING_DELIVERY") {
+      history.push({
+        text: "Đang giao hàng",
+        time: dayjs().add(7, "hour").format("HH:mm DD/MM/YYYY"),
+      });
+    }
+
     if (order.deliveredAt && order.status === "DELIVERED") {
       history.push({
         text: "Giao hàng thành công",
         time: dayjs(order.deliveredAt).add(7, "hour").format("HH:mm DD/MM/YYYY"),
       });
     }
+
     return (
       <div className="status-history">
         <h4>Lịch sử trạng thái</h4>
@@ -130,7 +126,7 @@ function ManageOrderDetail() {
 
   useEffect(() => {
     document.title = "Chi tiết đơn hàng";
-    void fetchOrderDetail();
+    fetchOrderDetail();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [orderId]);
 
@@ -166,6 +162,24 @@ function ManageOrderDetail() {
               <Descriptions.Item label="Email">{order.customerProfile.email}</Descriptions.Item>
               <Descriptions.Item label="CMND/CCCD">{order.customerProfile.citizenId}</Descriptions.Item>
               <Descriptions.Item label="Địa chỉ KH">{order.customerProfile.address}</Descriptions.Item>
+
+              <Descriptions.Item label="Phương thức thanh toán">
+                {order.paymentMethod === "VNPAY" ? (
+                  <img
+                    src="https://itviec.com/rails/active_storage/representations/proxy/eyJfcmFpbHMiOnsiZGF0YSI6NDAzODMzMCwicHVyIjoiYmxvYl9pZCJ9fQ==--d01b1b407f49d33d4ea19b9218e10da4dc7f231d/eyJfcmFpbHMiOnsiZGF0YSI6eyJmb3JtYXQiOiJwbmciLCJyZXNpemVfdG9fbGltaXQiOlszMDAsMzAwXX0sInB1ciI6InZhcmlhdGlvbiJ9fQ==--e1d036817a0840c585f202e70291f5cdd058753d/logo%20d%E1%BB%8Dc.png"
+                    alt="VNPAY"
+                    className="payment-logo"
+                  />
+                ) : order.paymentMethod === "PAYOS" ? (
+                  <img
+                    src="https://media.zenfs.com/en/globenewswire.com/d572fcc587598e58786c3856ba2bc978"
+                    alt="PAYOS"
+                    className="payment-logo"
+                  />
+                ) : (
+                  order.paymentMethod || "Chưa cập nhật"
+                )}
+              </Descriptions.Item>
             </Descriptions>
           </Card>
         </div>
@@ -176,30 +190,15 @@ function ManageOrderDetail() {
             className="status-card"
           >
             <div className="status-actions">
-              {order.status === "PENDING" && (
-                <Button danger block loading={updatingCancel} onClick={() => void handleCancel()}>
-                  Hủy đơn
+              {order.status === "PAID" && (
+                <Button type="primary" loading={updating} onClick={() => handleUpdateStatus("PENDING_DELIVERY")} block>
+                  Xác nhận đơn hàng
                 </Button>
               )}
-              {order.status === "PAID" && (
-                <>
-                  <Button danger loading={updatingCancel} onClick={() => void handleCancel()}>
-                    Hủy đơn
-                  </Button>
-                  <Button type="primary" loading={updating} onClick={() => void handleUpdateStatus("PREPARED")}>
-                    Xác nhận
-                  </Button>
-                </>
-              )}
-              {order.status === "PREPARED" && (
-                <>
-                  <Button danger loading={updatingCancel} onClick={() => void handleCancel()}>
-                    Hủy đơn
-                  </Button>
-                  <Button type="primary" loading={updating} onClick={() => void handleUpdateStatus("DELIVERED")}>
-                    Đã giao
-                  </Button>
-                </>
+              {order.status === "PENDING_DELIVERY" && (
+                <Button type="primary" loading={updating} onClick={() => handleUpdateStatus("DELIVERED")} block>
+                  Đã giao
+                </Button>
               )}
             </div>
             {renderStatusHistory()}

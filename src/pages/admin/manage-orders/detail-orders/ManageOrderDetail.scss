@@ -1,6 +1,29 @@
 .ManageOrderDetail {
   padding: 20px;
 
+  .payment-logo {
+    height: 50px;
+    width: auto;
+    object-fit: contain;
+    vertical-align: middle;
+  }
+
+  .status-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .status-history {
+    margin-top: 15px;
+    .history-item {
+      display: flex;
+      justify-content: space-between;
+      font-size: 14px;
+      color: #555;
+    }
+  }
+
   .main-title {
     font-size: 24px;
     font-weight: 600;

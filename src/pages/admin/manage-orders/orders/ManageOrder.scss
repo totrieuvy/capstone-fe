@@ -12,6 +12,14 @@
     text-align: center;
   }
 
+  .payment-logo {
+    height: 40px;
+    width: auto;
+    object-fit: contain;
+    display: inline-block;
+    vertical-align: middle;
+  }
+
   .filter-status {
     display: flex;
     flex-wrap: wrap;
