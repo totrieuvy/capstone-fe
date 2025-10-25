@@ -52,6 +52,8 @@ import ManageComboGroomingDetail from "./pages/admin/manage-grooming-service/man
 import ManageGroomingServiceDetail from "./pages/admin/manage-grooming-service/manage-grooming-single-detail/ManageGroomingServiceDetail";
 import BookingGroomingService from "./pages/customer/grooming/dat-dich-vu-lam-dep/BookingGroomingService";
 import BookingSuccess from "./components/booking-success/BookingSuccess";
+import MedicalList from "./pages/customer/medical/MedicalList/MedicalList";
+import ManageMedical from "./pages/admin/manage-medical-services/ManageMedical";
 
 interface User {
   id: number;
@@ -194,6 +196,10 @@ const App = () => {
             },
           ],
         },
+        {
+          path: "/dich-vu-y-te",
+          element: <MedicalList />,
+        }
       ],
     },
     {
@@ -209,6 +215,7 @@ const App = () => {
             { path: "quan-li-loai-hamster", element: <Species /> },
             { path: "quan-li-danh-muc-san-pham", element: <Category /> },
             { path: "quan-li-loai-chuong", element: <CageType /> },
+            { path: "quan-li-dich-vu-y-te", element: <ManageMedical /> },
             { path: "quan-li-dich-vu-grooming/grooming-le", element: <ManageGroomingService /> },
             { path: "quan-li-dich-vu-grooming/grooming-le/:id", element: <ManageGroomingServiceDetail /> },
             {
