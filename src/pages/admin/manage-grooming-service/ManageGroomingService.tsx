@@ -1,16 +1,32 @@
 import { useEffect, useState } from "react";
-import { Table, Input, Button, Modal, Form, InputNumber, Select, Tag, Popconfirm, Spin, message } from "antd";
+import {
+  Table,
+  Input,
+  Button,
+  Modal,
+  Form,
+  InputNumber,
+  Tag,
+  Popconfirm,
+  Spin,
+  message,
+  Space,
+  Divider,
+  Typography,
+  Card,
+} from "antd";
 import { PlusOutlined } from "@ant-design/icons";
 import type { TableColumnsType } from "antd";
 import api from "../../../config/axios";
 import { toast } from "react-toastify";
 import "./ManageGroomingService.scss";
-import { Link } from "react-router-dom";
+import { FiEdit, FiTrash2 } from "react-icons/fi";
 
 const { Search } = Input;
-const { Option } = Select;
+const { Text, Title } = Typography;
 
-interface SpeciesPrice {
+interface Price {
+  priceId?: string;
   speciesId: string;
   speciesName?: string;
   price: number;
@@ -23,7 +39,7 @@ interface GroomingService {
   description: string;
   durationMinutes: number;
   isActive: boolean;
-  speciesPrices: SpeciesPrice[];
+  prices: Price[];
 }
 
 interface Species {
@@ -46,6 +62,7 @@ interface ServiceDetailResponse {
     speciesName: string;
     price: number;
   }[];
+  displayPrice?: number;
 }
 
 interface ServiceFormValues {
@@ -53,7 +70,7 @@ interface ServiceFormValues {
   serviceName: string;
   description: string;
   durationMinutes: number;
-  speciesPrices: { priceId?: string; speciesId: string; price: number }[];
+  prices: Price[];
 }
 
 function ManageGroomingService() {
@@ -64,15 +81,15 @@ function ManageGroomingService() {
   const [loading, setLoading] = useState(false);
   const [isUpdate, setIsUpdate] = useState(false);
   const [form] = Form.useForm<ServiceFormValues>();
+  const [serviceDetail, setServiceDetail] = useState<ServiceDetailResponse | null>(null);
 
-  // 📦 Lấy danh sách dịch vụ grooming
   const fetchServices = async (): Promise<void> => {
     try {
       const response = await api.get("/api/services/type/GROOMING");
       setServices(response.data.data);
       setFilteredServices(response.data.data);
-    } catch (error) {
-      toast.error("Lấy danh sách dịch vụ thất bại!" + error);
+    } catch {
+      toast.error("Lấy danh sách dịch vụ thất bại!");
     }
   };
 
@@ -81,8 +98,9 @@ function ManageGroomingService() {
     try {
       const response = await api.get<{ data: ServiceDetailResponse }>(`/api/services/${id}`);
       const data = response.data.data;
+      setServiceDetail(data);
 
-      const speciesPrices = data.prices.map((p) => ({
+      const prices = data.prices.map((p) => ({
         priceId: p.priceId,
         speciesId: p.speciesId,
         price: p.price,
@@ -93,7 +111,7 @@ function ManageGroomingService() {
         serviceName: data.serviceName,
         description: data.description,
         durationMinutes: data.durationMinutes,
-        speciesPrices,
+        prices,
       });
 
       setIsUpdate(true);
@@ -108,11 +126,9 @@ function ManageGroomingService() {
   const fetchSpecies = async (): Promise<void> => {
     try {
       const response = await api.get("/api/species");
-      if (response.data.code === 200) {
-        setSpecies(response.data.data);
-      }
-    } catch (error) {
-      toast.error("Lấy danh sách loài thất bại!" + error);
+      if (response.data.code === 200) setSpecies(response.data.data);
+    } catch {
+      toast.error("Lấy danh sách loài thất bại!");
     }
   };
 
@@ -135,11 +151,8 @@ function ManageGroomingService() {
         serviceName: values.serviceName,
         description: values.description,
         durationMinutes: values.durationMinutes,
-        speciesPrices: values.speciesPrices.map((sp) => ({
-          priceId: sp.priceId,
-          speciesId: sp.speciesId,
-          price: sp.price,
-        })),
+        prices: values.prices,
+        isActive: true,
       };
 
       if (isUpdate && values.id) {
@@ -162,12 +175,8 @@ function ManageGroomingService() {
   const handleCancel = (): void => {
     setIsModalVisible(false);
     form.resetFields();
-  };
-
-  const handleOpenAdd = (): void => {
     setIsUpdate(false);
-    setIsModalVisible(true);
-    form.resetFields();
+    setServiceDetail(null);
   };
 
   const handleDelete = async (id: string): Promise<void> => {
@@ -186,14 +195,6 @@ function ManageGroomingService() {
       dataIndex: "serviceName",
       key: "serviceName",
       sorter: (a, b) => a.serviceName.localeCompare(b.serviceName),
-      render: (text: string, record: GroomingService) => (
-        <Link
-          to={`/ADMIN/quan-li-dich-vu-grooming/grooming-le/${record.id}`}
-          style={{ color: "#1890ff", fontWeight: "500" }}
-        >
-          {text}
-        </Link>
-      ),
     },
     {
       title: "Mô tả",
@@ -205,32 +206,32 @@ function ManageGroomingService() {
       title: "Thời lượng (phút)",
       dataIndex: "durationMinutes",
       key: "durationMinutes",
+      align: "center",
     },
     {
       title: "Trạng thái",
       dataIndex: "isActive",
       key: "isActive",
+      align: "center",
       render: (isActive: boolean) => (
         <Tag color={isActive ? "green" : "red"}>{isActive ? "Hoạt động" : "Không hoạt động"}</Tag>
       ),
     },
     {
       title: "Hành động",
-      key: "action",
+      key: "actions",
+      align: "center",
       render: (_, record) => (
-        <>
-          <Button type="primary" style={{ marginRight: 8 }} onClick={() => fetchServiceDetail(record.id)}>
-            Cập nhật
-          </Button>
-
+        <Space className="action-buttons">
+          <Button type="primary" icon={<FiEdit />} size="small" onClick={() => fetchServiceDetail(record.id)} />
           <Popconfirm
             title="Xóa dịch vụ?"
             description="Bạn có chắc muốn xóa dịch vụ này?"
             onConfirm={() => handleDelete(record.id)}
           >
-            <Button danger>Xóa</Button>
+            <Button type="primary" danger icon={<FiTrash2 />} size="small" />
           </Popconfirm>
-        </>
+        </Space>
       ),
     },
   ];
@@ -246,7 +247,15 @@ function ManageGroomingService() {
           onChange={(e) => handleSearch(e.target.value)}
           style={{ width: 300 }}
         />
-        <Button type="primary" icon={<PlusOutlined />} onClick={handleOpenAdd}>
+        <Button
+          type="primary"
+          icon={<PlusOutlined />}
+          onClick={() => {
+            setIsUpdate(false);
+            setIsModalVisible(true);
+            form.resetFields();
+          }}
+        >
           Thêm dịch vụ
         </Button>
       </div>
@@ -258,6 +267,7 @@ function ManageGroomingService() {
         title={isUpdate ? "Cập nhật dịch vụ" : "Thêm dịch vụ mới"}
         onCancel={handleCancel}
         footer={null}
+        width={800}
       >
         <Spin spinning={loading}>
           <Form form={form} layout="vertical" onFinish={handleSubmit}>
@@ -282,52 +292,66 @@ function ManageGroomingService() {
               name="durationMinutes"
               rules={[{ required: true, message: "Vui lòng nhập thời lượng!" }]}
             >
-              <InputNumber min={1} style={{ width: "100%" }} />
+              <InputNumber min={1} style={{ width: "100%" }} addonAfter="phút" />
             </Form.Item>
 
-            <Form.List name="speciesPrices" initialValue={[{} as SpeciesPrice]}>
-              {(fields, { add, remove }) => (
-                <>
-                  <h4>Giá theo loài</h4>
-                  {fields.map(({ key, name, ...restField }) => (
-                    <div key={key} className="species-price-row">
+            {!isUpdate ? (
+              <>
+                <Divider />
+                <Title level={5}>Giá dịch vụ theo loài hamster</Title>
+                <Card size="small" style={{ background: "#f9f9f9" }}>
+                  {species.map((sp, index) => (
+                    <div key={sp.id} className="price-row">
+                      <Text strong>{sp.speciesName}</Text>
                       <Form.Item
-                        {...restField}
-                        name={[name, "speciesId"]}
-                        style={{ flex: 2 }}
-                        rules={[{ required: true, message: "Chọn loài!" }]}
-                      >
-                        <Select placeholder="Chọn loài hamster">
-                          {species.map((sp) => (
-                            <Option key={sp.id} value={sp.id}>
-                              {sp.speciesName}
-                            </Option>
-                          ))}
-                        </Select>
-                      </Form.Item>
-
-                      <Form.Item
-                        {...restField}
-                        name={[name, "price"]}
-                        style={{ flex: 2 }}
+                        name={["prices", index, "price"]}
                         rules={[{ required: true, message: "Nhập giá!" }]}
+                        style={{ marginBottom: 0 }}
                       >
-                        <InputNumber placeholder="Giá" min={0} style={{ width: "100%" }} />
+                        <InputNumber
+                          placeholder="Giá"
+                          min={0}
+                          step={1000}
+                          style={{ width: 200 }}
+                          addonAfter="VND"
+                          formatter={(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",")}
+                        />
                       </Form.Item>
-
-                      <Button danger onClick={() => remove(name)} style={{ flex: 1 }}>
-                        Xóa
-                      </Button>
+                      <Form.Item name={["prices", index, "speciesId"]} initialValue={sp.id} hidden>
+                        <Input />
+                      </Form.Item>
                     </div>
                   ))}
-                  <Button type="dashed" onClick={() => add()} block>
-                    + Thêm loài
-                  </Button>
+                </Card>
+                <Divider />
+              </>
+            ) : (
+              serviceDetail && (
+                <>
+                  <Divider />
+                  <Title level={5}>Giá dịch vụ theo loài hamster</Title>
+                  <div className="price-list">
+                    {serviceDetail.prices.map((p) => (
+                      <div key={p.priceId} className="price-display-row">
+                        <Text strong>{p.speciesName}</Text>
+                        <Text className="price-value">
+                          {new Intl.NumberFormat("vi-VN", {
+                            style: "currency",
+                            currency: "VND",
+                          }).format(p.price)}
+                        </Text>
+                      </div>
+                    ))}
+                  </div>
+                  <Text type="secondary" style={{ fontSize: "12px", marginTop: "8px", display: "block" }}>
+                    Giá hiển thị: {new Intl.NumberFormat("vi-VN").format(serviceDetail.displayPrice || 0)} VND
+                  </Text>
+                  <Divider />
                 </>
-              )}
-            </Form.List>
+              )
+            )}
 
-            <Form.Item style={{ marginTop: 20 }}>
+            <Form.Item>
               <Button type="primary" htmlType="submit" block>
                 {isUpdate ? "Cập nhật" : "Thêm dịch vụ"}
               </Button>
