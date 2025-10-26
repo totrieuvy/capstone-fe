@@ -54,6 +54,7 @@ import BookingGroomingService from "./pages/customer/grooming/dat-dich-vu-lam-de
 import BookingSuccess from "./components/booking-success/BookingSuccess";
 import MedicalList from "./pages/customer/medical/MedicalList/MedicalList";
 import ManageMedical from "./pages/admin/manage-medical-services/ManageMedical";
+import MedicalBooking from "./pages/customer/medical/MedicalBooking/MedicalBooking";
 
 interface User {
   id: number;
@@ -199,6 +200,10 @@ const App = () => {
         {
           path: "/dich-vu-y-te",
           element: <MedicalList />,
+        },
+        {
+          path: "/dich-vu-y-te/dat-dich-vu",
+          element: <MedicalBooking/>
         }
       ],
     },
