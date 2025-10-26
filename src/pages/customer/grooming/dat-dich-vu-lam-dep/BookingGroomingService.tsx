@@ -214,9 +214,6 @@ function BookingGroomingService() {
         // Tab "Chọn lịch trước": Tải tất cả slot (việc này sẽ tự động xây dựng cache)
         fetchSlots(currentWeek);
         setAllStaffs([]);
-        // ----- START FIX: ĐÃ XÓA DÒNG GÂY LỖI -----
-        // setSelectedStaff(null);
-        // ----- END FIX -----
       } else {
         // Tab "Chọn nhân viên trước"
         if (selectedStaff) {
@@ -229,9 +226,9 @@ function BookingGroomingService() {
         setSelectedSlot(null); // Bỏ chọn slot (nếu có)
       }
     }
-  }, [currentStep, currentWeek, selectMode, fetchSlots, selectedStaff]); // selectedStaff VẪN CẦN THIẾT cho logic 'staffFirst'
+  }, [currentStep, currentWeek, selectMode, fetchSlots, selectedStaff]);
 
-  // useEffect MỚI: Xây dựng danh sách allStaffs TỪ slotsData
+  // useEffect: Xây dựng danh sách allStaffs TỪ slotsData
   // Chỉ chạy khi ở tab "Chọn nhân viên trước" VÀ chưa chọn nhân viên
   useEffect(() => {
     // Logic này chỉ chạy khi slotsData là "full" (đã được fetch mà không có staffId)
@@ -258,9 +255,12 @@ function BookingGroomingService() {
       }));
 
       setAllStaffs(finalStaffList);
-    } else if (currentStep === 1 && selectMode === "staffFirst" && selectedStaff) {
-      setAllStaffs([]);
     }
+    // ----- START FIX 1: ĐÃ XÓA logic 'else if' ẩn danh sách nhân viên -----
+    // else if (currentStep === 1 && selectMode === "staffFirst" && selectedStaff) {
+    //   setAllStaffs([]);
+    // }
+    // ----- END FIX 1 -----
   }, [slotsData, currentStep, selectMode, selectedStaff]); // slotsData là dependency chính
 
   const handleWeekChange = (direction: "prev" | "next") => {
@@ -543,17 +543,19 @@ function BookingGroomingService() {
             ) : (
               <>
                 {/* Chọn nhân viên trước */}
-                {allStaffs.length > 0 && !selectedStaff && (
+                {/* ----- START FIX 2: Đã xóa '!selectedStaff' ----- */}
+                {allStaffs.length > 0 && (
                   <div className="staff-section">
+                    {/* ----- END FIX 2 ----- */}
                     <Title level={5}>Chọn nhân viên</Title>
                     <Row gutter={[16, 16]}>
                       {allStaffs.map((staff) => (
                         <Col xs={24} sm={12} md={8} lg={6} key={staff.id}>
                           <Card
                             hoverable={!staff.isBooked}
-                            className={`staff-card ${
-                              (selectedStaff as Staff | null)?.id === staff.id ? "selected" : ""
-                            } ${staff.isBooked ? "disabled" : ""}`}
+                            className={`staff-card ${selectedStaff?.id === staff.id ? "selected" : ""} ${
+                              staff.isBooked ? "disabled" : ""
+                            }`}
                             onClick={() => !staff.isBooked && handleStaffSelect(staff)}
                           >
                             <img
