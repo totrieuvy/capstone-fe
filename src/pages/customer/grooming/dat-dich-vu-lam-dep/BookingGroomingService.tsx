@@ -1,8 +1,30 @@
 import { useState, useEffect, useCallback } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import { Steps, Button, Card, Row, Col, Spin, message, Tag, Descriptions, Image, Empty, Typography, Input } from "antd";
-import { UserOutlined, CalendarOutlined, CheckCircleOutlined, LeftOutlined, RightOutlined } from "@ant-design/icons";
+import {
+  Steps,
+  Button,
+  Card,
+  Row,
+  Col,
+  Spin,
+  message,
+  Tag,
+  Descriptions,
+  Image,
+  Empty,
+  Typography,
+  Input,
+  Tabs,
+} from "antd";
+import {
+  UserOutlined,
+  CalendarOutlined,
+  CheckCircleOutlined,
+  LeftOutlined,
+  RightOutlined,
+  TeamOutlined,
+} from "@ant-design/icons";
 import type { Dayjs } from "dayjs";
 import dayjs from "dayjs";
 import "dayjs/locale/vi";
@@ -54,6 +76,10 @@ interface Membership {
   currentPoint: number;
 }
 
+// Key sẽ là: `${staff.id}_${day.slotDate}_${slot.startTime}`
+// Value sẽ là: `staff.isBooked` (true/false)
+type StaffBookingCache = Map<string, boolean>;
+
 function BookingGroomingService() {
   const navigate = useNavigate();
   const dispatch = useDispatch();
@@ -71,6 +97,10 @@ function BookingGroomingService() {
   const [notes, setNotes] = useState("");
   const [membership, setMembership] = useState<Membership | null>(null);
   const [currentWeek, setCurrentWeek] = useState(dayjs());
+  const [selectMode, setSelectMode] = useState<"scheduleFirst" | "staffFirst">("scheduleFirst");
+  const [allStaffs, setAllStaffs] = useState<Staff[]>([]);
+
+  const [staffBookingCache, setStaffBookingCache] = useState<StaffBookingCache>(new Map());
 
   const steps = [
     { title: "Chọn Hamster", icon: <UserOutlined /> },
@@ -147,22 +177,91 @@ function BookingGroomingService() {
     return { start, end };
   };
 
-  const fetchSlots = useCallback(async (week: Dayjs) => {
+  const fetchSlots = useCallback(async (week: Dayjs, staffId?: string) => {
     setLoading(true);
     const { start, end } = getWeekRange(week);
     const startDate = start.format("DD-MM-YYYY");
     const endDate = end.format("DD-MM-YYYY");
     const response = await api.get<{ code: number; data: SlotData[] }>("/api/slot", {
-      params: { from: startDate, to: endDate, serviceType: "GROOMING" },
+      params: { from: startDate, to: endDate, serviceType: "GROOMING", staffId },
     });
-    if (response.data.code === 200) setSlotsData(response.data.data);
-    else setSlotsData([]);
+    if (response.data.code === 200) {
+      setSlotsData(response.data.data);
+    } else {
+      setSlotsData([]);
+    }
     setLoading(false);
+
+    // Chỉ xây dựng cache khi chúng ta gọi API lấy TẤT CẢ slots (staffId không được định nghĩa)
+    if (!staffId && response.data.code === 200) {
+      const newBookingCache: StaffBookingCache = new Map();
+      response.data.data.forEach((day) => {
+        day.slots.forEach((slot) => {
+          slot.staffs.forEach((staff) => {
+            const cacheKey = `${staff.id}_${day.slotDate}_${slot.startTime}`;
+            newBookingCache.set(cacheKey, staff.isBooked);
+          });
+        });
+      });
+      setStaffBookingCache(newBookingCache);
+    }
   }, []);
 
+  // useEffect chính điều khiển việc tải dữ liệu cho Bước 2
   useEffect(() => {
-    if (currentStep === 1) fetchSlots(currentWeek);
-  }, [currentStep, currentWeek, fetchSlots]);
+    if (currentStep === 1) {
+      if (selectMode === "scheduleFirst") {
+        // Tab "Chọn lịch trước": Tải tất cả slot (việc này sẽ tự động xây dựng cache)
+        fetchSlots(currentWeek);
+        setAllStaffs([]);
+        // ----- START FIX: ĐÃ XÓA DÒNG GÂY LỖI -----
+        // setSelectedStaff(null);
+        // ----- END FIX -----
+      } else {
+        // Tab "Chọn nhân viên trước"
+        if (selectedStaff) {
+          // Nếu đã chọn 1 staff -> chỉ tải lịch của staff đó
+          fetchSlots(currentWeek, selectedStaff.id);
+        } else {
+          // Nếu chưa chọn staff -> tải tất cả slot (để xây dựng cache VÀ danh sách staff)
+          fetchSlots(currentWeek);
+        }
+        setSelectedSlot(null); // Bỏ chọn slot (nếu có)
+      }
+    }
+  }, [currentStep, currentWeek, selectMode, fetchSlots, selectedStaff]); // selectedStaff VẪN CẦN THIẾT cho logic 'staffFirst'
+
+  // useEffect MỚI: Xây dựng danh sách allStaffs TỪ slotsData
+  // Chỉ chạy khi ở tab "Chọn nhân viên trước" VÀ chưa chọn nhân viên
+  useEffect(() => {
+    // Logic này chỉ chạy khi slotsData là "full" (đã được fetch mà không có staffId)
+    if (currentStep === 1 && selectMode === "staffFirst" && !selectedStaff && slotsData.length > 0) {
+      const staffMap = new Map<string, Staff>();
+      const staffBookingStatus = new Map<string, boolean>();
+
+      slotsData.forEach((day) => {
+        day.slots.forEach((slot) => {
+          slot.staffs.forEach((staff) => {
+            if (!staffMap.has(staff.id)) {
+              staffMap.set(staff.id, staff);
+            }
+            if (staff.isBooked === false) {
+              staffBookingStatus.set(staff.id, true);
+            }
+          });
+        });
+      });
+
+      const finalStaffList = Array.from(staffMap.values()).map((staff) => ({
+        ...staff,
+        isBooked: !staffBookingStatus.get(staff.id),
+      }));
+
+      setAllStaffs(finalStaffList);
+    } else if (currentStep === 1 && selectMode === "staffFirst" && selectedStaff) {
+      setAllStaffs([]);
+    }
+  }, [slotsData, currentStep, selectMode, selectedStaff]); // slotsData là dependency chính
 
   const handleWeekChange = (direction: "prev" | "next") => {
     const newWeek = direction === "prev" ? currentWeek.subtract(1, "week") : currentWeek.add(1, "week");
@@ -172,12 +271,47 @@ function BookingGroomingService() {
   const handleSlotClick = (date: string, slot: TimeSlot) => {
     const slotDate = dayjs(date, "DD-MM-YYYY");
     if (slotDate.isSame(dayjs(), "day") || slotDate.isBefore(dayjs(), "day")) return;
-    if (slot.availableSlot === 0) return;
-    setSelectedSlot({ date, slot });
-    setSelectedStaff(null);
+
+    // (Kiểm tra cache cho 'staffFirst' mode)
+    if (selectMode === "staffFirst" && selectedStaff) {
+      const cacheKey = `${selectedStaff.id}_${date}_${slot.startTime}`;
+      const isBookedInCache = staffBookingCache.get(cacheKey);
+      if (isBookedInCache === true) {
+        message.warning("Nhân viên này bận vào khung giờ này.");
+        return;
+      }
+    }
+
+    // Chặn click nếu slot full (chỉ ở mode 'scheduleFirst')
+    if (slot.availableSlot === 0 && selectMode === "scheduleFirst") return;
+
+    if (selectMode === "staffFirst" && selectedStaff) {
+      setSelectedSlot({ date, slot });
+    } else {
+      // Đây là logic cho 'scheduleFirst'
+      setSelectedSlot({ date, slot });
+      // Reset staff khi chọn 1 SLOT MỚI
+      setSelectedStaff(null);
+    }
+  };
+
+  const handleStaffSelect = (staff: Staff) => {
+    setSelectedStaff(staff);
+    // Hàm này sẽ gọi fetchSlots(currentWeek, staff.id)
+    // (thông qua useEffect [currentStep, currentWeek, selectMode, fetchSlots, selectedStaff])
+    setSelectedSlot(null);
   };
 
   const handleConfirmBooking = async () => {
+    if (selectMode === "staffFirst" && selectedStaff && !selectedSlot) {
+      message.error("Vui lòng chọn một slot trống từ lịch của nhân viên.");
+      return;
+    }
+    if (selectMode === "scheduleFirst" && selectedSlot && !selectedStaff) {
+      message.error("Vui lòng chọn một nhân viên cho slot này.");
+      return;
+    }
+
     if (!selectedHamster || !selectedSlot || !selectedGroomingItem || !selectedStaff) {
       message.error("Vui lòng chọn đầy đủ thông tin!");
       return;
@@ -300,113 +434,217 @@ function BookingGroomingService() {
         {currentStep === 1 && (
           <div className="step step-weekly-schedule">
             <Title level={4} className="step-title">
-              Bước 2: Chọn ngày, giờ và nhân viên
+              Bước 2: Chọn lịch hoặc nhân viên
             </Title>
-            <div className="week-header">
-              <Button icon={<LeftOutlined />} onClick={() => handleWeekChange("prev")} />
-              <Title level={5} className="week-title">
-                Tuần {currentWeek.isoWeek()} ({getWeekRange(currentWeek).start.format("DD/MM")} -{" "}
-                {getWeekRange(currentWeek).end.format("DD/MM")})
-              </Title>
-              <Button icon={<RightOutlined />} onClick={() => handleWeekChange("next")} />
-            </div>
+            <Tabs
+              activeKey={selectMode}
+              onChange={(key) => setSelectMode(key as "scheduleFirst" | "staffFirst")}
+              items={[
+                { key: "scheduleFirst", label: "Chọn lịch trước", icon: <CalendarOutlined /> },
+                { key: "staffFirst", label: "Chọn nhân viên trước", icon: <TeamOutlined /> },
+              ]}
+            />
 
-            <div className="legend">
-              <div className="legend-item">
-                <span className="dot available-dot" /> Còn trống
-              </div>
-              <div className="legend-item">
-                <span className="dot selected-dot" /> Đã chọn
-              </div>
-              <div className="legend-item">
-                <span className="dot full-dot" /> Hết chỗ
-              </div>
-              <div className="legend-item">
-                <span className="dot past-dot" /> Quá khứ
-              </div>
-            </div>
+            {selectMode === "scheduleFirst" ? (
+              <>
+                {/* Lịch chung (chọn lịch trước) */}
+                <div className="week-header">
+                  <Button icon={<LeftOutlined />} onClick={() => handleWeekChange("prev")} />
+                  <Title level={5} className="week-title">
+                    Tuần {currentWeek.isoWeek()} ({getWeekRange(currentWeek).start.format("DD/MM")} -{" "}
+                    {getWeekRange(currentWeek).end.format("DD/MM")})
+                  </Title>
+                  <Button icon={<RightOutlined />} onClick={() => handleWeekChange("next")} />
+                </div>
 
-            <div className="weekly-grid">
-              <div className="time-column">
-                <div className="time-cell-header">Giờ</div>
-                {allSlots.map((slot) => (
-                  <div key={slot} className="time-cell">
-                    {slot}
-                  </div>
-                ))}
-              </div>
-
-              {getDaysOfWeek(currentWeek).map((day) => {
-                const slotData = slotsData.find((s) => s.slotDate === day.format("DD-MM-YYYY"));
-                const isPastDay = day.isSame(dayjs(), "day") || day.isBefore(dayjs(), "day");
-                return (
-                  <div key={day.format()} className={`day-column ${isPastDay ? "disabled-day" : ""}`}>
-                    <div className="day-header">
-                      {day.format("dd")}
-                      <br />
-                      {day.format("DD/MM")}
-                    </div>
-                    {allSlots.map((slotRange) => {
-                      const found = slotData?.slots.find((s) => `${s.startTime}-${s.endTime}` === slotRange);
-                      if (!found) return <div key={slotRange} className="slot-cell empty"></div>;
-                      const isFull = found.availableSlot === 0;
-                      const isSelected =
-                        selectedSlot?.date === day.format("DD-MM-YYYY") &&
-                        selectedSlot?.slot.startTime === found.startTime;
-                      return (
-                        <div
-                          key={slotRange}
-                          className={`slot-cell ${isPastDay ? "past" : isFull ? "full" : "available"} ${
-                            isSelected ? "selected" : ""
-                          }`}
-                          onClick={() => handleSlotClick(day.format("DD-MM-YYYY"), found)}
-                        >
-                          {isPastDay
-                            ? ""
-                            : isFull
-                            ? "Hết chỗ"
-                            : isSelected
-                            ? "Đã chọn"
-                            : `Còn trống ${found.availableSlot}`}
-                        </div>
-                      );
-                    })}
-                  </div>
-                );
-              })}
-            </div>
-
-            {/* Nhân viên */}
-            {selectedSlot && (
-              <div className="staff-section">
-                <Title level={5}>Chọn nhân viên</Title>
-                {selectedSlot.slot.staffs.length ? (
-                  <Row gutter={[16, 16]}>
-                    {selectedSlot.slot.staffs.map((staff) => (
-                      <Col xs={24} sm={12} md={8} lg={6} key={staff.id}>
-                        <Card
-                          hoverable={!staff.isBooked}
-                          className={`staff-card ${selectedStaff?.id === staff.id ? "selected" : ""} ${
-                            staff.isBooked ? "disabled" : ""
-                          }`}
-                          onClick={() => !staff.isBooked && setSelectedStaff(staff)}
-                        >
-                          <img
-                            src="https://cdn-icons-png.flaticon.com/512/2202/2202112.png"
-                            alt={staff.name}
-                            className="staff-avatar"
-                          />
-                          <h4>{staff.name}</h4>
-                          <p>{staff.sex === "MALE" ? "Nam" : "Nữ"}</p>
-                          {staff.isBooked && <Tag color="red">Đã bận</Tag>}
-                        </Card>
-                      </Col>
+                <div className="weekly-grid">
+                  <div className="time-column">
+                    <div className="time-cell-header">Giờ</div>
+                    {allSlots.map((slot) => (
+                      <div key={slot} className="time-cell">
+                        {slot}
+                      </div>
                     ))}
-                  </Row>
-                ) : (
-                  <Empty description="Không có nhân viên khả dụng" />
+                  </div>
+
+                  {getDaysOfWeek(currentWeek).map((day) => {
+                    const slotData = slotsData.find((s) => s.slotDate === day.format("DD-MM-YYYY"));
+                    const isPastDay = day.isSame(dayjs(), "day") || day.isBefore(dayjs(), "day");
+                    return (
+                      <div key={day.format()} className={`day-column ${isPastDay ? "disabled-day" : ""}`}>
+                        <div className="day-header">
+                          {day.format("dd")}
+                          <br />
+                          {day.format("DD/MM")}
+                        </div>
+                        {allSlots.map((slotRange) => {
+                          const found = slotData?.slots.find((s) => `${s.startTime}-${s.endTime}` === slotRange);
+                          if (!found) return <div key={slotRange} className="slot-cell empty"></div>;
+                          const isFull = found.availableSlot === 0;
+                          const isSelected =
+                            selectedSlot?.date === day.format("DD-MM-YYYY") &&
+                            selectedSlot?.slot.startTime === found.startTime;
+                          return (
+                            <div
+                              key={slotRange}
+                              className={`slot-cell ${isPastDay ? "past" : isFull ? "full" : "available"} ${
+                                isSelected ? "selected" : ""
+                              }`}
+                              onClick={() => handleSlotClick(day.format("DD-MM-YYYY"), found)}
+                            >
+                              {isPastDay
+                                ? ""
+                                : isFull
+                                ? "Hết chỗ"
+                                : isSelected
+                                ? "Đã chọn"
+                                : `Còn trống ${found.availableSlot}`}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* Chọn nhân viên sau khi chọn lịch */}
+                {selectedSlot && (
+                  <div className="staff-section">
+                    <Title level={5}>Chọn nhân viên</Title>
+                    {selectedSlot.slot.staffs.length ? (
+                      <Row gutter={[16, 16]}>
+                        {selectedSlot.slot.staffs.map((staff) => (
+                          <Col xs={24} sm={12} md={8} lg={6} key={staff.id}>
+                            <Card
+                              hoverable={!staff.isBooked}
+                              className={`staff-card ${selectedStaff?.id === staff.id ? "selected" : ""} ${
+                                staff.isBooked ? "disabled" : ""
+                              }`}
+                              onClick={() => !staff.isBooked && setSelectedStaff(staff)}
+                            >
+                              <img
+                                src="https://cdn-icons-png.flaticon.com/512/2202/2202112.png"
+                                alt={staff.name}
+                                className="staff-avatar"
+                              />
+                              <h4>{staff.name}</h4>
+                              <p>{staff.sex === "MALE" ? "Nam" : "Nữ"}</p>
+                              {staff.isBooked && <Tag color="red">Đã bận</Tag>}
+                            </Card>
+                          </Col>
+                        ))}
+                      </Row>
+                    ) : (
+                      <Empty description="Không có nhân viên khả dụng" />
+                    )}
+                  </div>
                 )}
-              </div>
+              </>
+            ) : (
+              <>
+                {/* Chọn nhân viên trước */}
+                {allStaffs.length > 0 && !selectedStaff && (
+                  <div className="staff-section">
+                    <Title level={5}>Chọn nhân viên</Title>
+                    <Row gutter={[16, 16]}>
+                      {allStaffs.map((staff) => (
+                        <Col xs={24} sm={12} md={8} lg={6} key={staff.id}>
+                          <Card
+                            hoverable={!staff.isBooked}
+                            className={`staff-card ${
+                              (selectedStaff as Staff | null)?.id === staff.id ? "selected" : ""
+                            } ${staff.isBooked ? "disabled" : ""}`}
+                            onClick={() => !staff.isBooked && handleStaffSelect(staff)}
+                          >
+                            <img
+                              src="https://cdn-icons-png.flaticon.com/512/2202/2202112.png"
+                              alt={staff.name}
+                              className="staff-avatar"
+                            />
+                            <h4>{staff.name}</h4>
+                            <p>{staff.sex === "MALE" ? "Nam" : "Nữ"}</p>
+                            {staff.isBooked && <Tag color="red">Đã bận</Tag>}
+                          </Card>
+                        </Col>
+                      ))}
+                    </Row>
+                  </div>
+                )}
+
+                {/* Hiển thị lịch của nhân viên ĐÃ CHỌN */}
+                {selectedStaff && (
+                  <>
+                    <Title level={5} style={{ marginTop: 20 }}>
+                      Lịch của {selectedStaff.name}
+                    </Title>
+                    <div className="week-header">
+                      <Button icon={<LeftOutlined />} onClick={() => handleWeekChange("prev")} />
+                      <Title level={5} className="week-title">
+                        Tuần {currentWeek.isoWeek()} ({getWeekRange(currentWeek).start.format("DD/MM")} -{" "}
+                        {getWeekRange(currentWeek).end.format("DD/MM")})
+                      </Title>
+                      <Button icon={<RightOutlined />} onClick={() => handleWeekChange("next")} />
+                    </div>
+
+                    <div className="weekly-grid">
+                      <div className="time-column">
+                        <div className="time-cell-header">Giờ</div>
+                        {allSlots.map((slot) => (
+                          <div key={slot} className="time-cell">
+                            {slot}
+                          </div>
+                        ))}
+                      </div>
+
+                      {getDaysOfWeek(currentWeek).map((day) => {
+                        const slotData = slotsData.find((s) => s.slotDate === day.format("DD-MM-YYYY"));
+                        const isPastDay = day.isSame(dayjs(), "day") || day.isBefore(dayjs(), "day");
+                        const currentDateStr = day.format("DD-MM-YYYY");
+                        return (
+                          <div key={day.format()} className={`day-column ${isPastDay ? "disabled-day" : ""}`}>
+                            <div className="day-header">
+                              {day.format("dd")}
+                              <br />
+                              {day.format("DD/MM")}
+                            </div>
+                            {allSlots.map((slotRange) => {
+                              const found = slotData?.slots.find((s) => `${s.startTime}-${s.endTime}` === slotRange);
+                              if (!found) return <div key={slotRange} className="slot-cell empty"></div>;
+
+                              // Logic ghi đè (FIX 6)
+                              const cacheKey = `${selectedStaff.id}_${currentDateStr}_${found.startTime}`;
+                              const isBookedInCache = staffBookingCache.get(cacheKey);
+                              const isFull = found.availableSlot === 0 || isBookedInCache === true;
+
+                              const isSelected =
+                                selectedSlot?.date === currentDateStr &&
+                                selectedSlot?.slot.startTime === found.startTime;
+                              return (
+                                <div
+                                  key={slotRange}
+                                  className={`slot-cell ${isPastDay ? "past" : isFull ? "full" : "available"} ${
+                                    isSelected ? "selected" : ""
+                                  }`}
+                                  // (FIX 7)
+                                  onClick={() => !isFull && handleSlotClick(currentDateStr, found)}
+                                >
+                                  {isPastDay
+                                    ? ""
+                                    : isFull
+                                    ? "Hết chỗ"
+                                    : isSelected
+                                    ? "Đã chọn"
+                                    : `Còn trống ${found.availableSlot}`}
+                                </div>
+                              );
+                            })}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </>
+                )}
+              </>
             )}
           </div>
         )}

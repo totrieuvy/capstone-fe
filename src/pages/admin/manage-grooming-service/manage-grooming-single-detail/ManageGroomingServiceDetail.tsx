@@ -1,11 +1,10 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { Card, Descriptions, Tag, Spin, Alert, Button, Table, Typography, Space } from "antd";
+import { Card, Descriptions, Tag, Spin, Alert, Button, Typography, Space } from "antd";
 import { ArrowLeftOutlined, InfoCircleOutlined, TagsOutlined, ClockCircleOutlined } from "@ant-design/icons";
 import api from "../../../../config/axios";
 import { getFormattedPrice } from "../../../../utils/formatPrice";
 import "./ManageGroomingServiceDetail.scss";
-import type { TableColumnsType } from "antd";
 import dayjs from "dayjs";
 import { AxiosError } from "axios";
 
@@ -69,22 +68,6 @@ function ManageGroomingServiceDetail() {
 
     fetchDetail();
   }, [id]);
-
-  const priceColumns: TableColumnsType<ServicePriceDetail> = [
-    {
-      title: "Loài Hamster",
-      dataIndex: "speciesName",
-      key: "speciesName",
-      width: "60%",
-    },
-    {
-      title: "Giá (VND)",
-      dataIndex: "price",
-      key: "price",
-      align: "right",
-      render: (price: number) => getFormattedPrice(price),
-    },
-  ];
 
   if (loading) {
     return (
@@ -188,7 +171,6 @@ function ManageGroomingServiceDetail() {
         </Descriptions>
       </Card>
 
-      {/* Prices Card */}
       <Card
         className="detail-card"
         title={
@@ -198,14 +180,19 @@ function ManageGroomingServiceDetail() {
         }
         bordered={false}
       >
-        <Table
-          columns={priceColumns}
-          dataSource={serviceDetail.prices}
-          rowKey="priceId" // Use priceId as key
-          pagination={false}
-          className="price-table"
-          size="middle" // Use middle size for better spacing
-        />
+        <div className="price-container">
+          <div className="price-header">
+            <span className="col species">Loài Hamster</span>
+            <span className="col price">Giá (VND)</span>
+          </div>
+
+          {serviceDetail.prices.map((item) => (
+            <div key={item.priceId} className="price-row">
+              <span className="col species">{item.speciesName}</span>
+              <span className="col price">{getFormattedPrice(item.price)}</span>
+            </div>
+          ))}
+        </div>
       </Card>
     </div>
   );

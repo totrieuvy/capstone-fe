@@ -79,7 +79,7 @@ function ManageComboGroomingDetail() {
       title: "Loài Hamster",
       dataIndex: "speciesName",
       key: "speciesName",
-      width: "40%",
+      width: "10%",
     },
     {
       title: "Giá Gốc (Tổng DV)",
@@ -93,18 +93,10 @@ function ManageComboGroomingDetail() {
       dataIndex: "priceAfter",
       key: "priceAfter",
       align: "right",
-      render: (priceAfter: number, record: ComboDetailPrice) => (
-        <Space size="small">
-          {/* Optionally show original price strikethrough */}
-          {record.price > priceAfter && (
-            <Text delete type="secondary">
-              {getFormattedPrice(record.price)}
-            </Text>
-          )}
-          <Text strong style={{ color: "#52c41a" }}>
-            {getFormattedPrice(priceAfter)}
-          </Text>
-        </Space>
+      render: (priceAfter: number) => (
+        <Text strong style={{ color: "#52c41a" }}>
+          {getFormattedPrice(priceAfter)}
+        </Text>
       ),
     },
   ];

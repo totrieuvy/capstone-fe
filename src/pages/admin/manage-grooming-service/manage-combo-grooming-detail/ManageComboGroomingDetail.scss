@@ -1,112 +1,115 @@
 .ManageComboGroomingDetail {
-  padding: 24px;
-  background-color: #f9fafc; // Light background
-  min-height: calc(100vh - 120px);
+  padding: 20px 40px;
+  background-color: #fff;
 
-  .detail-loading,
-  .detail-error {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    min-height: 400px;
-    flex-direction: column; // Center content vertically
-    gap: 16px; // Space between spinner/icon and text
-  }
-
+  /* --- HEADER --- */
   .detail-header {
     display: flex;
     align-items: center;
-    justify-content: space-between; // Push title and status apart
+    justify-content: space-between;
     margin-bottom: 24px;
-    background-color: #fff;
-    padding: 16px 24px;
-    border-radius: 12px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-
-    .back-button {
-      font-size: 16px;
-      // Style the back button if needed
-    }
+    flex-wrap: wrap;
+    gap: 12px;
 
     .combo-title {
-      font-size: 24px;
-      font-weight: 600;
-      color: #f58232; // Theme color
       margin: 0;
-    }
-
-    // Status Tag styling in header
-    .ant-tag {
-      font-size: 14px;
-      padding: 4px 12px;
-      border-radius: 6px;
-    }
-  }
-
-  .detail-card {
-    margin-bottom: 24px;
-    border-radius: 12px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-    background-color: #fff;
-
-    .ant-card-head {
-      background-color: #fff6f0; // Light orange header
-      border-bottom: 1px solid #ffe6d1;
-      border-radius: 12px 12px 0 0;
-
-      .ant-card-head-title {
-        color: #f58232; // Theme color
-        font-weight: 600;
-        font-size: 18px;
-        display: flex; // Align icon and text
-        align-items: center;
-        gap: 8px; // Space between icon and text
-      }
-    }
-
-    // Styling for Descriptions component
-    .ant-descriptions-item-label {
-      font-weight: 500;
-      color: #555;
-      background-color: #fafafa; // Slight background for labels
-    }
-    .ant-descriptions-item-content {
+      font-weight: 600;
       color: #333;
     }
 
-    // Styling for Service List
-    .service-list-item {
+    .back-button {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background-color: #1677ff;
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      height: 36px;
+      padding: 0 14px;
+      font-weight: 500;
+
+      &:hover {
+        background-color: #0958d9;
+        color: #fff;
+      }
+    }
+  }
+
+  /* --- CARD CHUNG --- */
+  .detail-card {
+    margin-bottom: 24px;
+    border-radius: 8px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+
+    .ant-card-head-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 600;
+      color: #333;
+    }
+  }
+
+  /* --- BẢNG GIÁ THEO LOÀI --- */
+  .price-table {
+    margin-top: 12px;
+
+    table {
+      border-collapse: collapse !important;
+      table-layout: fixed !important; /* ép 3 cột chia đều */
+      width: 100%;
+    }
+
+    th,
+    td {
+      width: 33.33% !important; /* tất cả 3 cột chia đều */
+      text-align: center !important; /* căn giữa dữ liệu */
+      padding: 10px 8px !important;
+      font-size: 14px;
       border-bottom: 1px solid #f0f0f0;
-      padding: 12px 0;
-      &:last-child {
-        border-bottom: none;
-      }
-
-      .service-name {
-        font-weight: 500;
-      }
-      .service-description {
-        color: #777;
-        font-size: 0.9em;
-        margin-top: 4px;
-      }
+      white-space: nowrap;
+      vertical-align: middle;
     }
 
-    // Styling for Price Table
-    .price-table {
-      th {
-        background-color: #fafafa !important;
-        font-weight: 600;
-      }
-      .price-original {
-        text-decoration: line-through;
-        color: #999;
-        margin-right: 8px;
-      }
-      .price-after {
-        font-weight: 600;
-        color: #52c41a; // Green for final price
-      }
+    th {
+      background-color: #fafafa;
+      font-weight: 600;
+      color: #333;
     }
+
+    td {
+      color: #222;
+    }
+
+    /* Căn giá sau giảm màu xanh */
+    .ant-table-cell:last-child {
+      color: #52c41a;
+      font-weight: 600;
+    }
+
+    /* Hiệu ứng hover nhẹ */
+    .ant-table-tbody > tr:hover > td {
+      background-color: #fafafa;
+    }
+  }
+
+  /* --- TAG TRẠNG THÁI --- */
+  .ant-tag {
+    font-weight: 500;
+    border-radius: 4px;
+    padding: 2px 10px;
+    font-size: 13px;
+  }
+
+  /* --- LOADING / ERROR --- */
+  .detail-loading,
+  .detail-error {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 300px;
+    gap: 10px;
   }
 }

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Table, Input, DatePicker, Button, Tag, Space } from "antd";
+import { Table, Input, DatePicker, Button, Tag, Space, Select } from "antd";
 import type { TableColumnsType, TablePaginationConfig } from "antd";
 import api from "../../../config/axios";
 import { toast } from "react-toastify";
@@ -14,6 +14,7 @@ dayjs.extend(timezone);
 
 const { RangePicker } = DatePicker;
 const { Search } = Input;
+const { Option } = Select;
 
 interface TransactionType {
   id: string;
@@ -28,6 +29,7 @@ function ManageTransaction() {
   const [transactions, setTransactions] = useState<TransactionType[]>([]);
   const [loading, setLoading] = useState(false);
   const [statusFilter, setStatusFilter] = useState<string>("ALL");
+  const [serviceFilter, setServiceFilter] = useState<string>("ALL");
   const [dateRange, setDateRange] = useState<[Dayjs | null, Dayjs | null] | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [pagination, setPagination] = useState<TablePaginationConfig>({
@@ -70,13 +72,14 @@ function ManageTransaction() {
 
   const filteredTransactions = transactions.filter((t) => {
     const matchStatus = statusFilter === "ALL" ? true : t.status === statusFilter;
+    const matchService = serviceFilter === "ALL" ? true : t.serviceName === serviceFilter;
     const matchSearch = t.documentNo.toLowerCase().includes(searchTerm.toLowerCase());
     const matchDate =
       dateRange && dateRange[0] && dateRange[1]
         ? dayjs(t.transactionTime, "DD-MM-YYYY HH:mm:ss").add(7, "hour").isAfter(dateRange[0]) &&
           dayjs(t.transactionTime, "DD-MM-YYYY HH:mm:ss").add(7, "hour").isBefore(dateRange[1])
         : true;
-    return matchStatus && matchSearch && matchDate;
+    return matchStatus && matchService && matchSearch && matchDate;
   });
 
   const renderStatusTag = (status: TransactionType["status"]) => {
@@ -112,7 +115,8 @@ function ManageTransaction() {
       align: "center" as const,
       render: (text: string) => {
         if (text === "ORDER") return <Tag color="cyan">Đơn hàng</Tag>;
-        if (text === "BOOKING") return <Tag color="geekblue">Đặt chỗ</Tag>;
+        if (text === "BOOKING") return <Tag color="geekblue">Đặt lịch giữ hộ</Tag>;
+        if (text === "GROOMING") return <Tag color="magenta">Đặt làm đẹp</Tag>;
         return <Tag color="default">{text}</Tag>;
       },
     },
@@ -151,6 +155,13 @@ function ManageTransaction() {
     { key: "REFUNDED", label: "REFUNDED" },
   ];
 
+  const serviceTypes = [
+    { key: "ALL", label: "Tất cả" },
+    { key: "BOOKING", label: "Đặt lịch giữ hộ" },
+    { key: "GROOMING", label: "Đặt làm đẹp" },
+    { key: "ORDER", label: "Đơn hàng" },
+  ];
+
   return (
     <div className="ManageTransaction">
       <h1 className="page-title">Quản lý giao dịch</h1>
@@ -175,9 +186,16 @@ function ManageTransaction() {
             placeholder="Tìm theo mã chứng từ..."
             allowClear
             onChange={(e) => setSearchTerm(e.target.value)}
-            style={{ width: 340 }}
+            style={{ width: 260 }}
           />
-          <RangePicker format="DD/MM/YYYY" onChange={(v) => setDateRange(v)} style={{ width: 340 }} />
+          <RangePicker format="DD/MM/YYYY" onChange={(v) => setDateRange(v)} style={{ width: 260 }} />
+          <Select defaultValue="ALL" onChange={(value) => setServiceFilter(value)} style={{ width: 220 }}>
+            {serviceTypes.map((s) => (
+              <Option key={s.key} value={s.key}>
+                {s.label}
+              </Option>
+            ))}
+          </Select>
         </Space>
       </div>
 
