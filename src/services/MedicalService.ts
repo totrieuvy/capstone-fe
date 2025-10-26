@@ -51,8 +51,7 @@ export interface CreateServiceRequest {
   serviceName: string;
   description: string;
   durationMinutes: number;
-  displayPrice: number;
-  speciesPrices: SpeciesPrice[];
+  prices: SpeciesPrice[];
 }
 
 export interface CreateServiceResponse {
@@ -94,10 +93,33 @@ export const getServiceById = async (serviceId: string): Promise<ServiceDetailRe
 
 export const createService = async (serviceData: CreateServiceRequest): Promise<CreateServiceResponse> => {
   try {
-    const response = await api.post<CreateServiceResponse>("/api/service/grooming-medical", serviceData);
+    const response = await api.post<CreateServiceResponse>("/api/services/grooming-medical", serviceData);
     return response.data;
   } catch (error) {
     console.error("Error creating service:", error);
+    throw error;
+  }
+};
+
+export interface UpdateServiceRequest {
+  serviceName: string;
+  description: string;
+  durationMinutes: number;
+  isActive: boolean;
+  prices: ServicePrice[];
+}
+
+export interface UpdateServiceResponse {
+  code: number;
+  message: string;
+}
+
+export const updateService = async (serviceId: string, serviceData: UpdateServiceRequest): Promise<UpdateServiceResponse> => {
+  try {
+    const response = await api.put<UpdateServiceResponse>(`/api/services/grooming-medical/${serviceId}`, serviceData);
+    return response.data;
+  } catch (error) {
+    console.error("Error updating service:", error);
     throw error;
   }
 };
