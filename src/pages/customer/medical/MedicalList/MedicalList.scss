@@ -4,7 +4,7 @@
 
   .medical-banner {
     text-align: center;
-    background: linear-gradient(135deg, #4fc3f7, #29b6f6);
+    background: linear-gradient(135deg, #ffa07a, #ff7f50);
     padding: 80px 20px;
     color: white;
     border-radius: 0 0 40px 40px;
@@ -54,7 +54,7 @@
       }
 
       .service-icon-container {
-        background: linear-gradient(135deg, #4fc3f7, #29b6f6); // Blue gradient for medical
+        background: linear-gradient(135deg, #ffa07a, #ff7f50);
         color: #fff;
         font-size: 36px;
         width: 80px;
@@ -105,7 +105,7 @@
         }
 
         .book-button {
-          background: linear-gradient(135deg, #4fc3f7, #29b6f6); // Blue gradient for medical
+          background: linear-gradient(135deg, #ffa07a, #ff7f50);
           border: none;
           font-weight: 600;
           padding: 8px 20px;
@@ -114,7 +114,7 @@
           margin-top: auto;
 
           &:hover {
-            background: linear-gradient(135deg, #29b6f6, #1e88e5); // Darker blue
+            background: linear-gradient(135deg, #ff7f50, #ff6347);
             transform: scale(1.05);
           }
         }

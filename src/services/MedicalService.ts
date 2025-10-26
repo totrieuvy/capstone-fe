@@ -59,6 +59,70 @@ export interface CreateServiceResponse {
   message: string;
 }
 
+// Interfaces for booking-related functions
+export interface Species {
+  id: string;
+  speciesName: string;
+}
+
+export interface MedicalPriceItem {
+  id: string;
+  displayPrice: string;
+}
+
+export interface Staff {
+  id: string;
+  name: string;
+  sex: string;
+  isBooked: boolean;
+  experienceYears: number;
+  specialization: string;
+  bestServices: string[];
+}
+
+export interface TimeSlot {
+  startTime: string;
+  endTime: string;
+  maxSlots: number;
+  availableSlot: number;
+  staffs: Staff[];
+}
+
+export interface SlotData {
+  slotDate: string;
+  slots: TimeSlot[];
+}
+
+export interface Membership {
+  discountPercent: number;
+  rankName: string;
+  currentPoint: number;
+}
+
+export interface AppointmentItem {
+  serviceId: string;
+  price: number;
+}
+
+export interface CreateAppointmentRequest {
+  hamsterId: string;
+  veterinarianId: string;
+  appointmentDate: string;
+  notes: string;
+  totalAmount: number;
+  totalAmountAfter: number;
+  discountPercent: number;
+  slotStart: string;
+  slotEnd: string;
+  serviceType: "MEDICAL";
+  items: AppointmentItem[];
+}
+
+export interface CreateAppointmentResponse {
+  code: number;
+  message: string;
+}
+
 export const getServicesByType = async (serviceType: "MEDICAL" | "FOOD" | "GROOMING" = "MEDICAL"): Promise<ServiceResponse> => {
   try {
     const response = await api.get<ServiceResponse>(`/api/services/type/${serviceType}`);
@@ -130,6 +194,85 @@ export const deleteService = async (serviceId: string): Promise<DeleteServiceRes
     return response.data;
   } catch (error) {
     console.error("Error deleting service:", error);
+    throw error;
+  }
+};
+
+// Additional API functions for booking medical services
+
+export const getSpecies = async (): Promise<{ code: number; data: Species[] }> => {
+  try {
+    const response = await api.get<{ code: number; data: Species[] }>("/api/species");
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching species:", error);
+    throw error;
+  }
+};
+
+export const getMembership = async (): Promise<{ code: number; data: Membership }> => {
+  try {
+    const response = await api.get<{ code: number; data: Membership }>("/api/membership");
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching membership:", error);
+    throw error;
+  }
+};
+
+export const getMedicalServicePriceBySpecies = async (speciesId: string): Promise<{ code: number; data: MedicalPriceItem[] }> => {
+  try {
+    const response = await api.get<{ code: number; data: MedicalPriceItem[] }>(`/api/services/species/${speciesId}`);
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching medical service prices by species:", error);
+    throw error;
+  }
+};
+
+export const getSlots = async (fromDate: string, toDate: string): Promise<{ code: number; data: SlotData[] }> => {
+  try {
+    const response = await api.get<{ code: number; data: SlotData[] }>("/api/slot", {
+      params: { 
+        from: fromDate, 
+        to: toDate, 
+        serviceType: "MEDICAL" 
+      },
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching slots:", error);
+    throw error;
+  }
+};
+
+export const getSlotsByPersonId = async (
+  personId: string, 
+  fromDate: string, 
+  toDate: string, 
+  serviceType: "MEDICAL" | "GROOMING" | "FOOD" = "MEDICAL"
+): Promise<{ code: number; message: string; data: SlotData[] }> => {
+  try {
+    const response = await api.get<{ code: number; message: string; data: SlotData[] }>(`/api/slot/${personId}`, {
+      params: { 
+        from: fromDate, 
+        to: toDate, 
+        serviceType 
+      },
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching slots by person ID:", error);
+    throw error;
+  }
+};
+
+export const createAppointment = async (appointmentData: CreateAppointmentRequest): Promise<CreateAppointmentResponse> => {
+  try {
+    const response = await api.post<CreateAppointmentResponse>("/api/appointment", appointmentData);
+    return response.data;
+  } catch (error) {
+    console.error("Error creating appointment:", error);
     throw error;
   }
 };
