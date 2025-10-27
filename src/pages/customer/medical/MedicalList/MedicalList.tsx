@@ -1,6 +1,9 @@
 import { useEffect, useState, type ReactNode } from "react";
+import { useNavigate } from "react-router-dom";
+import { useDispatch } from "react-redux";
 import { Row, Col, Card, Button, Spin } from "antd";
 import { getMedicalServices, type Service } from "../../../../services/MedicalService";
+import { selectMedicalItem } from "../../../../redux/features/SelectedMedicalItem";
 import AOS from "aos";
 import "aos/dist/aos.css";
 import "./MedicalList.scss";
@@ -13,6 +16,8 @@ import {
 function MedicalList() {
   const [services, setServices] = useState<Service[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
 
   useEffect(() => {
     document.title = "Dịch vụ Y tế - The Hamster";
@@ -38,9 +43,18 @@ function MedicalList() {
   const serviceIcon: ReactNode = <MedicineBoxOutlined />;
 
   const handleBookNowClick = (service: Service) => {
-    // Navigate to booking page or handle booking logic
-    console.log("Booking service:", service);
-    // navigate("/dich-vu-y-te/dat-dich-vu");
+    // Dispatch the selected medical service to Redux store
+    dispatch(selectMedicalItem({
+      id: service.id,
+      name: service.serviceName,
+      type: "service",
+      description: service.description,
+      displayPrice: service.displayPrice,
+      durationMinutes: service.durationMinutes,
+    }));
+    
+    // Navigate to medical booking page
+    navigate("/dich-vu-y-te/dat-dich-vu");
   };
 
   const renderServices = () => (
