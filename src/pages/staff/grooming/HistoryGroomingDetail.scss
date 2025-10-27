@@ -1,0 +1,124 @@
+.history-grooming-detail-page {
+  padding: 24px;
+
+  .detail-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+
+    .page-title {
+      color: #1677ff;
+      margin: 0;
+    }
+
+    .booking-id {
+      color: #8c8c8c;
+      font-size: 14px;
+    }
+
+    .header-status {
+      margin-top: 8px;
+    }
+  }
+
+  .section-card {
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  }
+
+  /* --- DỊCH VỤ ĐÃ CHỌN --- */
+  .services-card {
+    background-color: #fff;
+    border: 1px solid #f0f0f0;
+
+    .ant-typography {
+      color: #000;
+    }
+
+    .service-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 14px;
+      border-radius: 8px;
+      margin-bottom: 8px;
+      background-color: #fafafa;
+      transition: all 0.3s ease;
+
+      &:hover {
+        background-color: #f5f5f5;
+      }
+
+      strong {
+        color: #000;
+        font-size: 15px;
+      }
+
+      .service-price {
+        font-weight: 600;
+        color: #262626;
+        font-size: 15px;
+      }
+    }
+
+    .service-total {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 16px;
+      padding: 8px 12px;
+      border-top: 1px solid #e0e0e0;
+
+      strong {
+        color: #000;
+      }
+
+      .total-value {
+        color: #000;
+        font-weight: 700;
+        font-size: 16px;
+      }
+    }
+  }
+
+  /* --- CÁC PHẦN KHÁC GIỮ NGUYÊN --- */
+  .final-amount {
+    color: #ff4d4f;
+    font-size: 16px;
+    font-weight: 600;
+  }
+
+  .checkin-upload {
+    text-align: center;
+  }
+
+  .in-progress-action {
+    margin-top: 12px;
+
+    .ant-btn {
+      background-color: #1677ff;
+      border-color: #1677ff;
+      font-weight: 600;
+      font-size: 15px;
+      transition: all 0.3s ease;
+
+      &:hover {
+        background-color: #4096ff;
+        border-color: #4096ff;
+      }
+    }
+  }
+
+  .preview-img {
+    border-radius: 8px;
+  }
+
+  .loading-spinner-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 60vh;
+  }
+}
