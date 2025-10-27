@@ -54,6 +54,8 @@ import BookingGroomingService from "./pages/customer/grooming/dat-dich-vu-lam-de
 import BookingSuccess from "./components/booking-success/BookingSuccess";
 import MedicalList from "./pages/customer/medical/MedicalList/MedicalList";
 import ManageMedical from "./pages/admin/manage-medical-services/ManageMedical";
+import HistoryGrooming from "./pages/admin/manage-grooming-service/history-grooming/HistoryGrooming";
+import HistoryGroomingDetail from "./pages/staff/grooming/HistoryGroomingDetail";
 import MedicalBooking from "./pages/customer/medical/MedicalBooking/MedicalBooking";
 
 interface User {
@@ -269,6 +271,8 @@ const App = () => {
             { path: "quan-li-chuong", element: <CageManagement /> },
             { path: "*", element: <StaffNotFoundPage /> },
             { path: "thong-so-iot", element: <Iot /> },
+            { path: "lich-dat-grooming", element: <HistoryGrooming /> },
+            { path: "lich-dat-grooming/:id", element: <HistoryGroomingDetail /> },
             { path: "*", element: <StaffNotFoundPage /> },
           ],
         },
