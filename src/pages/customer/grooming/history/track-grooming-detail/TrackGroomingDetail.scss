@@ -1,0 +1,85 @@
+.track-grooming-detail-page {
+  background-color: #fff3e6;
+  min-height: 100vh;
+  padding: 40px 0;
+
+  .tgd-container {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 24px;
+  }
+
+  .tgd-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 24px;
+
+    .tgd-back-btn {
+      color: #ff6b35;
+      font-weight: 600;
+      &:hover {
+        color: #ff814d;
+      }
+    }
+
+    .tgd-title {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+
+      .tgd-page-title {
+        color: #ff6b35;
+        font-weight: 700;
+      }
+
+      .tgd-id {
+        color: #888;
+        font-size: 13px;
+      }
+    }
+
+    .tgd-status {
+      font-weight: 600;
+    }
+  }
+
+  .tgd-card {
+    background-color: #fff;
+    border-radius: 14px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+    padding: 24px;
+  }
+
+  .tgd-service-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 0;
+    border-bottom: 1px dashed #eee;
+  }
+
+  .tgd-service-summary {
+    display: flex;
+    justify-content: space-between;
+    font-size: 15px;
+    .tgd-bold {
+      font-weight: 700;
+      color: #111;
+    }
+  }
+
+  .ant-tag {
+    border-radius: 8px;
+    font-weight: 600;
+  }
+
+  .tgd-loading {
+    padding: 80px;
+    text-align: center;
+  }
+
+  .tgd-empty {
+    text-align: center;
+    padding: 40px;
+  }
+}

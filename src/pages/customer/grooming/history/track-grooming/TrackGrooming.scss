@@ -1,0 +1,217 @@
+/* TrackGrooming.scss */
+/* Phong cách đồng bộ với TrackOrder - tone cam ấm áp, card trắng bo tròn, shadow nhẹ */
+
+.track-grooming-page {
+  background-color: #fff3e6; /* nền cam nhạt nhẹ */
+  min-height: 100vh;
+  padding: 40px 0;
+
+  .tg-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 24px;
+  }
+
+  /* ===== HEADER ===== */
+  .tg-header {
+    text-align: center;
+    margin-bottom: 28px;
+
+    h2 {
+      font-size: 30px;
+      font-weight: 700;
+      color: #ff6b35; /* cam đậm */
+      margin: 0;
+      letter-spacing: 0.5px;
+    }
+  }
+
+  /* ===== FILTER CARD ===== */
+  .tg-filter-card {
+    background-color: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.06);
+    padding: 20px;
+    margin-bottom: 24px;
+    border: 1px solid #f0f0f0;
+    display: flex;
+    justify-content: center;
+
+    .ant-space {
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 16px;
+
+      .ant-select,
+      .ant-picker {
+        border-radius: 8px;
+        height: 40px;
+        font-size: 15px;
+      }
+
+      .ant-picker-input > input {
+        font-size: 15px;
+      }
+
+      .ant-btn {
+        height: 40px;
+        border-radius: 8px;
+        font-weight: 600;
+        transition: all 0.25s ease;
+      }
+
+      .ant-btn-primary {
+        background-color: #ff6b35;
+        border-color: #ff6b35;
+
+        &:hover {
+          background-color: #ff814d;
+          border-color: #ff814d;
+        }
+      }
+
+      .ant-btn-default:hover {
+        border-color: #ff6b35;
+        color: #ff6b35;
+      }
+    }
+  }
+
+  /* ===== MAIN CARD (TABLE CONTAINER) ===== */
+  .tg-card {
+    background-color: #fff;
+    border-radius: 14px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+    padding: 28px 24px;
+
+    .tg-loading {
+      padding: 60px 0;
+      text-align: center;
+    }
+
+    .tg-empty {
+      text-align: center;
+      color: #999;
+      font-size: 15px;
+      margin-top: 24px;
+      font-style: italic;
+    }
+
+    /* ===== TABLE ===== */
+    .ant-table {
+      background: transparent;
+      font-size: 15px;
+
+      .ant-table-thead > tr > th {
+        background: #fafafa;
+        color: #333;
+        font-weight: 600;
+        border-bottom: 1px solid #f0f0f0;
+        font-size: 16px;
+        padding: 16px 12px;
+        text-align: center;
+      }
+
+      .ant-table-tbody > tr > td {
+        padding: 14px 12px;
+        border-bottom: 1px solid #f4f4f4;
+        color: #333;
+        text-align: center;
+        vertical-align: middle;
+      }
+
+      .tg-id {
+        font-weight: 600;
+        color: #222;
+      }
+
+      /* ===== TAG TRẠNG THÁI ===== */
+      .ant-tag {
+        border-radius: 8px;
+        font-weight: 600;
+        padding: 4px 10px;
+        font-size: 14px;
+      }
+
+      .ant-tag-gold {
+        background: #fff8e1;
+        color: #c99700;
+        border: 1px solid #ffe58f;
+      }
+
+      .ant-tag-processing {
+        background: #e6f4ff;
+        color: #1677ff;
+        border: 1px solid #91caff;
+      }
+
+      .ant-tag-cyan {
+        background: #e0f7f7;
+        color: #08979c;
+        border: 1px solid #5cdbd3;
+      }
+
+      .ant-tag-success {
+        background: #f6ffed;
+        color: #389e0d;
+        border: 1px solid #b7eb8f;
+      }
+
+      .ant-tag-error {
+        background: #fff2f0;
+        color: #cf1322;
+        border: 1px solid #ffa39e;
+      }
+
+      /* ===== NÚT XEM CHI TIẾT ===== */
+      .ant-btn-link {
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        padding: 4px 10px;
+        font-weight: 600;
+        color: #444;
+        background-color: #fafafa;
+        transition: all 0.25s;
+
+        &:hover {
+          border-color: #ff6b35;
+          color: #ff6b35;
+          background-color: #fff7f2;
+        }
+
+        .anticon {
+          margin-right: 4px;
+        }
+      }
+    }
+
+    /* ===== PAGINATION ===== */
+    .ant-pagination {
+      margin-top: 20px;
+      display: flex;
+      justify-content: center;
+
+      .ant-pagination-item-active {
+        border-color: #ff6b35;
+
+        a {
+          color: #ff6b35;
+        }
+      }
+
+      .ant-pagination-item:hover a {
+        color: #ff6b35;
+      }
+
+      .ant-pagination-item-link:hover {
+        color: #ff6b35;
+        border-color: #ff6b35;
+      }
+    }
+
+    .ant-spin {
+      text-align: center;
+      padding: 40px 0;
+    }
+  }
+}

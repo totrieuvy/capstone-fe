@@ -57,6 +57,8 @@ import ManageMedical from "./pages/admin/manage-medical-services/ManageMedical";
 import HistoryGrooming from "./pages/admin/manage-grooming-service/history-grooming/HistoryGrooming";
 import HistoryGroomingDetail from "./pages/staff/grooming/HistoryGroomingDetail";
 import MedicalBooking from "./pages/customer/medical/MedicalBooking/MedicalBooking";
+import TrackGrooming from "./pages/customer/grooming/history/track-grooming/TrackGrooming";
+import TrackGroomingDetail from "./pages/customer/grooming/history/track-grooming-detail/TrackGroomingDetail";
 
 interface User {
   id: number;
@@ -186,6 +188,20 @@ const App = () => {
           ],
         },
         {
+          path: "/grooming-history",
+          element: <Panel />,
+          children: [
+            {
+              path: "",
+              element: <TrackGrooming />,
+            },
+            {
+              path: ":id",
+              element: <TrackGroomingDetail />,
+            },
+          ],
+        },
+        {
           path: "/boarding-schedule",
           element: <Panel />,
           children: [
@@ -205,8 +221,8 @@ const App = () => {
         },
         {
           path: "/dich-vu-y-te/dat-dich-vu",
-          element: <MedicalBooking/>
-        }
+          element: <MedicalBooking />,
+        },
       ],
     },
     {
