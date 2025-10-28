@@ -1,6 +1,20 @@
 import { useEffect, useState, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { message, Spin, Button, Tag, Upload, Card, Descriptions, Image, Typography, Row, Col, Divider } from "antd";
+import {
+  message,
+  Spin,
+  Button,
+  Tag,
+  Upload,
+  Card,
+  Descriptions,
+  Image,
+  Typography,
+  Row,
+  Col,
+  Divider,
+  Select,
+} from "antd";
 import {
   ArrowLeftOutlined,
   UploadOutlined,
@@ -18,6 +32,20 @@ import dayjs from "dayjs";
 import { getFormattedPrice } from "../../../utils/formatPrice";
 
 const { Title, Text } = Typography;
+const { Option } = Select;
+
+interface Staff {
+  id: string;
+  fullName?: string;
+}
+
+interface ServiceItem {
+  id: string;
+  serviceId?: string;
+  serviceName?: string;
+  serviceComboName?: string;
+  price: number;
+}
 
 interface GroomingDetail {
   id: string;
@@ -27,51 +55,76 @@ interface GroomingDetail {
   status: string;
   totalAmount: number;
   totalAmountAfter: number;
+  additionalAmount?: number;
   notes?: string;
   checkInImage?: string;
   checkoutImage?: string;
   slotStart?: string;
   slotEnd?: string;
   createdAt: string;
-  staff?: { id: string; name: string };
-  items: {
-    id: string;
-    serviceName?: string;
-    serviceComboName?: string;
-    price: number;
-  }[];
+  staff?: Staff;
+  speciesId?: string;
+  items: ServiceItem[];
+}
+
+interface Service {
+  id: string;
+  serviceType: string;
+  serviceName: string;
+  description: string;
+  durationMinutes: number;
+  displayPrice: string;
+  isActive: boolean;
 }
 
 const HistoryGroomingDetail = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+
   const [detail, setDetail] = useState<GroomingDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
+  const [checkoutUploading, setCheckoutUploading] = useState(false);
+  const [groomingServices, setGroomingServices] = useState<Service[]>([]);
+  const [selectedServices, setSelectedServices] = useState<string[]>([]);
+  const [, setCheckOutImageUrl] = useState<string | null>(null);
+
+  // ======================= FETCH =======================
+  const fetchServicesBySpecies = useCallback(async (speciesId: string) => {
+    try {
+      const res = await api.get(`/api/services/species/${speciesId}`);
+      if (res.data.code === 200) {
+        const filtered = res.data.data.filter((s: Service) => s.serviceType === "GROOMING");
+        setGroomingServices(filtered);
+      }
+    } catch {
+      message.error("Không thể tải danh sách dịch vụ theo loài!");
+    }
+  }, []);
 
   const fetchDetail = useCallback(async () => {
+    if (!id) return;
     try {
       const res = await api.get(`/api/appointment/${id}`);
       if (res.data.code === 200) {
-        setDetail(res.data.data);
+        const data: GroomingDetail = res.data.data;
+        setDetail(data);
+        if (data.speciesId) fetchServicesBySpecies(data.speciesId);
       } else message.error(res.data.message);
     } catch {
       message.error("Lỗi khi tải chi tiết grooming!");
     } finally {
       setLoading(false);
     }
-  }, [id]);
+  }, [id, fetchServicesBySpecies]);
 
   useEffect(() => {
     document.title = "Chi tiết Grooming";
-    if (id) fetchDetail();
-  }, [id, fetchDetail]);
+    fetchDetail();
+  }, [fetchDetail]);
 
+  // ======================= STATUS =======================
   const getStatusTag = (status: string) => {
-    const key = String(status || "")
-      .toUpperCase()
-      .replace(/[-\s]/g, "_");
-
     const colorMap: Record<string, string> = {
       BOOKED: "gold",
       CHECKED_IN: "processing",
@@ -79,7 +132,6 @@ const HistoryGroomingDetail = () => {
       CHECKOUT: "success",
       CANCELLED: "error",
     };
-
     const textMap: Record<string, string> = {
       BOOKED: "Đã đặt",
       CHECKED_IN: "Đã check-in",
@@ -87,14 +139,14 @@ const HistoryGroomingDetail = () => {
       CHECKOUT: "Hoàn tất",
       CANCELLED: "Đã hủy",
     };
-
     return (
-      <Tag color={colorMap[key] || "default"} style={{ fontWeight: 600, fontSize: "14px" }}>
-        {textMap[key] || status || "Unknown"}
+      <Tag color={colorMap[status] || "default"} style={{ fontWeight: 600, fontSize: "14px" }}>
+        {textMap[status] || status}
       </Tag>
     );
   };
 
+  // ======================= CHECK-IN =======================
   const handleUploadCheckIn = async (file: File) => {
     if (!id) return;
     setUploading(true);
@@ -115,6 +167,7 @@ const HistoryGroomingDetail = () => {
     }
   };
 
+  // ======================= IN PROGRESS =======================
   const handleSetInProgress = async () => {
     if (!id) return;
     try {
@@ -126,6 +179,70 @@ const HistoryGroomingDetail = () => {
     }
   };
 
+  // ======================= ADD SERVICE =======================
+  const handleAddServices = async () => {
+    if (!id || selectedServices.length === 0) return;
+
+    const selectedItems = groomingServices
+      .filter((s) => selectedServices.includes(s.id))
+      .map((s) => ({
+        serviceId: s.id,
+        price: parseFloat(s.displayPrice),
+      }));
+
+    const additionalAmount = selectedItems.reduce((sum, item) => sum + item.price, 0);
+
+    try {
+      await api.post("/api/appointment/add-service", {
+        appointmentId: id,
+        additionalAmount,
+        items: selectedItems,
+      });
+      message.success("Đã thêm dịch vụ thành công!");
+      setSelectedServices([]);
+      fetchDetail();
+    } catch {
+      message.error("Không thể thêm dịch vụ!");
+    }
+  };
+
+  // ======================= CHECK-OUT =======================
+  const handleUploadCheckOut = async (file: File) => {
+    if (!id || !detail) return;
+    setCheckoutUploading(true);
+    try {
+      const fileRef = ref(storage, `checkout/${id}-${Date.now()}-${file.name}`);
+      await uploadBytes(fileRef, file);
+      const url = await getDownloadURL(fileRef);
+      setCheckOutImageUrl(url);
+
+      // Tính additionalAmount (nếu có)
+      const additionalAmount = detail.additionalAmount || 0;
+
+      // Gọi API mới /appointment/check-out
+      const res = await api.post("/api/appointment/check-out", {
+        appointmentId: id,
+        checkOutImage: url,
+        paymentMethod: "PAYOS",
+        additionalAmount,
+      });
+
+      if (res.data.code === 200 && res.data.data?.paymentUrl) {
+        message.success("Tạo link thanh toán thành công!");
+        window.open(res.data.data.paymentUrl, "_blank");
+        fetchDetail();
+      } else {
+        message.success("Check-out thành công!");
+        fetchDetail();
+      }
+    } catch {
+      message.error("Không thể thực hiện check-out!");
+    } finally {
+      setCheckoutUploading(false);
+    }
+  };
+
+  // ======================= UI =======================
   if (loading)
     return (
       <div className="loading-spinner-container">
@@ -145,8 +262,9 @@ const HistoryGroomingDetail = () => {
       </div>
     );
 
-  const totalServicePrice = detail.items.reduce((sum, item) => sum + item.price, 0);
+  const totalPrice = (detail.totalAmountAfter || 0) + (detail.additionalAmount || 0);
 
+  // ======================= RETURN =======================
   return (
     <div className="history-grooming-detail-page">
       <div className="container">
@@ -169,8 +287,9 @@ const HistoryGroomingDetail = () => {
         </div>
 
         <Row gutter={[24, 24]}>
+          {/* ---- Thông tin ---- */}
           <Col xs={24} md={14}>
-            <Card className="info-card section-card" bordered={false}>
+            <Card bordered={false} className="info-card section-card">
               <Descriptions
                 title={
                   <>
@@ -184,7 +303,7 @@ const HistoryGroomingDetail = () => {
                 <Descriptions.Item label="Khách hàng">{detail.customerName}</Descriptions.Item>
                 <Descriptions.Item label="Hamster">{detail.hamsterName}</Descriptions.Item>
                 <Descriptions.Item label="Ngày hẹn">
-                  {dayjs(detail.appointmentTime, "YYYY-MM-DD").format("DD/MM/YYYY")}
+                  {dayjs(detail.appointmentTime).format("DD/MM/YYYY")}
                 </Descriptions.Item>
                 {detail.slotStart && (
                   <Descriptions.Item label="Khung giờ">
@@ -193,84 +312,86 @@ const HistoryGroomingDetail = () => {
                     </Tag>
                   </Descriptions.Item>
                 )}
-                {detail.staff && <Descriptions.Item label="Nhân viên">{detail.staff.name}</Descriptions.Item>}
-                <Descriptions.Item label="Ngày tạo">
-                  {dayjs(detail.createdAt).format("DD/MM/YYYY HH:mm")}
-                </Descriptions.Item>
-                {detail.notes && (
-                  <Descriptions.Item label="Ghi chú">
-                    <Text italic>{detail.notes}</Text>
-                  </Descriptions.Item>
-                )}
+                {detail.staff && <Descriptions.Item label="Nhân viên">{detail.staff.fullName}</Descriptions.Item>}
               </Descriptions>
             </Card>
 
+            {/* ---- Dịch vụ ---- */}
             <Card className="services-card section-card" bordered={false}>
-              <Title level={4} style={{ marginBottom: 16 }}>
+              <Title level={4}>
                 <ScissorOutlined /> Dịch vụ đã chọn
               </Title>
-              {detail.items.length === 0 ? (
-                <Text type="secondary" italic>
-                  Không có dịch vụ nào.
-                </Text>
-              ) : (
-                detail.items.map((item) => (
-                  <div key={item.id} className="service-item">
-                    <Text strong>{item.serviceName || item.serviceComboName}</Text>
-                    <Text className="service-price">{getFormattedPrice(item.price)}</Text>
-                  </div>
-                ))
-              )}
-              <Divider style={{ margin: "16px 0" }} />
-              <div className="service-total">
-                <Text strong>Tổng tiền dịch vụ:</Text>
-                <Text strong className="total-value">
-                  {getFormattedPrice(totalServicePrice)}
-                </Text>
-              </div>
+              {detail.items.map((item) => (
+                <div key={item.id} className="service-item">
+                  <Text strong>{item.serviceName}</Text>
+                  <Text className="service-price">{getFormattedPrice(item.price)}</Text>
+                </div>
+              ))}
+              <Divider />
+              <Title level={5}>Chọn thêm dịch vụ Grooming</Title>
+              <Select
+                mode="multiple"
+                style={{ width: "100%" }}
+                placeholder="Chọn dịch vụ Grooming"
+                value={selectedServices}
+                onChange={setSelectedServices}
+              >
+                {groomingServices.map((service) => (
+                  <Option key={service.id} value={service.id}>
+                    {service.serviceName} ({getFormattedPrice(service.displayPrice)})
+                  </Option>
+                ))}
+              </Select>
+              <Button
+                type="primary"
+                style={{ marginTop: 12 }}
+                disabled={selectedServices.length === 0}
+                onClick={handleAddServices}
+              >
+                Thêm dịch vụ đã chọn
+              </Button>
             </Card>
           </Col>
 
+          {/* ---- Thanh toán & Hình ảnh ---- */}
           <Col xs={24} md={10}>
             <Card className="payment-card section-card" bordered={false}>
-              <Title level={4} style={{ marginBottom: 16 }}>
+              <Title level={4}>
                 <DollarOutlined /> Thanh toán
               </Title>
-              <Descriptions column={1} size="middle">
-                <Descriptions.Item label="Tổng tiền gốc">{getFormattedPrice(detail.totalAmount)}</Descriptions.Item>
-                <Descriptions.Item label="Thành tiền (sau giảm)">
-                  <Text strong className="final-amount">
-                    {getFormattedPrice(detail.totalAmountAfter)}
-                  </Text>
+              <Descriptions column={1}>
+                <Descriptions.Item label="Tiền ban đầu (đã giảm)">
+                  {getFormattedPrice(detail.totalAmountAfter)}
+                </Descriptions.Item>
+                <Descriptions.Item label="Dịch vụ bổ sung">
+                  {getFormattedPrice(detail.additionalAmount || 0)}
+                </Descriptions.Item>
+                <Descriptions.Item label="Tổng thanh toán">
+                  <Text strong>{getFormattedPrice(totalPrice)}</Text>
                 </Descriptions.Item>
               </Descriptions>
             </Card>
 
+            {/* ---- Check-in ---- */}
             <Card className="image-card section-card" bordered={false}>
-              <Title level={4} style={{ marginBottom: 16 }}>
+              <Title level={4}>
                 <ClockCircleOutlined /> Check-in
               </Title>
               {detail.checkInImage ? (
-                <Image src={detail.checkInImage} alt="Ảnh check-in" className="preview-img" width="100%" />
+                <Image src={detail.checkInImage} width="100%" />
               ) : detail.status === "BOOKED" ? (
-                <div className="checkin-upload">
-                  <Upload
-                    accept="image/*"
-                    showUploadList={false}
-                    beforeUpload={(file) => {
-                      handleUploadCheckIn(file);
-                      return false;
-                    }}
-                    disabled={uploading}
-                  >
-                    <Button icon={<UploadOutlined />} loading={uploading} type="primary" block size="large">
-                      Tải ảnh Check-in
-                    </Button>
-                  </Upload>
-                  <Text type="secondary" style={{ marginTop: 8, display: "block", textAlign: "center" }}>
-                    (Chụp ảnh hamster khi bắt đầu thực hiện dịch vụ)
-                  </Text>
-                </div>
+                <Upload
+                  accept="image/*"
+                  showUploadList={false}
+                  beforeUpload={(file) => {
+                    handleUploadCheckIn(file);
+                    return false;
+                  }}
+                >
+                  <Button icon={<UploadOutlined />} type="primary" block loading={uploading}>
+                    Tải ảnh Check-in
+                  </Button>
+                </Upload>
               ) : (
                 <Text type="secondary" italic>
                   Chưa có ảnh check-in.
@@ -278,21 +399,43 @@ const HistoryGroomingDetail = () => {
               )}
 
               {detail.status === "CHECKED_IN" && (
-                <div className="in-progress-action">
-                  <Button type="primary" size="large" block onClick={handleSetInProgress}>
-                    Đang thực hiện
-                  </Button>
-                </div>
+                <Button type="primary" block onClick={handleSetInProgress} style={{ marginTop: 12 }}>
+                  Đang thực hiện
+                </Button>
               )}
             </Card>
 
-            {detail.status === "CHECKOUT" && detail.checkoutImage && (
+            {/* ---- Check-out ---- */}
+            {detail.status === "IN_PROGRESS" ? (
               <Card className="image-card section-card" bordered={false}>
-                <Title level={4} style={{ marginBottom: 16 }}>
+                <Title level={4}>
                   <CheckCircleOutlined /> Check-out
                 </Title>
-                <Image src={detail.checkoutImage} alt="Ảnh check-out" className="preview-img" width="100%" />
+                <Upload
+                  accept="image/*"
+                  showUploadList={false}
+                  beforeUpload={(file) => {
+                    handleUploadCheckOut(file);
+                    return false;
+                  }}
+                >
+                  <Button icon={<UploadOutlined />} type="primary" block size="large" loading={checkoutUploading}>
+                    Tải ảnh Check-out & Thanh toán
+                  </Button>
+                </Upload>
+                <Text type="secondary" style={{ display: "block", textAlign: "center", marginTop: 8 }}>
+                  (Chụp ảnh hamster sau khi hoàn tất dịch vụ)
+                </Text>
               </Card>
+            ) : (
+              detail.checkoutImage && (
+                <Card className="image-card section-card" bordered={false}>
+                  <Title level={4}>
+                    <CheckCircleOutlined /> Check-out
+                  </Title>
+                  <Image src={detail.checkoutImage} width="100%" />
+                </Card>
+              )
             )}
           </Col>
         </Row>

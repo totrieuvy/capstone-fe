@@ -23,7 +23,7 @@ interface Grooming {
   hamsterName: string;
   appointmentTime: string;
   serviceType: string;
-  status: "BOOKED" | "CHECKED_IN" | "IN_PROCESS" | "CHECKOUT";
+  status: "BOOKED" | "CHECKED_IN" | "IN_PROGRESS" | "CHECK_OUT";
 }
 
 const HistoryGrooming = () => {
@@ -98,14 +98,14 @@ const HistoryGrooming = () => {
     const colorMap: Record<string, string> = {
       BOOKED: "gold",
       CHECKED_IN: "blue",
-      IN_PROCESS: "cyan",
-      CHECKOUT: "green",
+      IN_PROGRESS: "cyan",
+      CHECK_OUT: "green",
     };
     const textMap: Record<string, string> = {
       BOOKED: "Đã đặt",
       CHECKED_IN: "Đã check-in",
-      IN_PROCESS: "Đang thực hiện",
-      CHECKOUT: "Hoàn tất",
+      IN_PROGRESS: "Đang thực hiện",
+      CHECK_OUT: "Hoàn tất",
     };
     return <Tag color={colorMap[status]}>{textMap[status]}</Tag>;
   };
@@ -156,8 +156,8 @@ const HistoryGrooming = () => {
                 <Option value="ALL">Tất cả trạng thái</Option>
                 <Option value="BOOKED">Đã đặt</Option>
                 <Option value="CHECKED_IN">Đã check-in</Option>
-                <Option value="IN_PROCESS">Đang thực hiện</Option>
-                <Option value="CHECKOUT">Hoàn tất</Option>
+                <Option value="IN_PROGRESS">Đang thực hiện</Option>
+                <Option value="CHECK_OUT">Hoàn tất</Option>
               </Select>
             </Col>
             <Col xs={24} sm={12} md={10}>
