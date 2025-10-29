@@ -11,7 +11,7 @@ import {
   TagOutlined,
 } from "@ant-design/icons";
 import { GiPawPrint } from "react-icons/gi";
-import { BiCategory,BiPlusMedical } from "react-icons/bi";
+import { BiCategory, BiPlusMedical } from "react-icons/bi";
 import { Layout, Menu, Button, theme } from "antd";
 import type { ItemType } from "antd/es/menu/interface";
 import { Link, Outlet, useNavigate } from "react-router-dom";
@@ -87,6 +87,10 @@ const SideBar: React.FC = () => {
       ];
     } else if (user?.role === "STAFF") {
       items = [
+        getItem("Dịch vụ y tế", "medical-checkup", <BiPlusMedical />, [
+          getItem("Lịch đặt khám", "lich-dat-kham"),
+        ]),
+
         getItem("Grooming", "grooming", <SkinOutlined />, [
           getItem("Quản lí dịch vụ grooming", "quan-li-dich-vu-grooming"),
           getItem("Lịch đặt grooming", "lich-dat-grooming"),

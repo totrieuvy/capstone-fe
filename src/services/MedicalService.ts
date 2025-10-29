@@ -123,6 +123,48 @@ export interface CreateAppointmentResponse {
   message: string;
 }
 
+// Interfaces for fetching appointments
+export interface AppointmentFilters {
+  date?: string;
+  serviceType?: "MEDICAL" | "GROOMING" | "FOOD";
+  status?: string;
+  veterinarianId?: string;
+  staffId?: string;
+  customerId?: string;
+  hamsterName?: string;
+  sortDir?: "asc" | "desc";
+  page?: number;
+  size?: number;
+}
+
+export interface Appointment {
+  id: string;
+  customerId: string;
+  customerName: string;
+  hamsterId: string;
+  hamsterName: string;
+  appointmentTime: string;
+  veterinarianName: string;
+  serviceType: "MEDICAL" | "GROOMING" | "FOOD";
+  status: string;
+}
+
+export interface AppointmentListData {
+  content: Appointment[];
+  pageNumber: number;
+  pageSize: number;
+  totalElements: number;
+  totalPages: number;
+  first: boolean;
+  last: boolean;
+}
+
+export interface AppointmentListResponse {
+  code: number;
+  message: string;
+  data: AppointmentListData;
+}
+
 export const getServicesByType = async (serviceType: "MEDICAL" | "FOOD" | "GROOMING" = "MEDICAL"): Promise<ServiceResponse> => {
   try {
     const response = await api.get<ServiceResponse>(`/api/services/type/${serviceType}`);
@@ -273,6 +315,34 @@ export const createAppointment = async (appointmentData: CreateAppointmentReques
     return response.data;
   } catch (error) {
     console.error("Error creating appointment:", error);
+    throw error;
+  }
+};
+
+export const getAppointments = async (filters: AppointmentFilters = {}): Promise<AppointmentListResponse> => {
+  try {
+    // Set default values
+    const params = {
+      //i want date to be today by default if not provided
+      date: filters.date || new Date().toISOString().split("T")[0],
+      serviceType: "MEDICAL",
+      sortDir: "asc",
+      page: 0,
+      size: 10,
+      ...filters, // Override defaults with provided filters
+    };
+
+    // Remove undefined values to avoid sending them as query parameters
+    const cleanParams = Object.fromEntries(
+      Object.entries(params).filter(([_, value]) => value !== undefined)
+    );
+
+    const response = await api.get<AppointmentListResponse>("/api/appointment", {
+      params: cleanParams,
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching appointments:", error);
     throw error;
   }
 };
