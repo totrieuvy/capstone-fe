@@ -8,6 +8,7 @@ export interface Service {
   durationMinutes: number;
   displayPrice: string;
   isActive: boolean;
+  isDefault: boolean;
 }
 
 export interface ServicePrice {
