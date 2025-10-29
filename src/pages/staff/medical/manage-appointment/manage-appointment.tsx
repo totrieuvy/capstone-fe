@@ -12,7 +12,8 @@ import {
   Tag,
   Spin,
 } from 'antd';
-import { FilterOutlined, ClearOutlined } from '@ant-design/icons';
+import {  ClearOutlined } from '@ant-design/icons';
+import { useNavigate } from 'react-router-dom';
 import type { ColumnsType } from 'antd/es/table';
 import dayjs from 'dayjs';
 import { getAppointments, type Appointment, type AppointmentFilters } from '../../../../services/MedicalService';
@@ -22,6 +23,7 @@ const { Title } = Typography;
 const { Option } = Select;
 
 const ManageAppointment: React.FC = () => {
+  const navigate = useNavigate();
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [pagination, setPagination] = useState({
@@ -49,10 +51,11 @@ const ManageAppointment: React.FC = () => {
   const statusOptions = [
     { value: '', label: 'Tất cả Trạng thái' },
     { value: 'BOOKED', label: 'Đã đặt' },
-    { value: 'CONFIRMED', label: 'Đã xác nhận' },
+    { value: 'CHECKED_IN', label: 'Đã check-in' },
     { value: 'IN_PROGRESS', label: 'Đang thực hiện' },
-    { value: 'COMPLETED', label: 'Hoàn thành' },
+    { value: 'NO_SHOW', label: 'Không đến' },
     { value: 'CANCELLED', label: 'Đã hủy' },
+    { value: 'CHECKED_OUT', label: 'Đã check-out' },
   ];
 
   // Fetch appointments
@@ -109,17 +112,19 @@ const ManageAppointment: React.FC = () => {
 
   // Get status color
   const getStatusColor = (status: string) => {
-    switch (status.toLowerCase()) {
-      case 'booked':
+    switch (status.toUpperCase()) {
+      case 'BOOKED':
         return 'blue';
-      case 'confirmed':
+      case 'CHECKED_IN':
         return 'cyan';
-      case 'in_progress':
+      case 'IN_PROGRESS':
         return 'orange';
-      case 'completed':
-        return 'green';
-      case 'cancelled':
+      case 'NO_SHOW':
+        return 'volcano';
+      case 'CANCELLED':
         return 'red';
+      case 'CHECKED_OUT':
+        return 'green';
       default:
         return 'default';
     }
@@ -130,14 +135,16 @@ const ManageAppointment: React.FC = () => {
     switch (status.toUpperCase()) {
       case 'BOOKED':
         return 'Đã đặt';
-      case 'CONFIRMED':
-        return 'Đã xác nhận';
+      case 'CHECKED_IN':
+        return 'Đã check-in';
       case 'IN_PROGRESS':
         return 'Đang thực hiện';
-      case 'COMPLETED':
-        return 'Hoàn thành';
+      case 'NO_SHOW':
+        return 'Không đến';
       case 'CANCELLED':
         return 'Đã hủy';
+      case 'CHECKED_OUT':
+        return 'Đã check-out';
       default:
         return status.replace('_', ' ');
     }
@@ -193,6 +200,20 @@ const ManageAppointment: React.FC = () => {
         value: option.value,
       })),
     },
+    {
+      title: 'Thao tác',
+      key: 'action',
+      width: 120,
+      render: (_, record) => (
+        <Button
+          type="primary"
+          size="small"
+          onClick={() => navigate(`/STAFF/lich-dat-kham/${record.id}`)}
+        >
+          Chi tiết
+        </Button>
+      ),
+    },
   ];
 
   // Initial load
@@ -205,7 +226,7 @@ const ManageAppointment: React.FC = () => {
       <Card className="appointment-container">
         <div className="header-section">
           <Title level={2} className="page-title">
-            <FilterOutlined /> Quản lý Cuộc hẹn Y tế
+             Quản lí lịch khám
           </Title>
           
           {/* Filter Section */}

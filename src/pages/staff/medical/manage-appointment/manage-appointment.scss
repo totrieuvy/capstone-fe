@@ -142,6 +142,49 @@
         font-size: 12px;
         text-transform: uppercase;
         letter-spacing: 0.5px;
+        border: 1px solid transparent;
+        
+        // BOOKED - Blue theme
+        &.ant-tag-blue {
+          background-color: #e6f7ff;
+          border-color: #91d5ff;
+          color: #1890ff;
+        }
+        
+        // CHECKED_IN - Cyan theme
+        &.ant-tag-cyan {
+          background-color: #e6fffb;
+          border-color: #87e8de;
+          color: #13c2c2;
+        }
+        
+        // IN_PROGRESS - Orange theme
+        &.ant-tag-orange {
+          background-color: #fff7e6;
+          border-color: #ffd591;
+          color: #fa8c16;
+        }
+        
+        // NO_SHOW - Volcano theme
+        &.ant-tag-volcano {
+          background-color: #fff2e8;
+          border-color: #ffbb96;
+          color: #fa541c;
+        }
+        
+        // CANCELLED - Red theme
+        &.ant-tag-red {
+          background-color: #fff1f0;
+          border-color: #ffa39e;
+          color: #f5222d;
+        }
+        
+        // CHECKED_OUT - Green theme
+        &.ant-tag-green {
+          background-color: #f6ffed;
+          border-color: #b7eb8f;
+          color: #52c41a;
+        }
       }
     }
 
