@@ -1,0 +1,294 @@
+.manage-appointment {
+  padding: 24px;
+  background-color: #f5f5f5;
+  min-height: 100vh;
+
+  .appointment-container {
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    
+    .ant-card-body {
+      padding: 24px;
+    }
+  }
+
+  .header-section {
+    margin-bottom: 24px;
+
+    .page-title {
+      margin-bottom: 16px;
+      color: #1890ff;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      
+      .anticon {
+        font-size: 24px;
+      }
+    }
+  }
+
+  .filter-card {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border: none;
+    border-radius: 8px;
+    margin-bottom: 16px;
+
+    .ant-card-body {
+      padding: 20px;
+    }
+
+    .filter-item {
+      .filter-label {
+        display: block;
+        color: white;
+        font-weight: 500;
+        margin-bottom: 8px;
+        font-size: 14px;
+      }
+
+      .ant-picker,
+      .ant-select,
+      .ant-btn {
+        .ant-picker-selector,
+        .ant-select-selector {
+          border-radius: 6px;
+          border: 1px solid rgba(255, 255, 255, 0.3);
+          background: rgba(255, 255, 255, 0.9);
+          transition: all 0.3s ease;
+
+          &:hover {
+            border-color: #40a9ff;
+            background: rgba(255, 255, 255, 1);
+          }
+
+          &:focus-within {
+            border-color: #40a9ff;
+            box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2);
+            background: rgba(255, 255, 255, 1);
+          }
+        }
+
+        &.ant-btn {
+          border-radius: 6px;
+          height: 32px;
+          font-weight: 500;
+          border: 1px solid rgba(255, 255, 255, 0.3);
+          background: rgba(255, 255, 255, 0.9);
+          transition: all 0.3s ease;
+
+          &:hover {
+            border-color: #40a9ff;
+            background: rgba(255, 255, 255, 1);
+          }
+        }
+      }
+    }
+  }
+
+  .table-card {
+    border-radius: 8px;
+    border: none;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+
+    .appointments-table {
+      .ant-table {
+        border-radius: 8px;
+        overflow: hidden;
+
+        .ant-table-thead > tr > th {
+          background: #fafafa;
+          border-bottom: 2px solid #e8e8e8;
+          font-weight: 600;
+          color: #262626;
+          padding: 16px;
+        }
+
+        .ant-table-tbody > tr {
+          transition: all 0.3s ease;
+
+          &:hover {
+            background-color: #f5f5f5;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+          }
+
+          > td {
+            padding: 16px;
+            border-bottom: 1px solid #f0f0f0;
+          }
+        }
+      }
+
+      .customer-name {
+        font-weight: 500;
+        color: #1890ff;
+      }
+
+      .hamster-name {
+        font-weight: 500;
+        color: #722ed1;
+      }
+
+      .veterinarian-name {
+        font-weight: 500;
+        color: #52c41a;
+      }
+
+      .status-tag {
+        font-weight: 500;
+        border-radius: 12px;
+        padding: 4px 12px;
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        border: 1px solid transparent;
+        
+        // BOOKED - Blue theme
+        &.ant-tag-blue {
+          background-color: #e6f7ff;
+          border-color: #91d5ff;
+          color: #1890ff;
+        }
+        
+        // CHECKED_IN - Cyan theme
+        &.ant-tag-cyan {
+          background-color: #e6fffb;
+          border-color: #87e8de;
+          color: #13c2c2;
+        }
+        
+        // IN_PROGRESS - Orange theme
+        &.ant-tag-orange {
+          background-color: #fff7e6;
+          border-color: #ffd591;
+          color: #fa8c16;
+        }
+        
+        // NO_SHOW - Volcano theme
+        &.ant-tag-volcano {
+          background-color: #fff2e8;
+          border-color: #ffbb96;
+          color: #fa541c;
+        }
+        
+        // CANCELLED - Red theme
+        &.ant-tag-red {
+          background-color: #fff1f0;
+          border-color: #ffa39e;
+          color: #f5222d;
+        }
+        
+        // CHECKED_OUT - Green theme
+        &.ant-tag-green {
+          background-color: #f6ffed;
+          border-color: #b7eb8f;
+          color: #52c41a;
+        }
+      }
+    }
+
+    .ant-pagination {
+      margin-top: 24px;
+      text-align: center;
+
+      .ant-pagination-item {
+        border-radius: 6px;
+        transition: all 0.3s ease;
+
+        &:hover {
+          transform: translateY(-1px);
+        }
+
+        &.ant-pagination-item-active {
+          background: #1890ff;
+          border-color: #1890ff;
+
+          a {
+            color: white;
+          }
+        }
+      }
+
+      .ant-pagination-prev,
+      .ant-pagination-next {
+        border-radius: 6px;
+        transition: all 0.3s ease;
+
+        &:hover {
+          transform: translateY(-1px);
+        }
+      }
+    }
+  }
+}
+
+// Responsive design
+@media (max-width: 768px) {
+  .manage-appointment {
+    padding: 16px;
+
+    .appointments-table {
+      .ant-table {
+        font-size: 12px;
+
+        .ant-table-thead > tr > th,
+        .ant-table-tbody > tr > td {
+          padding: 12px 8px;
+        }
+      }
+    }
+  }
+}
+
+@media (max-width: 576px) {
+  .manage-appointment {
+    padding: 12px;
+
+    .header-section {
+      .page-title {
+        font-size: 20px;
+      }
+    }
+
+    .filter-card {
+      .ant-card-body {
+        padding: 16px;
+      }
+    }
+  }
+}
+
+// Loading state styling
+.ant-spin-nested-loading {
+  .ant-spin-container {
+    transition: opacity 0.3s ease;
+  }
+
+  &.ant-spin-spinning .ant-spin-container {
+    opacity: 0.7;
+  }
+}
+
+// Custom scrollbar for table
+.appointments-table .ant-table-body {
+  &::-webkit-scrollbar {
+    height: 8px;
+    width: 8px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 4px;
+    transition: background 0.3s ease;
+
+    &:hover {
+      background: #a8a8a8;
+    }
+  }
+}
