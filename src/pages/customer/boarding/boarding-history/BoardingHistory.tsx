@@ -36,6 +36,8 @@ const BoardingHistory: React.FC = () => {
   const [searchText, setSearchText] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [cageTypeFilter, setCageTypeFilter] = useState<string>('all');
+  const [availableCageTypes, setAvailableCageTypes] = useState<string[]>([]);
+  const [availableStatuses, setAvailableStatuses] = useState<string[]>([]);
 
   useEffect(() => {
     fetchBookingHistory();
@@ -51,6 +53,14 @@ const BoardingHistory: React.FC = () => {
       setError(null);
       const history = await boardingService.getBookingHistory();
       setBookingHistory(history);
+      
+      // Extract unique cage types from the booking history
+      const uniqueCageTypes = [...new Set(history.map(booking => booking.cageTypeName))];
+      setAvailableCageTypes(uniqueCageTypes.sort());
+      
+      // Extract unique statuses from the booking history
+      const uniqueStatuses = [...new Set(history.map(booking => booking.status))];
+      setAvailableStatuses(uniqueStatuses.sort());
     } catch (err) {
       setError('Failed to fetch booking history. Please try again.');
       console.error('Error fetching booking history:', err);
@@ -85,37 +95,45 @@ const BoardingHistory: React.FC = () => {
   };
 
   const getStatusColor = (status: string) => {
-    const statusColors = {
-      'CONFIRMED': 'success',
-      'PAID': 'blue',
-      'CHECK_IN': 'processing',
-      'IN_PROGRESS': 'processing',
-      'CHECK_OUT': 'success',
-      'NO_SHOW': 'error'
-    };
-    return statusColors[status as keyof typeof statusColors] || 'default';
+    switch (status.toUpperCase()) {
+      case 'PENDING':
+        return 'orange';
+      case 'BOOKED':
+        return 'blue';
+      case 'NO_SHOW':
+        return 'volcano';
+      case 'IN_PROGRESS':
+        return 'processing';
+      case 'CHECK_OUT':
+        return 'green';
+      case 'CANCELLED':
+        return 'red';
+      default:
+        return 'default';
+    }
   };
 
   const getStatusText = (status: string) => {
-    const statusTexts = {
-      'CONFIRMED': 'Confirmed',
-      'PAID': 'Paid',
-      'CHECK_IN': 'Check-in',
-      'IN_PROGRESS': 'In Progress',
-      'CHECK_OUT': 'Check-out',
-      'NO_SHOW': 'No Show'
-    };
-    return statusTexts[status as keyof typeof statusTexts] || status;
+    switch (status.toUpperCase()) {
+      case 'PENDING':
+        return 'Chờ xử lý';
+      case 'BOOKED':
+        return 'Đã đặt';
+      case 'NO_SHOW':
+        return 'Không đến';
+      case 'IN_PROGRESS':
+        return 'Đang thực hiện';
+      case 'CHECK_OUT':
+        return 'Hoàn tất';
+      case 'CANCELLED':
+        return 'Đã hủy';
+      default:
+        return status.replace('_', ' ');
+    }
   };
 
   const handleViewDetails = (booking: BookingHistoryItem) => {
     navigate(`/boarding-schedule/${booking.bookingId}`);
-  };
-
-  // Get unique cage types for filter dropdown
-  const getUniqueCageTypes = () => {
-    const cageTypes = [...new Set(bookingHistory.map(booking => booking.cageTypeName))];
-    return cageTypes.sort();
   };
 
   const renderBookingCard = (booking: BookingHistoryItem) => (
@@ -281,7 +299,7 @@ const BoardingHistory: React.FC = () => {
           <Row gutter={16} align="middle">
             <Col xs={24} sm={8}>
               <Search
-                placeholder="Search by hamster name or booking ID"
+                placeholder="Tìm kiếm theo tên hamster hoặc mã đặt phòng"
                 allowClear
                 value={searchText}
                 onChange={(e) => setSearchText(e.target.value)}
@@ -291,30 +309,31 @@ const BoardingHistory: React.FC = () => {
             <Col xs={24} sm={6}>
               <Select
                 style={{ width: '100%' }}
-                placeholder="Filter by Status"
+                placeholder="Lọc theo trạng thái"
                 value={statusFilter}
                 onChange={setStatusFilter}
                 suffixIcon={<FilterOutlined />}
+                loading={loading}
               >
-                <Option value="all">All Status</Option>
-                <Option value="CONFIRMED">Confirmed</Option>
-                <Option value="PAID">Paid</Option>
-                <Option value="CHECK_IN">Check-in</Option>
-                <Option value="IN_PROGRESS">In Progress</Option>
-                <Option value="CHECK_OUT">Check-out</Option>
-                <Option value="NO_SHOW">No Show</Option>
+                <Option value="all">Tất cả trạng thái</Option>
+                {availableStatuses.map(status => (
+                  <Option key={status} value={status}>
+                    {getStatusText(status)}
+                  </Option>
+                ))}
               </Select>
             </Col>
             <Col xs={24} sm={6}>
               <Select
                 style={{ width: '100%' }}
-                placeholder="Filter by Cage Type"
+                placeholder="Lọc theo loại chuồng"
                 value={cageTypeFilter}
                 onChange={setCageTypeFilter}
                 suffixIcon={<FilterOutlined />}
+                loading={loading}
               >
-                <Option value="all">All Cage Types</Option>
-                {getUniqueCageTypes().map(cageType => (
+                <Option value="all">Tất cả loại chuồng</Option>
+                {availableCageTypes.map(cageType => (
                   <Option key={cageType} value={cageType}>
                     {cageType}
                   </Option>
