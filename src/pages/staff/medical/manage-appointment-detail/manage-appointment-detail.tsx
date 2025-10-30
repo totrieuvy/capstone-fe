@@ -91,7 +91,7 @@ const ManageAppointmentDetail: React.FC = () => {
       case 'check_out':
       case 'checked_out':
         return 'green';
-      case 'no_show':
+      case 'NO-SHOW':
         return 'volcano';
       case 'cancelled':
         return 'red';
@@ -115,7 +115,7 @@ const ManageAppointmentDetail: React.FC = () => {
       case 'CHECK_OUT':
       case 'CHECKED_OUT':
         return 'Đã check-out';
-      case 'NO_SHOW':
+      case 'NO-SHOW':
         return 'Không đến';
       case 'CANCELLED':
         return 'Đã hủy';

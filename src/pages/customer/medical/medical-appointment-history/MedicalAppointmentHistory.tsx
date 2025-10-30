@@ -94,7 +94,7 @@ const MedicalAppointmentHistory: React.FC = () => {
                 return 'cyan';
             case 'IN_PROGRESS':
                 return 'orange';
-            case 'NO_SHOW':
+            case 'NO-SHOW':
                 return 'volcano';
             case 'CANCELLED':
                 return 'red';
@@ -121,7 +121,7 @@ const MedicalAppointmentHistory: React.FC = () => {
                 return 'Đã check-in';
             case 'IN_PROGRESS':
                 return 'Đang thực hiện';
-            case 'NO_SHOW':
+            case 'NO-SHOW':
                 return 'Không đến';
             case 'CANCELLED':
                 return 'Đã hủy';
@@ -275,7 +275,7 @@ const MedicalAppointmentHistory: React.FC = () => {
                                 <Option value="IN_PROGRESS">In Progress</Option>
                                 <Option value="COMPLETED">Completed</Option>
                                 <Option value="CANCELLED">Cancelled</Option>
-                                <Option value="NO_SHOW">No Show</Option>
+                                <Option value="NO-SHOW">No Show</Option>
                             </Select>
                         </Col>
                     </Row>
