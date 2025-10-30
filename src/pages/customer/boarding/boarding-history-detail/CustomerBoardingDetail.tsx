@@ -17,6 +17,7 @@ import {
   EyeOutlined,
   StarOutlined,
   ScissorOutlined,
+  ExclamationCircleOutlined,
 } from "@ant-design/icons";
 import { useParams, useNavigate } from "react-router-dom";
 import { boardingService } from "../../../../services/BoardingService";
@@ -25,6 +26,7 @@ import { getServicesByType, ServiceType } from '../../../../services/AdditionSer
 import type { Service } from '../../../../services/AdditionService';
 import { getFormattedPrice } from "../../../../utils/formatPrice";
 import dayjs from 'dayjs';
+import { toast } from 'react-toastify';
 import "./BoardingDetail.scss";
 import api from "../../../../config/axios";
 
@@ -113,6 +115,10 @@ const BoardingDetail: React.FC = () => {
   const [groomingLoading, setGroomingLoading] = useState(false);
   const [addingService, setAddingService] = useState(false);
 
+  // Cancel booking modal states
+  const [isCancelModalVisible, setIsCancelModalVisible] = useState(false);
+  const [cancelLoading, setCancelLoading] = useState(false);
+
 
 
   useEffect(() => {
@@ -154,7 +160,7 @@ const BoardingDetail: React.FC = () => {
 
   const getStatusColor = (status: string) => {
     const statusColors = {
-      CONFIRMED: "success",
+      BOOKED: "success",
       PENDING: "warning",
       CANCELLED: "error",
       FAILED: "error",
@@ -166,7 +172,7 @@ const BoardingDetail: React.FC = () => {
 
   const getStatusText = (status: string) => {
     const statusTexts = {
-      CONFIRMED: "Đã xác nhận",
+      BOOKED: "Đã đặt",
       PENDING: "Đang chờ",
       CANCELLED: "Đã hủy",
       FAILED: "Thất bại",
@@ -225,6 +231,64 @@ const BoardingDetail: React.FC = () => {
     setIsGroomingModalVisible(false);
     setSelectedServiceId('');
     setSelectedDate('');
+  };
+
+  // Cancel booking functions
+  const handleCancelBooking = () => {
+    setIsCancelModalVisible(true);
+  };
+
+  const handleConfirmCancel = async () => {
+    if (!bookingId) return;
+
+    try {
+      setCancelLoading(true);
+      await boardingService.cancelBooking(bookingId);
+      
+      // Show success message
+      toast.success('Hủy booking thành công');
+      
+      // Refresh booking details to show updated status
+      await fetchBookingDetails();
+      
+      // Close modal
+      setIsCancelModalVisible(false);
+    } catch (error) {
+      message.error('Không thể hủy booking. Vui lòng thử lại.');
+      console.error('Error cancelling booking:', error);
+    } finally {
+      setCancelLoading(false);
+    }
+  };
+
+  const handleCloseCancelModal = () => {
+    setIsCancelModalVisible(false);
+  };
+
+  // Calculate refund information preview
+  const getRefundInfo = () => {
+    if (!booking) return null;
+    
+    const startDate = dayjs(booking.startDate);
+    const today = dayjs();
+    const daysBeforeCheckIn = startDate.diff(today, 'day');
+    
+    if (daysBeforeCheckIn > 1) {
+      const refundAmount = Math.round(booking.totalAmountAfter * 0.7);
+      return {
+        isRefunded: true,
+        refundPercentage: 70,
+        refundAmount,
+        daysBeforeCheckIn
+      };
+    } else {
+      return {
+        isRefunded: false,
+        refundPercentage: 0,
+        refundAmount: 0,
+        daysBeforeCheckIn
+      };
+    }
   };
 
   const getDateRange = () => {
@@ -576,6 +640,26 @@ const BoardingDetail: React.FC = () => {
         </Col>
       </Row>
 
+      {/* Cancel Booking Button - Only show if booking can be cancelled */}
+      {booking && ['BOOKED'].includes(booking.status) && (
+        <div style={{ marginTop: 24, textAlign: 'center' }}>
+          <Button
+            type="primary"
+            danger
+            size="large"
+            onClick={handleCancelBooking}
+            style={{
+              minWidth: 200,
+              height: 48,
+              fontSize: 16,
+              fontWeight: 500
+            }}
+          >
+            Hủy booking
+          </Button>
+        </div>
+      )}
+
       {/* Video Modal */}
       <Modal
         title="Camera trực tiếp"
@@ -685,6 +769,93 @@ const BoardingDetail: React.FC = () => {
               </div>
             </>
           )}
+        </div>
+      </Modal>
+
+      {/* Cancel Booking Confirmation Modal */}
+      <Modal
+        title={
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <ExclamationCircleOutlined style={{ color: '#faad14', fontSize: 20 }} />
+            <span>Xác nhận hủy booking</span>
+          </div>
+        }
+        open={isCancelModalVisible}
+        onCancel={handleCloseCancelModal}
+        width={500}
+        footer={[
+          <Button key="cancel" onClick={handleCloseCancelModal}>
+            Quay lại
+          </Button>,
+          <Button
+            key="confirm"
+            type="primary"
+            danger
+            loading={cancelLoading}
+            onClick={handleConfirmCancel}
+          >
+            Xác nhận hủy
+          </Button>
+        ]}
+      >
+        <div style={{ padding: '16px 0' }}>
+          <p style={{ fontSize: 16, marginBottom: 16 }}>
+            Bạn có chắc chắn muốn hủy booking này không?
+          </p>
+          
+          {(() => {
+            const refundInfo = getRefundInfo();
+            if (!refundInfo) return null;
+            
+            return (
+              <div style={{ 
+                backgroundColor: '#f6f8fa', 
+                padding: 16, 
+                borderRadius: 8,
+                border: '1px solid #e1e5e9'
+              }}>
+                <Title level={5} style={{ marginBottom: 12, color: '#1890ff' }}>
+                  Thông tin hoàn tiền:
+                </Title>
+                
+                <div style={{ marginBottom: 8 }}>
+                  <Text strong>Số ngày trước khi check-in: </Text>
+                  <Text>{refundInfo.daysBeforeCheckIn} ngày</Text>
+                </div>
+                
+                <div style={{ marginBottom: 8 }}>
+                  <Text strong>Tổng tiền đã thanh toán: </Text>
+                  <Text>{getFormattedPrice(booking?.totalAmountAfter || 0)}</Text>
+                </div>
+                
+                {refundInfo.isRefunded ? (
+                  <>
+                    <div style={{ marginBottom: 8 }}>
+                      <Text strong>Phần trăm hoàn tiền: </Text>
+                      <Text style={{ color: '#52c41a' }}>{refundInfo.refundPercentage}%</Text>
+                    </div>
+                    <div>
+                      <Text strong>Số tiền hoàn lại: </Text>
+                      <Text style={{ color: '#52c41a', fontSize: 16, fontWeight: 500 }}>
+                        {getFormattedPrice(refundInfo.refundAmount)}
+                      </Text>
+                    </div>
+                  </>
+                ) : (
+                  <div style={{ 
+                    padding: 12, 
+                    backgroundColor: '#fff2e8', 
+                    borderRadius: 6,
+                    border: '1px solid #ffec3d'
+                  }}>
+                    <Text style={{ color: '#d46b08' }}>
+                      ⚠️ Hủy booking trong vòng 1 ngày trước check-in sẽ không được hoàn tiền
+                    </Text>
+                  </div>
+                )}
+              </div>
+            );
+          })()}
         </div>
       </Modal>
     </div>

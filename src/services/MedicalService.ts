@@ -451,6 +451,12 @@ export interface CheckInAppointmentResponse {
   message: string;
 }
 
+// Interfaces for cancel appointment
+export interface CancelAppointmentResponse {
+  code: number;
+  message: string;
+}
+
 // Type definitions for file upload
 export interface FileUploadRequest {
   file: File;
@@ -472,6 +478,17 @@ export const checkInAppointment = async (checkInData: CheckInAppointmentRequest)
     return response.data;
   } catch (error) {
     console.error("Error checking in appointment:", error);
+    throw error;
+  }
+};
+
+// Cancel an appointment by ID
+export const cancelAppointment = async (appointmentId: string): Promise<CancelAppointmentResponse> => {
+  try {
+    const response = await api.delete<CancelAppointmentResponse>(`/api/appointment/${appointmentId}`);
+    return response.data;
+  } catch (error) {
+    console.error("Error cancelling appointment:", error);
     throw error;
   }
 };

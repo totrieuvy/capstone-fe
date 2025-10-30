@@ -13,7 +13,6 @@ import {
   Avatar,
   Space,
   Modal,
-  Upload,
 } from 'antd';
 import {
   ArrowLeftOutlined,
@@ -23,20 +22,17 @@ import {
   MedicineBoxOutlined,
   CameraOutlined,
   FileImageOutlined,
-  PlusOutlined,
 } from '@ant-design/icons';
 import { useNavigate, useParams } from 'react-router-dom';
-import type { UploadProps } from 'antd';
 import dayjs from 'dayjs';
 import timezone from 'dayjs/plugin/timezone';
 import utc from 'dayjs/plugin/utc';
+import { toast } from 'react-toastify';
 import { 
   getAppointmentById, 
-  checkInAppointment,
+  cancelAppointment,
   type AppointmentDetail 
 } from '../../../../services/MedicalService';
-import { storage } from '../../../../config/firebase';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import './MedicalAppointmentHistoryDetail.scss';
 
 // Extend dayjs with timezone plugins
@@ -51,10 +47,9 @@ const ManageAppointmentDetail: React.FC = () => {
   const [appointment, setAppointment] = useState<AppointmentDetail | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
   
-  // Check-in modal states
-  const [checkInModalVisible, setCheckInModalVisible] = useState<boolean>(false);
-  const [checkInLoading, setCheckInLoading] = useState<boolean>(false);
-  const [uploadedImage, setUploadedImage] = useState<string | null>(null);
+  // Cancel modal states
+  const [cancelModalVisible, setCancelModalVisible] = useState<boolean>(false);
+  const [cancelLoading, setCancelLoading] = useState<boolean>(false);
   
   // Image preview modal states
   const [imagePreviewVisible, setImagePreviewVisible] = useState<boolean>(false);
@@ -120,8 +115,6 @@ const ManageAppointmentDetail: React.FC = () => {
         return 'Đã hủy';
       case 'COMPLETED':
         return 'Hoàn thành';
-      case 'CONFIRMED':
-        return 'Đã xác nhận';
       default:
         return status.replace('_', ' ');
     }
@@ -135,25 +128,6 @@ const ManageAppointmentDetail: React.FC = () => {
     }).format(price);
   };
 
-  // Handle file upload to Firebase
-  const handleFileUpload = async (file: File): Promise<string> => {
-    try {
-      // Create a unique filename
-      const timestamp = Date.now();
-      const fileName = `check-in-images/${timestamp}_${file.name}`;
-      const storageRef = ref(storage, fileName);
-      
-      // Upload file to Firebase
-      const snapshot = await uploadBytes(storageRef, file);
-      const downloadURL = await getDownloadURL(snapshot.ref);
-      
-      return downloadURL;
-    } catch (error) {
-      console.error('Error uploading file:', error);
-      throw error;
-    }
-  };
-
   // Handle image preview
   const handleImagePreview = (imageUrl: string, title: string) => {
     setPreviewImage(imageUrl);
@@ -161,93 +135,27 @@ const ManageAppointmentDetail: React.FC = () => {
     setImagePreviewVisible(true);
   };
 
-  // Handle upload change
-  const handleImageUpload: UploadProps['customRequest'] = ({ file, onSuccess, onError }) => {
-    if (file instanceof File) {
-      // Validate file type
-      const isImage = file.type.startsWith('image/');
-      if (!isImage) {
-        message.error('Chỉ được phép tải lên file hình ảnh!');
-        onError?.(new Error('Invalid file type'));
-        return;
-      }
-
-      // Validate file size (max 10MB)
-      const isLt10M = file.size / 1024 / 1024 < 10;
-      if (!isLt10M) {
-        message.error('Kích thước file phải nhỏ hơn 10MB!');
-        onError?.(new Error('File too large'));
-        return;
-      }
-
-      // Create preview and upload to Firebase
-      const reader = new FileReader();
-      reader.onload = async () => {
-        try {
-          message.loading('Đang tải lên hình ảnh...', 0);
-          const imageUrl = await handleFileUpload(file);
-          setUploadedImage(imageUrl);
-          message.destroy();
-          message.success('Tải lên hình ảnh thành công!');
-          onSuccess?.(file);
-        } catch (error) {
-          message.destroy();
-          message.error('Tải lên hình ảnh thất bại!');
-          onError?.(error as Error);
-        }
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
-  // Handle check-in appointment
-  const handleCheckIn = async () => {
-    if (!uploadedImage) {
-      message.error('Vui lòng tải lên hình ảnh check-in!');
-      return;
-    }
-
-    if (!appointment?.veterinarian?.id) {
-      message.error('Không tìm thấy thông tin bác sĩ thú y!');
-      return;
-    }
-
+  // Handle cancel appointment
+  const handleCancel = async () => {
     if (!appointmentId) {
       message.error('Không tìm thấy ID cuộc hẹn!');
       return;
     }
 
-    setCheckInLoading(true);
+    setCancelLoading(true);
     try {
-      await checkInAppointment({
-        appointmentId: appointmentId,
-        checkInImage: uploadedImage,
-        veterinarianId: appointment.veterinarian.id,
-        staffId: null, // Default to null as requested
-      });
-
-      message.success('Check-in thành công!');
-      setCheckInModalVisible(false);
+      await cancelAppointment(appointmentId);
+      toast.success('Hủy thành công');
+      setCancelModalVisible(false);
       
       // Refresh appointment data
       await fetchAppointmentDetails();
-      
-      // Reset form
-      setUploadedImage(null);
     } catch (error) {
-      message.error('Check-in thất bại! Vui lòng thử lại.');
-      console.error('Error checking in appointment:', error);
+      message.error('Hủy thất bại! Vui lòng thử lại.');
+      console.error('Error cancelling appointment:', error);
     } finally {
-      setCheckInLoading(false);
+      setCancelLoading(false);
     }
-  };
-
-  // Upload props
-  const uploadProps = {
-    accept: 'image/*',
-    customRequest: handleImageUpload,
-    showUploadList: false,
-    maxCount: 1,
   };
 
   useEffect(() => {
@@ -591,120 +499,56 @@ const ManageAppointmentDetail: React.FC = () => {
             </Col>
           )}
 
-          {/* Check-in Button */}
-          {/* {appointment.status !== 'COMPLETED' && !appointment.checkInImage && (
+          {/* Cancel Button */}
+          {(appointment.status === 'BOOKED') && (
             <Col span={24}>
               <div style={{ textAlign: 'center', marginTop: '24px' }}>
                 <Button
                   type="primary"
                   size="large"
-                  icon={<CheckCircleOutlined />}
-                  onClick={() => setCheckInModalVisible(true)}
+                  danger
+                  onClick={() => setCancelModalVisible(true)}
                   style={{
-                    backgroundColor: '#52c41a',
-                    borderColor: '#52c41a',
                     fontSize: '16px',
                     height: '48px',
                     padding: '0 32px',
                   }}
                 >
-                  Check-in
+                  Hủy cuộc hẹn
                 </Button>
               </div>
             </Col>
-          )} */}
+          )}
         </Row>
 
-        {/* Check-in Modal */}
+        {/* Cancel Confirmation Modal */}
         <Modal
-          open={checkInModalVisible}
-          onCancel={() => {
-            setCheckInModalVisible(false);
-            setUploadedImage(null);
-          }}
+          title="Xác nhận hủy cuộc hẹn"
+          open={cancelModalVisible}
+          onCancel={() => setCancelModalVisible(false)}
           footer={[
             <Button
               key="cancel"
-              onClick={() => {
-                setCheckInModalVisible(false);
-                setUploadedImage(null);
-              }}
+              onClick={() => setCancelModalVisible(false)}
             >
-              Hủy
+              Không
             </Button>,
             <Button
-              key="submit"
+              key="confirm"
               type="primary"
-              loading={checkInLoading}
-              onClick={handleCheckIn}
-              disabled={!uploadedImage}
+              danger
+              loading={cancelLoading}
+              onClick={handleCancel}
             >
-              Check-in
+              Có, hủy cuộc hẹn
             </Button>,
           ]}
-          width={600}
-          className="check-in-modal"
+          centered
         >
-          <div style={{ padding: '20px 0' }}>
-            <Space direction="vertical" style={{ width: '100%' }} size="large">
-              <div>
-                <Text strong style={{ fontSize: '16px', marginBottom: '8px', display: 'block' }}>
-                  Tải lên hình ảnh check-in:
-                </Text>
-                <Text type="secondary">
-                  Vui lòng chọn hình ảnh để ghi nhận thời điểm check-in của cuộc hẹn.
-                </Text>
-              </div>
-
-              <Upload {...uploadProps}>
-                <div style={{
-                  border: '2px dashed #d9d9d9',
-                  borderRadius: 8,
-                  padding: '40px 20px',
-                  textAlign: 'center',
-                  cursor: 'pointer',
-                  transition: 'border-color 0.3s',
-                  backgroundColor: '#fafafa'
-                }}>
-                  {uploadedImage ? (
-                    <div>
-                      <img
-                        src={uploadedImage}
-                        alt="Check-in preview"
-                        style={{
-                          maxWidth: '100%',
-                          maxHeight: 200,
-                          marginBottom: 16,
-                          borderRadius: 8
-                        }}
-                      />
-                      <p style={{ margin: 0, color: '#666' }}>
-                        Click để thay đổi hình ảnh
-                      </p>
-                    </div>
-                  ) : (
-                    <div>
-                      <PlusOutlined style={{ fontSize: 48, color: '#999', marginBottom: 16 }} />
-                      <p style={{ margin: 0, fontSize: 16, color: '#666' }}>
-                        Click hoặc kéo thả file vào đây
-                      </p>
-                      <p style={{ margin: '8px 0 0 0', fontSize: 14, color: '#999' }}>
-                        Hỗ trợ: JPG, PNG, GIF (tối đa 10MB)
-                      </p>
-                    </div>
-                  )}
-                </div>
-              </Upload>
-
-              {uploadedImage && (
-                <div style={{ textAlign: 'center', marginTop: 16 }}>
-                  <Text type="secondary" style={{ fontSize: '12px' }}>
-                    Hình ảnh đã được tải lên thành công
-                  </Text>
-                </div>
-              )}
-            </Space>
-          </div>
+          <p>Bạn có chắc chắn muốn hủy cuộc hẹn này không?</p>
+          <p style={{ color: '#666', fontSize: '14px' }}>
+            Hành động này không thể hoàn tác.
+          </p>
         </Modal>
 
         {/* Image Preview Modal */}
