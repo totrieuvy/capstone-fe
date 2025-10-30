@@ -19,22 +19,22 @@ import Species from "./pages/admin/species/Species";
 import ResetPassword from "./pages/reset-password/ResetPassword";
 import Category from "./pages/admin/category-product/Category";
 import ManageProduct from "./pages/admin/product/ManageProduct";
-import BoardingHamster from "./pages/customer/boarding/BoardingBooking/BoardingHamster";
+import BoardingHamster from "./pages/customer/boarding/boarding-booking/BoardingHamster";
 import ProductDetail from "./pages/product-detail/ProductDetail";
 import { clearCart } from "./redux/features/cartSlice";
 import Checkout from "./pages/customer/checkout/Checkout";
 import PaymentSuccess from "./pages/customer/payment-success/PaymentSuccess";
 import TrackOrder from "./pages/customer/track-order/track-order-overall/TrackOrder";
 import TrackOrderDetail from "./pages/customer/track-order/track-order-detail/TrackOrderDetail";
-import CageType from "./pages/admin/CageType/CageType";
+import CageType from "./pages/admin/cage-type/CageType";
 import ViewProfile from "./pages/customer/profile/ProfileCustomer";
 import WalletCustomer from "./pages/customer/wallet-customer/WalletCustomer";
 import PaymentFail from "./pages/customer/payment-fail/PaymentFail";
 import ManageOrder from "./pages/admin/manage-orders/orders/ManageOrder";
 import ManageOrderDetail from "./pages/admin/manage-orders/detail-orders/ManageOrderDetail";
 import ManageTransaction from "./pages/admin/manage-transaction/ManageTransaction";
-import BoardingHistory from "./pages/customer/boarding/BoardingHistory/BoardingHistory";
-import BoardingDetail from "./pages/customer/boarding/BoardingDetail/CustomerBoardingDetail";
+import BoardingHistory from "./pages/customer/boarding/boarding-history/BoardingHistory";
+import BoardingDetail from "./pages/customer/boarding/boarding-history-detail/CustomerBoardingDetail";
 import BoardingSchedule from "./pages/staff/boarding/BoardingSchedule";
 import StaffBoardingDetail from "./pages/staff/boarding-detail/StaffBoardingDetail";
 import StaffCheckOut from "./pages/staff/checkout/StaffCheckOut";
@@ -52,16 +52,18 @@ import ManageComboGroomingDetail from "./pages/admin/manage-grooming-service/man
 import ManageGroomingServiceDetail from "./pages/admin/manage-grooming-service/manage-grooming-single-detail/ManageGroomingServiceDetail";
 import BookingGroomingService from "./pages/customer/grooming/dat-dich-vu-lam-dep/BookingGroomingService";
 import BookingSuccess from "./components/booking-success/BookingSuccess";
-import MedicalList from "./pages/customer/medical/MedicalList/MedicalList";
+import MedicalList from "./pages/customer/medical/medical-list/MedicalList";
 import ManageMedical from "./pages/admin/manage-medical-services/ManageMedical";
 import HistoryGrooming from "./pages/admin/manage-grooming-service/history-grooming/HistoryGrooming";
 import HistoryGroomingDetail from "./pages/staff/grooming/HistoryGroomingDetail";
-import MedicalBooking from "./pages/customer/medical/MedicalBooking/MedicalBooking";
+import MedicalBooking from "./pages/customer/medical/medical-booking/MedicalBooking";
 import TrackGrooming from "./pages/customer/grooming/history/track-grooming/TrackGrooming";
 import TrackGroomingDetail from "./pages/customer/grooming/history/track-grooming-detail/TrackGroomingDetail";
 import GroomingPaymentSuccess from "./pages/customer/grooming/payment-success/GroomingPaymentSuccess";
 import ManageAppointment from "./pages/staff/medical/manage-appointment/manage-appointment";
 import ManageAppointmentDetail from "./pages/staff/medical/manage-appointment-detail/manage-appointment-detail";
+import MedicalAppointmentHistory from "./pages/customer/medical/medical-appointment-history/MedicalAppointmentHistory";
+import MedicalAppointmentHistoryDetail from "./pages/customer/medical/medical-appointment-history-detail/MedicalAppointmentHistoryDetail";
 
 interface User {
   id: number;
@@ -216,6 +218,31 @@ const App = () => {
               path: ":bookingId",
               element: <BoardingDetail />,
             },
+         
+          ],
+        },
+        {
+          path: "/lich-su-kham",
+          element: <Panel />,
+          children: [
+            {
+              path: "",
+              element: <MedicalAppointmentHistory />,
+            },
+          ],
+        },
+        {
+          path: "/lich-su-kham",
+          element: <Panel />,
+          children: [
+            {
+              path: "",
+              element: <MedicalAppointmentHistory />,
+            },
+            {
+              path: ":appointmentId",
+              element: <MedicalAppointmentHistoryDetail />,
+            }
           ],
         },
         {
@@ -226,6 +253,7 @@ const App = () => {
           path: "/dich-vu-y-te/dat-dich-vu",
           element: <MedicalBooking />,
         },
+
       ],
     },
     {

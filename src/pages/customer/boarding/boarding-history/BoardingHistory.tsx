@@ -222,7 +222,7 @@ const BoardingHistory: React.FC = () => {
     <div className="boarding-history">
       <Card style={{ overflow: 'visible', height: 'auto' }}>
         <div className="boarding-history-header">
-          <Title level={2}>Hamster Boarding History</Title>
+          <Title level={2}>Lịch sử đặt gửi hộ</Title>
         </div>
 
         {error && (

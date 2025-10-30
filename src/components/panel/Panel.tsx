@@ -7,7 +7,7 @@ const Panel: React.FC = () => {
 
   const menuItems = [
     { key: "1", to: "/grooming-history", text: "Lịch grooming" },
-    { key: "2", to: "/appointment", text: "Lịch khám" },
+    { key: "2", to: "/lich-su-kham", text: "Lịch khám" },
     { key: "3", to: "/boarding-schedule", text: "Lịch gửi hộ" },
   ];
 
