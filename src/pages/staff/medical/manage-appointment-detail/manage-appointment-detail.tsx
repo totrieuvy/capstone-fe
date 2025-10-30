@@ -29,6 +29,8 @@ import {
 import { useNavigate, useParams } from 'react-router-dom';
 import type { UploadProps } from 'antd';
 import dayjs from 'dayjs';
+import timezone from 'dayjs/plugin/timezone';
+import utc from 'dayjs/plugin/utc';
 import { 
   getAppointmentById, 
   checkInAppointment,
@@ -37,6 +39,10 @@ import {
 import { storage } from '../../../../config/firebase';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import './manage-appointment-detail.scss';
+
+// Extend dayjs with timezone plugins
+dayjs.extend(utc);
+dayjs.extend(timezone);
 
 const { Title, Text } = Typography;
 
@@ -343,7 +349,7 @@ const ManageAppointmentDetail: React.FC = () => {
               <Descriptions column={1} size="middle">
                 <Descriptions.Item label="Ngày hẹn">
                   <Text strong>
-                    {dayjs(appointment.appointmentTime).format('DD/MM/YYYY')}
+                    {dayjs(appointment.appointmentTime).tz('Asia/Ho_Chi_Minh').format('DD/MM/YYYY')}
                   </Text>
                 </Descriptions.Item>
                 <Descriptions.Item label="Giờ hẹn">
@@ -352,7 +358,7 @@ const ManageAppointmentDetail: React.FC = () => {
                   </Text>
                 </Descriptions.Item>
                 <Descriptions.Item label="Thời gian tạo">
-                  {dayjs(appointment.createdAt).format('DD/MM/YYYY HH:mm:ss')}
+                  {dayjs(appointment.createdAt).tz('Asia/Ho_Chi_Minh').format('DD/MM/YYYY HH:mm:ss')}
                 </Descriptions.Item>
               </Descriptions>
             </Card>

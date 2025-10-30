@@ -23,12 +23,6 @@ interface Booking {
 
 const BoardingSchedule = () => {
   const navigate = useNavigate();
-  const cagesByType = {
-    'Cơ bản': ['CB-001', 'CB-002', 'CB-003', 'CB-004', 'CB-005', 'CB-006', 'CB-007', 'CB-008', 'CB-009', 'CB-010'],
-    'Tiêu chuẩn': ['TC-001', 'TC-002', 'TC-003'],
-    'Đầy đủ': ['DD-001', 'DD-002', 'DD-003'],
-    'Vip': ['VIP-001', 'VIP-002', 'VIP-003']
-  };
 
   // State for current month and API data
   const [currentMonth, setCurrentMonth] = useState<Dayjs>(dayjs());
@@ -163,6 +157,13 @@ const BoardingSchedule = () => {
     if (lowerName.includes('tiêu chuẩn') || lowerName.includes('standard')) return 'Tiêu chuẩn';
     if (lowerName.includes('đầy đủ') || lowerName.includes('full')) return 'Đầy đủ';
     if (lowerName.includes('vip')) return 'Vip';
+    
+    // Additional mapping for Vietnamese cage type names from API
+    if (lowerName.includes('chuồng cơ bản')) return 'Cơ bản';
+    if (lowerName.includes('chuồng tiêu chuẩn')) return 'Tiêu chuẩn';
+    if (lowerName.includes('Chuồng đầy đủ')) return 'Đầy đủ';
+    if (lowerName.includes('chuồng vip')) return 'Vip';
+    
     return 'Cơ bản'; // Default fallback
   };
 
@@ -196,20 +197,20 @@ const BoardingSchedule = () => {
   }, [currentMonth]);
 
   // Separate bookings by status
-  // First table: Bookings that are checked in or in progress (CHECKED_IN, IN_PROGRESS, CHECK_OUT)
+  // First table: Bookings that are checked in or in progress (CHECK_IN, IN_PROGRESS, CHECK_OUT)
   const checkedInBookings = convertToDisplayBookings(
     bookings.filter(booking => 
+      booking.status === 'CHECK_IN' ||
       booking.status === 'IN_PROGRESS' || 
       booking.status === 'CHECK_OUT'
     )
   );
   
-  // Second table: Bookings that are paid or confirmed but not yet checked in (PAID, CONFIRMED)
+  // Second table: Bookings that are booked but not yet checked in or no-shows (BOOKED, NO_SHOW)
   const notCheckedInBookings = convertToDisplayBookings(
     bookings.filter(booking => 
-      booking.status === 'PAID' || 
-      booking.status === 'CHECK_IN' ||
-      booking.status === 'CONFIRMED'
+      booking.status === 'BOOKED' || 
+      booking.status === 'NO_SHOW'
     )
   );
 
@@ -264,7 +265,7 @@ const BoardingSchedule = () => {
             </div>
 
             {/* Cage Type Sections */}
-            {Object.keys(cagesByType).map((cageType) => {
+            {[...new Set(checkedInBookings.map(booking => booking.cageType))].sort().map((cageType) => {
               // Get unique cage names for this cage type from actual bookings
               const cagesWithBookings = [...new Set(
                 checkedInBookings
@@ -427,9 +428,9 @@ const BoardingSchedule = () => {
                     >
                       <div
                         className={`booking-bar ${
-                          booking.status === 'CHECK_IN' 
-                            ? (isBookingExtended(booking.id) ? 'booking-bar-extended' : 'booking-bar-green')
-                            : 'booking-bar-orange'
+                          booking.status === 'NO_SHOW' 
+                            ? 'booking-bar-red'
+                            : (isBookingExtended(booking.id) ? 'booking-bar-extended' : 'booking-bar-orange')
                         }`}
                         style={{
                           left: `${leftPosition + 4}px`,
