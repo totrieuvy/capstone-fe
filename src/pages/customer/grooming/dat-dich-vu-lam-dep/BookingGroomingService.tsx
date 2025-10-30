@@ -316,13 +316,39 @@ function BookingGroomingService() {
       message.error("Vui lòng chọn đầy đủ thông tin!");
       return;
     }
+
     setLoading(true);
     try {
       const discountPercent = membership?.discountPercent || 0;
-      const totalAmount = groomingPrice || 0;
+      let totalAmount = groomingPrice || 0;
+
+      if (selectedGroomingItem.type === "service" && selectedGroomingItem.displayPrice?.includes(",")) {
+        const prices = selectedGroomingItem.displayPrice
+          .split(",")
+          .map((p) => parseFloat(p))
+          .filter((p) => !isNaN(p));
+        totalAmount = prices.reduce((sum, val) => sum + val, 0);
+      }
+
       const totalAmountAfter = Math.round(totalAmount - (totalAmount * discountPercent) / 100);
-      const isService = selectedGroomingItem.type === "service";
-      const itemKey = isService ? "serviceId" : "serviceComboId";
+
+      // ✅ Xử lý nếu chọn nhiều dịch vụ lẻ
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      let items: { [key: string]: any; price: number }[] = [];
+
+      if (selectedGroomingItem.type === "service") {
+        const serviceIds = selectedGroomingItem.id.split(",").map((id) => id.trim());
+        const prices = selectedGroomingItem.displayPrice?.split(",").map((p) => parseFloat(p)) || [];
+
+        items = serviceIds.map((id, index) => ({
+          serviceId: id,
+          price: prices[index] || totalAmount, // fallback
+        }));
+      } else {
+        // Combo chỉ 1
+        items = [{ serviceComboId: selectedGroomingItem.id, price: totalAmount }];
+      }
+
       const payload = {
         hamsterId: selectedHamster.id,
         staffId: selectedStaff.id,
@@ -334,8 +360,9 @@ function BookingGroomingService() {
         slotStart: selectedSlot.slot.startTime,
         slotEnd: selectedSlot.slot.endTime,
         serviceType: "GROOMING",
-        items: [{ [itemKey]: selectedGroomingItem.id, price: totalAmount }],
+        items,
       };
+
       const res = await api.post("/api/appointment", payload);
       if (res.data.code === 200) {
         message.success("Đặt lịch thành công!");
@@ -357,6 +384,18 @@ function BookingGroomingService() {
   const allSlots = Array.from(
     new Set(slotsData.flatMap((d) => d.slots.map((s) => `${s.startTime}-${s.endTime}`)))
   ).sort();
+
+  // ✅ Nếu là nhiều dịch vụ lẻ, tính tổng giá
+  let totalPriceDisplay = groomingPrice || 0;
+
+  if (selectedGroomingItem?.type === "service" && selectedGroomingItem.displayPrice?.includes(",")) {
+    const prices = selectedGroomingItem.displayPrice
+      .split(",")
+      .map((p) => parseFloat(p))
+      .filter((p) => !isNaN(p));
+
+    totalPriceDisplay = prices.reduce((sum, val) => sum + val, 0);
+  }
 
   return (
     <div className="booking-grooming-service">
@@ -670,8 +709,9 @@ function BookingGroomingService() {
                   {selectedSlot.slot.startTime} - {selectedSlot.slot.endTime}
                 </Descriptions.Item>
                 <Descriptions.Item label="Giá gốc">
-                  <Tag color="#ff6f61">{getFormattedPrice(String(groomingPrice || 0))}</Tag>
+                  <Tag color="#ff6f61">{getFormattedPrice(String(totalPriceDisplay))}</Tag>
                 </Descriptions.Item>
+
                 {membership && (
                   <>
                     <Descriptions.Item label="Giảm giá">
@@ -680,9 +720,7 @@ function BookingGroomingService() {
                     <Descriptions.Item label="Thành tiền sau giảm">
                       <Tag color="green">
                         {getFormattedPrice(
-                          String(
-                            Math.round((groomingPrice || 0) - ((groomingPrice || 0) * membership.discountPercent) / 100)
-                          )
+                          String(Math.round(totalPriceDisplay - (totalPriceDisplay * membership.discountPercent) / 100))
                         )}
                       </Tag>
                     </Descriptions.Item>

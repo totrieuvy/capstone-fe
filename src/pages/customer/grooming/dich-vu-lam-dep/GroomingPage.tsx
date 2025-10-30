@@ -13,6 +13,7 @@ import {
   ScissorOutlined,
   AppstoreOutlined,
   GiftOutlined,
+  CheckOutlined,
 } from "@ant-design/icons";
 
 interface Service {
@@ -41,6 +42,8 @@ function GroomingPage() {
   const [combos, setCombos] = useState<Combo[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [, setActiveView] = useState<ActiveView>("services");
+  const [selectedServices, setSelectedServices] = useState<Service[]>([]); // Nhiều dịch vụ lẻ
+  const [selectedCombo, setSelectedCombo] = useState<Combo | null>(null); // 1 combo
 
   const navigate = useNavigate();
   const dispatch = useDispatch();
@@ -57,10 +60,10 @@ function GroomingPage() {
           api.get("/api/combo"),
         ]);
 
-        if (serviceResponse.data && serviceResponse.data.code === 200) {
+        if (serviceResponse.data?.code === 200) {
           setServices(serviceResponse.data.data.filter((s: Service) => s.isActive));
         }
-        if (comboResponse.data && comboResponse.data.code === 200) {
+        if (comboResponse.data?.code === 200) {
           setCombos(comboResponse.data.data.filter((c: Combo) => c.isActive));
         }
       } catch (error) {
@@ -76,54 +79,106 @@ function GroomingPage() {
   const serviceIcon: ReactNode = <ScissorOutlined />;
   const comboIcon: ReactNode = <GiftOutlined />;
 
-  const handleBookNowClick = (item: Service | Combo, type: "service" | "combo") => {
+  /** ✅ Chọn hoặc bỏ chọn dịch vụ lẻ */
+  const toggleServiceSelect = (service: Service) => {
+    setSelectedServices((prev) => {
+      const isSelected = prev.some((s) => s.id === service.id);
+      if (isSelected) {
+        return prev.filter((s) => s.id !== service.id);
+      }
+      return [...prev, service];
+    });
+  };
+
+  /** ✅ Chọn combo (chỉ 1, chọn là đi luôn) */
+  const handleComboSelect = (combo: Combo) => {
+    setSelectedCombo(combo);
     dispatch(
       selectGroomingItem({
-        id: item.id,
-        name: type === "service" ? (item as Service).serviceName : (item as Combo).comboName,
-        type: type,
-        description: item.description,
-        displayPrice: item.displayPrice,
-        durationMinutes: type === "service" ? (item as Service).durationMinutes : undefined,
+        id: combo.id,
+        name: combo.comboName,
+        type: "combo",
+        description: combo.description,
+        displayPrice: combo.displayPrice,
+      })
+    );
+    navigate("/dich-vu-lam-dep/dat-dich-vu");
+  };
+
+  /** ✅ Bấm đặt lịch với nhiều dịch vụ lẻ */
+  const handleBookSelectedServices = () => {
+    if (!selectedServices.length) return;
+    // Tạo payload gộp (nhiều service)
+    dispatch(
+      selectGroomingItem({
+        id: selectedServices.map((s) => s.id).join(","), // gộp id
+        name: selectedServices.map((s) => s.serviceName).join(", "),
+        type: "service",
+        description: selectedServices.map((s) => s.description).join(" | "),
+        displayPrice: selectedServices.map((s) => s.displayPrice).join(", "),
+        durationMinutes: selectedServices.reduce((sum, s) => sum + s.durationMinutes, 0),
       })
     );
     navigate("/dich-vu-lam-dep/dat-dich-vu");
   };
 
   const renderServices = () => (
-    <Row gutter={[24, 24]} justify="center">
-      {services.map((service) => (
-        <Col xs={24} sm={12} lg={8} key={service.id} data-aos="zoom-in-up">
-          <Card hoverable className="service-card">
-            <div className="service-icon-container">{serviceIcon}</div>
-            <div className="service-info">
-              <div>
-                <h3 className="service-name">{service.serviceName}</h3>
-                <p className="service-description">{service.description}</p>
-                <div className="service-details">
-                  <span className="service-price">
-                    <DollarOutlined /> {service.displayPrice.replace(".00", "")}
-                  </span>
-                  <span className="service-duration">
-                    <ClockCircleOutlined /> {service.durationMinutes} phút
-                  </span>
+    <>
+      <Row gutter={[24, 24]} justify="center">
+        {services.map((service) => {
+          const isSelected = selectedServices.some((s) => s.id === service.id);
+          return (
+            <Col xs={24} sm={12} lg={8} key={service.id} data-aos="zoom-in-up">
+              <Card
+                hoverable
+                className={`service-card ${isSelected ? "selected" : ""}`}
+                onClick={() => toggleServiceSelect(service)}
+              >
+                <div className="service-icon-container">{serviceIcon}</div>
+                <div className="service-info">
+                  <div>
+                    <h3 className="service-name">{service.serviceName}</h3>
+                    <p className="service-description">{service.description}</p>
+                    <div className="service-details">
+                      <span className="service-price">
+                        <DollarOutlined /> {service.displayPrice.replace(".00", "")}
+                      </span>
+                      <span className="service-duration">
+                        <ClockCircleOutlined /> {service.durationMinutes} phút
+                      </span>
+                    </div>
+                  </div>
+                  {isSelected && (
+                    <div className="selected-check">
+                      <CheckOutlined />
+                    </div>
+                  )}
                 </div>
-              </div>
-              <Button type="primary" className="book-button" onClick={() => handleBookNowClick(service, "service")}>
-                Đặt lịch ngay
-              </Button>
-            </div>
-          </Card>
-        </Col>
-      ))}
-    </Row>
+              </Card>
+            </Col>
+          );
+        })}
+      </Row>
+
+      {selectedServices.length > 0 && (
+        <div className="book-now-container">
+          <Button type="primary" className="book-now-btn" onClick={handleBookSelectedServices}>
+            Đặt lịch ngay ({selectedServices.length})
+          </Button>
+        </div>
+      )}
+    </>
   );
 
   const renderCombos = () => (
     <Row gutter={[24, 24]} justify="center">
       {combos.map((combo) => (
         <Col xs={24} sm={12} lg={8} key={combo.id} data-aos="zoom-in-up" data-aos-delay="100">
-          <Card hoverable className="combo-card">
+          <Card
+            hoverable
+            className={`combo-card ${selectedCombo?.id === combo.id ? "selected" : ""}`}
+            onClick={() => handleComboSelect(combo)}
+          >
             <div className="combo-icon-container">{comboIcon}</div>
             <div className="combo-info">
               <div>
@@ -138,9 +193,11 @@ function GroomingPage() {
                   </span>
                 </div>
               </div>
-              <Button type="primary" className="book-button" onClick={() => handleBookNowClick(combo, "combo")}>
-                Đặt lịch ngay
-              </Button>
+              {selectedCombo?.id === combo.id && (
+                <div className="selected-check">
+                  <CheckOutlined />
+                </div>
+              )}
             </div>
           </Card>
         </Col>
@@ -149,16 +206,8 @@ function GroomingPage() {
   );
 
   const tabItems = [
-    {
-      key: "services",
-      label: "Dịch vụ đơn lẻ",
-      children: renderServices(),
-    },
-    {
-      key: "combos",
-      label: "Gói Combo Tiết Kiệm",
-      children: renderCombos(),
-    },
+    { key: "services", label: "Dịch vụ đơn lẻ", children: renderServices() },
+    { key: "combos", label: "Gói Combo Tiết Kiệm", children: renderCombos() },
   ];
 
   return (
@@ -179,16 +228,13 @@ function GroomingPage() {
             <p>Đang tải dịch vụ...</p>
           </div>
         ) : (
-          <>
-            {/* Tab Switcher */}
-            <Tabs
-              defaultActiveKey="services"
-              centered
-              items={tabItems}
-              onChange={(key) => setActiveView(key as ActiveView)}
-              className="view-switcher"
-            />
-          </>
+          <Tabs
+            defaultActiveKey="services"
+            centered
+            items={tabItems}
+            onChange={(key) => setActiveView(key as ActiveView)}
+            className="view-switcher"
+          />
         )}
       </div>
     </div>

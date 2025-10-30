@@ -229,7 +229,7 @@ const HistoryGroomingDetail = () => {
 
       if (res.data.code === 200 && res.data.data?.paymentUrl) {
         message.success("Tạo link thanh toán thành công!");
-        window.open(res.data.data.paymentUrl, "_blank");
+        window.location.href = res.data.data.paymentUrl;
         fetchDetail();
       } else {
         message.success("Check-out thành công!");
