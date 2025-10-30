@@ -3,7 +3,6 @@ import type { Service } from "./AdditionService";
 
 // Type definitions for availability check
 export interface CheckAvailabilityRequest {
-  cageTypeId: string;
   startDate: string; // Format: YYYY-MM-DD
   endDate: string;   // Format: YYYY-MM-DD
 }
@@ -15,8 +14,14 @@ export interface DailyAvailability {
   isAvailable: boolean;
 }
 
-export interface CheckAvailabilityResponse {
+export interface CageTypeAvailability {
+  cageTypeId: string;
+  typeName: string;
   dailyAvailability: DailyAvailability[];
+}
+
+export interface CheckAvailabilityResponse {
+  data: CageTypeAvailability[];
 }
 
 // Type definitions for booking cost calculation
@@ -306,10 +311,10 @@ export interface ApiResponse<T> {
 
 // Boarding service for handling boarding-related API calls
 export const boardingService = {
-  // Check cage availability for a specific cage type and date range
-  checkAvailability: async (request: CheckAvailabilityRequest): Promise<CheckAvailabilityResponse> => {
+  // Check cage availability for a specific date range (returns all cage types)
+  checkAvailability: async (request: CheckAvailabilityRequest): Promise<CageTypeAvailability[]> => {
     try {
-      const response = await api.post<ApiResponse<CheckAvailabilityResponse>>(
+      const response = await api.post<ApiResponse<CageTypeAvailability[]>>(
         "/api/cage/check-availability",
         request
       );

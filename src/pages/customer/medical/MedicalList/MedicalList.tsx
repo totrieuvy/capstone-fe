@@ -28,7 +28,7 @@ function MedicalList() {
       try {
         const response = await getMedicalServices();
         if (response && response.code === 200) {
-          setServices(response.data.filter((s: Service) => s.isActive));
+          setServices(response.data.filter((s: Service) => s.isActive && s.isDefault));
         }
       } catch (error) {
         console.error("Lỗi khi tải dữ liệu dịch vụ y tế:", error);

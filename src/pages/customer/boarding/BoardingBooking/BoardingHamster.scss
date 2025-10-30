@@ -127,7 +127,7 @@
 }
 
 .step-select-hamster,
-.step-select-dates,
+.step-select-dates-and-cage,
 .step-confirmation {
   background: white;
   padding: 32px;
@@ -171,6 +171,35 @@
     transform: translateY(-2px);
     box-shadow: 0 6px 16px rgba(255, 111, 97, 0.3);
   }
+
+  &.disabled {
+    &:hover {
+      transform: none;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    }
+  }
+}
+
+// Hotel-style cage card for Step 2
+.step-select-dates-and-cage {
+  .cage__card {
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(255, 111, 97, 0.15);
+    }
+
+    &.selected {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(255, 111, 97, 0.25);
+    }
+
+    &.disabled {
+      &:hover {
+        transform: none;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+      }
+    }
+  }
 }
 
 // Service card styles
@@ -200,16 +229,32 @@
 }
 
 // Step 3 - Confirmation styles
-.info-group {
-  p {
-    margin: 8px 0;
-    font-size: 14px;
-    color: #666;
+.step-confirmation {
+  .info-group {
+    p {
+      margin: 8px 0;
+      font-size: 14px;
+      color: #666;
 
-    strong {
-      color: #333;
-      min-width: 120px;
-      display: inline-block;
+      strong {
+        color: #333;
+        min-width: 120px;
+        display: inline-block;
+      }
+    }
+  }
+
+  // Left column styling
+  .ant-col:first-child {
+    .ant-card {
+      height: fit-content;
+    }
+  }
+
+  // Right column styling  
+  .ant-col:last-child {
+    .ant-card {
+      height: fit-content;
     }
   }
 }
@@ -279,12 +324,51 @@
   }
 
   .step-select-hamster,
-  .step-select-dates,
+  .step-select-dates-and-cage,
   .step-confirmation {
     padding: 20px;
   }
 
   .boarding__actions {
     padding: 16px;
+  }
+
+  // Mobile-specific cage card styles
+  .step-select-dates-and-cage {
+    .cage__card {
+      .ant-row {
+        .ant-col {
+          &:first-child {
+            margin-bottom: 16px;
+          }
+        }
+      }
+    }
+  }
+
+  // Mobile-specific confirmation styles
+  .step-confirmation {
+    .ant-row {
+      .ant-col {
+        margin-bottom: 16px;
+        
+        &:last-child {
+          margin-bottom: 0;
+        }
+      }
+    }
+
+    // Mobile button layout
+    .terms-section {
+      .ant-row {
+        .ant-col {
+          margin-bottom: 0;
+          
+          &:first-child {
+            margin-bottom: 8px;
+          }
+        }
+      }
+    }
   }
 }

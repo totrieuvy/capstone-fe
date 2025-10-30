@@ -8,6 +8,7 @@ export interface Service {
   durationMinutes: number;
   displayPrice: string;
   isActive: boolean;
+  isDefault: boolean;
 }
 
 export interface ServicePrice {
@@ -121,6 +122,48 @@ export interface CreateAppointmentRequest {
 export interface CreateAppointmentResponse {
   code: number;
   message: string;
+}
+
+// Interfaces for fetching appointments
+export interface AppointmentFilters {
+  date?: string;
+  serviceType?: "MEDICAL" | "GROOMING" | "FOOD";
+  status?: string;
+  veterinarianId?: string;
+  staffId?: string;
+  customerId?: string;
+  hamsterName?: string;
+  sortDir?: "asc" | "desc";
+  page?: number;
+  size?: number;
+}
+
+export interface Appointment {
+  id: string;
+  customerId: string;
+  customerName: string;
+  hamsterId: string;
+  hamsterName: string;
+  appointmentTime: string;
+  veterinarianName: string;
+  serviceType: "MEDICAL" | "GROOMING" | "FOOD";
+  status: string;
+}
+
+export interface AppointmentListData {
+  content: Appointment[];
+  pageNumber: number;
+  pageSize: number;
+  totalElements: number;
+  totalPages: number;
+  first: boolean;
+  last: boolean;
+}
+
+export interface AppointmentListResponse {
+  code: number;
+  message: string;
+  data: AppointmentListData;
 }
 
 export const getServicesByType = async (serviceType: "MEDICAL" | "FOOD" | "GROOMING" = "MEDICAL"): Promise<ServiceResponse> => {
@@ -273,6 +316,158 @@ export const createAppointment = async (appointmentData: CreateAppointmentReques
     return response.data;
   } catch (error) {
     console.error("Error creating appointment:", error);
+    throw error;
+  }
+};
+
+export const getAppointments = async (filters: AppointmentFilters = {}): Promise<AppointmentListResponse> => {
+  try {
+    // Set default values
+    const params = {
+      //i want date to be today by default if not provided
+      date: filters.date || new Date().toISOString().split("T")[0],
+      serviceType: "MEDICAL",
+      sortDir: "asc",
+      page: 0,
+      size: 10,
+      ...filters, // Override defaults with provided filters
+    };
+
+    // Remove undefined values to avoid sending them as query parameters
+    const cleanParams = Object.fromEntries(
+      Object.entries(params).filter(([_, value]) => value !== undefined)
+    );
+
+    const response = await api.get<AppointmentListResponse>("/api/appointment", {
+      params: cleanParams,
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching appointments:", error);
+    throw error;
+  }
+};
+
+// Interfaces for appointment details
+export interface Veterinarian {
+  id: string;
+  name: string;
+  gender: "MALE" | "FEMALE";
+  experienceYears: number;
+  specialization: string;
+  bestServices: string[];
+}
+
+export interface AppointmentItemDetail {
+  id: string;
+  appointmentId: string;
+  serviceId: string;
+  serviceComboId: string | null;
+  medicalRecordId: string | null;
+  price: number;
+  serviceName: string;
+  serviceComboName: string | null;
+  comboServices: any[] | null;
+}
+
+export interface AppointmentDetail {
+  id: string;
+  customerId: string;
+  customerName: string;
+  hamsterId: string;
+  hamsterName: string;
+  speciesId: string;
+  appointmentTime: string;
+  serviceType: "MEDICAL" | "GROOMING" | "FOOD";
+  status: string;
+  totalAmount: number;
+  totalAmountAfter: number;
+  additionalAmount: number | null;
+  notes: string;
+  checkInImage: string | null;
+  checkoutImage: string | null;
+  slotStart: string;
+  slotEnd: string;
+  createdAt: string;
+  paymentMethod: string;
+  transactionTime: string;
+  staff: any | null;
+  veterinarian: Veterinarian | null;
+  items: AppointmentItemDetail[];
+}
+
+export interface AppointmentDetailResponse {
+  code: number;
+  message: string;
+  data: AppointmentDetail;
+}
+
+export const getAppointmentById = async (appointmentId: string): Promise<AppointmentDetailResponse> => {
+  try {
+    const response = await api.get<AppointmentDetailResponse>(`/api/appointment/${appointmentId}`);
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching appointment by ID:", error);
+    throw error;
+  }
+};
+
+// Interfaces for check-in appointment
+export interface CheckInAppointmentRequest {
+  appointmentId: string;
+  checkInImage: string;
+  veterinarianId: string;
+  staffId?: string | null;
+}
+
+export interface CheckInAppointmentResponse {
+  code: number;
+  message: string;
+}
+
+// Type definitions for file upload
+export interface FileUploadRequest {
+  file: File;
+}
+
+export interface FileUploadResponse {
+  url: string;
+}
+
+export const checkInAppointment = async (checkInData: CheckInAppointmentRequest): Promise<CheckInAppointmentResponse> => {
+  try {
+    // Set staffId to null by default if not provided
+    const requestData = {
+      ...checkInData,
+      staffId: checkInData.staffId || null,
+    };
+
+    const response = await api.post<CheckInAppointmentResponse>("/api/appointment/check-in", requestData);
+    return response.data;
+  } catch (error) {
+    console.error("Error checking in appointment:", error);
+    throw error;
+  }
+};
+
+// Upload a file and get the URL
+export const uploadFile = async (file: File): Promise<FileUploadResponse> => {
+  try {
+    const formData = new FormData();
+    formData.append('file', file);
+    
+    const response = await api.post<{ code: number; message: string; data: FileUploadResponse }>(
+      "/api/file/upload",
+      formData,
+      {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      }
+    );
+    return response.data.data;
+  } catch (error) {
+    console.error("Error uploading file:", error);
     throw error;
   }
 };

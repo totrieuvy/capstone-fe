@@ -60,6 +60,8 @@ import MedicalBooking from "./pages/customer/medical/MedicalBooking/MedicalBooki
 import TrackGrooming from "./pages/customer/grooming/history/track-grooming/TrackGrooming";
 import TrackGroomingDetail from "./pages/customer/grooming/history/track-grooming-detail/TrackGroomingDetail";
 import GroomingPaymentSuccess from "./pages/customer/grooming/payment-success/GroomingPaymentSuccess";
+import ManageAppointment from "./pages/staff/medical/manage-appointment/manage-appointment";
+import ManageAppointmentDetail from "./pages/staff/medical/manage-appointment-detail/manage-appointment-detail";
 
 interface User {
   id: number;
@@ -292,6 +294,8 @@ const App = () => {
             { path: "lich-dat-grooming/groomingpayment-success", element: <GroomingPaymentSuccess /> },
             { path: "lich-dat-grooming/:id", element: <HistoryGroomingDetail /> },
             { path: "*", element: <StaffNotFoundPage /> },
+            { path: "lich-dat-kham", element: <ManageAppointment /> },
+            { path: "lich-dat-kham/:appointmentId", element: <ManageAppointmentDetail /> },
           ],
         },
         {
