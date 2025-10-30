@@ -59,6 +59,7 @@ import HistoryGroomingDetail from "./pages/staff/grooming/HistoryGroomingDetail"
 import MedicalBooking from "./pages/customer/medical/MedicalBooking/MedicalBooking";
 import TrackGrooming from "./pages/customer/grooming/history/track-grooming/TrackGrooming";
 import TrackGroomingDetail from "./pages/customer/grooming/history/track-grooming-detail/TrackGroomingDetail";
+import GroomingPaymentSuccess from "./pages/customer/grooming/payment-success/GroomingPaymentSuccess";
 import ManageAppointment from "./pages/staff/medical/manage-appointment/manage-appointment";
 import ManageAppointmentDetail from "./pages/staff/medical/manage-appointment-detail/manage-appointment-detail";
 
@@ -290,6 +291,7 @@ const App = () => {
             { path: "*", element: <StaffNotFoundPage /> },
             { path: "thong-so-iot", element: <Iot /> },
             { path: "lich-dat-grooming", element: <HistoryGrooming /> },
+            { path: "lich-dat-grooming/groomingpayment-success", element: <GroomingPaymentSuccess /> },
             { path: "lich-dat-grooming/:id", element: <HistoryGroomingDetail /> },
             { path: "*", element: <StaffNotFoundPage /> },
             { path: "lich-dat-kham", element: <ManageAppointment /> },

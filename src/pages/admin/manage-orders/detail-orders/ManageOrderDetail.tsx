@@ -1,6 +1,6 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { Card, Descriptions, Button, Spin, Table, Tag } from "antd";
+import { Card, Descriptions, Button, Spin, Table, Tag, Modal } from "antd";
 import { toast } from "react-toastify";
 import dayjs from "dayjs";
 import api from "../../../../config/axios";
@@ -45,6 +45,8 @@ function ManageOrderDetail() {
   const [order, setOrder] = useState<OrderDetail | null>(null);
   const [loading, setLoading] = useState(false);
   const [updating, setUpdating] = useState(false);
+  const [printVisible, setPrintVisible] = useState(false);
+  const printRef = useRef<HTMLDivElement>(null);
 
   const fetchOrderDetail = async (): Promise<void> => {
     if (!orderId) return;
@@ -78,6 +80,33 @@ function ManageOrderDetail() {
     }
   };
 
+  const handlePrint = () => {
+    const printContents = printRef.current?.innerHTML;
+    const printWindow = window.open("", "_blank");
+    if (printWindow && printContents) {
+      printWindow.document.write(`
+        <html>
+          <head>
+            <title>Đơn hàng #${order?.id}</title>
+            <style>
+              body { font-family: Arial, sans-serif; padding: 20px; }
+              h2 { text-align: center; }
+              table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+              th, td { border: 1px solid #ddd; padding: 8px; text-align: center; }
+              th { background-color: #f4f4f4; }
+              .summary { margin-top: 20px; text-align: right; }
+            </style>
+          </head>
+          <body>
+            ${printContents}
+            <script>window.print();</script>
+          </body>
+        </html>
+      `);
+      printWindow.document.close();
+    }
+  };
+
   const statusMap: Record<OrderStatus, { color: string; text: string }> = {
     PENDING: { color: "orange", text: "Chờ thanh toán" },
     PAID: { color: "blue", text: "Đã thanh toán" },
@@ -88,46 +117,10 @@ function ManageOrderDetail() {
 
   const renderStatusTag = (status: OrderStatus) => <Tag color={statusMap[status].color}>{statusMap[status].text}</Tag>;
 
-  const renderStatusHistory = () => {
-    if (!order) return null;
-    const history: { text: string; time: string }[] = [];
-
-    history.push({
-      text: "Đặt hàng thành công",
-      time: dayjs(order.orderDate, "DD-MM-YYYY HH:mm:ss").add(7, "hour").format("HH:mm DD/MM/YYYY"),
-    });
-
-    if (order.status === "PENDING_DELIVERY") {
-      history.push({
-        text: "Đang giao hàng",
-        time: dayjs().add(7, "hour").format("HH:mm DD/MM/YYYY"),
-      });
-    }
-
-    if (order.deliveredAt && order.status === "DELIVERED") {
-      history.push({
-        text: "Giao hàng thành công",
-        time: dayjs(order.deliveredAt).add(7, "hour").format("HH:mm DD/MM/YYYY"),
-      });
-    }
-
-    return (
-      <div className="status-history">
-        <h4>Lịch sử trạng thái</h4>
-        {history.map((h, i) => (
-          <div className="history-item" key={i}>
-            <span>{h.text}</span>
-            <span>{h.time}</span>
-          </div>
-        ))}
-      </div>
-    );
-  };
-
   useEffect(() => {
     document.title = "Chi tiết đơn hàng";
     fetchOrderDetail();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [orderId]);
 
   if (loading || !order)
@@ -143,6 +136,11 @@ function ManageOrderDetail() {
         <Button onClick={() => navigate(-1)} className="back-btn">
           ← Quay lại
         </Button>
+        {order.invoiceUrl && (
+          <Button type="primary" onClick={() => window.open(order.invoiceUrl, "_blank")}>
+            🖨️ In đơn hàng
+          </Button>
+        )}
       </div>
 
       <h1 className="main-title">Chi tiết đơn hàng #{order.id}</h1>
@@ -162,24 +160,6 @@ function ManageOrderDetail() {
               <Descriptions.Item label="Email">{order.customerProfile.email}</Descriptions.Item>
               <Descriptions.Item label="CMND/CCCD">{order.customerProfile.citizenId}</Descriptions.Item>
               <Descriptions.Item label="Địa chỉ KH">{order.customerProfile.address}</Descriptions.Item>
-
-              <Descriptions.Item label="Phương thức thanh toán">
-                {order.paymentMethod === "VNPAY" ? (
-                  <img
-                    src="https://itviec.com/rails/active_storage/representations/proxy/eyJfcmFpbHMiOnsiZGF0YSI6NDAzODMzMCwicHVyIjoiYmxvYl9pZCJ9fQ==--d01b1b407f49d33d4ea19b9218e10da4dc7f231d/eyJfcmFpbHMiOnsiZGF0YSI6eyJmb3JtYXQiOiJwbmciLCJyZXNpemVfdG9fbGltaXQiOlszMDAsMzAwXX0sInB1ciI6InZhcmlhdGlvbiJ9fQ==--e1d036817a0840c585f202e70291f5cdd058753d/logo%20d%E1%BB%8Dc.png"
-                    alt="VNPAY"
-                    className="payment-logo"
-                  />
-                ) : order.paymentMethod === "PAYOS" ? (
-                  <img
-                    src="https://media.zenfs.com/en/globenewswire.com/d572fcc587598e58786c3856ba2bc978"
-                    alt="PAYOS"
-                    className="payment-logo"
-                  />
-                ) : (
-                  order.paymentMethod || "Chưa cập nhật"
-                )}
-              </Descriptions.Item>
             </Descriptions>
           </Card>
         </div>
@@ -201,7 +181,6 @@ function ManageOrderDetail() {
                 </Button>
               )}
             </div>
-            {renderStatusHistory()}
           </Card>
         </div>
       </div>
@@ -248,6 +227,57 @@ function ManageOrderDetail() {
           </div>
         </Card>
       </div>
+
+      {/* Modal In Đơn Hàng */}
+      <Modal
+        open={printVisible}
+        title="Xem trước đơn hàng"
+        onCancel={() => setPrintVisible(false)}
+        onOk={handlePrint}
+        okText="In ngay"
+        width={800}
+      >
+        <div ref={printRef}>
+          <h2>Đơn hàng #{order.id}</h2>
+          <p>
+            <b>Khách hàng:</b> {order.customerProfile.fullName}
+          </p>
+          <p>
+            <b>Ngày đặt:</b> {order.orderDate}
+          </p>
+          <p>
+            <b>Địa chỉ giao hàng:</b> {order.deliveryAddress}
+          </p>
+
+          <table>
+            <thead>
+              <tr>
+                <th>Tên sản phẩm</th>
+                <th>Số lượng</th>
+                <th>Đơn giá</th>
+                <th>Thành tiền</th>
+              </tr>
+            </thead>
+            <tbody>
+              {order.items.map((item) => (
+                <tr key={item.productId}>
+                  <td>{item.name}</td>
+                  <td>{item.quantity}</td>
+                  <td>{item.unitPrice.toLocaleString("vi-VN")} đ</td>
+                  <td>{(item.unitPrice * item.quantity).toLocaleString("vi-VN")} đ</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+
+          <div className="summary">
+            <p>Tổng tiền hàng: {order.totalAmount.toLocaleString("vi-VN")} đ</p>
+            <p>Phí vận chuyển: {order.shippingFee.toLocaleString("vi-VN")} đ</p>
+            <p>Giảm giá: {order.discountPercent}%</p>
+            <h3>Tổng cộng: {order.finalAmount.toLocaleString("vi-VN")} đ</h3>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 }

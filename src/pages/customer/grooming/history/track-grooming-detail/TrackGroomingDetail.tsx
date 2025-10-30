@@ -1,7 +1,6 @@
-// TrackGroomingDetail.tsx
 import { useEffect, useState, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { message, Spin, Button, Tag, Card, Descriptions, Image, Typography, Row, Col, Divider } from "antd";
+import { message, Spin, Button, Tag, Card, Descriptions, Image, Typography, Row, Col, Divider, Popconfirm } from "antd";
 import {
   ArrowLeftOutlined,
   ClockCircleOutlined,
@@ -9,6 +8,7 @@ import {
   ScissorOutlined,
   IdcardOutlined,
   CheckCircleOutlined,
+  ExclamationCircleOutlined,
 } from "@ant-design/icons";
 import api from "../../../../../config/axios";
 import dayjs from "dayjs";
@@ -53,6 +53,7 @@ const TrackGroomingDetail: React.FC = () => {
   const navigate = useNavigate();
   const [detail, setDetail] = useState<GroomingDetail | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
+  const [cancelLoading, setCancelLoading] = useState<boolean>(false);
 
   const fetchDetail = useCallback(async () => {
     if (!id) return;
@@ -74,6 +75,25 @@ const TrackGroomingDetail: React.FC = () => {
     document.title = "Chi tiết Grooming";
     fetchDetail();
   }, [fetchDetail]);
+
+  const handleCancelAppointment = async () => {
+    if (!id) return;
+    setCancelLoading(true);
+    try {
+      const res = await api.delete(`/api/appointment/${id}`);
+      if (res.status === 200 || res.data?.code === 200) {
+        message.success("Đã hủy lịch thành công");
+        fetchDetail(); // cập nhật lại dữ liệu
+      } else {
+        message.error(res.data?.message || "Hủy lịch thất bại");
+      }
+    } catch (err) {
+      console.error("Cancel error:", err);
+      message.error("Lỗi khi hủy lịch");
+    } finally {
+      setCancelLoading(false);
+    }
+  };
 
   const getStatusTag = (status: string) => {
     const colorMap: Record<string, string> = {
@@ -122,13 +142,30 @@ const TrackGroomingDetail: React.FC = () => {
           <Button type="text" icon={<ArrowLeftOutlined />} onClick={() => navigate(-1)} className="tgd-back-btn">
             Quay lại
           </Button>
+
           <div className="tgd-title">
             <Title level={3} className="tgd-page-title">
               <ScissorOutlined /> Chi tiết Lịch Grooming
             </Title>
             <Text className="tgd-id">Mã: {detail.id}</Text>
           </div>
-          <div className="tgd-status">{getStatusTag(detail.status)}</div>
+
+          <div className="tgd-status">
+            {getStatusTag(detail.status)}
+            {detail.status === "BOOKED" && (
+              <Popconfirm
+                title="Xác nhận hủy lịch?"
+                description="Bạn có chắc chắn muốn hủy lịch Grooming này không?"
+                okText="Xác nhận"
+                cancelText="Thoát"
+                onConfirm={handleCancelAppointment}
+              >
+                <Button danger loading={cancelLoading} icon={<ExclamationCircleOutlined />} style={{ marginLeft: 12 }}>
+                  Hủy lịch
+                </Button>
+              </Popconfirm>
+            )}
+          </div>
         </div>
 
         <Row gutter={[24, 24]}>

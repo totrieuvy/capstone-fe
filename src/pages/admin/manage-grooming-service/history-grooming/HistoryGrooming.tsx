@@ -100,12 +100,14 @@ const HistoryGrooming = () => {
       CHECKED_IN: "blue",
       IN_PROGRESS: "cyan",
       CHECK_OUT: "green",
+      CANCELLED: "error",
     };
     const textMap: Record<string, string> = {
       BOOKED: "Đã đặt",
       CHECKED_IN: "Đã check-in",
       IN_PROGRESS: "Đang thực hiện",
       CHECK_OUT: "Hoàn tất",
+      CANCELLED: "Đã hủy",
     };
     return <Tag color={colorMap[status]}>{textMap[status]}</Tag>;
   };
@@ -158,6 +160,7 @@ const HistoryGrooming = () => {
                 <Option value="CHECKED_IN">Đã check-in</Option>
                 <Option value="IN_PROGRESS">Đang thực hiện</Option>
                 <Option value="CHECK_OUT">Hoàn tất</Option>
+                <Option value="CANCELLED">Đã hủy</Option>
               </Select>
             </Col>
             <Col xs={24} sm={12} md={10}>
