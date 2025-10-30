@@ -302,6 +302,15 @@ export interface BookingCheckOutResponse {
   message: string;
 }
 
+// Type definitions for booking cancellation
+export interface CancelBookingResponse {
+  message: string;
+  isRefunded: boolean;
+  refundAmount: number;
+  refundPercentage: number;
+  daysBeforeCheckIn: number;
+}
+
 export interface ApiResponse<T> {
   code: number;
   message: string;
@@ -499,6 +508,19 @@ export const boardingService = {
       return response.data.data;
     } catch (error) {
       console.error("Error checking out booking:", error);
+      throw error;
+    }
+  },
+
+  // Cancel a booking - refund depends on timing before check-in
+  cancelBooking: async (bookingId: string): Promise<CancelBookingResponse> => {
+    try {
+      const response = await api.patch<ApiResponse<CancelBookingResponse>>(
+        `/api/booking/${bookingId}/cancel`
+      );
+      return response.data.data;
+    } catch (error) {
+      console.error("Error cancelling booking:", error);
       throw error;
     }
   },
