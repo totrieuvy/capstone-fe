@@ -348,6 +348,32 @@ export const getAppointments = async (filters: AppointmentFilters = {}): Promise
   }
 };
 
+export const getMedicalAppointmentHistory = async (filters: Omit<AppointmentFilters, 'date'> = {}): Promise<AppointmentListResponse> => {
+  try {
+    // Set default values but without date filter to get all history
+    const params = {
+      serviceType: "MEDICAL",
+      sortDir: "desc", // Most recent first for history
+      page: 0,
+      size: 50, // Get more records for history view
+      ...filters, // Override defaults with provided filters
+    };
+
+    // Remove undefined values to avoid sending them as query parameters
+    const cleanParams = Object.fromEntries(
+      Object.entries(params).filter(([_, value]) => value !== undefined)
+    );
+
+    const response = await api.get<AppointmentListResponse>("/api/appointment", {
+      params: cleanParams,
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching medical appointment history:", error);
+    throw error;
+  }
+};
+
 // Interfaces for appointment details
 export interface Veterinarian {
   id: string;

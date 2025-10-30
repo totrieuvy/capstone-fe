@@ -53,7 +53,7 @@ const ManageAppointment: React.FC = () => {
     { value: 'BOOKED', label: 'Đã đặt' },
     { value: 'CHECKED_IN', label: 'Đã check-in' },
     { value: 'IN_PROGRESS', label: 'Đang thực hiện' },
-    { value: 'NO_SHOW', label: 'Không đến' },
+    { value: 'NO-SHOW', label: 'Không đến' },
     { value: 'CANCELLED', label: 'Đã hủy' },
     { value: 'CHECKED_OUT', label: 'Đã check-out' },
   ];
@@ -119,7 +119,7 @@ const ManageAppointment: React.FC = () => {
         return 'cyan';
       case 'IN_PROGRESS':
         return 'orange';
-      case 'NO_SHOW':
+      case 'NO-SHOW':
         return 'volcano';
       case 'CANCELLED':
         return 'red';
@@ -139,7 +139,7 @@ const ManageAppointment: React.FC = () => {
         return 'Đã check-in';
       case 'IN_PROGRESS':
         return 'Đang thực hiện';
-      case 'NO_SHOW':
+      case 'NO-SHOW':
         return 'Không đến';
       case 'CANCELLED':
         return 'Đã hủy';

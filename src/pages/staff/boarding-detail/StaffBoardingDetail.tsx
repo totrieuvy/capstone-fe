@@ -54,26 +54,23 @@ const BoardingDetail: React.FC = () => {
 
   const getStatusColor = (status: string) => {
     const statusColors: Record<string, string> = {
-      'PAID': 'green',
-      'CONFIRMED': 'cyan',
-      'CHECK_IN': 'blue',
-      'CHECK_OUT': 'orange',
+      'BOOKED': 'cyan',
+      'IN_PROGRESS': 'purple',
+      'CHECK_OUT': 'green',
       'CANCELLED': 'red',
-      'PENDING': 'gold',
-      'IN_PROGRESS': 'purple'
+      'NO-SHOW': 'red',
+     
     };
     return statusColors[status] || 'default';
   };
 
   const getStatusText = (status: string) => {
     const statusTexts: Record<string, string> = {
-      'PAID': 'Đã thanh toán',
-      'CONFIRMED': 'Đã xác nhận',
-      'CHECK_IN': 'Đã check-in',
-      'CHECKED_IN': 'Đã check-in',
-      'CHECKED_OUT': 'Đã check-out',
+      'BOOKED': 'Đã đặt',
+      'IN_PROGRESS': 'Đang thực hiện',
+      'CHECK_OUT': 'Đã check-out', 
       'CANCELLED': 'Đã hủy',
-      'PENDING': 'Chờ xử lý'
+      'NO-SHOW': 'Không xuất hiện',
     };
     return statusTexts[status] || status;
   };
@@ -464,7 +461,7 @@ const BoardingDetail: React.FC = () => {
                 <Descriptions.Item label="Ngày kết thúc">
                   <strong>{formatDate(bookingDetail.endDate)}</strong>
                 </Descriptions.Item>
-                {bookingDetail.newEndDate && bookingDetail.status === 'IN_PROGRESS' && (
+                {bookingDetail.newEndDate && (bookingDetail.status === 'IN_PROGRESS' || bookingDetail.status === 'CHECK_OUT' || bookingDetail.status === 'CHECK_IN') && (
                   <Descriptions.Item label="Ngày kết thúc mới (Gia hạn)">
                     <div style={{ 
                       display: 'flex', 
@@ -560,8 +557,8 @@ const BoardingDetail: React.FC = () => {
               </div>
             )}
 
-            {/* Extension Information Section - Show for IN_PROGRESS bookings with newEndDate */}
-            {bookingDetail.newEndDate && bookingDetail.status === 'IN_PROGRESS' && (
+            {/* Extension Information Section - Show for bookings with newEndDate */}
+            {bookingDetail.newEndDate && (bookingDetail.status === 'IN_PROGRESS' || bookingDetail.status === 'CHECK_OUT' || bookingDetail.status === 'CHECK_IN') && (
               <div className="extension-section" style={{ 
                 marginTop: '24px', 
                 paddingTop: '20px', 
@@ -669,8 +666,8 @@ const BoardingDetail: React.FC = () => {
           </Card>
         </div>
 
-        {/* Check-in Button for CONFIRMED and PAID bookings */}
-        {(bookingDetail.status === 'CONFIRMED' || bookingDetail.status === 'PAID') && (
+        {/* Check-in Button for BOOKED bookings */}
+        {(bookingDetail.status === 'BOOKED') && (
           <div className="info-section">
             <div style={{ textAlign: 'center' }}>
               <Button
@@ -686,8 +683,8 @@ const BoardingDetail: React.FC = () => {
           </div>
         )}
 
-        {/* Create Care Log Button and Check Out Button for IN_PROGRESS bookings */}
-        {bookingDetail.status === 'IN_PROGRESS' && (
+        {/* Create Care Log Button and Check Out Button for CHECK_IN and IN_PROGRESS bookings */}
+        {(bookingDetail.status === 'IN_PROGRESS' || bookingDetail.status === 'CHECK_IN') && (
           <div className="info-section">
             <div style={{ textAlign: 'center', display: 'flex', gap: '16px', justifyContent: 'center' }}>
               <Button
