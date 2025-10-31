@@ -39,6 +39,23 @@
 
     .service-item {
       display: flex;
+      flex-direction: column;
+      margin-bottom: 10px;
+
+      .service-price {
+        font-weight: 600;
+        align-self: flex-end;
+      }
+
+      .combo-services {
+        margin-top: 4px;
+        font-size: 13px;
+        color: #666;
+      }
+    }
+
+    .service-item {
+      display: flex;
       justify-content: space-between;
       align-items: center;
       padding: 10px 14px;

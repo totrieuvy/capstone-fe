@@ -45,6 +45,7 @@ interface ServiceItem {
   serviceName?: string;
   serviceComboName?: string;
   price: number;
+  comboServices?: string[]; // 👈 Thêm dòng này
 }
 
 interface GroomingDetail {
@@ -323,10 +324,29 @@ const HistoryGroomingDetail = () => {
               </Title>
               {detail.items.map((item) => (
                 <div key={item.id} className="service-item">
-                  <Text strong>{item.serviceName}</Text>
-                  <Text className="service-price">{getFormattedPrice(item.price)}</Text>
+                  {item.serviceName ? (
+                    // ---- Dịch vụ lẻ ----
+                    <>
+                      <Text strong>{item.serviceName}</Text>
+                      <Text className="service-price">{getFormattedPrice(item.price)}</Text>
+                    </>
+                  ) : (
+                    // ---- Combo ----
+                    <>
+                      <Text strong>{item.serviceComboName}</Text>
+                      <div className="combo-services">
+                        {item.comboServices?.map((srv, idx) => (
+                          <Text key={idx} type="secondary" style={{ display: "block", marginLeft: 8 }}>
+                            • {srv}
+                          </Text>
+                        ))}
+                      </div>
+                      <Text className="service-price">{getFormattedPrice(item.price)}</Text>
+                    </>
+                  )}
                 </div>
               ))}
+
               <Divider />
               <Title level={5}>Chọn thêm dịch vụ Grooming</Title>
               <Select

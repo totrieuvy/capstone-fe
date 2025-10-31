@@ -222,7 +222,6 @@ const App = () => {
               path: ":bookingId",
               element: <BoardingDetail />,
             },
-
           ],
         },
         {
@@ -246,7 +245,7 @@ const App = () => {
             {
               path: ":appointmentId",
               element: <MedicalAppointmentHistoryDetail />,
-            }
+            },
           ],
         },
         {
@@ -257,7 +256,6 @@ const App = () => {
           path: "/dich-vu-y-te/dat-dich-vu",
           element: <MedicalBooking />,
         },
-
       ],
     },
     {
@@ -323,7 +321,7 @@ const App = () => {
             { path: "*", element: <StaffNotFoundPage /> },
             { path: "thong-so-iot", element: <Iot /> },
             { path: "lich-dat-grooming", element: <HistoryGrooming /> },
-            { path: "lich-dat-grooming/groomingpayment-success", element: <GroomingPaymentSuccess /> },
+            { path: "groomingpayment-success", element: <GroomingPaymentSuccess /> },
             { path: "lich-dat-grooming/:id", element: <HistoryGroomingDetail /> },
             { path: "*", element: <StaffNotFoundPage /> },
             { path: "lich-dat-kham", element: <ManageAppointment /> },
