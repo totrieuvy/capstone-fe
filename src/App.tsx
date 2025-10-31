@@ -64,10 +64,14 @@ import ManageAppointment from "./pages/staff/medical/manage-appointment/manage-a
 import ManageAppointmentDetail from "./pages/staff/medical/manage-appointment-detail/manage-appointment-detail";
 import MedicalAppointmentHistory from "./pages/customer/medical/medical-appointment-history/MedicalAppointmentHistory";
 import MedicalAppointmentHistoryDetail from "./pages/customer/medical/medical-appointment-history-detail/MedicalAppointmentHistoryDetail";
+import VetNotFoundPage from "./pages/not-found/veterinarian/VetNotFoundPage";
+import HamsterSchedule from "./pages/veterinarian/today-schedule/TodaySchedule";
+import VetAppointmentDetail from "./pages/veterinarian/vet-appointment-detail/VetAppointmentDetail";
+import Examination from "./pages/veterinarian/examination/Examination";
 
 interface User {
   id: number;
-  role: "ADMIN" | "STAFF" | "VETERINARIAN" | "SHIPPER" | string;
+  role: "ADMIN" | "STAFF" | "VET" | "SHIPPER" | string;
   token?: string;
 }
 
@@ -80,7 +84,7 @@ interface DecodedToken {
 }
 
 interface PrivateRouteProps {
-  role?: "ADMIN" | "STAFF" | "VETERINARIAN" | "SHIPPER";
+  role?: "ADMIN" | "STAFF" | "VET" | "SHIPPER";
 }
 
 const PrivateRoute: React.FC<PrivateRouteProps> = ({ role }) => {
@@ -335,9 +339,20 @@ const App = () => {
       ],
     },
     {
-      path: "/VETERINARIAN",
-      element: <PrivateRoute role="VETERINARIAN" />,
-      children: [{ path: "", element: <SideBar /> }],
+      path: "/VET",
+      element: <PrivateRoute role="VET" />,
+      children: [
+        {
+          path: "",
+          element: <SideBar />,
+          children: [
+            { path: "lich-kham-hom-nay", element: <HamsterSchedule /> },
+            { path: "lich-kham/:appointmentId", element: <VetAppointmentDetail /> },
+            { path: "examination/:appointmentId", element: <Examination /> },
+            { path: "*", element: <VetNotFoundPage /> },
+          ],
+        }
+      ],
     },
     {
       path: "/SHIPPER",

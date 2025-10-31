@@ -23,7 +23,7 @@ import { GiCage } from "react-icons/gi";
 
 interface User {
   id: number;
-  role: "ADMIN" | "STAFF" | "VETERINARIAN" | "SHIPPER" | string;
+  role: "ADMIN" | "STAFF" | "VET" | "SHIPPER" | string;
 }
 
 interface RootState {
@@ -101,9 +101,9 @@ const SideBar: React.FC = () => {
           getItem("Quản lí chuồng", "quan-li-chuong"),
         ]),
       ];
-    } else if (user?.role === "VETERINARIAN") {
+    } else if (user?.role === "VET") {
       items = [
-        getItem("Lịch khám của tui", "lich-kham", <ScheduleOutlined />),
+        getItem("Lịch khám hôm nay", "lich-kham-hom-nay", <ScheduleOutlined />),
         getItem("Lịch đặt khám", "lich-dat-kham", <ClockCircleOutlined />),
       ];
     }
