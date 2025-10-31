@@ -146,6 +146,7 @@ const TrackGrooming: React.FC = () => {
               <Option value="CHECKED_IN">Đã check-in</Option>
               <Option value="IN_PROGRESS">Đang thực hiện</Option>
               <Option value="CHECK_OUT">Hoàn tất</Option>
+              <Option value="CANCELLED">Đã hủy</Option>
             </Select>
 
             <RangePicker
