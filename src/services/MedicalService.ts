@@ -148,6 +148,8 @@ export interface Appointment {
   veterinarianName: string;
   serviceType: "MEDICAL" | "GROOMING" | "FOOD";
   status: string;
+  slotStart: string;
+  slotEnd: string;
 }
 
 export interface AppointmentListData {
@@ -457,6 +459,16 @@ export interface CancelAppointmentResponse {
   message: string;
 }
 
+// Interfaces for update appointment status
+export interface UpdateAppointmentStatusRequest {
+  status: string;
+}
+
+export interface UpdateAppointmentStatusResponse {
+  code: number;
+  message: string;
+}
+
 // Type definitions for file upload
 export interface FileUploadRequest {
   file: File;
@@ -489,6 +501,24 @@ export const cancelAppointment = async (appointmentId: string): Promise<CancelAp
     return response.data;
   } catch (error) {
     console.error("Error cancelling appointment:", error);
+    throw error;
+  }
+};
+
+// Update appointment status
+export const updateAppointmentStatus = async (
+  appointmentId: string, 
+  status: string
+): Promise<UpdateAppointmentStatusResponse> => {
+  try {
+    const requestData: UpdateAppointmentStatusRequest = { status };
+    const response = await api.put<UpdateAppointmentStatusResponse>(
+      `/api/appointment/${appointmentId}`, 
+      requestData
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error updating appointment status:", error);
     throw error;
   }
 };

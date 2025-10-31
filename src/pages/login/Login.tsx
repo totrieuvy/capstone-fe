@@ -57,8 +57,8 @@ const LoginForm = () => {
           case "STAFF":
             navigate("/STAFF", { replace: true });
             break;
-          case "VETERINARIAN":
-            navigate("/VETERINARIAN", { replace: true });
+          case "VET":
+            navigate("/VET", { replace: true });
             break;
           case "SHIPPER":
             navigate("/SHIPPER", { replace: true });
@@ -102,8 +102,8 @@ const LoginForm = () => {
         case "STAFF":
           navigate("/STAFF", { replace: true });
           break;
-        case "VETERINARIAN":
-          navigate("/VETERINARIAN", { replace: true });
+        case "VET":
+          navigate("/VET", { replace: true });
           break;
         case "SHIPPER":
           navigate("/SHIPPER", { replace: true });
