@@ -4,7 +4,7 @@ import type { Service } from "./AdditionService";
 // Type definitions for availability check
 export interface CheckAvailabilityRequest {
   startDate: string; // Format: YYYY-MM-DD
-  endDate: string;   // Format: YYYY-MM-DD
+  endDate: string; // Format: YYYY-MM-DD
 }
 
 export interface DailyAvailability {
@@ -27,7 +27,7 @@ export interface CheckAvailabilityResponse {
 // Type definitions for booking cost calculation
 export interface CalculateBookingCostRequest {
   startDate: string; // Format: YYYY-MM-DD
-  endDate: string;   // Format: YYYY-MM-DD
+  endDate: string; // Format: YYYY-MM-DD
   cageTypeId: string;
   hamsterId: string;
   paymentMethod: string;
@@ -66,7 +66,7 @@ export interface CalculateBookingCostResponse {
 
 export interface CreateBookingRequest {
   startDate: string; // Format: YYYY-MM-DD
-  endDate: string;   // Format: YYYY-MM-DD
+  endDate: string; // Format: YYYY-MM-DD
   cageTypeId: string;
   hamsterId: string;
   paymentMethod: string;
@@ -86,7 +86,7 @@ export interface BookingHistoryItem {
   cageTypeId: string;
   cageTypeName: string;
   startDate: string; // Format: YYYY-MM-DD
-  endDate: string;   // Format: YYYY-MM-DD
+  endDate: string; // Format: YYYY-MM-DD
   totalAmount: number;
   totalAmountAfter: number;
   status: string;
@@ -103,13 +103,13 @@ export interface BookingHistoryResponse {
 // Type definitions for bookings by date range
 export interface GetBookingsByDateRangeRequest {
   startDate: string; // Format: YYYY-MM-DD
-  endDate: string;   // Format: YYYY-MM-DD
+  endDate: string; // Format: YYYY-MM-DD
 }
 
 export interface BookingByDateRange {
   bookingId: string;
   startDate: string; // Format: YYYY-MM-DD
-  endDate: string;   // Format: YYYY-MM-DD
+  endDate: string; // Format: YYYY-MM-DD
   newEndDate: string | null; // Format: YYYY-MM-DD or null
   status: string;
   cageTypeId: string;
@@ -146,7 +146,7 @@ export interface BookingDetail {
   cageName: string;
   cageTypeName: string;
   startDate: string; // Format: YYYY-MM-DD
-  endDate: string;   // Format: YYYY-MM-DD
+  endDate: string; // Format: YYYY-MM-DD
   newEndDate: string | null; // Format: YYYY-MM-DD or null
   checkInImage: string;
   totalAmount: number;
@@ -155,6 +155,7 @@ export interface BookingDetail {
   notes: string;
   createdAt: string; // ISO string format
   services: BookingDetailService[];
+  cameraId: string;
 }
 
 // Type definitions for file upload
@@ -317,16 +318,12 @@ export interface ApiResponse<T> {
   data: T;
 }
 
-
 // Boarding service for handling boarding-related API calls
 export const boardingService = {
   // Check cage availability for a specific date range (returns all cage types)
   checkAvailability: async (request: CheckAvailabilityRequest): Promise<CageTypeAvailability[]> => {
     try {
-      const response = await api.post<ApiResponse<CageTypeAvailability[]>>(
-        "/api/cage/check-availability",
-        request
-      );
+      const response = await api.post<ApiResponse<CageTypeAvailability[]>>("/api/cage/check-availability", request);
       return response.data.data;
     } catch (error) {
       console.error("Error checking cage availability:", error);
@@ -337,10 +334,7 @@ export const boardingService = {
   // Calculate booking cost for a specific booking request
   calculateBookingCost: async (request: CalculateBookingCostRequest): Promise<CalculateBookingCostResponse> => {
     try {
-      const response = await api.post<ApiResponse<CalculateBookingCostResponse>>(
-        "/api/booking/calculate",
-        request
-      );
+      const response = await api.post<ApiResponse<CalculateBookingCostResponse>>("/api/booking/calculate", request);
       return response.data.data;
     } catch (error) {
       console.error("Error calculating booking cost:", error);
@@ -348,13 +342,10 @@ export const boardingService = {
     }
   },
 
-   // Create a new booking for hamster boarding
+  // Create a new booking for hamster boarding
   createBooking: async (request: CreateBookingRequest): Promise<CreateBookingResponse> => {
     try {
-      const response = await api.post<ApiResponse<CreateBookingResponse>>(
-        "/api/booking",
-        request
-      );
+      const response = await api.post<ApiResponse<CreateBookingResponse>>("/api/booking", request);
       return response.data.data;
     } catch (error) {
       console.error("Error creating booking:", error);
@@ -365,9 +356,7 @@ export const boardingService = {
   // Get booking history for the current user
   getBookingHistory: async (): Promise<BookingHistoryItem[]> => {
     try {
-      const response = await api.get<ApiResponse<BookingHistoryItem[]>>(
-        "/api/booking/history"
-      );
+      const response = await api.get<ApiResponse<BookingHistoryItem[]>>("/api/booking/history");
       return response.data.data;
     } catch (error) {
       console.error("Error fetching booking history:", error);
@@ -378,15 +367,12 @@ export const boardingService = {
   // Get bookings by date range
   getBookingsByDateRange: async (request: GetBookingsByDateRangeRequest): Promise<BookingByDateRange[]> => {
     try {
-      const response = await api.get<ApiResponse<BookingByDateRange[]>>(
-        "/api/booking/date-range",
-        {
-          params: {
-            startDate: request.startDate,
-            endDate: request.endDate
-          }
-        }
-      );
+      const response = await api.get<ApiResponse<BookingByDateRange[]>>("/api/booking/date-range", {
+        params: {
+          startDate: request.startDate,
+          endDate: request.endDate,
+        },
+      });
       return response.data.data;
     } catch (error) {
       console.error("Error fetching bookings by date range:", error);
@@ -397,9 +383,7 @@ export const boardingService = {
   // Get booking details by booking ID
   getBookingDetails: async (bookingId: string): Promise<BookingDetail> => {
     try {
-      const response = await api.get<ApiResponse<BookingDetail>>(
-        `/api/booking/${bookingId}`
-      );
+      const response = await api.get<ApiResponse<BookingDetail>>(`/api/booking/${bookingId}`);
       return response.data.data;
     } catch (error) {
       console.error("Error fetching booking details:", error);
@@ -411,17 +395,13 @@ export const boardingService = {
   uploadFile: async (file: File): Promise<FileUploadResponse> => {
     try {
       const formData = new FormData();
-      formData.append('file', file);
-      
-      const response = await api.post<ApiResponse<FileUploadResponse>>(
-        "/api/file/upload",
-        formData,
-        {
-          headers: {
-            'Content-Type': 'multipart/form-data',
-          },
-        }
-      );
+      formData.append("file", file);
+
+      const response = await api.post<ApiResponse<FileUploadResponse>>("/api/file/upload", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
       return response.data.data;
     } catch (error) {
       console.error("Error uploading file:", error);
@@ -432,10 +412,7 @@ export const boardingService = {
   // Check in a booking with image and assign cage
   checkInBooking: async (request: BookingCheckInRequest): Promise<BookingCheckInResponse> => {
     try {
-      const response = await api.post<ApiResponse<BookingCheckInResponse>>(
-        "/api/booking/check-in",
-        request
-      );
+      const response = await api.post<ApiResponse<BookingCheckInResponse>>("/api/booking/check-in", request);
       return response.data.data;
     } catch (error) {
       console.error("Error checking in booking and assigning cage:", error);
@@ -446,10 +423,7 @@ export const boardingService = {
   // Extend a booking with new end date and optional services
   extendBooking: async (request: ExtendBookingRequest): Promise<ExtendBookingResponse> => {
     try {
-      const response = await api.post<ApiResponse<ExtendBookingResponse>>(
-        "/api/booking/extend",
-        request
-      );
+      const response = await api.post<ApiResponse<ExtendBookingResponse>>("/api/booking/extend", request);
       return response.data.data;
     } catch (error) {
       console.error("Error extending booking:", error);
@@ -460,10 +434,7 @@ export const boardingService = {
   // Add services to an existing booking for a specific date
   addServiceToBooking: async (request: AddServiceToBookingRequest): Promise<AddServiceToBookingResponse> => {
     try {
-      const response = await api.post<ApiResponse<AddServiceToBookingResponse>>(
-        "/api/booking/add-service",
-        request
-      );
+      const response = await api.post<ApiResponse<AddServiceToBookingResponse>>("/api/booking/add-service", request);
       return response.data.data;
     } catch (error) {
       console.error("Error adding services to booking:", error);
@@ -474,10 +445,7 @@ export const boardingService = {
   // Create a care log for a booking
   createCareLog: async (request: CreateCareLogRequest): Promise<CreateCareLogResponse> => {
     try {
-      const response = await api.post<ApiResponse<CreateCareLogResponse>>(
-        "/api/care-logs",
-        request
-      );
+      const response = await api.post<ApiResponse<CreateCareLogResponse>>("/api/care-logs", request);
       return response.data.data;
     } catch (error) {
       console.error("Error creating care log:", error);
@@ -488,9 +456,7 @@ export const boardingService = {
   // Get care logs for a specific booking
   getCareLogsByBookingId: async (bookingId: string): Promise<CareLogItem[]> => {
     try {
-      const response = await api.get<ApiResponse<CareLogItem[]>>(
-        `/api/care-logs/booking/${bookingId}`
-      );
+      const response = await api.get<ApiResponse<CareLogItem[]>>(`/api/care-logs/booking/${bookingId}`);
       return response.data.data;
     } catch (error) {
       console.error("Error fetching care logs:", error);
@@ -501,10 +467,7 @@ export const boardingService = {
   // Check out a booking with image and process payment if additional charges exist
   checkOutBooking: async (request: BookingCheckOutRequest): Promise<BookingCheckOutResponse> => {
     try {
-      const response = await api.post<ApiResponse<BookingCheckOutResponse>>(
-        "/api/booking/check-out",
-        request
-      );
+      const response = await api.post<ApiResponse<BookingCheckOutResponse>>("/api/booking/check-out", request);
       return response.data.data;
     } catch (error) {
       console.error("Error checking out booking:", error);
@@ -515,9 +478,7 @@ export const boardingService = {
   // Cancel a booking - refund depends on timing before check-in
   cancelBooking: async (bookingId: string): Promise<CancelBookingResponse> => {
     try {
-      const response = await api.patch<ApiResponse<CancelBookingResponse>>(
-        `/api/booking/${bookingId}/cancel`
-      );
+      const response = await api.patch<ApiResponse<CancelBookingResponse>>(`/api/booking/${bookingId}/cancel`);
       return response.data.data;
     } catch (error) {
       console.error("Error cancelling booking:", error);
@@ -529,9 +490,7 @@ export const boardingService = {
 // Get booking details by booking ID (legacy function - consider using boardingService.getBookingDetails instead)
 export const getBookingHistoryDetails = async (bookingId: string): Promise<BookingDetail> => {
   try {
-    const response = await api.get<ApiResponse<BookingDetail>>(
-      `/api/booking/${bookingId}`
-    );
+    const response = await api.get<ApiResponse<BookingDetail>>(`/api/booking/${bookingId}`);
     return response.data.data;
   } catch (error) {
     console.error("Error fetching booking details:", error);
