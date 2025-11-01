@@ -1,11 +1,25 @@
 import React, { useState, useEffect, useRef } from "react";
 import Hls from "hls.js";
-import { Card, Tag, Typography, Spin, Alert, Row, Col, Button, Divider, Timeline, Image, Modal, Avatar,
+import {
+  Card,
+  Tag,
+  Typography,
+  Spin,
+  Alert,
+  Row,
+  Col,
+  Button,
+  Divider,
+  Timeline,
+  Image,
+  Modal,
+  Avatar,
   List,
   Radio,
   DatePicker,
   message,
-  Space } from "antd";
+  Space,
+} from "antd";
 import {
   ArrowLeftOutlined,
   CalendarOutlined,
@@ -22,13 +36,14 @@ import {
 import { useParams, useNavigate } from "react-router-dom";
 import { boardingService } from "../../../../services/BoardingService";
 import type { BookingDetail, CareLogItem } from "../../../../services/BoardingService";
-import { getServicesByType, ServiceType } from '../../../../services/AdditionService';
-import type { Service } from '../../../../services/AdditionService';
+import { getServicesByType, ServiceType } from "../../../../services/AdditionService";
+import type { Service } from "../../../../services/AdditionService";
 import { getFormattedPrice } from "../../../../utils/formatPrice";
-import dayjs from 'dayjs';
-import { toast } from 'react-toastify';
+import dayjs from "dayjs";
+import { toast } from "react-toastify";
 import "./BoardingDetail.scss";
 import api from "../../../../config/axios";
+import type { Dayjs } from "dayjs";
 
 const { Title, Text } = Typography;
 
@@ -41,7 +56,7 @@ const BoardingDetail: React.FC = () => {
   const [isVideoModalVisible, setIsVideoModalVisible] = useState(false);
   const [hlsUrl, setHlsUrl] = useState<string | null>(null);
   const [isModalLoading, setIsModalLoading] = useState(false);
-  
+
   // Care logs state
   const [careLogs, setCareLogs] = useState<CareLogItem[]>([]);
   const [careLogsLoading, setCareLogsLoading] = useState(false);
@@ -79,17 +94,23 @@ const BoardingDetail: React.FC = () => {
       }
       if (videoRef.current) {
         videoRef.current.pause();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
         videoRef.current.src = "";
       }
     };
   }, [hlsUrl]);
 
   const handleOpenCamera = async () => {
+    if (!booking?.cameraId) {
+      message.warning("Không tìm thấy camera cho booking này.");
+      return;
+    }
+
     setIsModalLoading(true);
     setIsVideoModalVisible(true);
+
     try {
-      const randomParam = Math.floor(Math.random() * 1000000);
-      const response = await api.get(`/api/camera/play?url=${randomParam}`);
+      const response = await api.get(`/api/camera/play?cameraId=${booking.cameraId}`);
 
       const result = response.data;
 
@@ -106,12 +127,12 @@ const BoardingDetail: React.FC = () => {
       setIsModalLoading(false);
     }
   };
-  
+
   // Grooming service modal states
   const [isGroomingModalVisible, setIsGroomingModalVisible] = useState(false);
   const [groomingServices, setGroomingServices] = useState<Service[]>([]);
-  const [selectedServiceId, setSelectedServiceId] = useState<string>('');
-  const [selectedDate, setSelectedDate] = useState<string>('');
+  const [selectedServiceId, setSelectedServiceId] = useState<string>("");
+  const [selectedDate, setSelectedDate] = useState<string>("");
   const [groomingLoading, setGroomingLoading] = useState(false);
   const [addingService, setAddingService] = useState(false);
 
@@ -119,13 +140,12 @@ const BoardingDetail: React.FC = () => {
   const [isCancelModalVisible, setIsCancelModalVisible] = useState(false);
   const [cancelLoading, setCancelLoading] = useState(false);
 
-
-
   useEffect(() => {
     if (bookingId) {
       fetchBookingDetails();
       fetchCareLogs();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [bookingId]);
 
   const fetchBookingDetails = async () => {
@@ -144,7 +164,7 @@ const BoardingDetail: React.FC = () => {
 
   const fetchCareLogs = async () => {
     if (!bookingId) return;
-    
+
     try {
       setCareLogsLoading(true);
       setCareLogsError(null);
@@ -189,8 +209,8 @@ const BoardingDetail: React.FC = () => {
       setGroomingServices(response.data);
       setIsGroomingModalVisible(true);
     } catch (error) {
-      message.error('Không thể tải danh sách dịch vụ. Vui lòng thử lại.');
-      console.error('Error fetching grooming services:', error);
+      message.error("Không thể tải danh sách dịch vụ. Vui lòng thử lại.");
+      console.error("Error fetching grooming services:", error);
     } finally {
       setGroomingLoading(false);
     }
@@ -198,7 +218,7 @@ const BoardingDetail: React.FC = () => {
 
   const handleAddServiceToBooking = async () => {
     if (!selectedServiceId || !selectedDate) {
-      message.warning('Vui lòng chọn dịch vụ và ngày thực hiện.');
+      message.warning("Vui lòng chọn dịch vụ và ngày thực hiện.");
       return;
     }
 
@@ -207,21 +227,21 @@ const BoardingDetail: React.FC = () => {
       await boardingService.addServiceToBooking({
         bookingId: bookingId!,
         serviceDate: selectedDate,
-        serviceIds: [selectedServiceId]
+        serviceIds: [selectedServiceId],
       });
 
-      message.success('Thêm dịch vụ thành công');
-      
+      message.success("Thêm dịch vụ thành công");
+
       // Refresh booking details
       await fetchBookingDetails();
-      
+
       // Reset modal state
       setIsGroomingModalVisible(false);
-      setSelectedServiceId('');
-      setSelectedDate('');
+      setSelectedServiceId("");
+      setSelectedDate("");
     } catch (error) {
-      message.error('Không thể thêm dịch vụ. Vui lòng thử lại.');
-      console.error('Error adding service to booking:', error);
+      message.error("Không thể thêm dịch vụ. Vui lòng thử lại.");
+      console.error("Error adding service to booking:", error);
     } finally {
       setAddingService(false);
     }
@@ -229,8 +249,8 @@ const BoardingDetail: React.FC = () => {
 
   const handleCloseGroomingModal = () => {
     setIsGroomingModalVisible(false);
-    setSelectedServiceId('');
-    setSelectedDate('');
+    setSelectedServiceId("");
+    setSelectedDate("");
   };
 
   // Cancel booking functions
@@ -244,18 +264,18 @@ const BoardingDetail: React.FC = () => {
     try {
       setCancelLoading(true);
       await boardingService.cancelBooking(bookingId);
-      
+
       // Show success message
-      toast.success('Hủy booking thành công');
-      
+      toast.success("Hủy booking thành công");
+
       // Refresh booking details to show updated status
       await fetchBookingDetails();
-      
+
       // Close modal
       setIsCancelModalVisible(false);
     } catch (error) {
-      message.error('Không thể hủy booking. Vui lòng thử lại.');
-      console.error('Error cancelling booking:', error);
+      message.error("Không thể hủy booking. Vui lòng thử lại.");
+      console.error("Error cancelling booking:", error);
     } finally {
       setCancelLoading(false);
     }
@@ -268,44 +288,44 @@ const BoardingDetail: React.FC = () => {
   // Calculate refund information preview
   const getRefundInfo = () => {
     if (!booking) return null;
-    
+
     const startDate = dayjs(booking.startDate);
     const today = dayjs();
-    const daysBeforeCheckIn = startDate.diff(today, 'day');
-    
+    const daysBeforeCheckIn = startDate.diff(today, "day");
+
     if (daysBeforeCheckIn > 1) {
       const refundAmount = Math.round(booking.totalAmountAfter * 0.7);
       return {
         isRefunded: true,
         refundPercentage: 70,
         refundAmount,
-        daysBeforeCheckIn
+        daysBeforeCheckIn,
       };
     } else {
       return {
         isRefunded: false,
         refundPercentage: 0,
         refundAmount: 0,
-        daysBeforeCheckIn
+        daysBeforeCheckIn,
       };
     }
   };
 
   const getDateRange = () => {
     if (!booking) return { start: null, end: null };
-    
+
     const startDate = dayjs(booking.startDate);
     const endDate = dayjs(booking.endDate);
-    
+
     return { start: startDate, end: endDate };
   };
 
-  const disabledDate = (current: any) => {
+  const disabledDate = (current: Dayjs | null): boolean => {
     const { start, end } = getDateRange();
     if (!start || !end) return true;
-    
+
     // Disable dates outside the booking period
-    return current && (current < start.startOf('day') || current > end.endOf('day'));
+    return !!(current && (current.isBefore(start.startOf("day")) || current.isAfter(end.endOf("day"))));
   };
 
   if (loading) {
@@ -434,8 +454,8 @@ const BoardingDetail: React.FC = () => {
                 <div className="info-item">
                   <Text type="secondary">Tên chuồng</Text>
                   <div className="info-value">
-                    <HomeOutlined style={{ marginRight: 8, color: '#fa8c16' }} />
-                    {booking.cageName || 'Chưa phân chuồng'}
+                    <HomeOutlined style={{ marginRight: 8, color: "#fa8c16" }} />
+                    {booking.cageName || "Chưa phân chuồng"}
                   </div>
                 </div>
               </Col>
@@ -475,13 +495,8 @@ const BoardingDetail: React.FC = () => {
                     </div>
                   ))}
                 </div>
-                <div style={{ marginTop: 16, textAlign: 'center' }}>
-                  <Button 
-                    type="primary" 
-                    size="middle"
-                    className="book-service-button"
-                    onClick={handleBookService}
-                  >
+                <div style={{ marginTop: 16, textAlign: "center" }}>
+                  <Button type="primary" size="middle" className="book-service-button" onClick={handleBookService}>
                     Đặt dịch vụ làm đẹp
                   </Button>
                 </div>
@@ -498,28 +513,28 @@ const BoardingDetail: React.FC = () => {
                   height={300}
                   src={booking.checkInImage}
                   alt="Check-in"
-                  style={{ 
+                  style={{
                     borderRadius: 8,
-                    objectFit: 'cover'
+                    objectFit: "cover",
                   }}
                   placeholder={
-                    <div style={{ 
-                      width: '100%', 
-                      height: 300, 
-                      background: '#f0f0f0',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      borderRadius: 8
-                    }}>
-                      <EyeOutlined style={{ fontSize: 32, color: '#d9d9d9' }} />
+                    <div
+                      style={{
+                        width: "100%",
+                        height: 300,
+                        background: "#f0f0f0",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        borderRadius: 8,
+                      }}
+                    >
+                      <EyeOutlined style={{ fontSize: 32, color: "#d9d9d9" }} />
                     </div>
                   }
                 />
-                <div style={{ marginTop: 12, textAlign: 'center' }}>
-                  <Text type="secondary">
-                    Hình ảnh được chụp khi hamster check-in vào chuồng
-                  </Text>
+                <div style={{ marginTop: 12, textAlign: "center" }}>
+                  <Text type="secondary">Hình ảnh được chụp khi hamster check-in vào chuồng</Text>
                 </div>
               </div>
             </Card>
@@ -574,26 +589,24 @@ const BoardingDetail: React.FC = () => {
           {/* Daily Reports */}
           <Card title="Báo cáo hàng ngày từ nhân viên" className="daily-reports-card">
             {careLogsLoading ? (
-              <div style={{ textAlign: 'center', padding: '40px 0' }}>
+              <div style={{ textAlign: "center", padding: "40px 0" }}>
                 <Spin size="large" />
                 <p style={{ marginTop: 16 }}>Đang tải báo cáo...</p>
               </div>
             ) : careLogsError ? (
-              <Alert
-                message="Lỗi"
-                description={careLogsError}
-                type="error"
-                showIcon
-                style={{ marginBottom: 16 }}
-              />
+              <Alert message="Lỗi" description={careLogsError} type="error" showIcon style={{ marginBottom: 16 }} />
             ) : careLogs.length === 0 ? (
-              <div style={{ textAlign: 'center', padding: '40px 0' }}>
+              <div style={{ textAlign: "center", padding: "40px 0" }}>
                 <Text type="secondary">Chưa có báo cáo nào từ nhân viên</Text>
               </div>
             ) : (
               <Timeline className="daily-timeline">
                 {careLogs.map((log) => (
-                  <Timeline.Item key={log.logId} dot={<StarOutlined style={{ fontSize: 16 }} />} className="timeline-item">
+                  <Timeline.Item
+                    key={log.logId}
+                    dot={<StarOutlined style={{ fontSize: 16 }} />}
+                    className="timeline-item"
+                  >
                     <div className="report-date">
                       <CalendarOutlined style={{ marginRight: 8 }} />
                       {new Date(log.logDate).toLocaleDateString("vi-VN")} - {log.logTime.slice(0, 8)}
@@ -641,8 +654,8 @@ const BoardingDetail: React.FC = () => {
       </Row>
 
       {/* Cancel Booking Button - Only show if booking can be cancelled */}
-      {booking && ['BOOKED'].includes(booking.status) && (
-        <div style={{ marginTop: 24, textAlign: 'center' }}>
+      {booking && ["BOOKED"].includes(booking.status) && (
+        <div style={{ marginTop: 24, textAlign: "center" }}>
           <Button
             type="primary"
             danger
@@ -652,7 +665,7 @@ const BoardingDetail: React.FC = () => {
               minWidth: 200,
               height: 48,
               fontSize: 16,
-              fontWeight: 500
+              fontWeight: 500,
             }}
           >
             Hủy booking
@@ -690,7 +703,7 @@ const BoardingDetail: React.FC = () => {
       <Modal
         title={
           <Space>
-            <ScissorOutlined style={{ color: '#ff7a45' }} />
+            <ScissorOutlined style={{ color: "#ff7a45" }} />
             Chọn dịch vụ làm đẹp
           </Space>
         }
@@ -709,13 +722,13 @@ const BoardingDetail: React.FC = () => {
             onClick={handleAddServiceToBooking}
           >
             Thêm dịch vụ
-          </Button>
+          </Button>,
         ]}
         className="grooming-modal"
       >
         <div className="grooming-modal-content">
           {groomingLoading ? (
-            <div style={{ textAlign: 'center', padding: '40px 0' }}>
+            <div style={{ textAlign: "center", padding: "40px 0" }}>
               <Spin size="large" />
               <p style={{ marginTop: 16 }}>Đang tải danh sách dịch vụ...</p>
             </div>
@@ -759,11 +772,11 @@ const BoardingDetail: React.FC = () => {
                 <DatePicker
                   placeholder="Chọn ngày"
                   value={selectedDate ? dayjs(selectedDate) : null}
-                  onChange={(date) => setSelectedDate(date ? date.format('YYYY-MM-DD') : '')}
+                  onChange={(date) => setSelectedDate(date ? date.format("YYYY-MM-DD") : "")}
                   disabledDate={disabledDate}
-                  style={{ width: '100%' }}
+                  style={{ width: "100%" }}
                 />
-                <Text type="secondary" style={{ fontSize: 12, marginTop: 8, display: 'block' }}>
+                <Text type="secondary" style={{ fontSize: 12, marginTop: 8, display: "block" }}>
                   * Chỉ có thể chọn ngày trong khoảng thời gian gửi gài
                 </Text>
               </div>
@@ -775,8 +788,8 @@ const BoardingDetail: React.FC = () => {
       {/* Cancel Booking Confirmation Modal */}
       <Modal
         title={
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <ExclamationCircleOutlined style={{ color: '#faad14', fontSize: 20 }} />
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <ExclamationCircleOutlined style={{ color: "#faad14", fontSize: 20 }} />
             <span>Xác nhận hủy booking</span>
           </div>
         }
@@ -787,68 +800,64 @@ const BoardingDetail: React.FC = () => {
           <Button key="cancel" onClick={handleCloseCancelModal}>
             Quay lại
           </Button>,
-          <Button
-            key="confirm"
-            type="primary"
-            danger
-            loading={cancelLoading}
-            onClick={handleConfirmCancel}
-          >
+          <Button key="confirm" type="primary" danger loading={cancelLoading} onClick={handleConfirmCancel}>
             Xác nhận hủy
-          </Button>
+          </Button>,
         ]}
       >
-        <div style={{ padding: '16px 0' }}>
-          <p style={{ fontSize: 16, marginBottom: 16 }}>
-            Bạn có chắc chắn muốn hủy booking này không?
-          </p>
-          
+        <div style={{ padding: "16px 0" }}>
+          <p style={{ fontSize: 16, marginBottom: 16 }}>Bạn có chắc chắn muốn hủy booking này không?</p>
+
           {(() => {
             const refundInfo = getRefundInfo();
             if (!refundInfo) return null;
-            
+
             return (
-              <div style={{ 
-                backgroundColor: '#f6f8fa', 
-                padding: 16, 
-                borderRadius: 8,
-                border: '1px solid #e1e5e9'
-              }}>
-                <Title level={5} style={{ marginBottom: 12, color: '#1890ff' }}>
+              <div
+                style={{
+                  backgroundColor: "#f6f8fa",
+                  padding: 16,
+                  borderRadius: 8,
+                  border: "1px solid #e1e5e9",
+                }}
+              >
+                <Title level={5} style={{ marginBottom: 12, color: "#1890ff" }}>
                   Thông tin hoàn tiền:
                 </Title>
-                
+
                 <div style={{ marginBottom: 8 }}>
                   <Text strong>Số ngày trước khi check-in: </Text>
                   <Text>{refundInfo.daysBeforeCheckIn} ngày</Text>
                 </div>
-                
+
                 <div style={{ marginBottom: 8 }}>
                   <Text strong>Tổng tiền đã thanh toán: </Text>
                   <Text>{getFormattedPrice(booking?.totalAmountAfter || 0)}</Text>
                 </div>
-                
+
                 {refundInfo.isRefunded ? (
                   <>
                     <div style={{ marginBottom: 8 }}>
                       <Text strong>Phần trăm hoàn tiền: </Text>
-                      <Text style={{ color: '#52c41a' }}>{refundInfo.refundPercentage}%</Text>
+                      <Text style={{ color: "#52c41a" }}>{refundInfo.refundPercentage}%</Text>
                     </div>
                     <div>
                       <Text strong>Số tiền hoàn lại: </Text>
-                      <Text style={{ color: '#52c41a', fontSize: 16, fontWeight: 500 }}>
+                      <Text style={{ color: "#52c41a", fontSize: 16, fontWeight: 500 }}>
                         {getFormattedPrice(refundInfo.refundAmount)}
                       </Text>
                     </div>
                   </>
                 ) : (
-                  <div style={{ 
-                    padding: 12, 
-                    backgroundColor: '#fff2e8', 
-                    borderRadius: 6,
-                    border: '1px solid #ffec3d'
-                  }}>
-                    <Text style={{ color: '#d46b08' }}>
+                  <div
+                    style={{
+                      padding: 12,
+                      backgroundColor: "#fff2e8",
+                      borderRadius: 6,
+                      border: "1px solid #ffec3d",
+                    }}
+                  >
+                    <Text style={{ color: "#d46b08" }}>
                       ⚠️ Hủy booking trong vòng 1 ngày trước check-in sẽ không được hoàn tiền
                     </Text>
                   </div>
