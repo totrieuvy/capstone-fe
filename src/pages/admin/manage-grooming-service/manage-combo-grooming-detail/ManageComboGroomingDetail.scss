@@ -1,0 +1,115 @@
+.ManageComboGroomingDetail {
+  padding: 20px 40px;
+  background-color: #fff;
+
+  /* --- HEADER --- */
+  .detail-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+    gap: 12px;
+
+    .combo-title {
+      margin: 0;
+      font-weight: 600;
+      color: #333;
+    }
+
+    .back-button {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background-color: #1677ff;
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      height: 36px;
+      padding: 0 14px;
+      font-weight: 500;
+
+      &:hover {
+        background-color: #0958d9;
+        color: #fff;
+      }
+    }
+  }
+
+  /* --- CARD CHUNG --- */
+  .detail-card {
+    margin-bottom: 24px;
+    border-radius: 8px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+
+    .ant-card-head-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 600;
+      color: #333;
+    }
+  }
+
+  /* --- BẢNG GIÁ THEO LOÀI --- */
+  .price-table {
+    margin-top: 12px;
+
+    table {
+      border-collapse: collapse !important;
+      table-layout: fixed !important; /* ép 3 cột chia đều */
+      width: 100%;
+    }
+
+    th,
+    td {
+      width: 33.33% !important; /* tất cả 3 cột chia đều */
+      text-align: center !important; /* căn giữa dữ liệu */
+      padding: 10px 8px !important;
+      font-size: 14px;
+      border-bottom: 1px solid #f0f0f0;
+      white-space: nowrap;
+      vertical-align: middle;
+    }
+
+    th {
+      background-color: #fafafa;
+      font-weight: 600;
+      color: #333;
+    }
+
+    td {
+      color: #222;
+    }
+
+    /* Căn giá sau giảm màu xanh */
+    .ant-table-cell:last-child {
+      color: #52c41a;
+      font-weight: 600;
+    }
+
+    /* Hiệu ứng hover nhẹ */
+    .ant-table-tbody > tr:hover > td {
+      background-color: #fafafa;
+    }
+  }
+
+  /* --- TAG TRẠNG THÁI --- */
+  .ant-tag {
+    font-weight: 500;
+    border-radius: 4px;
+    padding: 2px 10px;
+    font-size: 13px;
+  }
+
+  /* --- LOADING / ERROR --- */
+  .detail-loading,
+  .detail-error {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 300px;
+    gap: 10px;
+  }
+}

@@ -1,0 +1,27 @@
+.history-grooming-page {
+  .container {
+    padding: 24px;
+  }
+
+  .page-title {
+    font-size: 24px;
+    font-weight: 700;
+    margin-bottom: 16px;
+  }
+
+  .filter-card {
+    margin-bottom: 20px;
+  }
+
+  .order-list-card {
+    background: #fff;
+    border-radius: 12px;
+    padding: 16px;
+  }
+
+  .no-data {
+    text-align: center;
+    color: #888;
+    padding: 20px;
+  }
+}

@@ -1,0 +1,374 @@
+.boarding-container {
+  padding: 24px;
+  max-width: 1400px;
+  margin: 0 auto;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #fff5f5 0%, #ffe6e6 100%);
+}
+
+.boarding__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 32px;
+
+  h2 {
+    font-size: 28px;
+    font-weight: 700;
+    margin: 0;
+  }
+}
+
+.boarding__steps {
+  background: white;
+  padding: 24px;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  margin-bottom: 32px;
+}
+
+.boarding__content {
+  min-height: 400px;
+  margin-bottom: 24px;
+}
+
+.boarding__actions {
+  display: flex;
+  justify-content: flex-end;
+  padding: 24px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+// Hamster card styles (from ProfileHamster)
+.hamster__card {
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+  position: relative;
+
+  &:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 8px 24px rgba(255, 111, 97, 0.3);
+  }
+
+  &.selected {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 24px rgba(255, 111, 97, 0.4);
+  }
+}
+
+.hamster__card-img {
+  height: 200px;
+  object-fit: cover;
+  width: 100%;
+}
+
+.hamster__card-name {
+  font-size: 20px;
+  font-weight: 700;
+  color: #ff6f61;
+  text-align: center;
+  margin-bottom: 12px;
+  text-transform: capitalize;
+}
+
+.hamster__info {
+  p {
+    margin: 8px 0;
+    font-size: 14px;
+    color: #666;
+    display: flex;
+    align-items: center;
+
+    b {
+      min-width: 90px;
+      font-weight: 600;
+    }
+  }
+}
+
+// Compact hamster card for selection
+.hamster__card-compact {
+  transition: all 0.3s ease;
+  
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(255, 111, 97, 0.2);
+  }
+
+  &.selected {
+    background: linear-gradient(135deg, #fff5f5 0%, #ffe6e6 100%);
+    box-shadow: 0 4px 12px rgba(255, 111, 97, 0.3);
+  }
+
+  .hamster__info-compact {
+    p {
+      margin: 4px 0;
+      font-size: 13px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+
+      .label {
+        color: #999;
+        font-size: 12px;
+        min-width: 70px;
+      }
+
+      .value {
+        color: #333;
+        font-weight: 500;
+      }
+    }
+  }
+}
+
+.step-select-hamster,
+.step-select-dates-and-cage,
+.step-confirmation {
+  background: white;
+  padding: 32px;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.selected-checkmark {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: #ff6f61;
+  color: white;
+  border-radius: 50%;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  font-weight: bold;
+  box-shadow: 0 2px 8px rgba(255, 111, 97, 0.4);
+}
+
+// Date selection section
+.date-section {
+  margin-bottom: 32px;
+}
+
+// Cage card styles
+.cage__card {
+  transition: all 0.3s ease;
+  position: relative;
+
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 6px 16px rgba(255, 111, 97, 0.2);
+  }
+
+  &.selected {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(255, 111, 97, 0.3);
+  }
+
+  &.disabled {
+    &:hover {
+      transform: none;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    }
+  }
+}
+
+// Hotel-style cage card for Step 2
+.step-select-dates-and-cage {
+  .cage__card {
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(255, 111, 97, 0.15);
+    }
+
+    &.selected {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(255, 111, 97, 0.25);
+    }
+
+    &.disabled {
+      &:hover {
+        transform: none;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+      }
+    }
+  }
+}
+
+// Service card styles
+.service__card {
+  transition: all 0.3s ease;
+  position: relative;
+
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 6px 16px rgba(255, 111, 97, 0.2);
+  }
+
+  &.selected {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(255, 111, 97, 0.3);
+    background: linear-gradient(135deg, #fff5f5 0%, #ffe6e6 100%);
+  }
+}
+
+// Cage details drawer
+.cage-details {
+  h4 {
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 8px;
+  }
+}
+
+// Step 3 - Confirmation styles
+.step-confirmation {
+  .info-group {
+    p {
+      margin: 8px 0;
+      font-size: 14px;
+      color: #666;
+
+      strong {
+        color: #333;
+        min-width: 120px;
+        display: inline-block;
+      }
+    }
+  }
+
+  // Left column styling
+  .ant-col:first-child {
+    .ant-card {
+      height: fit-content;
+    }
+  }
+
+  // Right column styling  
+  .ant-col:last-child {
+    .ant-card {
+      height: fit-content;
+    }
+  }
+}
+
+.price-breakdown {
+  background: #fafafa;
+  padding: 20px;
+  border-radius: 8px;
+
+  .price-item {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 12px;
+    font-size: 15px;
+    color: #666;
+
+    &.total {
+      font-size: 18px;
+      font-weight: 700;
+      color: #ff6f61;
+      margin-top: 8px;
+    }
+
+    span:last-child {
+      font-weight: 600;
+      color: #333;
+    }
+  }
+}
+
+.terms-section {
+  .ant-checkbox-wrapper {
+    align-items: flex-start;
+
+    .ant-checkbox {
+      margin-top: 4px;
+    }
+  }
+}
+
+// Animation
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+// Responsive
+@media (max-width: 768px) {
+  .boarding-container {
+    padding: 16px;
+  }
+
+  .boarding__header {
+    flex-direction: column;
+    gap: 16px;
+    align-items: flex-start;
+
+    h2 {
+      font-size: 24px;
+    }
+  }
+
+  .step-select-hamster,
+  .step-select-dates-and-cage,
+  .step-confirmation {
+    padding: 20px;
+  }
+
+  .boarding__actions {
+    padding: 16px;
+  }
+
+  // Mobile-specific cage card styles
+  .step-select-dates-and-cage {
+    .cage__card {
+      .ant-row {
+        .ant-col {
+          &:first-child {
+            margin-bottom: 16px;
+          }
+        }
+      }
+    }
+  }
+
+  // Mobile-specific confirmation styles
+  .step-confirmation {
+    .ant-row {
+      .ant-col {
+        margin-bottom: 16px;
+        
+        &:last-child {
+          margin-bottom: 0;
+        }
+      }
+    }
+
+    // Mobile button layout
+    .terms-section {
+      .ant-row {
+        .ant-col {
+          margin-bottom: 0;
+          
+          &:first-child {
+            margin-bottom: 8px;
+          }
+        }
+      }
+    }
+  }
+}

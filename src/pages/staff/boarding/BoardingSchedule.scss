@@ -114,7 +114,8 @@
   display: flex;
   border-bottom: 1px solid #e5e7eb;
   min-height: 48px;
-  transition: background-color 0.2s;
+  transition: background-color 0.2s, min-height 0.3s ease;
+  position: relative; // Enable proper positioning for overlapping bookings
   
   &:hover {
     background-color: #f9fafb;
@@ -131,6 +132,7 @@
   background-color: white;
   display: flex;
   align-items: center;
+  transition: min-height 0.3s ease;
 }
 
 .cage-type-cell {
@@ -142,6 +144,7 @@
   flex-shrink: 0;
   display: flex;
   align-items: center;
+  transition: min-height 0.3s ease;
   
   &.cage-type-basic {
     background-color: #a5f3fc;
@@ -164,11 +167,14 @@
   display: flex;
   flex: 1;
   position: relative;
+  min-height: 48px; // Base minimum height
+  transition: min-height 0.3s ease;
 }
 
 .grid-cell {
   border-right: 1px solid #e5e7eb;
   flex-shrink: 0;
+  transition: min-height 0.3s ease;
 }
 
 .booking-bar {
@@ -200,6 +206,37 @@
   &.booking-bar-orange {
     background-color: #f97316;
   }
+  
+  &.booking-bar-extended {
+    background: linear-gradient(135deg, #22c55e 0%, #16a34a 50%, #15803d 100%);
+    border: 2px solid #15803d;
+    font-weight: 700;
+  }
+  
+  &.booking-bar-split {
+    // Adjust padding and positioning for split bookings
+    padding: 0 4px;
+    border-radius: 4px;
+    
+    // Add border to separate overlapping bookings
+    &:not(:first-child) {
+      border-top: 1px solid rgba(255, 255, 255, 0.3);
+    }
+    
+    // Ensure text is readable in smaller space
+    .booking-text {
+      font-size: 10px;
+      line-height: 1.1;
+      font-weight: 700;
+    }
+    
+    // Adjust hover effects for split bookings
+    &:hover {
+      transform: scale(1.05);
+      z-index: 50 !important;
+      border: 1px solid rgba(255, 255, 255, 0.8);
+    }
+  }
 }
 
 .booking-text {
@@ -209,6 +246,13 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  
+  .extended-indicator {
+    font-style: italic;
+    font-weight: 800;
+    opacity: 0.9;
+    font-size: 11px;
+  }
 }
 
 .booking-tooltip {

@@ -1,7 +1,7 @@
 import { Navigate, Outlet, RouterProvider, createBrowserRouter } from "react-router-dom";
 import Layout from "./layouts/Layout";
 import Homepage from "./pages/homepage/Homepage";
-import NotFoundPage from "./pages/not-found/NotFoundPage";
+import NotFoundPage from "./pages/not-found/customer/NotFoundPage";
 import Login from "./pages/login/Login";
 import Register from "./pages/register/Register";
 import ForgotPassword from "./pages/forgot-password/ForgotPassword";
@@ -19,31 +19,59 @@ import Species from "./pages/admin/species/Species";
 import ResetPassword from "./pages/reset-password/ResetPassword";
 import Category from "./pages/admin/category-product/Category";
 import ManageProduct from "./pages/admin/product/ManageProduct";
-import BoardingHamster from "./pages/customer/boarding/BoardingBooking/BoardingHamster";
+import BoardingHamster from "./pages/customer/boarding/boarding-booking/BoardingHamster";
 import ProductDetail from "./pages/product-detail/ProductDetail";
 import { clearCart } from "./redux/features/cartSlice";
 import Checkout from "./pages/customer/checkout/Checkout";
 import PaymentSuccess from "./pages/customer/payment-success/PaymentSuccess";
 import TrackOrder from "./pages/customer/track-order/track-order-overall/TrackOrder";
 import TrackOrderDetail from "./pages/customer/track-order/track-order-detail/TrackOrderDetail";
-import CageType from "./pages/admin/CageType/CageType";
+import CageType from "./pages/admin/cage-type/CageType";
 import ViewProfile from "./pages/customer/profile/ProfileCustomer";
 import WalletCustomer from "./pages/customer/wallet-customer/WalletCustomer";
 import PaymentFail from "./pages/customer/payment-fail/PaymentFail";
 import ManageOrder from "./pages/admin/manage-orders/orders/ManageOrder";
 import ManageOrderDetail from "./pages/admin/manage-orders/detail-orders/ManageOrderDetail";
 import ManageTransaction from "./pages/admin/manage-transaction/ManageTransaction";
-import BoardingHistory from "./pages/customer/boarding/BoardingHistory/BoardingHistory";
-import BoardingDetail from "./pages/customer/boarding/BoardingDetail/BoardingDetail";
+import BoardingHistory from "./pages/customer/boarding/boarding-history/BoardingHistory";
+import BoardingDetail from "./pages/customer/boarding/boarding-history-detail/CustomerBoardingDetail";
 import BoardingSchedule from "./pages/staff/boarding/BoardingSchedule";
-import StaffBoardingDetail from "./pages/staff/boarding-detail/BoardingDetail";
+import StaffBoardingDetail from "./pages/staff/boarding-detail/StaffBoardingDetail";
+import StaffCheckOut from "./pages/staff/checkout/StaffCheckOut";
+import StaffNotFoundPage from "./pages/not-found/staff/StaffNotFoundPage";
+import AdminNotFoundPage from "./pages/not-found/admin/AdminNotFoundPage";
+import BoardingPaymentSuccess from "./pages/staff/BoardingPaymentSuccess";
+import BoardingPaymentFailure from "./pages/staff/BoardingPaymentFailure";
 import GroomingPage from "./pages/customer/grooming/dich-vu-lam-dep/GroomingPage";
 import ManageGroomingService from "./pages/admin/manage-grooming-service/ManageGroomingService";
 import CageManagement from "./pages/staff/cage/CageManagement";
+import CareLog from "./pages/staff/care-log/CareLog";
+import Iot from "./pages/staff/Iot/Iot";
+import ManageComboGrooming from "./pages/admin/manage-grooming-service/manage-combo-grooming/ManageComboGrooming";
+import ManageComboGroomingDetail from "./pages/admin/manage-grooming-service/manage-combo-grooming-detail/ManageComboGroomingDetail";
+import ManageGroomingServiceDetail from "./pages/admin/manage-grooming-service/manage-grooming-single-detail/ManageGroomingServiceDetail";
+import BookingGroomingService from "./pages/customer/grooming/dat-dich-vu-lam-dep/BookingGroomingService";
+import BookingSuccess from "./components/booking-success/BookingSuccess";
+import MedicalList from "./pages/customer/medical/medical-list/MedicalList";
+import ManageMedical from "./pages/admin/manage-medical-services/ManageMedical";
+import HistoryGrooming from "./pages/admin/manage-grooming-service/history-grooming/HistoryGrooming";
+import HistoryGroomingDetail from "./pages/staff/grooming/HistoryGroomingDetail";
+import MedicalBooking from "./pages/customer/medical/medical-booking/MedicalBooking";
+import TrackGrooming from "./pages/customer/grooming/history/track-grooming/TrackGrooming";
+import TrackGroomingDetail from "./pages/customer/grooming/history/track-grooming-detail/TrackGroomingDetail";
+import GroomingPaymentSuccess from "./pages/customer/grooming/payment-success/GroomingPaymentSuccess";
+import ManageAppointment from "./pages/staff/medical/manage-appointment/manage-appointment";
+import ManageAppointmentDetail from "./pages/staff/medical/manage-appointment-detail/manage-appointment-detail";
+import MedicalAppointmentHistory from "./pages/customer/medical/medical-appointment-history/MedicalAppointmentHistory";
+import MedicalAppointmentHistoryDetail from "./pages/customer/medical/medical-appointment-history-detail/MedicalAppointmentHistoryDetail";
+import VetNotFoundPage from "./pages/not-found/veterinarian/VetNotFoundPage";
+import HamsterSchedule from "./pages/veterinarian/today-schedule/TodaySchedule";
+import VetAppointmentDetail from "./pages/veterinarian/vet-appointment-detail/VetAppointmentDetail";
+import Examination from "./pages/veterinarian/examination/Examination";
 
 interface User {
   id: number;
-  role: "ADMIN" | "STAFF" | "VETERINARIAN" | "SHIPPER" | string;
+  role: "ADMIN" | "STAFF" | "VET" | "SHIPPER" | string;
   token?: string;
 }
 
@@ -56,7 +84,7 @@ interface DecodedToken {
 }
 
 interface PrivateRouteProps {
-  role?: "ADMIN" | "STAFF" | "VETERINARIAN" | "SHIPPER";
+  role?: "ADMIN" | "STAFF" | "VET" | "SHIPPER";
 }
 
 const PrivateRoute: React.FC<PrivateRouteProps> = ({ role }) => {
@@ -125,6 +153,11 @@ const App = () => {
         { path: "/payment-failure", element: <PaymentFail /> },
         { path: "/dich-vu-lam-dep", element: <GroomingPage /> },
         {
+          path: "/booking-success",
+          element: <BookingSuccess />,
+        },
+        { path: "/dich-vu-lam-dep/dat-dich-vu", element: <BookingGroomingService /> },
+        {
           path: "/profile",
           element: <Panel />,
           children: [
@@ -164,6 +197,20 @@ const App = () => {
           ],
         },
         {
+          path: "/grooming-history",
+          element: <Panel />,
+          children: [
+            {
+              path: "",
+              element: <TrackGrooming />,
+            },
+            {
+              path: ":id",
+              element: <TrackGroomingDetail />,
+            },
+          ],
+        },
+        {
           path: "/boarding-schedule",
           element: <Panel />,
           children: [
@@ -176,6 +223,38 @@ const App = () => {
               element: <BoardingDetail />,
             },
           ],
+        },
+        {
+          path: "/lich-su-kham",
+          element: <Panel />,
+          children: [
+            {
+              path: "",
+              element: <MedicalAppointmentHistory />,
+            },
+          ],
+        },
+        {
+          path: "/lich-su-kham",
+          element: <Panel />,
+          children: [
+            {
+              path: "",
+              element: <MedicalAppointmentHistory />,
+            },
+            {
+              path: ":appointmentId",
+              element: <MedicalAppointmentHistoryDetail />,
+            },
+          ],
+        },
+        {
+          path: "/dich-vu-y-te",
+          element: <MedicalList />,
+        },
+        {
+          path: "/dich-vu-y-te/dat-dich-vu",
+          element: <MedicalBooking />,
         },
       ],
     },
@@ -192,7 +271,17 @@ const App = () => {
             { path: "quan-li-loai-hamster", element: <Species /> },
             { path: "quan-li-danh-muc-san-pham", element: <Category /> },
             { path: "quan-li-loai-chuong", element: <CageType /> },
-            { path: "quan-li-dich-vu-grooming", element: <ManageGroomingService /> },
+            { path: "quan-li-dich-vu-y-te", element: <ManageMedical /> },
+            { path: "quan-li-dich-vu-grooming/grooming-le", element: <ManageGroomingService /> },
+            { path: "quan-li-dich-vu-grooming/grooming-le/:id", element: <ManageGroomingServiceDetail /> },
+            {
+              path: "quan-li-dich-vu-grooming/grooming-combo",
+              element: <ManageComboGrooming />,
+            },
+            {
+              path: "quan-li-dich-vu-grooming/grooming-combo/:id",
+              element: <ManageComboGroomingDetail />,
+            },
             {
               path: "quan-li-san-pham",
               element: <ManageProduct />,
@@ -208,6 +297,10 @@ const App = () => {
               path: "quan-li-giao-dich",
               element: <ManageTransaction />,
             },
+            {
+              path: "*",
+              element: <AdminNotFoundPage />,
+            },
           ],
         },
       ],
@@ -222,15 +315,44 @@ const App = () => {
           children: [
             { path: "lich-dat-boarding", element: <BoardingSchedule /> },
             { path: "booking-detail/:bookingId", element: <StaffBoardingDetail /> },
+            { path: "care-log/:bookingId", element: <CareLog /> },
+            { path: "checkout", element: <StaffCheckOut /> },
             { path: "quan-li-chuong", element: <CageManagement /> },
+            { path: "*", element: <StaffNotFoundPage /> },
+            { path: "thong-so-iot", element: <Iot /> },
+            { path: "lich-dat-grooming", element: <HistoryGrooming /> },
+            { path: "groomingpayment-success", element: <GroomingPaymentSuccess /> },
+            { path: "lich-dat-grooming/:id", element: <HistoryGroomingDetail /> },
+            { path: "*", element: <StaffNotFoundPage /> },
+            { path: "lich-dat-kham", element: <ManageAppointment /> },
+            { path: "lich-dat-kham/:appointmentId", element: <ManageAppointmentDetail /> },
           ],
+        },
+        {
+          path: "boardingpayment-success",
+          element: <BoardingPaymentSuccess />,
+        },
+        {
+          path: "boardingpayment-failure",
+          element: <BoardingPaymentFailure />,
         },
       ],
     },
     {
-      path: "/VETERINARIAN",
-      element: <PrivateRoute role="VETERINARIAN" />,
-      children: [{ path: "", element: <SideBar /> }],
+      path: "/VET",
+      element: <PrivateRoute role="VET" />,
+      children: [
+        {
+          path: "",
+          element: <SideBar />,
+          children: [
+            { path: "lich-kham-hom-nay", element: <HamsterSchedule /> },
+            { path: "lich-kham/:appointmentId", element: <VetAppointmentDetail /> },
+            { path: "examination/:appointmentId", element: <Examination /> },
+            { path: "*", element: <VetNotFoundPage /> },
+          ],
+        }
+      ],
     },
     {
       path: "/SHIPPER",

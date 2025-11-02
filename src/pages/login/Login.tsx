@@ -10,6 +10,8 @@ import api from "../../config/axios";
 import { toast } from "react-toastify";
 import { useDispatch } from "react-redux";
 import { login } from "../../redux/features/userSlice";
+import { messaging } from "../../config/firebase";
+import { getToken } from "firebase/messaging";
 
 interface LoginValues {
   email: string;
@@ -29,6 +31,25 @@ const LoginForm = () => {
   useEffect(() => {
     document.title = "Login";
   }, []);
+
+  const getFcmToken = async () => {
+    try {
+      const permission = await Notification.requestPermission();
+      if (permission === "granted") {
+        const token = await getToken(messaging, {
+          vapidKey: "BOYKZ4MFMfEBL8WJTLid1bmd-m0Hbq8Aru3jlJTbylPWiHpdxyiKlhU97BtPw3K44Uyn4BLqzzVmsptNvwatdRI", // ⚠️ Lấy từ Firebase Console
+        });
+        console.log("FCM Token:", token);
+        return token;
+      } else {
+        console.warn("Permission denied for notifications.");
+        return null;
+      }
+    } catch (err) {
+      console.error("Error getting FCM token:", err);
+      return null;
+    }
+  };
 
   const handleLogin = async (values: LoginValues) => {
     setLoading(true);
@@ -50,6 +71,9 @@ const LoginForm = () => {
         const userData = { ...user, token };
         dispatch(login(userData));
 
+        const fcmToken = await getFcmToken();
+        console.log("Thiết bị này có FCM token:", fcmToken);
+
         switch (role) {
           case "ADMIN":
             navigate("/ADMIN", { replace: true });
@@ -57,8 +81,8 @@ const LoginForm = () => {
           case "STAFF":
             navigate("/STAFF", { replace: true });
             break;
-          case "VETERINARIAN":
-            navigate("/VETERINARIAN", { replace: true });
+          case "VET":
+            navigate("/VET", { replace: true });
             break;
           case "SHIPPER":
             navigate("/SHIPPER", { replace: true });
@@ -102,8 +126,8 @@ const LoginForm = () => {
         case "STAFF":
           navigate("/STAFF", { replace: true });
           break;
-        case "VETERINARIAN":
-          navigate("/VETERINARIAN", { replace: true });
+        case "VET":
+          navigate("/VET", { replace: true });
           break;
         case "SHIPPER":
           navigate("/SHIPPER", { replace: true });

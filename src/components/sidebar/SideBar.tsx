@@ -11,7 +11,7 @@ import {
   TagOutlined,
 } from "@ant-design/icons";
 import { GiPawPrint } from "react-icons/gi";
-import { BiCategory } from "react-icons/bi";
+import { BiCategory, BiPlusMedical } from "react-icons/bi";
 import { Layout, Menu, Button, theme } from "antd";
 import type { ItemType } from "antd/es/menu/interface";
 import { Link, Outlet, useNavigate } from "react-router-dom";
@@ -23,7 +23,7 @@ import { GiCage } from "react-icons/gi";
 
 interface User {
   id: number;
-  role: "ADMIN" | "STAFF" | "VETERINARIAN" | "SHIPPER" | string;
+  role: "ADMIN" | "STAFF" | "VET" | "SHIPPER" | string;
 }
 
 interface RootState {
@@ -75,7 +75,11 @@ const SideBar: React.FC = () => {
         getItem("Quản lí danh mục sản phẩm", "quan-li-danh-muc-san-pham", <BiCategory />),
         getItem("Quản lí sản phẩm", "quan-li-san-pham", <TagOutlined />),
         getItem("Quản lí loại chuồng", "quan-li-loai-chuong", <GiCage />),
-        getItem("Quản lí dịch vụ grooming", "quan-li-dich-vu-grooming", <GiCage />),
+        getItem("Quản lí dịch vụ y tế", "quan-li-dich-vu-y-te", <BiPlusMedical />),
+        getItem("Quản lí dịch vụ grooming", "quan-li-dich-vu-grooming", <GiCage />, [
+          getItem("Grooming lẻ", "quan-li-dich-vu-grooming/grooming-le"),
+          getItem("Grooming combo", "quan-li-dich-vu-grooming/grooming-combo"),
+        ]),
         getItem("Thống kê", "thong-ke", <AreaChartOutlined />),
         getItem("Quản lí tài khoản", "quan-li-tai-khoan", <UserOutlined />),
         getItem("Quản lí đơn hàng", "quan-li-don-hang", <ShoppingOutlined />),
@@ -83,6 +87,10 @@ const SideBar: React.FC = () => {
       ];
     } else if (user?.role === "STAFF") {
       items = [
+        getItem("Dịch vụ y tế", "medical-checkup", <BiPlusMedical />, [
+          getItem("Lịch đặt khám", "lich-dat-kham"),
+        ]),
+
         getItem("Grooming", "grooming", <SkinOutlined />, [
           getItem("Quản lí dịch vụ grooming", "quan-li-dich-vu-grooming"),
           getItem("Lịch đặt grooming", "lich-dat-grooming"),
@@ -93,9 +101,9 @@ const SideBar: React.FC = () => {
           getItem("Quản lí chuồng", "quan-li-chuong"),
         ]),
       ];
-    } else if (user?.role === "VETERINARIAN") {
+    } else if (user?.role === "VET") {
       items = [
-        getItem("Lịch khám của tui", "lich-kham", <ScheduleOutlined />),
+        getItem("Lịch khám hôm nay", "lich-kham-hom-nay", <ScheduleOutlined />),
         getItem("Lịch đặt khám", "lich-dat-kham", <ClockCircleOutlined />),
       ];
     }
