@@ -9,6 +9,8 @@ export interface CreateCageTypeReq {
   material: string;
   isActive?: boolean;
   imageUrl: string;
+  iotDeviceId: string;
+  section: string;
 }
 
 export interface CageTypeResponse {
@@ -78,7 +80,7 @@ export const cageTypeService = {
       console.error("Error deleting cage type:", error);
       throw error;
     }
-  }
+  },
 };
 
 export default cageTypeService;
