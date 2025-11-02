@@ -386,6 +386,20 @@ export interface Veterinarian {
   bestServices: string[];
 }
 
+export interface MedicalRecord {
+  id: string;
+  appointmentItemId: string;
+  diagnosis: string;
+  symptom: string;
+  linkResult: string;
+  healthStatus: string;
+}
+
+export interface Prescription {
+  id: string;
+  // Add other prescription fields as needed when structure is available
+}
+
 export interface AppointmentItemDetail {
   id: string;
   appointmentId: string;
@@ -396,6 +410,7 @@ export interface AppointmentItemDetail {
   serviceName: string;
   serviceComboName: string | null;
   comboServices: any[] | null;
+  medicalRecord: MedicalRecord | null;
 }
 
 export interface AppointmentDetail {
@@ -421,6 +436,7 @@ export interface AppointmentDetail {
   transactionTime: string;
   staff: any | null;
   veterinarian: Veterinarian | null;
+  prescription: Prescription | null;
   items: AppointmentItemDetail[];
 }
 
@@ -512,7 +528,7 @@ export const updateAppointmentStatus = async (
 ): Promise<UpdateAppointmentStatusResponse> => {
   try {
     const requestData: UpdateAppointmentStatusRequest = { status };
-    const response = await api.put<UpdateAppointmentStatusResponse>(
+    const response = await api.patch<UpdateAppointmentStatusResponse>(
       `/api/appointment/${appointmentId}`, 
       requestData
     );
@@ -541,6 +557,95 @@ export const uploadFile = async (file: File): Promise<FileUploadResponse> => {
     return response.data.data;
   } catch (error) {
     console.error("Error uploading file:", error);
+    throw error;
+  }
+};
+
+// Interfaces for medical record
+export interface CreateMedicalRecordRequest {
+  appointmentItemId: string;
+  hamsterId: string;
+  diagnosis: string;
+  symptom: string;
+  linkResult: string;
+  healthStatus: string;
+}
+
+export interface CreateMedicalRecordResponse {
+  code: number;
+  message: string;
+}
+
+// Create a medical record for a hamster
+export const createMedicalRecord = async (medicalRecordData: CreateMedicalRecordRequest): Promise<CreateMedicalRecordResponse> => {
+  try {
+    const response = await api.post<CreateMedicalRecordResponse>("/api/medical-record", medicalRecordData);
+    return response.data;
+  } catch (error) {
+    console.error("Error creating medical record:", error);
+    throw error;
+  }
+};
+
+// Interfaces for check-out appointment
+export interface CheckOutAppointmentRequest {
+  appointmentId: string;
+  checkOutImage: string;
+  paymentMethod?: string;
+  additionalAmount: number;
+}
+
+export interface CheckOutAppointmentData {
+  paymentUrl: string;
+}
+
+export interface CheckOutAppointmentResponse {
+  code: number;
+  message: string;
+  data: CheckOutAppointmentData;
+}
+
+// Check out an appointment
+export const checkOutAppointment = async (checkOutData: CheckOutAppointmentRequest): Promise<CheckOutAppointmentResponse> => {
+  try {
+    // Set paymentMethod to VNPAY by default if not provided
+    const requestData = {
+      ...checkOutData,
+      paymentMethod: checkOutData.paymentMethod || "VNPAY",
+    };
+
+    const response = await api.post<CheckOutAppointmentResponse>("/api/appointment/check-out", requestData);
+    return response.data;
+  } catch (error) {
+    console.error("Error checking out appointment:", error);
+    throw error;
+  }
+};
+
+// Interfaces for adding services to appointment
+export interface AddServiceItem {
+  serviceId: string;
+  price: number;
+}
+
+export interface AddServiceToAppointmentRequest {
+  appointmentId: string;
+  additionalAmount: number;
+  items: AddServiceItem[];
+}
+
+export interface AddServiceToAppointmentResponse {
+  code: number;
+  message: string;
+}
+
+// Add services to an existing appointment
+export const addServiceToAppointment = async (serviceData: AddServiceToAppointmentRequest): Promise<AddServiceToAppointmentResponse> => {
+  try {
+    const response = await api.post<AddServiceToAppointmentResponse>("/api/appointment/add-service", serviceData);
+    return response.data;
+  } catch (error) {
+    console.error("Error adding service to appointment:", error);
     throw error;
   }
 };

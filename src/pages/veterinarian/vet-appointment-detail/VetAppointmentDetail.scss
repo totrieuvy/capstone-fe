@@ -189,6 +189,16 @@
         transform: translateY(-2px);
       }
 
+      &.clickable {
+        cursor: pointer;
+        
+        &:hover {
+          border-color: #1890ff;
+          box-shadow: 0 6px 16px rgba(24, 144, 255, 0.3);
+          transform: translateY(-3px);
+        }
+      }
+
       .ant-card-body {
         padding: 16px;
         text-align: center;
@@ -257,6 +267,51 @@
       
       .ant-upload-hint {
         font-size: 14px;
+      }
+    }
+  }
+
+  .medical-record-modal {
+    .ant-modal-header {
+      background: linear-gradient(135deg, #f6ffed 0%, #f0f9ff 100%);
+      border-bottom: 2px solid #d9f7be;
+      
+      .ant-modal-title {
+        color: #52c41a;
+        font-weight: 600;
+        font-size: 18px;
+      }
+    }
+
+    .ant-modal-body {
+      max-height: 70vh;
+      overflow-y: auto;
+    }
+
+    .ant-descriptions {
+      .ant-descriptions-item-label {
+        font-weight: 600;
+        color: #595959;
+        background: #fafafa;
+      }
+
+      .ant-descriptions-item-content {
+        font-weight: 500;
+        color: #262626;
+      }
+    }
+
+    .ant-card {
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+      
+      .ant-card-head {
+        border-bottom: 1px solid #e6f4ff;
+        
+        .ant-card-head-title {
+          font-weight: 600;
+          font-size: 16px;
+        }
       }
     }
   }

@@ -25,7 +25,7 @@ interface Appointment {
 }
 
 const timeSlots = [
-  '09:00', '10:00', '11:00', '12:00', '13:00', 
+  '09:00', '10:00', '11:00-13:00', 
   '14:00', '15:00', '16:00', '17:00'
 ];
 
@@ -90,7 +90,7 @@ export default function HamsterSchedule() {
   };
 
   const isBreakTime = (time: string) => {
-    return time === '12:00';
+    return time === '11:00-13:00';
   };
 
   const isAfterWork = (time: string) => {
