@@ -4,36 +4,379 @@
   min-height: 100vh;
 
   .examination-container {
-    border-radius: 12px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-    background: white;
+    max-width: 1200px;
+    margin: 0 auto;
   }
 
-  .examination-loading {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    min-height: 50vh;
-  }
-
+  .examination-loading,
   .examination-error {
     display: flex;
+    flex-direction: column;
     justify-content: center;
     align-items: center;
     min-height: 50vh;
-    
-    .ant-card {
-      text-align: center;
-      min-width: 400px;
-    }
+    gap: 16px;
   }
 
   .examination-header {
-    margin-bottom: 0;
-    
+    margin-bottom: 24px;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+
+    .ant-card-body {
+      padding: 24px;
+    }
+
     .ant-typography {
+      margin-bottom: 8px;
       color: #1890ff;
       font-weight: 600;
+    }
+  }
+
+  .steps-card {
+    margin-bottom: 24px;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+
+    .ant-steps {
+      padding: 16px 0;
+    }
+
+    .ant-steps-item-title {
+      font-weight: 600;
+    }
+
+    .ant-steps-item-description {
+      color: #8c8c8c;
+    }
+  }
+
+  .step-content-card {
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    background: white;
+
+    .ant-card-head {
+      background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+      border-bottom: 2px solid #e6f4ff;
+      border-radius: 12px 12px 0 0;
+
+      .ant-card-head-title {
+        color: #1890ff;
+        font-weight: 600;
+        font-size: 18px;
+      }
+    }
+
+    .ant-card-body {
+      padding: 32px;
+    }
+  }
+
+  .services-card {
+    .ant-card-head {
+      background: linear-gradient(135deg, #fff2e8 0%, #fff7e6 100%);
+      border-bottom: 2px solid #ffe7ba;
+
+      .ant-card-head-title {
+        color: #fa8c16;
+        font-weight: 600;
+        font-size: 18px;
+      }
+    }
+
+    .ant-select {
+      .ant-select-selector {
+        border-radius: 8px;
+        border: 2px solid #d9d9d9;
+        transition: all 0.3s ease;
+
+        &:hover {
+          border-color: #40a9ff;
+        }
+      }
+
+      &.ant-select-focused .ant-select-selector {
+        border-color: #1890ff;
+        box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2);
+      }
+    }
+
+    .ant-btn {
+      border-radius: 8px;
+      font-weight: 600;
+      height: 40px;
+      transition: all 0.3s ease;
+
+      &.ant-btn-primary {
+        background: linear-gradient(135deg, #1890ff 0%, #096dd9 100%);
+        border: none;
+        box-shadow: 0 4px 12px rgba(24, 144, 255, 0.3);
+
+        &:hover {
+          background: linear-gradient(135deg, #40a9ff 0%, #1890ff 100%);
+          transform: translateY(-2px);
+          box-shadow: 0 6px 16px rgba(24, 144, 255, 0.4);
+        }
+      }
+    }
+  }
+
+  .ant-collapse {
+    background: transparent !important;
+    border: none !important;
+
+    .ant-collapse-item {
+      border: 2px solid #f0f0f0;
+      border-radius: 12px !important;
+      margin-bottom: 16px;
+      overflow: hidden;
+      transition: all 0.3s ease;
+
+      &:hover {
+        border-color: #1890ff;
+        box-shadow: 0 4px 16px rgba(24, 144, 255, 0.1);
+      }
+
+      &.ant-collapse-item-active {
+        border-color: #52c41a;
+        box-shadow: 0 4px 16px rgba(82, 196, 26, 0.1);
+      }
+
+      .ant-collapse-header {
+        background: linear-gradient(135deg, #f0f9ff 0%, #e6f4ff 100%);
+        border-bottom: 2px solid #bae7ff !important;
+        padding: 16px 20px !important;
+        font-weight: 600;
+        transition: all 0.3s ease;
+
+        &:hover {
+          background: linear-gradient(135deg, #e6f4ff 0%, #bae7ff 100%);
+        }
+
+        .ant-collapse-expand-icon {
+          color: #1890ff !important;
+          font-size: 16px;
+        }
+
+        .ant-collapse-header-text {
+          color: #1890ff;
+          font-size: 16px;
+        }
+      }
+
+      .ant-collapse-content {
+        border-top: none !important;
+        background: #fafafa;
+
+        .ant-collapse-content-box {
+          padding: 20px !important;
+        }
+      }
+
+      &:last-child {
+        margin-bottom: 0;
+      }
+    }
+
+    .ant-tag {
+      margin-left: 8px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 500;
+
+      &.ant-tag-green {
+        background: #f6ffed;
+        border-color: #b7eb8f;
+        color: #52c41a;
+      }
+
+      &.ant-tag-orange {
+        background: #fff7e6;
+        border-color: #ffd591;
+        color: #fa8c16;
+      }
+    }
+  }
+
+  .medical-record-card {
+    border: 2px solid #f0f0f0;
+    border-radius: 12px;
+    transition: all 0.3s ease;
+    margin-bottom: 16px;
+
+    &:hover {
+      border-color: #1890ff;
+      box-shadow: 0 4px 16px rgba(24, 144, 255, 0.1);
+    }
+
+    .ant-card-head {
+      background: linear-gradient(135deg, #f0f9ff 0%, #e6f4ff 100%);
+      border-bottom: 2px solid #bae7ff;
+      border-radius: 10px 10px 0 0;
+
+      .ant-card-head-title {
+        color: #1890ff;
+        font-weight: 600;
+        font-size: 16px;
+      }
+    }
+
+    .ant-card-body {
+      padding: 20px;
+    }
+
+    .ant-form-item-label > label {
+      font-weight: 600;
+      color: #262626;
+    }
+
+    .ant-input,
+    .ant-select-selector {
+      border-radius: 8px;
+      border: 2px solid #d9d9d9;
+      transition: all 0.3s ease;
+
+      &:hover {
+        border-color: #40a9ff;
+      }
+
+      &:focus,
+      &.ant-select-focused .ant-select-selector {
+        border-color: #1890ff;
+        box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2);
+      }
+    }
+
+    .ant-upload-dragger {
+      border: 2px dashed #d9d9d9 !important;
+      border-radius: 8px !important;
+      background: #fafafa !important;
+      transition: all 0.3s ease !important;
+
+      &:hover {
+        border-color: #40a9ff !important;
+        background: #f0f9ff !important;
+      }
+
+      &.ant-upload-drag-hover {
+        border-color: #1890ff !important;
+        background: #e6f4ff !important;
+      }
+
+      .ant-upload-drag-icon {
+        margin-bottom: 16px;
+      }
+
+      .ant-upload-text {
+        color: #262626;
+        font-weight: 500;
+        margin-bottom: 8px;
+      }
+
+      .ant-upload-hint {
+        color: #8c8c8c;
+        font-size: 14px;
+      }
+    }
+
+    .compact-upload {
+      .ant-btn {
+        border: 2px dashed #d9d9d9;
+        background: #fafafa;
+        transition: all 0.3s ease;
+
+        &:hover {
+          border-color: #40a9ff;
+          background: #f0f9ff;
+          color: #40a9ff;
+        }
+      }
+    }
+
+    .image-upload-success {
+      .image-preview {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        padding: 16px;
+        background: #f6ffed;
+        border: 2px solid #b7eb8f;
+        border-radius: 8px;
+        transition: all 0.3s ease;
+
+        &:hover {
+          border-color: #52c41a;
+          box-shadow: 0 2px 8px rgba(82, 196, 26, 0.2);
+        }
+
+        .image-info {
+          flex: 1;
+          display: flex;
+          flex-direction: column;
+          gap: 4px;
+        }
+
+        .ant-image {
+          border: 2px solid #52c41a;
+          border-radius: 8px;
+          overflow: hidden;
+        }
+      }
+    }
+  }
+
+  .selected-services-table {
+    .ant-table {
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .ant-table-thead > tr > th {
+      background: linear-gradient(135deg, #f6ffed 0%, #f0f9ff 100%);
+      border-bottom: 2px solid #d9f7be;
+      font-weight: 600;
+      color: #52c41a;
+    }
+
+    .ant-table-tbody > tr {
+      transition: all 0.3s ease;
+
+      &:hover {
+        background: #f6ffed !important;
+        transform: translateY(-1px);
+        box-shadow: 0 2px 8px rgba(82, 196, 26, 0.1);
+      }
+    }
+
+    .ant-input-number {
+      width: 100%;
+      border-radius: 6px;
+      border: 1px solid #d9d9d9;
+
+      &:hover {
+        border-color: #40a9ff;
+      }
+
+      &:focus-within {
+        border-color: #1890ff;
+        box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2);
+      }
+    }
+
+    .ant-btn {
+      border-radius: 6px;
+      
+      &.ant-btn-text.ant-btn-dangerous {
+        color: #ff4d4f;
+        
+        &:hover {
+          background: #fff2f0;
+          color: #cf1322;
+        }
+      }
     }
   }
 
@@ -44,116 +387,33 @@
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.8px;
-    margin-left: 12px;
     min-width: 80px;
     text-align: center;
     display: inline-block;
   }
 
-  .info-card {
-    height: 100%;
+  .ant-alert {
     border-radius: 8px;
-    border: 1px solid #e8e8e8;
-    transition: all 0.3s ease;
+    border: none;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 
-    &:hover {
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-      border-color: #1890ff;
+    &.ant-alert-info {
+      background: linear-gradient(135deg, #e6f4ff 0%, #f0f9ff 100%);
+      border-left: 4px solid #1890ff;
+    }
+  }
+
+  .ant-divider-horizontal {
+    margin: 24px 0;
+    border-color: #e8e8e8;
+
+    &.ant-divider-with-text-left::before {
+      width: 5%;
     }
 
-    .ant-card-head {
-      background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
-      border-bottom: 2px solid #e6f4ff;
-      
-      .ant-card-head-title {
-        color: #1890ff;
-        font-weight: 600;
-        font-size: 16px;
-      }
-    }
-
-    .ant-descriptions-item-label {
+    .ant-divider-inner-text {
       font-weight: 600;
       color: #595959;
-      width: 40%;
-    }
-
-    .ant-descriptions-item-content {
-      font-weight: 500;
-      color: #262626;
-    }
-  }
-
-  .services-card {
-    .ant-card-head {
-      background: linear-gradient(135deg, #fff2e8 0%, #fff7e6 100%);
-      border-bottom: 2px solid #ffe7ba;
-      
-      .ant-card-head-title {
-        color: #fa8c16;
-        font-weight: 600;
-        font-size: 18px;
-      }
-    }
-
-    .service-item {
-      border: 2px solid #f0f0f0;
-      border-radius: 8px;
-      transition: all 0.3s ease;
-      height: 100%;
-
-      &:hover {
-        border-color: #52c41a;
-        box-shadow: 0 4px 8px rgba(82, 196, 26, 0.2);
-        transform: translateY(-2px);
-      }
-
-      .ant-card-body {
-        padding: 16px;
-        text-align: center;
-      }
-    }
-  }
-
-  .notes-card {
-    .ant-card-head {
-      background: linear-gradient(135deg, #f9f0ff 0%, #f6ffed 100%);
-      border-bottom: 2px solid #efdbff;
-      
-      .ant-card-head-title {
-        color: #722ed1;
-        font-weight: 600;
-        font-size: 16px;
-      }
-    }
-
-    .ant-card-body {
-      background: #fafafa;
-      border-radius: 0 0 8px 8px;
-      
-      .ant-typography {
-        font-size: 16px;
-        line-height: 1.6;
-        color: #595959;
-        font-style: italic;
-        padding: 16px;
-        background: white;
-        border-radius: 6px;
-        border-left: 4px solid #722ed1;
-      }
-    }
-  }
-
-  .examination-area {
-    .ant-card-head {
-      background: linear-gradient(135deg, #e6f7ff 0%, #f0f9ff 100%);
-      border-bottom: 2px solid #91d5ff;
-      
-      .ant-card-head-title {
-        color: #1890ff;
-        font-weight: 600;
-        font-size: 18px;
-      }
     }
   }
 
@@ -162,62 +422,241 @@
     padding: 16px;
 
     .examination-header {
+      .ant-card-body {
+        padding: 16px;
+      }
+
       .ant-typography {
-        font-size: 20px;
+        font-size: 18px;
+      }
+
+      .status-tag-large {
+        font-size: 12px;
+        padding: 6px 12px;
+        margin-top: 8px;
+        min-width: 70px;
       }
     }
 
-    .status-tag-large {
-      font-size: 12px;
-      padding: 6px 12px;
-      margin-left: 0;
-      margin-top: 8px;
-      min-width: 70px;
+    .step-content-card {
+      .ant-card-body {
+        padding: 20px;
+      }
+
+      .ant-card-head .ant-card-head-title {
+        font-size: 16px;
+      }
     }
 
-    .info-card {
-      margin-bottom: 16px;
-      
-      .ant-descriptions-item-label {
-        width: 100%;
+    .steps-card {
+      .ant-steps {
+        padding: 12px 0;
+      }
+
+      .ant-steps-item-title {
         font-size: 14px;
       }
-      
-      .ant-descriptions-item-content {
-        font-size: 14px;
+
+      .ant-steps-item-description {
+        font-size: 12px;
       }
     }
 
-    .services-card {
-      .service-item {
-        margin-bottom: 12px;
+    .selected-services-table {
+      .ant-table {
+        font-size: 14px;
+      }
+
+      .ant-table-thead > tr > th {
+        padding: 8px;
+        font-size: 14px;
+      }
+
+      .ant-table-tbody > tr > td {
+        padding: 8px;
+      }
+    }
+
+    .medical-record-card {
+      .ant-card-head .ant-card-head-title {
+        font-size: 14px;
+      }
+
+      .ant-card-body {
+        padding: 16px;
+      }
+
+      .ant-form-item-label > label {
+        font-size: 14px;
+      }
+
+      .ant-upload-dragger {
+        padding: 16px !important;
+
+        .ant-upload-drag-icon {
+          margin-bottom: 12px;
+        }
+
+        .ant-upload-text {
+          font-size: 14px;
+          margin-bottom: 6px;
+        }
+
+        .ant-upload-hint {
+          font-size: 12px;
+        }
+      }
+
+      .compact-upload .ant-btn {
+        height: 60px;
+        font-size: 14px;
+      }
+
+      .image-upload-success .image-preview {
+        padding: 12px;
+        gap: 12px;
+
+        .ant-image {
+          width: 60px !important;
+          height: 60px !important;
+        }
+
+        .image-info {
+          gap: 2px;
+        }
+      }
+    }
+
+    .ant-collapse {
+      .ant-collapse-item {
+        .ant-collapse-header {
+          padding: 12px 16px !important;
+          font-size: 14px;
+
+          .ant-collapse-expand-icon {
+            font-size: 14px;
+          }
+
+          .ant-collapse-header-text {
+            font-size: 14px;
+          }
+        }
+
+        .ant-collapse-content .ant-collapse-content-box {
+          padding: 16px !important;
+        }
+      }
+
+      .ant-tag {
+        font-size: 11px;
+        margin-left: 6px;
       }
     }
   }
 
   @media (max-width: 576px) {
     padding: 12px;
-    
-    .examination-container {
-      border-radius: 8px;
-    }
 
     .examination-header {
-      flex-direction: column;
-      align-items: flex-start;
-      gap: 16px;
-      
+      margin-bottom: 16px;
+
+      .ant-row {
+        flex-direction: column;
+        align-items: flex-start !important;
+        gap: 16px;
+      }
+
       .ant-typography {
-        font-size: 18px;
+        font-size: 16px;
       }
     }
 
-    .info-card .ant-card-head .ant-card-head-title {
-      font-size: 14px;
+    .steps-card {
+      margin-bottom: 16px;
+
+      .ant-steps {
+        .ant-steps-item-title {
+          font-size: 12px;
+        }
+
+        .ant-steps-item-description {
+          display: none;
+        }
+      }
     }
 
-    .services-card .ant-card-head .ant-card-head-title {
-      font-size: 16px;
+    .step-content-card {
+      .ant-card-body {
+        padding: 16px;
+      }
+    }
+
+    .selected-services-table {
+      .ant-table-responsive {
+        .ant-table-tbody > tr > td {
+          padding: 6px 4px;
+          font-size: 12px;
+        }
+      }
+    }
+
+    .medical-record-card {
+      margin-bottom: 12px;
+
+      .ant-card-head .ant-card-head-title {
+        font-size: 13px;
+      }
+
+      .ant-card-body {
+        padding: 12px;
+      }
+
+      .ant-form-item {
+        margin-bottom: 12px;
+      }
+
+      .ant-form-item-label > label {
+        font-size: 13px;
+      }
+
+      .ant-upload-dragger {
+        padding: 12px !important;
+
+        .ant-upload-drag-icon {
+          margin-bottom: 8px;
+        }
+
+        .ant-upload-text {
+          font-size: 13px;
+          margin-bottom: 4px;
+        }
+
+        .ant-upload-hint {
+          font-size: 11px;
+        }
+      }
+
+      .compact-upload .ant-btn {
+        height: 50px;
+        font-size: 13px;
+      }
+
+      .image-upload-success .image-preview {
+        padding: 10px;
+        gap: 10px;
+        flex-direction: column;
+        text-align: center;
+
+        .ant-image {
+          width: 50px !important;
+          height: 50px !important;
+          align-self: center;
+        }
+
+        .image-info {
+          gap: 2px;
+        }
+      }
     }
   }
 }
@@ -234,15 +673,15 @@
   }
 }
 
-.examination .info-card {
+.examination .step-content-card {
   animation: fadeInUp 0.4s ease-out;
 }
 
-.examination .services-card .service-item {
-  animation: fadeInUp 0.5s ease-out;
+.examination .selected-services-table .ant-table-tbody > tr {
+  animation: fadeInUp 0.3s ease-out;
 }
 
-// Custom scrollbar for better UX
+// Custom scrollbar
 .examination::-webkit-scrollbar {
   width: 8px;
 }
@@ -255,8 +694,66 @@
 .examination::-webkit-scrollbar-thumb {
   background: #c1c1c1;
   border-radius: 4px;
-  
+
   &:hover {
     background: #a8a8a8;
+  }
+}
+
+// Enhanced button styles
+.examination .ant-btn {
+  border-radius: 8px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+
+  &:not(.ant-btn-text) {
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  }
+
+  &:hover {
+    transform: translateY(-1px);
+  }
+
+  &.ant-btn-primary {
+    background: linear-gradient(135deg, #1890ff 0%, #096dd9 100%);
+    border: none;
+
+    &:hover {
+      background: linear-gradient(135deg, #40a9ff 0%, #1890ff 100%);
+    }
+  }
+
+  &.ant-btn-default {
+    border: 2px solid #d9d9d9;
+
+    &:hover {
+      border-color: #40a9ff;
+      color: #40a9ff;
+    }
+  }
+}
+
+// Enhanced form styles
+.examination .ant-form-item-label > label {
+  font-weight: 600;
+  color: #262626;
+}
+
+.examination .ant-form-item-control-input {
+  .ant-input,
+  .ant-select-selector,
+  .ant-input-number {
+    border-radius: 8px;
+    border: 2px solid #d9d9d9;
+    transition: all 0.3s ease;
+
+    &:hover {
+      border-color: #40a9ff;
+    }
+
+    &:focus {
+      border-color: #1890ff;
+      box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2);
+    }
   }
 }
