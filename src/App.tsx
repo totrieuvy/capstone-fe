@@ -68,6 +68,7 @@ import VetNotFoundPage from "./pages/not-found/veterinarian/VetNotFoundPage";
 import HamsterSchedule from "./pages/veterinarian/today-schedule/TodaySchedule";
 import VetAppointmentDetail from "./pages/veterinarian/vet-appointment-detail/VetAppointmentDetail";
 import Examination from "./pages/veterinarian/examination/Examination";
+import ManageMedicine from "./pages/veterinarian/manage-medicine/ManageMedicine";
 
 interface User {
   id: number;
@@ -349,6 +350,7 @@ const App = () => {
             { path: "lich-kham-hom-nay", element: <HamsterSchedule /> },
             { path: "lich-kham/:appointmentId", element: <VetAppointmentDetail /> },
             { path: "examination/:appointmentId", element: <Examination /> },
+            { path: "quan-li-ke-thuoc", element: <ManageMedicine /> },
             { path: "*", element: <VetNotFoundPage /> },
           ],
         }
