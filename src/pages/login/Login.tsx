@@ -34,19 +34,32 @@ const LoginForm = () => {
 
   const getFcmToken = async () => {
     try {
+      if (!("Notification" in window)) {
+        console.warn("⚠️ Trình duyệt không hỗ trợ Notification API");
+        return null;
+      }
+
       const permission = await Notification.requestPermission();
-      if (permission === "granted") {
-        const token = await getToken(messaging, {
-          vapidKey: "BOYKZ4MFMfEBL8WJTLid1bmd-m0Hbq8Aru3jlJTbylPWiHpdxyiKlhU97BtPw3K44Uyn4BLqzzVmsptNvwatdRI", // ⚠️ Lấy từ Firebase Console
-        });
-        console.log("FCM Token:", token);
+      console.log("🔔 Notification permission:", permission);
+
+      if (permission !== "granted") {
+        console.warn("🚫 Người dùng chưa cấp quyền thông báo");
+        return null;
+      }
+
+      const token = await getToken(messaging, {
+        vapidKey: "BOYKZ4MFMfEBL8WJTLid1bmd-m0Hbq8Aru3jlJTbylPWiHpdxyiKlhU97BtPw3K44Uyn4BLqzzVmsptNvwatdRI",
+      });
+
+      if (token) {
+        console.log("🎯 FCM Token:", token);
         return token;
       } else {
-        console.warn("Permission denied for notifications.");
+        console.warn("⚠️ Không lấy được token (có thể thiếu service worker)");
         return null;
       }
     } catch (err) {
-      console.error("Error getting FCM token:", err);
+      console.error("💥 Lỗi khi lấy FCM token:", err);
       return null;
     }
   };
