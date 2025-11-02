@@ -39,45 +39,35 @@
 
     .service-item {
       display: flex;
-      flex-direction: column;
+      justify-content: space-between;
+      align-items: center;
+      background-color: #fafafa;
+      border-radius: 10px;
+      padding: 10px 16px;
       margin-bottom: 10px;
+      transition: all 0.2s ease;
+      border: 1px solid #f0f0f0;
 
-      .service-price {
-        font-weight: 600;
-        align-self: flex-end;
+      &:hover {
+        background-color: #fff;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
       }
 
-      .combo-services {
-        margin-top: 4px;
-        font-size: 13px;
-        color: #666;
+      .ant-typography {
+        margin: 0;
+      }
+
+      .service-price {
+        color: #1677ff;
+        font-weight: 600;
       }
     }
 
-    .service-item {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 10px 14px;
-      border-radius: 8px;
-      margin-bottom: 8px;
-      background-color: #fafafa;
-      transition: all 0.3s ease;
-
-      &:hover {
-        background-color: #f5f5f5;
-      }
-
-      strong {
-        color: #000;
-        font-size: 15px;
-      }
-
-      .service-price {
-        font-weight: 600;
-        color: #262626;
-        font-size: 15px;
-      }
+    .combo-services {
+      margin-top: 4px;
+      margin-left: 12px;
+      color: #777;
+      font-size: 13px;
     }
 
     .service-total {
