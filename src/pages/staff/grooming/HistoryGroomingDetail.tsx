@@ -180,6 +180,18 @@ const HistoryGroomingDetail = () => {
     }
   };
 
+  //cancel
+  const handleCancelAppointment = async () => {
+    if (!id) return;
+    try {
+      await api.patch(`/api/appointment/${id}`, { status: "CANCELLED" });
+      message.success("Đã hủy lịch Grooming thành công!");
+      fetchDetail();
+    } catch {
+      message.error("Không thể hủy lịch Grooming!");
+    }
+  };
+
   // ======================= ADD SERVICE =======================
   const handleAddServices = async () => {
     if (!id || selectedServices.length === 0) return;
@@ -391,6 +403,15 @@ const HistoryGroomingDetail = () => {
                 </Descriptions.Item>
               </Descriptions>
             </Card>
+
+            {/* ---- Cancel Button ---- */}
+            {detail.status === "BOOKED" && (
+              <Card className="cancel-card section-card" bordered={false}>
+                <Button danger type="primary" block onClick={handleCancelAppointment} style={{ fontWeight: 500 }}>
+                  Hủy lịch Grooming
+                </Button>
+              </Card>
+            )}
 
             {/* ---- Check-in ---- */}
             <Card className="image-card section-card" bordered={false}>
