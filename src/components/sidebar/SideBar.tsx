@@ -7,8 +7,8 @@ import {
   SkinOutlined,
   HomeOutlined,
   ScheduleOutlined,
-  ClockCircleOutlined,
   TagOutlined,
+  DatabaseOutlined,
 } from "@ant-design/icons";
 import { GiPawPrint } from "react-icons/gi";
 import { BiCategory, BiPlusMedical } from "react-icons/bi";
@@ -104,7 +104,7 @@ const SideBar: React.FC = () => {
     } else if (user?.role === "VET") {
       items = [
         getItem("Lịch khám hôm nay", "lich-kham-hom-nay", <ScheduleOutlined />),
-        getItem("Lịch đặt khám", "lich-dat-kham", <ClockCircleOutlined />),
+        getItem("Quản lí kê thuốc", "quan-li-ke-thuoc", <DatabaseOutlined />),
       ];
     }
 
