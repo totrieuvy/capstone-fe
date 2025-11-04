@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Card, Spin, Alert, Button, Tag, Descriptions, Avatar, Modal, Upload, message, List, Radio } from 'antd';
-import { ArrowLeftOutlined, UserOutlined, CalendarOutlined, ShoppingOutlined, UploadOutlined, CameraOutlined, HomeOutlined, EditOutlined, LogoutOutlined, BarChartOutlined } from '@ant-design/icons';
+import { ArrowLeftOutlined, UserOutlined, CalendarOutlined, ShoppingOutlined, UploadOutlined, CameraOutlined, HomeOutlined, EditOutlined, LogoutOutlined } from '@ant-design/icons';
 import { boardingService, type BookingDetail } from '../../../services/BoardingService';
 import { cageService, type Cage } from '../../../services/CageService';
 import { storage } from '../../../config/firebase';
@@ -687,17 +687,7 @@ const BoardingDetail: React.FC = () => {
         {(bookingDetail.status === 'IN_PROGRESS' || bookingDetail.status === 'CHECK_IN') && (
           <div className="info-section">
             <div style={{ textAlign: 'center', display: 'flex', gap: '16px', justifyContent: 'center' }}>
-              <Button
-                type="default"
-                size="large"
-                icon={<BarChartOutlined />}
-                onClick={() => {
-                  navigate('/STAFF/thong-so-iot');
-                }}
-                className="statistics-button"
-              >
-                Thông số
-              </Button>
+             
               <Button
                 type="primary"
                 size="large"

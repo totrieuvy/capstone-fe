@@ -98,26 +98,37 @@ const formatDateToUTC7 = (dateString: string): string => {
 // Parse a display price string (like "20,000 VND" or "₫20.000") into a number (in VND)
 const parseDisplayPrice = (displayPrice?: string): number => {
   if (!displayPrice) return 0;
+  
   // Remove all non-digit characters except dots and commas for decimal handling
   const cleanPrice = displayPrice.replace(/[^\d.,]/g, '');
   if (!cleanPrice) return 0;
   
-  // Handle different decimal separators and thousand separators
-  // Convert to standard format: remove commas used as thousand separators, keep dots as decimals
+  // For Vietnamese format, commas are typically thousand separators
+  // and dots are decimal separators
+  // Examples: "400,000" = 400000, "400.50" = 400.5, "1,234.56" = 1234.56
+  
   let normalized = cleanPrice;
   
-  // If there are multiple dots or commas, treat the last one as decimal separator
-  const lastDotIndex = cleanPrice.lastIndexOf('.');
-  const lastCommaIndex = cleanPrice.lastIndexOf(',');
+  // Count dots and commas to determine the format
+  const dotCount = (cleanPrice.match(/\./g) || []).length;
+  const commaCount = (cleanPrice.match(/,/g) || []).length;
   
-  if (lastDotIndex > lastCommaIndex) {
-    // Dot is decimal separator, remove commas
+  if (dotCount === 0 && commaCount > 0) {
+    // Only commas, treat as thousand separators: "400,000" -> 400000
     normalized = cleanPrice.replace(/,/g, '');
-  } else if (lastCommaIndex > lastDotIndex) {
-    // Comma is decimal separator, replace with dot and remove other commas
-    normalized = cleanPrice.replace(/,(?=.*,)/g, '').replace(',', '.');
+  } else if (dotCount === 1 && commaCount === 0) {
+    // Only dots, keep as decimal: "400.50" -> 400.50
+    normalized = cleanPrice;
+  } else if (dotCount === 1 && commaCount > 0) {
+    // Both dots and commas, commas are thousands, dot is decimal: "1,234.56" -> 1234.56
+    const parts = cleanPrice.split('.');
+    if (parts.length === 2) {
+      const wholePart = parts[0].replace(/,/g, '');
+      const decimalPart = parts[1];
+      normalized = `${wholePart}.${decimalPart}`;
+    }
   } else {
-    // No decimal separator or only one, remove all non-digits
+    // Multiple dots or complex format, remove all non-digits
     normalized = cleanPrice.replace(/[^\d]/g, '');
   }
   
@@ -338,10 +349,12 @@ const Examination: React.FC = () => {
         const existingServiceIds = appointmentData?.items.map(item => item.serviceId) || [];
         
         // Filter out services that are already in the appointment and inactive services
+        // Only include additional services (isDefault = false) for additional amount calculation
         const filteredServices = response.data.filter(service => 
           !existingServiceIds.includes(service.id) && 
           service.isActive &&
-          service.serviceType === 'MEDICAL'
+          service.serviceType === 'MEDICAL' &&
+          service.isDefault === false
         );
         
         setAvailableServices(filteredServices);
@@ -402,15 +415,15 @@ const Examination: React.FC = () => {
     try {
       setSubmittingServices(true);
       
-      // Calculate additionalAmount from service prices (multiply by 100 for API unit consistency)
-      const totalAdditionalAmount = selectedServices.reduce((sum, service) => sum + (service.price * 100), 0);
+      // Calculate additionalAmount from service prices (already parsed from displayPrice)
+      const totalAdditionalAmount = selectedServices.reduce((sum, service) => sum + service.price, 0);
       
       const addServiceRequest = {
         appointmentId: appointmentId!,
         additionalAmount: totalAdditionalAmount,
         items: selectedServices.map(service => ({
           serviceId: service.serviceId,
-          price: service.price * 100 // Convert to API unit
+          price: service.price
         }))
       };
 
@@ -418,8 +431,6 @@ const Examination: React.FC = () => {
       
       if (response.code === 200) {
         toast.success('Đã thêm dịch vụ bổ sung thành công');
-        // Clear selected services since they've been submitted
-        setSelectedServices([]);
         // Reload appointment data to reflect changes
         await loadAppointmentData();
         setCurrentStep(1);

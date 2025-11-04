@@ -157,26 +157,94 @@
   }
 }
 
-// Cage Grid and Cards
+// Cage Grid and Cards - Hotel Floor Plan Style
 .cage-grid {
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  padding: 20px;
+  border-radius: 12px;
+  border: 2px dashed #e2e8f0;
+
+  .ant-row {
+    min-height: 400px;
+  }
+
   .cage-card {
     border-radius: 12px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
     border: none;
     transition: all 0.3s ease;
     height: 100%;
+    position: relative;
+    overflow: hidden;
+    min-height: 200px;
 
     &:hover {
-      transform: translateY(-4px);
+      transform: translateY(-4px) scale(1.02);
       box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+      z-index: 10;
     }
 
     &.available {
-      border-left: 4px solid #52c41a;
+      border-left: 6px solid #52c41a;
+      background: linear-gradient(135deg, #f6ffed 0%, #ffffff 100%);
+      
+      &::after {
+        content: "✓";
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        background: #52c41a;
+        color: white;
+        font-size: 12px;
+        font-weight: bold;
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 5;
+      }
     }
 
-    &.in-use {
-      border-left: 4px solid #ff4d4f;
+    &.occupied {
+      border-left: 6px solid #ff4d4f;
+      background: linear-gradient(135deg, #fff2f0 0%, #ffffff 100%);
+      
+      &::after {
+        content: "⚠";
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        background: #ff4d4f;
+        color: white;
+        font-size: 12px;
+        font-weight: bold;
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 5;
+      }
+    }
+
+    &.iot-enabled {
+      &::before {
+        content: "IoT";
+        position: absolute;
+        top: 8px;
+        right: 8px;
+        background: linear-gradient(135deg, #1890ff, #40a9ff);
+        color: white;
+        font-size: 10px;
+        font-weight: bold;
+        padding: 2px 6px;
+        border-radius: 8px;
+        z-index: 10;
+        box-shadow: 0 2px 4px rgba(24, 144, 255, 0.3);
+      }
     }
 
     .ant-card-body {
@@ -193,60 +261,217 @@
         display: flex;
         justify-content: space-between;
         align-items: flex-start;
-        margin-bottom: 16px;
+        margin-bottom: 12px;
+        padding-bottom: 8px;
+        border-bottom: 2px solid #f0f0f0;
+        margin-left: 24px; // Space for status icon
 
         .cage-id {
           margin: 0;
-          font-size: 18px;
-          font-weight: 600;
+          font-size: 16px;
+          font-weight: 700;
           color: #1f2937;
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
         }
 
         .ant-badge {
           .ant-badge-status-text {
-            font-weight: 500;
-            font-size: 12px;
+            font-weight: 600;
+            font-size: 11px;
+            text-transform: uppercase;
           }
         }
       }
 
       .cage-status {
-        margin-bottom: 16px;
+        margin-bottom: 12px;
+        display: flex;
+        gap: 6px;
+        flex-wrap: wrap;
 
         .status-tag {
-          font-size: 14px;
-          font-weight: 600;
-          padding: 6px 12px;
-          border-radius: 20px;
+          font-size: 11px;
+          font-weight: 700;
+          padding: 3px 8px;
+          border-radius: 12px;
           border: none;
+          text-transform: uppercase;
+          letter-spacing: 0.3px;
 
           &.ant-tag-success {
             background: linear-gradient(135deg, #f6ffed, #d9f7be);
             color: #389e0d;
+            border: 1px solid #b7eb8f;
           }
 
           &.ant-tag-error {
             background: linear-gradient(135deg, #fff2f0, #ffccc7);
             color: #cf1322;
+            border: 1px solid #ffa39e;
+          }
+        }
+
+        .iot-tag {
+          background: linear-gradient(135deg, #e6f7ff, #bae7ff);
+          color: #0958d9;
+          font-size: 9px;
+          font-weight: 700;
+          border: 1px solid #91d5ff;
+        }
+      }
+
+      // IoT Data Display - Hotel Room Climate Control Style
+      .iot-data {
+        background: linear-gradient(135deg, #f0f9ff, #e0f2fe);
+        border-radius: 6px;
+        padding: 6px 8px;
+        margin-bottom: 8px;
+        border: 1px solid #bae6fd;
+        box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.05);
+        display: flex;
+        justify-content: space-around;
+        align-items: center;
+        gap: 8px;
+
+        .iot-metric {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 4px;
+          font-size: 11px;
+          font-weight: 600;
+          color: #374151;
+          flex: 1;
+
+          .anticon {
+            font-size: 12px;
+          }
+
+          span {
+            background: white;
+            padding: 2px 6px;
+            border-radius: 8px;
+            border: 1px solid #e0f2fe;
+            box-shadow: 0 1px 1px rgba(0, 0, 0, 0.05);
+            font-size: 10px;
+            font-weight: 700;
           }
         }
       }
 
-      .cage-details {
-        flex: 1;
-        padding-top: 12px;
-        border-top: 1px solid #f0f0f0;
+      // Cage Type Information - Hotel Room Details Style
+      .cage-type-info {
+        background: linear-gradient(135deg, #fafafa, #f5f5f5);
+        border-radius: 8px;
+        padding: 10px;
+        margin-bottom: 12px;
+        border: 1px solid #e8e8e8;
 
         .ant-space-item {
           width: 100%;
         }
 
         .ant-typography {
-          font-size: 13px;
+          font-size: 11px;
           line-height: 1.4;
+          margin: 0 !important;
           
           strong {
             color: #374151;
+            text-transform: uppercase;
+            font-size: 10px;
+            letter-spacing: 0.3px;
+          }
+        }
+      }
+
+      // Booking Information - Hotel Guest Info Style
+      .booking-info {
+        background: linear-gradient(135deg, #fff7e6, #ffe7ba);
+        border-radius: 8px;
+        padding: 10px;
+        border-left: 4px solid #fa8c16;
+        box-shadow: inset 0 1px 2px rgba(250, 140, 22, 0.1);
+
+        .ant-space-item {
+          width: 100%;
+        }
+
+        .ant-typography {
+          font-size: 11px;
+          line-height: 1.4;
+          margin: 0 !important;
+          color: #614700;
+          
+          strong {
+            color: #614700;
+            text-transform: uppercase;
+            font-size: 10px;
+            letter-spacing: 0.3px;
+          }
+
+          .anticon {
+            color: #fa8c16;
+            margin-right: 4px;
+          }
+        }
+      }
+    }
+  }
+
+  // Floor plan grid layout
+  .ant-col {
+    display: flex;
+    
+    .cage-card {
+      width: 100%;
+    }
+  }
+}
+
+// Floor plan legend
+.cage-management {
+  .floor-plan-legend {
+    background: white;
+    border-radius: 8px;
+    padding: 16px;
+    margin-bottom: 16px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+
+    .legend-title {
+      font-weight: 600;
+      margin-bottom: 12px;
+      color: #374151;
+    }
+
+    .legend-items {
+      display: flex;
+      gap: 20px;
+      flex-wrap: wrap;
+
+      .legend-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 12px;
+        color: #6b7280;
+
+        .legend-icon {
+          width: 16px;
+          height: 16px;
+          border-radius: 4px;
+          
+          &.available {
+            background: #52c41a;
+          }
+          
+          &.occupied {
+            background: #ff4d4f;
+          }
+          
+          &.iot {
+            background: #1890ff;
           }
         }
       }
