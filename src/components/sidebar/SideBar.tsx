@@ -98,7 +98,7 @@ const SideBar: React.FC = () => {
         getItem("Boarding", "boarding", <HomeOutlined />, [
           getItem("Quản lí dịch vụ boarding", "quan-li-dich-vu-boarding"),
           getItem("Lịch đặt boarding", "lich-dat-boarding"),
-          getItem("Quản lí chuồng", "quan-li-chuong"),
+          getItem("Sơ đồ chuồng", "so-do-chuong"),
         ]),
       ];
     } else if (user?.role === "VET") {

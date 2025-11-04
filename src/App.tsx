@@ -44,7 +44,6 @@ import BoardingPaymentSuccess from "./pages/staff/medical/payment-screen/Boardin
 import BoardingPaymentFailure from "./pages/staff/medical/payment-screen/BoardingPaymentFailure";
 import GroomingPage from "./pages/customer/grooming/dich-vu-lam-dep/GroomingPage";
 import ManageGroomingService from "./pages/admin/manage-grooming-service/ManageGroomingService";
-import CageManagement from "./pages/staff/cage/CageManagement";
 import CareLog from "./pages/staff/care-log/CareLog";
 import Iot from "./pages/staff/Iot/Iot";
 import ManageComboGrooming from "./pages/admin/manage-grooming-service/manage-combo-grooming/ManageComboGrooming";
@@ -71,6 +70,7 @@ import Examination from "./pages/veterinarian/examination/Examination";
 import ManageMedicine from "./pages/veterinarian/manage-medicine/ManageMedicine";
 import MedicalPaymentFailure from "./pages/staff/medical/payment-screen/MedicalPaymentFailure";
 import MedicalPaymentSuccess from "./pages/staff/medical/payment-screen/MedicalPaymentSuccess";
+import CageFloorPlan from "./pages/staff/cage/CageFloorPlan";
 
 interface User {
   id: number;
@@ -320,7 +320,7 @@ const App = () => {
             { path: "booking-detail/:bookingId", element: <StaffBoardingDetail /> },
             { path: "care-log/:bookingId", element: <CareLog /> },
             { path: "checkout", element: <StaffCheckOut /> },
-            { path: "quan-li-chuong", element: <CageManagement /> },
+            { path: "so-do-chuong", element: <CageFloorPlan /> },
             { path: "*", element: <StaffNotFoundPage /> },
             { path: "thong-so-iot", element: <Iot /> },
             { path: "lich-dat-grooming", element: <HistoryGrooming /> },

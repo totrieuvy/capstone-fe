@@ -312,6 +312,25 @@ export interface CancelBookingResponse {
   daysBeforeCheckIn: number;
 }
 
+// Type definitions for cage floor plan
+export interface CageFloorPlanItem {
+  cageId: string;
+  cageName: string;
+  status: string;
+  iotCode: string | null;
+  cageTypeId: string;
+  cageTypeName: string;
+  bookingId: string | null;
+  customerId: string | null;
+  customerName: string | null;
+  hamsterId: string | null;
+  hamsterName: string | null;
+  startDate: string | null; // Format: YYYY-MM-DD
+  endDate: string | null; // Format: YYYY-MM-DD
+  newEndDate: string | null; // Format: YYYY-MM-DD
+  bookingStatus: string | null;
+}
+
 export interface ApiResponse<T> {
   code: number;
   message: string;
@@ -482,6 +501,17 @@ export const boardingService = {
       return response.data.data;
     } catch (error) {
       console.error("Error cancelling booking:", error);
+      throw error;
+    }
+  },
+
+  // Get cage floor plan - shows all cages with their status, IoT codes, and current bookings
+  getCageFloorPlan: async (): Promise<CageFloorPlanItem[]> => {
+    try {
+      const response = await api.get<ApiResponse<CageFloorPlanItem[]>>("/api/cage/floor-plan");
+      return response.data.data;
+    } catch (error) {
+      console.error("Error fetching cage floor plan:", error);
       throw error;
     }
   },
