@@ -11,6 +11,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { addToCart } from "../../redux/features/cartSlice";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import AiChat from "../../components/ai-chat/AiChat";
 
 interface Product {
   id: string;
@@ -249,6 +250,8 @@ function Homepage() {
           </div>
         )}
       </div>
+
+      <AiChat />
     </div>
   );
 }
