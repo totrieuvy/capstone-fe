@@ -1,5 +1,15 @@
 export const getFormattedPrice = (price: string | number): string => {
-  const priceStr = typeof price === "number" ? price.toString() : price;
-  const integerPart = parseFloat(priceStr.split(".")[0]).toLocaleString("vi-VN");
+  let numericPrice: number;
+  
+  if (typeof price === "number") {
+    numericPrice = price;
+  } else {
+    // Handle string prices that may have commas as thousand separators
+    // Remove commas and parse as number
+    const cleanPrice = price.replace(/,/g, "");
+    numericPrice = parseFloat(cleanPrice) || 0;
+  }
+  
+  const integerPart = Math.floor(numericPrice).toLocaleString("vi-VN");
   return `${integerPart} đ`;
 };

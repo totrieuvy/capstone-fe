@@ -366,14 +366,14 @@ const Examination: React.FC = () => {
       return;
     }
 
-    // Try to extract a numeric price from the service.displayPrice and use it as the default
+    // Parse the display price and use it as both display and actual price
     const parsedPrice = parseDisplayPrice(service.displayPrice);
 
     const newService: SelectedService = {
       key: `${serviceId}-${Date.now()}`,
       serviceId: service.id,
       serviceName: service.serviceName,
-      price: parsedPrice || 0, // Keep the full price internally for calculations
+      price: parsedPrice, // Set to the same value as display price
       displayPrice: service.displayPrice
     };
 
@@ -383,12 +383,6 @@ const Examination: React.FC = () => {
 
   const handleRemoveService = (key: string) => {
     setSelectedServices(selectedServices.filter(s => s.key !== key));
-  };
-
-  const handlePriceChange = (key: string, price: number) => {
-    setSelectedServices(selectedServices.map(service =>
-      service.key === key ? { ...service, price } : service
-    ));
   };
 
   const handleSubmitAdditionalServices = async () => {
@@ -408,19 +402,15 @@ const Examination: React.FC = () => {
     try {
       setSubmittingServices(true);
       
-      // Calculate additionalAmount from original service displayPrice, not user-modified prices
-      const totalAdditionalAmount = selectedServices.reduce((sum, service) => {
-        const originalService = availableServices.find(s => s.id === service.serviceId);
-        const displayPrice = originalService ? parseDisplayPrice(originalService.displayPrice) : 0;
-        return sum + displayPrice;
-      }, 0);
+      // Calculate additionalAmount from service prices (multiply by 100 for API unit consistency)
+      const totalAdditionalAmount = selectedServices.reduce((sum, service) => sum + (service.price * 100), 0);
       
       const addServiceRequest = {
         appointmentId: appointmentId!,
         additionalAmount: totalAdditionalAmount,
         items: selectedServices.map(service => ({
           serviceId: service.serviceId,
-          price: service.price
+          price: service.price * 100 // Convert to API unit
         }))
       };
 
@@ -428,6 +418,8 @@ const Examination: React.FC = () => {
       
       if (response.code === 200) {
         toast.success('Đã thêm dịch vụ bổ sung thành công');
+        // Clear selected services since they've been submitted
+        setSelectedServices([]);
         // Reload appointment data to reflect changes
         await loadAppointmentData();
         setCurrentStep(1);
@@ -840,12 +832,8 @@ const Examination: React.FC = () => {
   };
 
   const calculateTotalAdditional = () => {
-    // Calculate from original service displayPrice, consistent with additionalAmount calculation
-    return selectedServices.reduce((sum, service) => {
-      const originalService = availableServices.find(s => s.id === service.serviceId);
-      const displayPrice = originalService ? parseDisplayPrice(originalService.displayPrice) : 0;
-      return sum + displayPrice;
-    }, 0);
+    // Calculate from the parsed price values of selected services
+    return selectedServices.reduce((sum, service) => sum + service.price, 0);
   };
 
   // Table columns for selected services
@@ -866,20 +854,10 @@ const Examination: React.FC = () => {
     },
     {
       title: 'Giá thực tế',
-      dataIndex: 'price',
-      key: 'price',
-      render: (price: number, record: SelectedService) => (
-        <InputNumber
-          min={10}
-          step={10}
-          value={Math.floor(price / 100)}
-          onChange={(value) => handlePriceChange(record.key, (value || 0) * 100)}
-          formatter={(value) => getFormattedPrice(Number(value) || 0).replace(' đ', '')}
-          parser={(value) => Number(value!.replace(/\D/g, ''))}
-          style={{ width: '100%' }}
-          placeholder="Nhập giá"
-          addonAfter="đ"
-        />
+      dataIndex: 'displayPrice',
+      key: 'actualPrice',
+      render: (displayPrice: string) => (
+        <Tag color="green">{displayPrice}</Tag>
       )
     },
     {
@@ -996,16 +974,14 @@ const Examination: React.FC = () => {
                               <Space direction="vertical" size={0}>
                                 <Text strong>{service.serviceName}</Text>
                                 <Text type="secondary" style={{ fontSize: '12px' }}>
-                                  Giá gốc: {getFormattedPrice(Math.floor(parseDisplayPrice(service.displayPrice) / 100))} | Thời gian: {service.durationMinutes} phút
+                                  Giá gốc: {service.displayPrice} | Thời gian: {service.durationMinutes} phút
                                 </Text>
                               </Space>
                             </Option>
                           ))}
                         </Select>
                       </Form.Item>
-                      <Text type="secondary" style={{ fontSize: 12 }}>
-                        Giá thực tế sẽ được tự động lấy từ Giá gốc khi thêm dịch vụ. Bạn vẫn có thể chỉnh sửa giá sau khi thêm.
-                      </Text>
+                 
                     </Col>
                     <Col xs={24} md={6}>
                       <Form.Item label=" ">
@@ -1048,7 +1024,7 @@ const Examination: React.FC = () => {
                       </Col>
                       <Col>
                         <Text strong style={{ fontSize: '18px', color: '#52c41a' }}>
-                          {getFormattedPrice(Math.floor(calculateTotalAdditional() / 100))}
+                          {calculateTotalAdditional().toLocaleString('vi-VN')} đ
                         </Text>
                       </Col>
                     </Row>
@@ -1506,16 +1482,16 @@ const Examination: React.FC = () => {
                   <Row gutter={[16, 8]}>
                     <Col xs={24} md={12}>
                       <Text strong>Tổng tiền gốc:</Text>
-                      <div style={{ fontSize: '16px' }}>{appointmentData ? getFormattedPrice(Math.floor(appointmentData.totalAmount / 100)) : '0 đ'}</div>
+                      <div style={{ fontSize: '16px' }}>{appointmentData ? getFormattedPrice(appointmentData.totalAmount) : '0 đ'}</div>
                     </Col>
                     <Col xs={24} md={12}>
                       <Text strong>Tổng tiền sau giảm giá:</Text>
-                      <div style={{ fontSize: '16px', color: '#52c41a' }}>{appointmentData ? getFormattedPrice(Math.floor(appointmentData.totalAmountAfter / 100)) : '0 đ'}</div>
+                      <div style={{ fontSize: '16px', color: '#52c41a' }}>{appointmentData ? getFormattedPrice(appointmentData.totalAmountAfter) : '0 đ'}</div>
                     </Col>
                     {appointmentData?.additionalAmount && (
                       <Col xs={24} md={12}>
                         <Text strong>Tiền dịch vụ bổ sung:</Text>
-                        <div style={{ fontSize: '16px', color: '#1890ff' }}>{getFormattedPrice(Math.floor(appointmentData.additionalAmount / 100))}</div>
+                        <div style={{ fontSize: '16px', color: '#1890ff' }}>{getFormattedPrice(appointmentData.additionalAmount)}</div>
                       </Col>
                     )}
                     <Col xs={24}>
@@ -1527,7 +1503,7 @@ const Examination: React.FC = () => {
                         <Col>
                           <Text strong style={{ fontSize: '20px', color: '#f5222d' }}>
                             {appointmentData ? getFormattedPrice(
-                              Math.floor(appointmentData.totalAmountAfter / 100) + Math.floor((appointmentData.additionalAmount || 0) / 100)
+                              appointmentData.totalAmountAfter + (appointmentData.additionalAmount || 0)
                             ) : '0 đ'}
                           </Text>
                         </Col>
