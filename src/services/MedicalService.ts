@@ -395,9 +395,19 @@ export interface MedicalRecord {
   healthStatus: string;
 }
 
+export interface PrescriptionMedicineDetail {
+  id: string;
+  medicineId: string;
+  medicineName: string;
+  dosage: string;
+  note: string;
+  durationDays: number;
+}
+
 export interface Prescription {
   id: string;
-  // Add other prescription fields as needed when structure is available
+  appointmentId: string;
+  medicines: PrescriptionMedicineDetail[];
 }
 
 export interface AppointmentItemDetail {
@@ -625,12 +635,12 @@ export const checkOutAppointment = async (checkOutData: CheckOutAppointmentReque
 // Interfaces for adding services to appointment
 export interface AddServiceItem {
   serviceId: string;
-  price: number;
+  price: number; // The actual price for this service (can be modified by user)
 }
 
 export interface AddServiceToAppointmentRequest {
   appointmentId: string;
-  additionalAmount: number;
+  additionalAmount: number; // Total cost calculated from service displayPrice fields from getServicesBySpeciesAndType
   items: AddServiceItem[];
 }
 
@@ -646,6 +656,51 @@ export const addServiceToAppointment = async (serviceData: AddServiceToAppointme
     return response.data;
   } catch (error) {
     console.error("Error adding service to appointment:", error);
+    throw error;
+  }
+};
+
+// Interfaces for prescription
+export interface PrescriptionMedicine {
+  medicineId: string;
+  dosage: string;
+  note: string;
+  durationDays: number;
+}
+
+export interface CreatePrescriptionRequest {
+  appointmentId: string;
+  medicines: PrescriptionMedicine[];
+}
+
+export interface PrescriptionMedicineResponse {
+  medicineId: string;
+  medicationName: string;
+  dosage: string;
+  note: string;
+  durationDays: number;
+}
+
+export interface PrescriptionData {
+  prescriptionId: string;
+  appointmentId: string;
+  createdBy: string;
+  medicines: PrescriptionMedicineResponse[];
+}
+
+export interface CreatePrescriptionResponse {
+  code: number;
+  message: string;
+  data: PrescriptionData;
+}
+
+// Create a prescription for a medical appointment
+export const createPrescription = async (prescriptionData: CreatePrescriptionRequest): Promise<CreatePrescriptionResponse> => {
+  try {
+    const response = await api.post<CreatePrescriptionResponse>("/api/prescription", prescriptionData);
+    return response.data;
+  } catch (error) {
+    console.error("Error creating prescription:", error);
     throw error;
   }
 };

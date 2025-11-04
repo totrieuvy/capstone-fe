@@ -14,6 +14,8 @@ import {
   Space,
   Modal,
   Upload,
+  Image,
+  Alert,
 } from 'antd';
 import {
   ArrowLeftOutlined,
@@ -25,6 +27,12 @@ import {
   FileImageOutlined,
   CheckCircleOutlined,
   PlusOutlined,
+  FileTextOutlined,
+  EyeOutlined,
+  ExperimentOutlined,
+  ClockCircleOutlined,
+  InfoCircleOutlined,
+  UploadOutlined,
 } from '@ant-design/icons';
 import { useNavigate, useParams } from 'react-router-dom';
 import type { UploadProps } from 'antd';
@@ -34,10 +42,15 @@ import utc from 'dayjs/plugin/utc';
 import { 
   getAppointmentById, 
   checkInAppointment,
-  type AppointmentDetail 
+  checkOutAppointment,
+  type AppointmentDetail,
+  type AppointmentItemDetail,
+  type MedicalRecord,
+  type CheckOutAppointmentRequest
 } from '../../../../services/MedicalService';
 import { storage } from '../../../../config/firebase';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { toast } from 'react-toastify';
 import './manage-appointment-detail.scss';
 
 // Extend dayjs with timezone plugins
@@ -61,6 +74,17 @@ const ManageAppointmentDetail: React.FC = () => {
   const [imagePreviewVisible, setImagePreviewVisible] = useState<boolean>(false);
   const [previewImage, setPreviewImage] = useState<string>('');
   const [previewTitle, setPreviewTitle] = useState<string>('');
+
+  // Medical record modal states
+  const [medicalRecordModalVisible, setMedicalRecordModalVisible] = useState<boolean>(false);
+  const [selectedMedicalRecord, setSelectedMedicalRecord] = useState<MedicalRecord | null>(null);
+  const [selectedServiceName, setSelectedServiceName] = useState<string>('');
+
+  // Checkout modal states
+  const [checkoutModalVisible, setCheckoutModalVisible] = useState<boolean>(false);
+  const [checkoutImage, setCheckoutImage] = useState<string>('');
+  const [uploadingCheckoutImage, setUploadingCheckoutImage] = useState<boolean>(false);
+  const [submittingCheckout, setSubmittingCheckout] = useState<boolean>(false);
 
   // Fetch appointment details
   const fetchAppointmentDetails = async () => {
@@ -136,6 +160,12 @@ const ManageAppointmentDetail: React.FC = () => {
     }).format(price);
   };
 
+  // Check if appointment has any medical records
+  const hasExistingMedicalRecords = () => {
+    if (!appointment?.items) return false;
+    return appointment.items.some((item: AppointmentItemDetail) => item.medicalRecord);
+  };
+
   // Handle file upload to Firebase
   const handleFileUpload = async (file: File): Promise<string> => {
     try {
@@ -160,6 +190,17 @@ const ManageAppointmentDetail: React.FC = () => {
     setPreviewImage(imageUrl);
     setPreviewTitle(title);
     setImagePreviewVisible(true);
+  };
+
+  // Handle medical record modal
+  const handleMedicalRecordClick = (item: AppointmentItemDetail) => {
+    if (item.medicalRecord) {
+      setSelectedMedicalRecord(item.medicalRecord);
+      setSelectedServiceName(item.serviceName);
+      setMedicalRecordModalVisible(true);
+    } else {
+      message.info('Dịch vụ này chưa có hồ sơ bệnh án');
+    }
   };
 
   // Handle upload change
@@ -240,6 +281,62 @@ const ManageAppointmentDetail: React.FC = () => {
       console.error('Error checking in appointment:', error);
     } finally {
       setCheckInLoading(false);
+    }
+  };
+
+  // Handle checkout image upload
+  const handleCheckoutImageUpload = async (file: File) => {
+    setUploadingCheckoutImage(true);
+    try {
+      const timestamp = Date.now();
+      const fileName = `checkout-images/${timestamp}_${file.name}`;
+      const storageRef = ref(storage, fileName);
+      
+      // Upload file to Firebase
+      await uploadBytes(storageRef, file);
+      
+      // Get download URL
+      const downloadURL = await getDownloadURL(storageRef);
+      setCheckoutImage(downloadURL);
+      
+      toast.success('Tải lên hình ảnh thành công!');
+    } catch (error) {
+      console.error('Error uploading checkout image:', error);
+      toast.error('Lỗi khi tải lên hình ảnh. Vui lòng thử lại.');
+    } finally {
+      setUploadingCheckoutImage(false);
+    }
+  };
+
+  // Handle checkout appointment
+  const handleCheckoutAppointment = async () => {
+    if (!appointment) return;
+    
+    setSubmittingCheckout(true);
+    try {
+      const checkoutRequest: CheckOutAppointmentRequest = {
+        appointmentId: appointment.id,
+        checkOutImage: checkoutImage,
+        additionalAmount: appointment.additionalAmount || 0
+      };
+
+      const response = await checkOutAppointment(checkoutRequest);
+      
+      if (response.data?.paymentUrl) {
+        toast.success('Tạo liên kết thanh toán thành công! Đang chuyển hướng...');
+        setTimeout(() => {
+          window.open(response.data.paymentUrl, '_blank');
+        }, 1000);
+      } else {
+        toast.success('Check-out thành công!');
+      }
+      
+      await fetchAppointmentDetails();
+    } catch (error) {
+      console.error('Error during checkout:', error);
+      toast.error('Checkout thất bại! Vui lòng thử lại.');
+    } finally {
+      setSubmittingCheckout(false);
     }
   };
 
@@ -564,16 +661,42 @@ const ManageAppointmentDetail: React.FC = () => {
               <Row gutter={[16, 16]}>
                 {appointment.items.map((item) => (
                   <Col xs={24} md={12} lg={8} key={item.id}>
-                    <Card size="small" className="service-item">
+                    <Card 
+                      size="small" 
+                      className="service-item"
+                      hoverable={!!item.medicalRecord}
+                      onClick={() => handleMedicalRecordClick(item)}
+                      style={{ 
+                        cursor: item.medicalRecord ? 'pointer' : 'default',
+                        border: item.medicalRecord ? '2px solid #52c41a' : '2px solid #f0f0f0'
+                      }}
+                    >
                       <Space direction="vertical" style={{ width: '100%' }}>
-                        <Text strong style={{ fontSize: '16px' }}>
-                          {item.serviceName}
-                        </Text>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                          <Text strong style={{ fontSize: '16px', flex: 1 }}>
+                            {item.serviceName}
+                          </Text>
+                          {item.medicalRecord && (
+                            <Tag color="green" icon={<FileTextOutlined />}>
+                              Có hồ sơ
+                            </Tag>
+                          )}
+                        </div>
                         <Text strong style={{ color: '#52c41a', fontSize: '18px' }}>
                           {formatPrice(item.price)}
                         </Text>
                         {item.serviceComboName && (
                           <Tag color="purple">Combo: {item.serviceComboName}</Tag>
+                        )}
+                        {item.medicalRecord && (
+                          <div style={{ marginTop: '8px' }}>
+                            <Space>
+                              <EyeOutlined style={{ color: '#1890ff' }} />
+                              <Text type="secondary" style={{ fontSize: '12px' }}>
+                                Nhấn để xem hồ sơ bệnh án
+                              </Text>
+                            </Space>
+                          </div>
                         )}
                       </Space>
                     </Card>
@@ -582,6 +705,138 @@ const ManageAppointmentDetail: React.FC = () => {
               </Row>
             </Card>
           </Col>
+
+          {/* Prescription Section */}
+          {appointment.prescription && appointment.prescription.medicines.length > 0 && (
+            <Col span={24}>
+              <Card
+                title={
+                  <Space>
+                    <ExperimentOutlined style={{ color: '#722ed1' }} />
+                    <span>Đơn thuốc</span>
+                  </Space>
+                }
+                className="prescription-card"
+              >
+                <div style={{ marginBottom: '16px' }}>
+                  <Text type="secondary">
+                    <InfoCircleOutlined style={{ marginRight: '8px' }} />
+                    Đơn thuốc được kê cho cuộc hẹn này
+                  </Text>
+                </div>
+                
+                <Row gutter={[16, 16]}>
+                  {appointment.prescription.medicines.map((medicine, index) => (
+                    <Col xs={24} md={12} lg={8} key={medicine.id}>
+                      <Card 
+                        size="small" 
+                        className="medicine-item"
+                        style={{ 
+                          border: '2px solid #f0f2ff',
+                          borderRadius: '8px',
+                          background: 'linear-gradient(135deg, #fafbff 0%, #f0f2ff 100%)'
+                        }}
+                      >
+                        <Space direction="vertical" style={{ width: '100%' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', marginBottom: '8px' }}>
+                            <div 
+                              style={{ 
+                                width: '32px', 
+                                height: '32px', 
+                                borderRadius: '50%', 
+                                background: '#722ed1', 
+                                display: 'flex', 
+                                alignItems: 'center', 
+                                justifyContent: 'center',
+                                marginRight: '12px'
+                              }}
+                            >
+                              <Text style={{ color: 'white', fontWeight: 'bold', fontSize: '14px' }}>
+                                {index + 1}
+                              </Text>
+                            </div>
+                            <Text strong style={{ fontSize: '16px', color: '#262626' }}>
+                              {medicine.medicineName}
+                            </Text>
+                          </div>
+                          
+                          <Descriptions size="small" column={1}>
+                            <Descriptions.Item 
+                              label={
+                                <Text style={{ fontWeight: 600, color: '#595959' }}>
+                                  Liều dùng
+                                </Text>
+                              }
+                            >
+                              <Text style={{ color: '#1890ff', fontWeight: 500 }}>
+                                {medicine.dosage}
+                              </Text>
+                            </Descriptions.Item>
+                            
+                            <Descriptions.Item 
+                              label={
+                                <Text style={{ fontWeight: 600, color: '#595959' }}>
+                                  <ClockCircleOutlined style={{ marginRight: '4px' }} />
+                                  Thời gian
+                                </Text>
+                              }
+                            >
+                              <Tag color="orange" style={{ fontSize: '12px' }}>
+                                {medicine.durationDays} ngày
+                              </Tag>
+                            </Descriptions.Item>
+                            
+                            {medicine.note && (
+                              <Descriptions.Item 
+                                label={
+                                  <Text style={{ fontWeight: 600, color: '#595959' }}>
+                                    Ghi chú
+                                  </Text>
+                                }
+                              >
+                                <Text 
+                                  style={{ 
+                                    color: '#52c41a', 
+                                    fontStyle: 'italic',
+                                    fontSize: '13px'
+                                  }}
+                                >
+                                  {medicine.note}
+                                </Text>
+                              </Descriptions.Item>
+                            )}
+                          </Descriptions>
+                        </Space>
+                      </Card>
+                    </Col>
+                  ))}
+                </Row>
+                
+                <div 
+                  style={{ 
+                    marginTop: '20px', 
+                    padding: '16px', 
+                    background: '#f6ffed', 
+                    border: '1px solid #d9f7be',
+                    borderRadius: '8px'
+                  }}
+                >
+                  <Space align="start">
+                    <InfoCircleOutlined style={{ color: '#52c41a', marginTop: '2px' }} />
+                    <div>
+                      <Text strong style={{ color: '#389e0d', display: 'block', marginBottom: '4px' }}>
+                        Lưu ý quan trọng:
+                      </Text>
+                      <Text style={{ color: '#595959', fontSize: '13px' }}>
+                        Vui lòng tuân thủ đúng liều dùng và thời gian dùng thuốc theo chỉ định của bác sĩ. 
+                        Nếu có bất kỳ phản ứng bất thường nào, hãy liên hệ ngay với phòng khám.
+                      </Text>
+                    </div>
+                  </Space>
+                </div>
+              </Card>
+            </Col>
+          )}
 
           {/* Notes */}
           {appointment.notes && (
@@ -610,6 +865,30 @@ const ManageAppointmentDetail: React.FC = () => {
                   }}
                 >
                   Check-in
+                </Button>
+              </div>
+            </Col>
+          )}
+
+          {/* Checkout Button */}
+          {appointment.status === 'IN_PROGRESS' && hasExistingMedicalRecords() && (
+            <Col span={24}>
+              <div style={{ textAlign: 'center', marginTop: '24px' }}>
+                <Button
+                  type="primary"
+                  size="large"
+                  icon={<DollarOutlined />}
+                  onClick={() => setCheckoutModalVisible(true)}
+                  loading={submittingCheckout}
+                  style={{
+                    backgroundColor: '#1890ff',
+                    borderColor: '#1890ff',
+                    fontSize: '16px',
+                    height: '48px',
+                    padding: '0 32px',
+                  }}
+                >
+                  Check out
                 </Button>
               </div>
             </Col>
@@ -730,6 +1009,264 @@ const ManageAppointmentDetail: React.FC = () => {
                 borderRadius: '8px'
               }}
             />
+          </div>
+        </Modal>
+
+        {/* Medical Record Modal */}
+        <Modal
+          open={medicalRecordModalVisible}
+          title={
+            <Space>
+              <FileTextOutlined style={{ color: '#52c41a' }} />
+              <span>Hồ sơ bệnh án - {selectedServiceName}</span>
+            </Space>
+          }
+          footer={[
+            <Button
+              key="close"
+              type="primary"
+              onClick={() => setMedicalRecordModalVisible(false)}
+            >
+              Đóng
+            </Button>
+          ]}
+          onCancel={() => setMedicalRecordModalVisible(false)}
+          width={800}
+          className="medical-record-modal"
+        >
+          {selectedMedicalRecord && (
+            <div style={{ padding: '16px 0' }}>
+              <Row gutter={[24, 24]}>
+                <Col span={24}>
+                  <Card
+                    size="small"
+                    title={
+                      <Space>
+                        <MedicineBoxOutlined style={{ color: '#1890ff' }} />
+                        <span>Thông tin chẩn đoán</span>
+                      </Space>
+                    }
+                    style={{ marginBottom: '16px' }}
+                  >
+                    <Descriptions column={1} bordered size="small">
+                      <Descriptions.Item label="Triệu chứng">
+                        <Text>{selectedMedicalRecord.symptom || 'Không có thông tin'}</Text>
+                      </Descriptions.Item>
+                      <Descriptions.Item label="Chẩn đoán">
+                        <Text strong style={{ color: '#fa8c16' }}>
+                          {selectedMedicalRecord.diagnosis || 'Chưa có chẩn đoán'}
+                        </Text>
+                      </Descriptions.Item>
+                      <Descriptions.Item label="Tình trạng sức khỏe">
+                        <Tag 
+                          color={
+                            selectedMedicalRecord.healthStatus === 'Good' ? 'green' :
+                            selectedMedicalRecord.healthStatus === 'Normal' ? 'blue' :
+                            selectedMedicalRecord.healthStatus === 'Poor' ? 'red' : 'default'
+                          }
+                          style={{ fontSize: '14px', padding: '4px 8px' }}
+                        >
+                          {selectedMedicalRecord.healthStatus || 'Chưa xác định'}
+                        </Tag>
+                      </Descriptions.Item>
+                    </Descriptions>
+                  </Card>
+                </Col>
+
+                {selectedMedicalRecord.linkResult && (
+                  <Col span={24}>
+                    <Card
+                      size="small"
+                      title={
+                        <Space>
+                          <FileImageOutlined style={{ color: '#722ed1' }} />
+                          <span>Hình ảnh kết quả</span>
+                        </Space>
+                      }
+                    >
+                      <div style={{ textAlign: 'center' }}>
+                        <Image
+                          src={selectedMedicalRecord.linkResult}
+                          alt="Kết quả xét nghiệm"
+                          style={{
+                            maxWidth: '100%',
+                            maxHeight: '400px',
+                            borderRadius: '8px',
+                            border: '1px solid #d9d9d9'
+                          }}
+                          preview={{
+                            mask: (
+                              <div style={{ textAlign: 'center' }}>
+                                <EyeOutlined style={{ fontSize: '20px', marginBottom: '8px' }} />
+                                <div>Xem ảnh phóng to</div>
+                              </div>
+                            )
+                          }}
+                        />
+                      </div>
+                    </Card>
+                  </Col>
+                )}
+              </Row>
+            </div>
+          )}
+        </Modal>
+
+        {/* Checkout Modal */}
+        <Modal
+          title="Xác nhận thanh toán"
+          open={checkoutModalVisible}
+          onCancel={() => {
+            setCheckoutModalVisible(false);
+            setCheckoutImage('');
+          }}
+          footer={[
+            <Button key="cancel" onClick={() => {
+              setCheckoutModalVisible(false);
+              setCheckoutImage('');
+            }}>
+              Hủy
+            </Button>,
+            <Button 
+              key="confirm" 
+              type="primary" 
+              icon={<DollarOutlined />}
+              loading={submittingCheckout}
+              disabled={!checkoutImage || uploadingCheckoutImage}
+              onClick={() => {
+                setCheckoutModalVisible(false);
+                handleCheckoutAppointment();
+              }}
+            >
+              Xác nhận thanh toán
+            </Button>
+          ]}
+          width={600}
+          centered
+        >
+          <div style={{ padding: '16px 0' }}>
+            <Alert
+              message="Xác nhận thông tin thanh toán"
+              description="Hệ thống sẽ tạo liên kết thanh toán và chuyển hướng đến trang thanh toán VNPay. Vui lòng kiểm tra lại thông tin và tải lên hình ảnh checkout trước khi tiếp tục."
+              type="info"
+              showIcon
+              style={{ marginBottom: 16 }}
+            />
+
+            {/* Image Upload Section */}
+            <Card size="small" style={{ marginBottom: 16 }}>
+              <Row gutter={[16, 16]}>
+                <Col span={24}>
+                  <Text strong>Hình ảnh checkout (Bắt buộc):</Text>
+                </Col>
+                <Col span={24}>
+                  <Upload
+                    accept="image/*"
+                    showUploadList={false}
+                    beforeUpload={async (file) => {
+                      // Validate file type
+                      const isImage = file.type.startsWith('image/');
+                      if (!isImage) {
+                        toast.error('Chỉ có thể tải lên file hình ảnh!');
+                        return false;
+                      }
+
+                      // Validate file size (5MB max)
+                      const isValidSize = file.size / 1024 / 1024 < 5;
+                      if (!isValidSize) {
+                        toast.error('Kích thước file phải nhỏ hơn 5MB!');
+                        return false;
+                      }
+
+                      // Upload the file
+                      await handleCheckoutImageUpload(file);
+                      return false; // Prevent default upload
+                    }}
+                    disabled={uploadingCheckoutImage}
+                  >
+                    <Button
+                      icon={<UploadOutlined />}
+                      loading={uploadingCheckoutImage}
+                      style={{ width: '100%' }}
+                    >
+                      {uploadingCheckoutImage ? 'Đang tải lên...' : 'Tải lên hình ảnh checkout'}
+                    </Button>
+                  </Upload>
+                </Col>
+                {checkoutImage && (
+                  <Col span={24}>
+                    <div style={{ textAlign: 'center' }}>
+                      <Image
+                        src={checkoutImage}
+                        alt="Checkout Image"
+                        style={{ 
+                          maxWidth: '200px', 
+                          maxHeight: '150px',
+                          objectFit: 'cover',
+                          borderRadius: '8px',
+                          border: '1px solid #d9d9d9'
+                        }}
+                      />
+                      <div style={{ marginTop: 8 }}>
+                        <Tag color="green">✓ Đã tải lên</Tag>
+                        <Button 
+                          type="link" 
+                          size="small" 
+                          onClick={() => setCheckoutImage('')}
+                        >
+                          Xóa
+                        </Button>
+                      </div>
+                    </div>
+                  </Col>
+                )}
+              </Row>
+            </Card>
+            
+            <Card size="small" style={{ background: '#f9f9f9' }}>
+              <Row gutter={[16, 8]}>
+                <Col span={12}>
+                  <Text strong>Khách hàng:</Text>
+                  <div>{appointment?.customerName}</div>
+                </Col>
+                <Col span={12}>
+                  <Text strong>Hamster:</Text>
+                  <div>{appointment?.hamsterName}</div>
+                </Col>
+                <Col span={12}>
+                  <Text strong>Tổng tiền gốc:</Text>
+                  <div>{appointment ? formatPrice(appointment.totalAmount) : '0 đ'}</div>
+                </Col>
+                <Col span={12}>
+                  <Text strong>Sau giảm giá:</Text>
+                  <div style={{ color: '#52c41a' }}>{appointment ? formatPrice(appointment.totalAmountAfter) : '0 đ'}</div>
+                </Col>
+                {appointment?.additionalAmount && (
+                  <>
+                    <Col span={12}>
+                      <Text strong>Dịch vụ bổ sung:</Text>
+                      <div style={{ color: '#1890ff' }}>{formatPrice(appointment.additionalAmount)}</div>
+                    </Col>
+                    <Col span={12}></Col>
+                  </>
+                )}
+                <Col span={24}>
+                  <Divider style={{ margin: '8px 0' }} />
+                  <Row justify="space-between" align="middle">
+                    <Col>
+                      <Text strong style={{ fontSize: '16px' }}>Tổng thanh toán:</Text>
+                    </Col>
+                    <Col>
+                      <Text strong style={{ fontSize: '18px', color: '#f5222d' }}>
+                        {appointment ? formatPrice(
+                          appointment.totalAmountAfter + (appointment.additionalAmount || 0)
+                        ) : '0 đ'}
+                      </Text>
+                    </Col>
+                  </Row>
+                </Col>
+              </Row>
+            </Card>
           </div>
         </Modal>
       </Card>

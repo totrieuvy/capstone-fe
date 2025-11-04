@@ -12,7 +12,6 @@ import {
   Space,
   Table,
   Tag,
-  message,
   Divider,
   Alert,
   Spin,
@@ -41,12 +40,17 @@ import {
   getAppointmentById, 
   type AppointmentDetail,
   createMedicalRecord,
-  type CreateMedicalRecordRequest
+  type CreateMedicalRecordRequest,
+  createPrescription,
+  type CreatePrescriptionRequest,
+  type PrescriptionMedicine
 } from '../../../services/MedicalService';
+import MedicineService, { type Medicine } from '../../../services/MedicineService';
 import { getFormattedPrice } from '../../../utils/formatPrice';
 import { storage } from '../../../config/firebase';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import type { UploadProps } from 'antd';
+import { toast } from 'react-toastify';
 import './Examination.scss';
 
 const { Title, Text } = Typography;
@@ -94,10 +98,31 @@ const formatDateToUTC7 = (dateString: string): string => {
 // Parse a display price string (like "20,000 VND" or "₫20.000") into a number (in VND)
 const parseDisplayPrice = (displayPrice?: string): number => {
   if (!displayPrice) return 0;
-  // Remove all non-digit characters
-  const digits = displayPrice.replace(/[^0-9]/g, '');
-  if (!digits) return 0;
-  return Number(digits);
+  // Remove all non-digit characters except dots and commas for decimal handling
+  const cleanPrice = displayPrice.replace(/[^\d.,]/g, '');
+  if (!cleanPrice) return 0;
+  
+  // Handle different decimal separators and thousand separators
+  // Convert to standard format: remove commas used as thousand separators, keep dots as decimals
+  let normalized = cleanPrice;
+  
+  // If there are multiple dots or commas, treat the last one as decimal separator
+  const lastDotIndex = cleanPrice.lastIndexOf('.');
+  const lastCommaIndex = cleanPrice.lastIndexOf(',');
+  
+  if (lastDotIndex > lastCommaIndex) {
+    // Dot is decimal separator, remove commas
+    normalized = cleanPrice.replace(/,/g, '');
+  } else if (lastCommaIndex > lastDotIndex) {
+    // Comma is decimal separator, replace with dot and remove other commas
+    normalized = cleanPrice.replace(/,(?=.*,)/g, '').replace(',', '.');
+  } else {
+    // No decimal separator or only one, remove all non-digits
+    normalized = cleanPrice.replace(/[^\d]/g, '');
+  }
+  
+  const result = parseFloat(normalized) || 0;
+  return Math.round(result); // Ensure integer for VND currency
 };
 
 const Examination: React.FC = () => {
@@ -119,6 +144,11 @@ const Examination: React.FC = () => {
   const [submittingRecords, setSubmittingRecords] = useState(false);
   const [uploadStates, setUploadStates] = useState<Map<string, UploadState>>(new Map());
 
+  // Prescription state
+  const [availableMedicines, setAvailableMedicines] = useState<Medicine[]>([]);
+  const [prescriptionMedicines, setPrescriptionMedicines] = useState<PrescriptionMedicine[]>([]);
+  const [submittingPrescription, setSubmittingPrescription] = useState(false);
+
   // Image preview modal states
   const [imagePreviewVisible, setImagePreviewVisible] = useState<boolean>(false);
   const [previewImage, setPreviewImage] = useState<string>('');
@@ -129,22 +159,22 @@ const Examination: React.FC = () => {
     {
       title: 'Dịch vụ bổ sung',
       icon: <PlusOutlined />,
-      description: 'Thêm dịch vụ y tế nâng cao'
+      description: 'Thêm dịch vụ y tế nâng cao (Tùy chọn)'
     },
     {
       title: 'Hồ sơ bệnh án',
       icon: <FileTextOutlined />,
-      description: 'Nhập thông tin khám bệnh'
+      description: 'Nhập thông tin khám bệnh (Bắt buộc)'
     },
     {
       title: 'Kê đơn thuốc',
       icon: <MedicineBoxOutlined />,
-      description: 'Kê đơn thuốc điều trị'
+      description: 'Kê đơn thuốc điều trị (Tùy chọn)'
     },
     {
-      title: 'Tổng kết & Thanh toán',
+      title: 'Tổng kết',
       icon: <CheckCircleOutlined />,
-      description: 'Xem lại và hoàn thành'
+      description: 'Xem lại thông tin khám bệnh'
     }
   ];
 
@@ -155,11 +185,18 @@ const Examination: React.FC = () => {
     }
   }, [appointmentId]);
 
+  // Load medicines on component mount
+  useEffect(() => {
+    loadAvailableMedicines();
+  }, []);
+
   // Load available services when appointment data is loaded
   useEffect(() => {
     if (appointmentData?.speciesId) {
       loadAvailableServices(appointmentData.speciesId);
       initializeMedicalRecords();
+      // Always start from step 0 (services step) regardless of completion status
+      // Users should see existing data but go through all steps
     }
   }, [appointmentData]);
 
@@ -169,7 +206,7 @@ const Examination: React.FC = () => {
     
     const recordsMap = new Map<string, MedicalRecordForm>();
     appointmentData.items.forEach(item => {
-      if (!item.medicalRecordId) { // Only create form for items without medical records
+      if (!item.medicalRecord) { // Check for medicalRecord object instead of medicalRecordId
         recordsMap.set(item.id, {
           appointmentItemId: item.id,
           serviceName: item.serviceName,
@@ -184,6 +221,95 @@ const Examination: React.FC = () => {
     setMedicalRecords(recordsMap);
   };
 
+  // Helper function to check if all medical records exist
+  const hasAllMedicalRecords = (): boolean => {
+    if (!appointmentData) return false;
+    return appointmentData.items.every(item => item.medicalRecord !== null);
+  };
+
+  // Helper function to check if prescription exists
+  const hasPrescription = (): boolean => {
+    return appointmentData?.prescription !== null;
+  };
+
+  // Load available medicines
+  const loadAvailableMedicines = async () => {
+    try {
+      const response = await MedicineService.getMedicines();
+      if (response.code === 200) {
+        setAvailableMedicines(response.data);
+      } else {
+        toast.error('Không thể tải danh sách thuốc');
+      }
+    } catch (error) {
+      console.error('Error loading medicines:', error);
+      toast.error('Lỗi khi tải danh sách thuốc');
+    }
+  };
+
+  // Add medicine to prescription
+  const handleAddMedicine = () => {
+    const newMedicine: PrescriptionMedicine = {
+      medicineId: '',
+      dosage: '',
+      note: '',
+      durationDays: 1
+    };
+    setPrescriptionMedicines([...prescriptionMedicines, newMedicine]);
+  };
+
+  // Remove medicine from prescription
+  const handleRemoveMedicine = (index: number) => {
+    const updatedMedicines = prescriptionMedicines.filter((_, i) => i !== index);
+    setPrescriptionMedicines(updatedMedicines);
+  };
+
+  // Update medicine in prescription
+  const handleUpdateMedicine = (index: number, field: keyof PrescriptionMedicine, value: string | number) => {
+    const updatedMedicines = prescriptionMedicines.map((medicine, i) => 
+      i === index ? { ...medicine, [field]: value } : medicine
+    );
+    setPrescriptionMedicines(updatedMedicines);
+  };
+
+  // Submit prescription
+  const handleSubmitPrescription = async () => {
+    // Validate prescription medicines
+    const incompleteMedicines = prescriptionMedicines.filter(medicine => 
+      !medicine.medicineId || !medicine.dosage || medicine.durationDays <= 0
+    );
+
+    if (incompleteMedicines.length > 0) {
+      toast.error('Vui lòng hoàn thành thông tin tất cả các thuốc');
+      return;
+    }
+
+    try {
+      setSubmittingPrescription(true);
+      
+      const prescriptionData: CreatePrescriptionRequest = {
+        appointmentId: appointmentId!,
+        medicines: prescriptionMedicines
+      };
+
+      const response = await createPrescription(prescriptionData);
+      
+      if (response.code === 200) {
+        toast.success('Đã tạo đơn thuốc thành công');
+        // Reload appointment data to reflect changes
+        await loadAppointmentData();
+        setCurrentStep(3);
+      } else {
+        toast.error('Không thể tạo đơn thuốc');
+      }
+    } catch (error) {
+      console.error('Error creating prescription:', error);
+      toast.error('Lỗi khi tạo đơn thuốc');
+    } finally {
+      setSubmittingPrescription(false);
+    }
+  };
+
   const loadAppointmentData = async () => {
     try {
       setLoading(true);
@@ -191,13 +317,13 @@ const Examination: React.FC = () => {
       if (response.code === 200) {
         setAppointmentData(response.data);
       } else {
-        message.error('Không thể tải thông tin cuộc hẹn');
-        navigate('/veterinarian/appointments');
+        toast.error('Không thể tải thông tin cuộc hẹn');
+        navigate('/VET/lich-kham-hom-nay');
       }
     } catch (error) {
       console.error('Error loading appointment:', error);
-      message.error('Lỗi khi tải thông tin cuộc hẹn');
-      navigate('/veterinarian/appointments');
+      toast.error('Lỗi khi tải thông tin cuộc hẹn');
+      navigate('/VET/lich-kham-hom-nay');
     } finally {
       setLoading(false);
     }
@@ -220,11 +346,11 @@ const Examination: React.FC = () => {
         
         setAvailableServices(filteredServices);
       } else {
-        message.error('Không thể tải danh sách dịch vụ');
+        toast.error('Không thể tải danh sách dịch vụ');
       }
     } catch (error) {
       console.error('Error loading services:', error);
-      message.error('Lỗi khi tải danh sách dịch vụ');
+      toast.error('Lỗi khi tải danh sách dịch vụ');
     } finally {
       setLoading(false);
     }
@@ -236,7 +362,7 @@ const Examination: React.FC = () => {
 
     // Check if service is already selected
     if (selectedServices.find(s => s.serviceId === serviceId)) {
-      message.warning('Dịch vụ này đã được chọn');
+      toast.warning('Dịch vụ này đã được chọn');
       return;
     }
 
@@ -275,14 +401,19 @@ const Examination: React.FC = () => {
     // Validate that all selected services have prices
     const servicesWithoutPrice = selectedServices.filter(s => !s.price || s.price <= 0);
     if (servicesWithoutPrice.length > 0) {
-      message.error('Vui lòng nhập giá cho tất cả dịch vụ đã chọn');
+      toast.error('Vui lòng nhập giá cho tất cả dịch vụ đã chọn');
       return;
     }
 
     try {
       setSubmittingServices(true);
       
-      const totalAdditionalAmount = selectedServices.reduce((sum, service) => sum + service.price, 0);
+      // Calculate additionalAmount from original service displayPrice, not user-modified prices
+      const totalAdditionalAmount = selectedServices.reduce((sum, service) => {
+        const originalService = availableServices.find(s => s.id === service.serviceId);
+        const displayPrice = originalService ? parseDisplayPrice(originalService.displayPrice) : 0;
+        return sum + displayPrice;
+      }, 0);
       
       const addServiceRequest = {
         appointmentId: appointmentId!,
@@ -296,16 +427,16 @@ const Examination: React.FC = () => {
       const response = await addServiceToAppointment(addServiceRequest);
       
       if (response.code === 200) {
-        message.success('Đã thêm dịch vụ bổ sung thành công');
+        toast.success('Đã thêm dịch vụ bổ sung thành công');
         // Reload appointment data to reflect changes
         await loadAppointmentData();
         setCurrentStep(1);
       } else {
-        message.error('Không thể thêm dịch vụ bổ sung');
+        toast.error('Không thể thêm dịch vụ bổ sung');
       }
     } catch (error) {
       console.error('Error adding services:', error);
-      message.error('Lỗi khi thêm dịch vụ bổ sung');
+      toast.error('Lỗi khi thêm dịch vụ bổ sung');
     } finally {
       setSubmittingServices(false);
     }
@@ -357,7 +488,7 @@ const Examination: React.FC = () => {
       })));
 
       console.log('File uploaded successfully:', downloadURL);
-      message.success('Tải lên hình ảnh thành công');
+      toast.success('Tải lên hình ảnh thành công');
       return downloadURL;
     } catch (error) {
       console.error('Error uploading file:', error);
@@ -368,7 +499,7 @@ const Examination: React.FC = () => {
         errorMessage = error.message;
       }
       
-      message.error(errorMessage);
+      toast.error(errorMessage);
       
       // Reset upload state
       setUploadStates(prev => new Map(prev.set(appointmentItemId, {
@@ -429,7 +560,7 @@ const Examination: React.FC = () => {
     );
 
     if (incompleteRecords.length > 0) {
-      message.error('Vui lòng hoàn thành tất cả hồ sơ bệnh án');
+      toast.error('Vui lòng hoàn thành tất cả hồ sơ bệnh án');
       return;
     }
 
@@ -453,13 +584,13 @@ const Examination: React.FC = () => {
         }
       }
 
-      message.success('Đã tạo hồ sơ bệnh án thành công');
+      toast.success('Đã tạo hồ sơ bệnh án thành công');
       // Reload appointment data to reflect changes
       await loadAppointmentData();
       setCurrentStep(2);
     } catch (error) {
       console.error('Error creating medical records:', error);
-      message.error('Lỗi khi tạo hồ sơ bệnh án');
+      toast.error('Lỗi khi tạo hồ sơ bệnh án');
     } finally {
       setSubmittingRecords(false);
     }
@@ -627,8 +758,94 @@ const Examination: React.FC = () => {
     });
   };
 
+  // Generate display for existing medical records
+  const getExistingMedicalRecordsDisplay = () => {
+    if (!appointmentData) return [];
+
+    const panelStyle: React.CSSProperties = {
+      marginBottom: 16,
+      background: token.colorFillAlter,
+      borderRadius: token.borderRadiusLG,
+      border: 'none',
+    };
+
+    const existingRecords = appointmentData.items.filter(item => item.medicalRecord);
+
+    return existingRecords.map((item) => {
+      const record = item.medicalRecord!;
+      
+      return {
+        key: item.id,
+        label: (
+          <Space>
+            <Text strong>{item.serviceName}</Text>
+            <Tag color="green">Đã hoàn thành</Tag>
+          </Space>
+        ),
+        children: (
+          <div style={{ padding: '8px 0' }}>
+            <Row gutter={[16, 16]}>
+              <Col xs={24} md={12}>
+                <div>
+                  <Text strong>Chẩn đoán:</Text>
+                  <div style={{ marginTop: 8, padding: 12, background: '#fafafa', borderRadius: 6 }}>
+                    <Text>{record.diagnosis}</Text>
+                  </div>
+                </div>
+              </Col>
+              <Col xs={24} md={12}>
+                <div>
+                  <Text strong>Triệu chứng:</Text>
+                  <div style={{ marginTop: 8, padding: 12, background: '#fafafa', borderRadius: 6 }}>
+                    <Text>{record.symptom}</Text>
+                  </div>
+                </div>
+              </Col>
+              <Col xs={24} md={8}>
+                <div>
+                  <Text strong>Tình trạng sức khỏe:</Text>
+                  <div style={{ marginTop: 8 }}>
+                    <Tag color={record.healthStatus === 'normal' ? 'green' : record.healthStatus === 'critical' ? 'red' : 'orange'}>
+                      {record.healthStatus === 'normal' ? 'Bình thường' :
+                       record.healthStatus === 'mild' ? 'Nhẹ' :
+                       record.healthStatus === 'moderate' ? 'Trung bình' :
+                       record.healthStatus === 'severe' ? 'Nghiêm trọng' : 'Nguy kích'}
+                    </Tag>
+                  </div>
+                </div>
+              </Col>
+              <Col xs={24} md={16}>
+                <div>
+                  <Text strong>Hình ảnh kết quả:</Text>
+                  <div style={{ marginTop: 8 }}>
+                    {record.linkResult && (
+                      <Image
+                        src={record.linkResult}
+                        alt="Kết quả khám"
+                        width={80}
+                        height={80}
+                        style={{ objectFit: 'cover', borderRadius: '8px', cursor: 'pointer' }}
+                        onClick={() => handleImagePreview(record.linkResult, `Kết quả khám - ${item.serviceName}`)}
+                      />
+                    )}
+                  </div>
+                </div>
+              </Col>
+            </Row>
+          </div>
+        ),
+        style: panelStyle,
+      };
+    });
+  };
+
   const calculateTotalAdditional = () => {
-    return selectedServices.reduce((sum, service) => sum + (service.price || 0), 0);
+    // Calculate from original service displayPrice, consistent with additionalAmount calculation
+    return selectedServices.reduce((sum, service) => {
+      const originalService = availableServices.find(s => s.id === service.serviceId);
+      const displayPrice = originalService ? parseDisplayPrice(originalService.displayPrice) : 0;
+      return sum + displayPrice;
+    }, 0);
   };
 
   // Table columns for selected services
@@ -644,7 +861,7 @@ const Examination: React.FC = () => {
       dataIndex: 'displayPrice',
       key: 'displayPrice',
       render: (text: string) => (
-        <Tag color="blue">{getFormattedPrice(Math.floor(parseDisplayPrice(text) / 100))}</Tag>
+        <Tag color="blue">{text}</Tag>
       )
     },
     {
@@ -750,7 +967,7 @@ const Examination: React.FC = () => {
               <Col span={24}>
                 <Alert
                   message="Bước tùy chọn"
-                  description="Bạn có thể thêm các dịch vụ y tế bổ sung cho cuộc khám này. Bước này có thể bỏ qua nếu không cần thiết."
+                  description="Bạn có thể thêm các dịch vụ y tế bổ sung cho cuộc khám này. Nếu không cần thêm dịch vụ, bạn có thể bỏ qua bước này."
                   type="info"
                   showIcon
                   style={{ marginBottom: 16 }}
@@ -800,7 +1017,7 @@ const Examination: React.FC = () => {
                             if (serviceId) {
                               handleAddService(serviceId);
                             } else {
-                              message.warning('Vui lòng chọn dịch vụ trước');
+                              toast.warning('Vui lòng chọn dịch vụ trước');
                             }
                           }}
                           block
@@ -831,7 +1048,7 @@ const Examination: React.FC = () => {
                       </Col>
                       <Col>
                         <Text strong style={{ fontSize: '18px', color: '#52c41a' }}>
-                          {getFormattedPrice(calculateTotalAdditional())}
+                          {getFormattedPrice(Math.floor(calculateTotalAdditional() / 100))}
                         </Text>
                       </Col>
                     </Row>
@@ -885,16 +1102,50 @@ const Examination: React.FC = () => {
           >
             <Row gutter={[24, 24]}>
               <Col span={24}>
-                <Alert
-                  message="Bước bắt buộc"
-                  description="Vui lòng nhập thông tin khám bệnh cho tất cả các dịch vụ y tế trong cuộc hẹn này."
-                  type="warning"
-                  showIcon
-                  style={{ marginBottom: 24 }}
-                />
+                {hasAllMedicalRecords() ? (
+                  <Alert
+                    message="Tất cả hồ sơ bệnh án đã hoàn thành"
+                    description="Các hồ sơ bệnh án cho cuộc hẹn này đã được tạo trước đó. Bạn có thể xem chi tiết bên dưới."
+                    type="success"
+                    showIcon
+                    style={{ marginBottom: 24 }}
+                  />
+                ) : medicalRecords.size > 0 ? (
+                  <Alert
+                    message="Bước bắt buộc"
+                    description="Vui lòng nhập thông tin khám bệnh cho tất cả các dịch vụ y tế trong cuộc hẹn này."
+                    type="warning"
+                    showIcon
+                    style={{ marginBottom: 24 }}
+                  />
+                ) : (
+                  <Alert
+                    message="Không có dịch vụ y tế nào cần tạo hồ sơ bệnh án"
+                    description="Tất cả các dịch vụ trong cuộc hẹn này đã có hồ sơ bệnh án hoặc không yêu cầu hồ sơ."
+                    type="info"
+                    showIcon
+                    style={{ marginBottom: 24 }}
+                  />
+                )}
               </Col>
 
-              {medicalRecords.size > 0 ? (
+              {/* Display existing medical records */}
+              {hasAllMedicalRecords() && (
+                <Col span={24}>
+                  <Divider orientation="left">Hồ sơ bệnh án đã hoàn thành</Divider>
+                  <Collapse
+                    bordered={false}
+                    defaultActiveKey={appointmentData?.items.filter(item => item.medicalRecord).map(item => item.id)}
+                    expandIcon={({ isActive }) => <CaretRightOutlined rotate={isActive ? 90 : 0} />}
+                    style={{ background: token.colorBgContainer }}
+                    items={getExistingMedicalRecordsDisplay()}
+                    size="large"
+                  />
+                </Col>
+              )}
+
+              {/* Display form for new medical records */}
+              {!hasAllMedicalRecords() && medicalRecords.size > 0 && (
                 <Col span={24}>
                   <Collapse
                     bordered={false}
@@ -905,7 +1156,9 @@ const Examination: React.FC = () => {
                     size="large"
                   />
                 </Col>
-              ) : (
+              )}
+
+              {!hasAllMedicalRecords() && medicalRecords.size === 0 && (
                 <Col span={24}>
                   <Alert
                     message="Không có dịch vụ y tế nào cần tạo hồ sơ bệnh án"
@@ -925,15 +1178,31 @@ const Examination: React.FC = () => {
                     </Button>
                   </Col>
                   <Col>
-                    <Button
-                      type="primary"
-                      icon={<CheckCircleOutlined />}
-                      onClick={handleSubmitMedicalRecords}
-                      loading={submittingRecords}
-                      disabled={medicalRecords.size === 0}
-                    >
-                      Hoàn thành hồ sơ bệnh án
-                    </Button>
+                    {hasAllMedicalRecords() ? (
+                      <Button
+                        type="primary"
+                        icon={<CheckCircleOutlined />}
+                        onClick={() => setCurrentStep(2)}
+                      >
+                        Tiếp tục kê đơn thuốc
+                      </Button>
+                    ) : medicalRecords.size > 0 ? (
+                      <Button
+                        type="primary"
+                        icon={<CheckCircleOutlined />}
+                        onClick={handleSubmitMedicalRecords}
+                        loading={submittingRecords}
+                      >
+                        Hoàn thành hồ sơ bệnh án
+                      </Button>
+                    ) : (
+                      <Button
+                        type="primary"
+                        onClick={() => setCurrentStep(2)}
+                      >
+                        Tiếp tục kê đơn thuốc
+                      </Button>
+                    )}
                   </Col>
                 </Row>
               </Col>
@@ -942,24 +1211,351 @@ const Examination: React.FC = () => {
         )}
 
         {currentStep === 2 && (
-          <Card title="Kê đơn thuốc" className="step-content-card">
-            <Alert
-              message="Sắp có"
-              description="Biểu mẫu kê đơn thuốc sẽ được triển khai tại đây."
-              type="info"
-              showIcon
-            />
+          <Card 
+            title={
+              <Space>
+                <MedicineBoxOutlined />
+                <span>Kê đơn thuốc</span>
+              </Space>
+            }
+            className="step-content-card"
+          >
+            <Row gutter={[24, 24]}>
+              <Col span={24}>
+                {hasPrescription() ? (
+                  <Alert
+                    message="Đơn thuốc đã được kê"
+                    description="Đơn thuốc cho cuộc hẹn này đã được tạo trước đó. Bạn có thể xem chi tiết bên dưới."
+                    type="success"
+                    showIcon
+                    style={{ marginBottom: 24 }}
+                  />
+                ) : (
+                  <Alert
+                    message="Kê đơn thuốc (Tùy chọn)"
+                    description="Bạn có thể kê đơn thuốc cho bệnh nhân nếu cần thiết. Bước này có thể bỏ qua."
+                    type="info"
+                    showIcon
+                    style={{ marginBottom: 24 }}
+                  />
+                )}
+              </Col>
+
+              {/* Display existing prescription */}
+              {hasPrescription() && appointmentData?.prescription && (
+                <Col span={24}>
+                  <Divider orientation="left">Đơn thuốc đã kê</Divider>
+                  <Card size="small" style={{ background: '#f6ffed' }}>
+                    <Row gutter={[16, 16]}>
+                      <Col span={24}>
+                        <Text strong style={{ fontSize: '16px' }}>Mã đơn thuốc: {appointmentData.prescription.id}</Text>
+                      </Col>
+                      {appointmentData.prescription.medicines.map((medicine, index) => (
+                        <Col span={24} key={medicine.id}>
+                          <Card size="small" style={{ marginBottom: 8, border: '1px solid #d9f7be' }}>
+                            <Row gutter={[16, 8]} align="middle">
+                              <Col xs={24} md={6}>
+                                <Text strong style={{ color: '#389e0d' }}>Thuốc {index + 1}:</Text>
+                                <div>{medicine.medicineName}</div>
+                              </Col>
+                              <Col xs={24} md={6}>
+                                <Text strong>Liều dùng:</Text>
+                                <div>{medicine.dosage}</div>
+                              </Col>
+                              <Col xs={24} md={4}>
+                                <Text strong>Thời gian:</Text>
+                                <div>{medicine.durationDays} ngày</div>
+                              </Col>
+                              <Col xs={24} md={8}>
+                                <Text strong>Ghi chú:</Text>
+                                <div>{medicine.note || 'Không có ghi chú'}</div>
+                              </Col>
+                            </Row>
+                          </Card>
+                        </Col>
+                      ))}
+                    </Row>
+                  </Card>
+                </Col>
+              )}
+
+              {/* Display prescription form for new prescription */}
+              {!hasPrescription() && (
+                <Col span={24}>
+                  <Divider orientation="left">Kê đơn thuốc mới</Divider>
+                  <Form layout="vertical">
+                    <Row gutter={[16, 16]}>
+                      <Col span={24}>
+                        <div style={{ marginBottom: 16 }}>
+                          <Button 
+                            type="dashed" 
+                            icon={<PlusOutlined />}
+                            onClick={handleAddMedicine}
+                            block
+                          >
+                            Thêm thuốc vào đơn
+                          </Button>
+                        </div>
+                      </Col>
+
+                      {prescriptionMedicines.map((medicine, index) => (
+                        <Col span={24} key={index}>
+                          <Card 
+                            size="small" 
+                            style={{ marginBottom: 16 }}
+                            title={`Thuốc ${index + 1}`}
+                            extra={
+                              <Button 
+                                type="text" 
+                                danger 
+                                icon={<DeleteOutlined />}
+                                onClick={() => handleRemoveMedicine(index)}
+                              >
+                                Xóa
+                              </Button>
+                            }
+                          >
+                            <Row gutter={[16, 16]}>
+                              <Col xs={24} md={12}>
+                                <Form.Item
+                                  label="Tên thuốc"
+                                  required
+                                >
+                                  <Select
+                                    placeholder="Chọn thuốc"
+                                    value={medicine.medicineId || undefined}
+                                    onChange={(value) => handleUpdateMedicine(index, 'medicineId', value)}
+                                    showSearch
+                                    optionFilterProp="children"
+                                    filterOption={(input, option) =>
+                                      (option?.label?.toString() || '').toLowerCase().indexOf(input.toLowerCase()) >= 0
+                                    }
+                                  >
+                                    {availableMedicines.map(med => (
+                                      <Option key={med.id} value={med.id} label={med.medicationName}>
+                                        {med.medicationName}
+                                      </Option>
+                                    ))}
+                                  </Select>
+                                </Form.Item>
+                              </Col>
+                              <Col xs={24} md={12}>
+                                <Form.Item
+                                  label="Liều dùng"
+                                  required
+                                >
+                                  <Input
+                                    placeholder="VD: 1 viên/ngày, 2 lần/ngày"
+                                    value={medicine.dosage}
+                                    onChange={(e) => handleUpdateMedicine(index, 'dosage', e.target.value)}
+                                  />
+                                </Form.Item>
+                              </Col>
+                              <Col xs={24} md={8}>
+                                <Form.Item
+                                  label="Số ngày"
+                                  required
+                                >
+                                  <InputNumber
+                                    min={1}
+                                    max={365}
+                                    value={medicine.durationDays}
+                                    onChange={(value) => handleUpdateMedicine(index, 'durationDays', value || 1)}
+                                    placeholder="Số ngày"
+                                    style={{ width: '100%' }}
+                                  />
+                                </Form.Item>
+                              </Col>
+                              <Col xs={24} md={16}>
+                                <Form.Item
+                                  label="Ghi chú"
+                                >
+                                  <TextArea
+                                    rows={2}
+                                    placeholder="Ghi chú cách sử dụng..."
+                                    value={medicine.note}
+                                    onChange={(e) => handleUpdateMedicine(index, 'note', e.target.value)}
+                                  />
+                                </Form.Item>
+                              </Col>
+                            </Row>
+                          </Card>
+                        </Col>
+                      ))}
+                    </Row>
+                  </Form>
+                </Col>
+              )}
+
+              <Col span={24}>
+                <Divider />
+                <Row justify="space-between">
+                  <Col>
+                    <Button onClick={() => setCurrentStep(1)}>
+                      Quay lại
+                    </Button>
+                  </Col>
+                  <Col>
+                    <Space>
+                      {!hasPrescription() && (
+                        <>
+                          <Button
+                            type="default"
+                            onClick={() => setCurrentStep(3)}
+                          >
+                            Bỏ qua kê đơn thuốc
+                          </Button>
+                          {prescriptionMedicines.length > 0 && (
+                            <Button
+                              type="primary"
+                              icon={<CheckCircleOutlined />}
+                              onClick={handleSubmitPrescription}
+                              loading={submittingPrescription}
+                            >
+                              Tạo đơn thuốc & Tiếp tục
+                            </Button>
+                          )}
+                        </>
+                      )}
+                      {hasPrescription() && (
+                        <Button
+                          type="primary"
+                          icon={<CheckCircleOutlined />}
+                          onClick={() => setCurrentStep(3)}
+                        >
+                          Tiếp tục tổng kết
+                        </Button>
+                      )}
+                    </Space>
+                  </Col>
+                </Row>
+              </Col>
+            </Row>
           </Card>
         )}
 
         {currentStep === 3 && (
-          <Card title="Tổng kết & Thanh toán" className="step-content-card">
-            <Alert
-              message="Sắp có"
-              description="Quy trình tổng kết và thanh toán sẽ được triển khai tại đây."
-              type="info"
-              showIcon
-            />
+          <Card 
+            title={
+              <Space>
+                <CheckCircleOutlined />
+                <span>Tổng kết thông tin khám bệnh</span>
+              </Space>
+            }
+            className="step-content-card"
+          >
+            <Row gutter={[24, 24]}>
+              <Col span={24}>
+                <Alert
+                  message="Tổng kết quá trình khám bệnh"
+                  description="Quá trình khám bệnh đã hoàn thành. Thông tin chi tiết được hiển thị bên dưới."
+                  type="success"
+                  showIcon
+                  style={{ marginBottom: 24 }}
+                />
+              </Col>
+
+              <Col span={24}>
+                <Divider orientation="left">Trạng thái hoàn thành</Divider>
+                <Row gutter={[16, 16]}>
+                  <Col xs={24} md={8}>
+                    <Card size="small" style={{ textAlign: 'center' }}>
+                      <PlusOutlined style={{ fontSize: '24px', color: availableServices.length > 0 ? '#1890ff' : '#52c41a' }} />
+                      <div style={{ marginTop: 8 }}>
+                        <Text strong>Dịch vụ bổ sung</Text>
+                      </div>
+                      <div>
+                        <Tag color={availableServices.length > 0 ? 'blue' : 'green'}>
+                          {availableServices.length > 0 ? 'Có thể thêm' : 'Hoàn thành'}
+                        </Tag>
+                      </div>
+                    </Card>
+                  </Col>
+                  <Col xs={24} md={8}>
+                    <Card size="small" style={{ textAlign: 'center' }}>
+                      <FileTextOutlined style={{ fontSize: '24px', color: hasAllMedicalRecords() ? '#52c41a' : '#faad14' }} />
+                      <div style={{ marginTop: 8 }}>
+                        <Text strong>Hồ sơ bệnh án</Text>
+                      </div>
+                      <div>
+                        <Tag color={hasAllMedicalRecords() ? 'green' : 'orange'}>
+                          {hasAllMedicalRecords() ? 'Đã hoàn thành' : 'Chưa hoàn thành'}
+                        </Tag>
+                      </div>
+                    </Card>
+                  </Col>
+                  <Col xs={24} md={8}>
+                    <Card size="small" style={{ textAlign: 'center' }}>
+                      <MedicineBoxOutlined style={{ fontSize: '24px', color: hasPrescription() ? '#52c41a' : '#faad14' }} />
+                      <div style={{ marginTop: 8 }}>
+                        <Text strong>Đơn thuốc</Text>
+                      </div>
+                      <div>
+                        <Tag color={hasPrescription() ? 'green' : 'orange'}>
+                          {hasPrescription() ? 'Đã kê đơn' : 'Chưa kê đơn'}
+                        </Tag>
+                      </div>
+                    </Card>
+                  </Col>
+                </Row>
+              </Col>
+
+              <Col span={24}>
+                <Divider orientation="left">Thông tin thanh toán</Divider>
+                <Card size="small" style={{ background: '#f0f9ff' }}>
+                  <Row gutter={[16, 8]}>
+                    <Col xs={24} md={12}>
+                      <Text strong>Tổng tiền gốc:</Text>
+                      <div style={{ fontSize: '16px' }}>{appointmentData ? getFormattedPrice(Math.floor(appointmentData.totalAmount / 100)) : '0 đ'}</div>
+                    </Col>
+                    <Col xs={24} md={12}>
+                      <Text strong>Tổng tiền sau giảm giá:</Text>
+                      <div style={{ fontSize: '16px', color: '#52c41a' }}>{appointmentData ? getFormattedPrice(Math.floor(appointmentData.totalAmountAfter / 100)) : '0 đ'}</div>
+                    </Col>
+                    {appointmentData?.additionalAmount && (
+                      <Col xs={24} md={12}>
+                        <Text strong>Tiền dịch vụ bổ sung:</Text>
+                        <div style={{ fontSize: '16px', color: '#1890ff' }}>{getFormattedPrice(Math.floor(appointmentData.additionalAmount / 100))}</div>
+                      </Col>
+                    )}
+                    <Col xs={24}>
+                      <Divider style={{ margin: '12px 0' }} />
+                      <Row justify="space-between" align="middle">
+                        <Col>
+                          <Text strong style={{ fontSize: '18px' }}>Tổng cần thanh toán:</Text>
+                        </Col>
+                        <Col>
+                          <Text strong style={{ fontSize: '20px', color: '#f5222d' }}>
+                            {appointmentData ? getFormattedPrice(
+                              Math.floor(appointmentData.totalAmountAfter / 100) + Math.floor((appointmentData.additionalAmount || 0) / 100)
+                            ) : '0 đ'}
+                          </Text>
+                        </Col>
+                      </Row>
+                    </Col>
+                  </Row>
+                </Card>
+              </Col>
+
+              <Col span={24}>
+                <Divider />
+                <Row justify="space-between">
+                  <Col>
+                    <Button onClick={() => setCurrentStep(2)}>
+                      Quay lại
+                    </Button>
+                  </Col>
+                  <Col>
+                    <Button
+                      type="primary"
+                      onClick={() => navigate('/VET/lich-kham-hom-nay')}
+                    >
+                      Hoàn thành khám bệnh
+                    </Button>
+                  </Col>
+                </Row>
+              </Col>
+            </Row>
           </Card>
         )}
       </div>
@@ -988,6 +1584,7 @@ const Examination: React.FC = () => {
           />
         </div>
       </Modal>
+
     </div>
   );
 };
