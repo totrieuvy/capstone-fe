@@ -116,7 +116,8 @@ function MedicalBooking() {
         if (response.code === 200) {
           const foundItem = response.data.find((item) => item.id === selectedMedicalItem.id);
           if (foundItem) {
-            const parsedPrice = parseFloat(String(foundItem.displayPrice));
+            // Remove commas from displayPrice before parsing
+            const parsedPrice = parseFloat(foundItem.displayPrice.replace(/,/g, ""));
             setMedicalPrice(isNaN(parsedPrice) ? 0 : parsedPrice);
           }
         }

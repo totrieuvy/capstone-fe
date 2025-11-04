@@ -32,6 +32,7 @@ import type { CustomerProfile, MembershipDetails } from "../../../../services/Cu
 import { getServicesByType, ServiceType } from "../../../../services/AdditionService";
 import type { Service } from "../../../../services/AdditionService";
 import { useNavigate } from "react-router-dom";
+import { getFormattedPrice } from "../../../../utils/formatPrice";
 
 const { RangePicker } = DatePicker;
 
@@ -312,7 +313,8 @@ function BoardingHamster() {
         // Calculate services price for this day
         const dailyServicesPrice = selectedServiceIds.reduce((total, serviceId) => {
           const service = additionalServices.find(s => s.id === serviceId);
-          return total + (service ? parseFloat(service.displayPrice.toString()) : 0);
+          // Remove commas from displayPrice before parsing
+          return total + (service ? parseFloat(service.displayPrice.replace(/,/g, "")) : 0);
         }, 0);
 
         // Check if it's a holiday (simplified - you may need to implement actual holiday checking)
@@ -995,7 +997,7 @@ function BoardingHamster() {
                                 margin: 0,
                               }}
                             >
-                              {parseFloat(service.displayPrice.toString()).toLocaleString("vi-VN")} đ/ngày
+                              {getFormattedPrice(service.displayPrice)}/ngày
                             </p>
                           </div>
                           {selectedServiceIds.includes(service.id) && (
@@ -1264,7 +1266,7 @@ function BoardingHamster() {
                                   • {service.serviceName}
                                 </p>
                                 <p style={{ fontSize: 13, color: "#666", marginLeft: 12 }}>
-                                  {parseFloat(service.displayPrice.toString()).toLocaleString("vi-VN")} đ/ngày
+                                  {getFormattedPrice(service.displayPrice)}/ngày
                                 </p>
                               </div>
                             ))}
