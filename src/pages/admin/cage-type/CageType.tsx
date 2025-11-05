@@ -24,6 +24,7 @@ import { storage } from "../../../config/firebase";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import api from "../../../config/axios";
 import "./CageType.scss";
+import { toast } from "react-toastify";
 
 const { Option } = Select;
 
@@ -127,10 +128,10 @@ const CageType: React.FC = () => {
 
       if (isUpdate && values.id) {
         await cageTypeService.updateCageType(values.id, payload);
-        message.success("Cập nhật loại chuồng thành công!");
+        toast.success("Cập nhật loại chuồng thành công!");
       } else {
         await cageTypeService.createCageType(payload);
-        message.success("Thêm loại chuồng thành công!");
+        toast.success("Thêm loại chuồng thành công!");
       }
 
       fetchCageTypes();

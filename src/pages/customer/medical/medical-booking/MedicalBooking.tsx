@@ -55,6 +55,7 @@ import {
   type Membership,
   type CreateAppointmentRequest,
 } from "../../../../services/MedicalService";
+import { toast } from "react-toastify";
 
 const { Title } = Typography;
 const { TextArea } = Input;
@@ -352,7 +353,7 @@ function MedicalBooking() {
 
       const response = await createAppointment(payload);
       if (response.code === 200) {
-        message.success("Đặt lịch thành công!");
+        toast.success("Đặt lịch thành công!");
         navigate("/booking-success");
       } else {
         throw new Error(response.message || "Đặt lịch thất bại");

@@ -36,8 +36,10 @@ import {
 import { useParams, useNavigate } from "react-router-dom";
 import { boardingService } from "../../../../services/BoardingService";
 import type { BookingDetail, CareLogItem } from "../../../../services/BoardingService";
-import { getServicesByType, ServiceType } from "../../../../services/AdditionService";
+import { getServicesBySpeciesAndType, ServiceType } from "../../../../services/AdditionService";
 import type { Service } from "../../../../services/AdditionService";
+import { ProfileHamsterService } from "../../../../services/ProfileHamsterService";
+import type { Species } from "../../../../services/ProfileHamsterService";
 import { getFormattedPrice } from "../../../../utils/formatPrice";
 import dayjs from "dayjs";
 import { toast } from "react-toastify";
@@ -136,6 +138,9 @@ const BoardingDetail: React.FC = () => {
   const [groomingLoading, setGroomingLoading] = useState(false);
   const [addingService, setAddingService] = useState(false);
 
+  // Species state for service filtering
+  const [speciesList, setSpeciesList] = useState<Species[]>([]);
+
   // Cancel booking modal states
   const [isCancelModalVisible, setIsCancelModalVisible] = useState(false);
   const [cancelLoading, setCancelLoading] = useState(false);
@@ -144,6 +149,7 @@ const BoardingDetail: React.FC = () => {
     if (bookingId) {
       fetchBookingDetails();
       fetchCareLogs();
+      fetchSpeciesList();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [bookingId]);
@@ -178,6 +184,20 @@ const BoardingDetail: React.FC = () => {
     }
   };
 
+  const fetchSpeciesList = async () => {
+    try {
+      const species = await ProfileHamsterService.getSpecies();
+      setSpeciesList(species);
+    } catch (err) {
+      console.error("Error fetching species list:", err);
+    }
+  };
+
+  const getSpeciesIdByName = (speciesName: string): string | null => {
+    const species = speciesList.find(s => s.speciesName === speciesName);
+    return species ? species.id : null;
+  };
+
   const getStatusColor = (status: string) => {
     const statusColors = {
       BOOKED: "success",
@@ -203,9 +223,20 @@ const BoardingDetail: React.FC = () => {
   };
 
   const handleBookService = async () => {
+    if (!booking) {
+      message.error("Không tìm thấy thông tin booking.");
+      return;
+    }
+
+    const speciesId = getSpeciesIdByName(booking.species);
+    if (!speciesId) {
+      message.error("Không tìm thấy thông tin loài hamster. Vui lòng thử lại.");
+      return;
+    }
+
     try {
       setGroomingLoading(true);
-      const response = await getServicesByType(ServiceType.GROOMING);
+      const response = await getServicesBySpeciesAndType(speciesId, ServiceType.GROOMING);
       setGroomingServices(response.data);
       setIsGroomingModalVisible(true);
     } catch (error) {
@@ -230,7 +261,7 @@ const BoardingDetail: React.FC = () => {
         serviceIds: [selectedServiceId],
       });
 
-      message.success("Thêm dịch vụ thành công");
+      toast.success("Thêm dịch vụ thành công");
 
       // Refresh booking details
       await fetchBookingDetails();
@@ -483,22 +514,88 @@ const BoardingDetail: React.FC = () => {
               </>
             )}
 
-            {booking.services && booking.services.length > 0 && (
+            {/* Services Section - Always show if booking is not cancelled/completed */}
+            {booking.status !== "CANCELLED" && booking.status !== "COMPLETED" && (
+              <>
+                <Divider />
+                
+                {/* Current Services */}
+                {booking.services && booking.services.length > 0 && (
+                  <div className="service-info">
+                    <Text type="secondary" style={{ fontSize: '14px', fontWeight: 500 }}>
+                      Dịch vụ đã đặt:
+                    </Text>
+                    <div style={{ marginTop: 8 }}>
+                      {booking.services.map((service) => (
+                        <div key={service.serviceId} className="service-item" style={{ 
+                          display: 'flex', 
+                          justifyContent: 'space-between', 
+                          alignItems: 'center',
+                          padding: '8px 12px',
+                          backgroundColor: '#f6f8fa',
+                          borderRadius: '6px',
+                          marginBottom: '6px',
+                          border: '1px solid #e1e5e9'
+                        }}>
+                          <span style={{ fontWeight: 500 }}>{service.serviceName}</span>
+                          <Tag color="blue">{getFormattedPrice(service.price)}</Tag>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Add Service Button */}
+                <div style={{ marginTop: booking.services && booking.services.length > 0 ? 16 : 8, textAlign: "center" }}>
+                  <Button 
+                    type="primary" 
+                    size="middle" 
+                    className="book-service-button" 
+                    onClick={handleBookService}
+                    icon={<ScissorOutlined />}
+                    style={{
+                      backgroundColor: '#ff7a45',
+                      borderColor: '#ff7a45',
+                      fontWeight: 500
+                    }}
+                  >
+                    Thêm dịch vụ làm đẹp cho {booking.species}
+                  </Button>
+                  <div style={{ marginTop: 8 }}>
+                    <Text type="secondary" style={{ fontSize: '12px' }}>
+                      Dịch vụ spa, cắt tỉa lông, vệ sinh chuyên dụng cho {booking.species}
+                    </Text>
+                  </div>
+                </div>
+              </>
+            )}
+
+            {/* Show services for completed/cancelled bookings (read-only) */}
+            {(booking.status === "CANCELLED" || booking.status === "COMPLETED") && 
+             booking.services && booking.services.length > 0 && (
               <>
                 <Divider />
                 <div className="service-info">
-                  <Text type="secondary">Chọn</Text>
-                  {booking.services.map((service) => (
-                    <div key={service.serviceId} className="service-item">
-                      <span>{service.serviceName}</span>
-                      <span className="service-price">{getFormattedPrice(service.price)}</span>
-                    </div>
-                  ))}
-                </div>
-                <div style={{ marginTop: 16, textAlign: "center" }}>
-                  <Button type="primary" size="middle" className="book-service-button" onClick={handleBookService}>
-                    Đặt dịch vụ làm đẹp
-                  </Button>
+                  <Text type="secondary" style={{ fontSize: '14px', fontWeight: 500 }}>
+                    Dịch vụ đã đặt:
+                  </Text>
+                  <div style={{ marginTop: 8 }}>
+                    {booking.services.map((service) => (
+                      <div key={service.serviceId} className="service-item" style={{ 
+                        display: 'flex', 
+                        justifyContent: 'space-between', 
+                        alignItems: 'center',
+                        padding: '8px 12px',
+                        backgroundColor: '#f6f8fa',
+                        borderRadius: '6px',
+                        marginBottom: '6px',
+                        border: '1px solid #e1e5e9'
+                      }}>
+                        <span style={{ fontWeight: 500 }}>{service.serviceName}</span>
+                        <Tag color="blue">{getFormattedPrice(service.price)}</Tag>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </>
             )}
@@ -718,10 +815,11 @@ const BoardingDetail: React.FC = () => {
             key="add"
             type="primary"
             loading={addingService}
-            disabled={!selectedServiceId || !selectedDate}
+            disabled={!selectedServiceId || !selectedDate || groomingServices.length === 0}
             onClick={handleAddServiceToBooking}
+            icon={<ScissorOutlined />}
           >
-            Thêm dịch vụ
+            Đặt dịch vụ
           </Button>,
         ]}
         className="grooming-modal"
@@ -735,34 +833,44 @@ const BoardingDetail: React.FC = () => {
           ) : (
             <>
               <div className="service-selection">
-                <Title level={5}>Chọn dịch vụ:</Title>
-                <Radio.Group
-                  value={selectedServiceId}
-                  onChange={(e) => setSelectedServiceId(e.target.value)}
-                  className="service-radio-group"
-                >
-                  <List
-                    dataSource={groomingServices}
-                    renderItem={(service) => (
-                      <List.Item className="service-list-item">
-                        <Radio value={service.id} className="service-radio">
-                          <div className="service-info">
-                            <div className="service-header">
-                              <Text strong>{service.serviceName}</Text>
-                              <Tag color="blue">{service.displayPrice}</Tag>
+                <Title level={5}>
+                  Chọn dịch vụ làm đẹp cho {booking?.species}:
+                </Title>
+                {groomingServices.length === 0 ? (
+                  <div style={{ textAlign: "center", padding: "20px 0" }}>
+                    <Text type="secondary">
+                      Hiện tại không có dịch vụ làm đẹp nào dành cho loài {booking?.species}
+                    </Text>
+                  </div>
+                ) : (
+                  <Radio.Group
+                    value={selectedServiceId}
+                    onChange={(e) => setSelectedServiceId(e.target.value)}
+                    className="service-radio-group"
+                  >
+                    <List
+                      dataSource={groomingServices}
+                      renderItem={(service) => (
+                        <List.Item className="service-list-item">
+                          <Radio value={service.id} className="service-radio">
+                            <div className="service-info">
+                              <div className="service-header">
+                                <Text strong>{service.serviceName}</Text>
+                                <Tag color="blue">{service.displayPrice}</Tag>
+                              </div>
+                              <Text type="secondary" className="service-description">
+                                {service.description}
+                              </Text>
+                              <Text type="secondary" className="service-duration">
+                                Thời gian: {service.durationMinutes} phút
+                              </Text>
                             </div>
-                            <Text type="secondary" className="service-description">
-                              {service.description}
-                            </Text>
-                            <Text type="secondary" className="service-duration">
-                              Thời gian: {service.durationMinutes} phút
-                            </Text>
-                          </div>
-                        </Radio>
-                      </List.Item>
-                    )}
-                  />
-                </Radio.Group>
+                          </Radio>
+                        </List.Item>
+                      )}
+                    />
+                  </Radio.Group>
+                )}
               </div>
 
               <Divider />

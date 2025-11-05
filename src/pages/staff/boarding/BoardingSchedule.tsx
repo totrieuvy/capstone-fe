@@ -9,6 +9,7 @@ import { boardingService, type BookingByDateRange } from '../../../services/Boar
 // Set Vietnamese locale for dayjs
 dayjs.locale('vi');
 import './BoardingSchedule.scss';
+import { toast } from 'react-toastify';
 
 interface Booking {
   id: string;
@@ -82,7 +83,7 @@ const BoardingSchedule = () => {
         )
       );
 
-      message.success('Gia hạn thành công');
+      toast.success('Gia hạn thành công');
       setExtendModalVisible(false);
       setSelectedBooking(null);
       setNewEndDate(null);
