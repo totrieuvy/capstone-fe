@@ -10,7 +10,7 @@ import {
   TagOutlined,
   DatabaseOutlined,
 } from "@ant-design/icons";
-import { GiPawPrint } from "react-icons/gi";
+import { GiPawPrint, GiCage } from "react-icons/gi";
 import { BiCategory, BiPlusMedical } from "react-icons/bi";
 import { Layout, Menu, Button, theme } from "antd";
 import type { ItemType } from "antd/es/menu/interface";
@@ -19,35 +19,23 @@ import { useDispatch, useSelector } from "react-redux";
 import { logout } from "../../redux/features/userSlice";
 import logo from "../../assets/logo.png";
 import "./Sidebar.scss";
-import { GiCage } from "react-icons/gi";
 
 interface User {
   id: number;
   role: "ADMIN" | "STAFF" | "VET" | "SHIPPER" | string;
 }
-
 interface RootState {
   user: User | null;
 }
 
 const { Sider, Content } = Layout;
-
 type MenuItem = Required<ItemType>;
 
 const getItem = (label: React.ReactNode, key: string, icon?: React.ReactNode, children?: MenuItem[]): MenuItem => {
   if (children) {
-    return {
-      key,
-      icon,
-      children,
-      label,
-    } as MenuItem;
+    return { key, icon, children, label } as MenuItem;
   }
-  return {
-    key,
-    icon,
-    label: <Link to={key}>{label}</Link>,
-  } as MenuItem;
+  return { key, icon, label: <Link to={key}>{label}</Link> } as MenuItem;
 };
 
 const SideBar: React.FC = () => {
@@ -68,7 +56,6 @@ const SideBar: React.FC = () => {
 
   useEffect(() => {
     let items: MenuItem[] = [];
-
     if (user?.role === "ADMIN") {
       items = [
         getItem("Quản lí loài hamster", "quan-li-loai-hamster", <GiPawPrint />),
@@ -87,10 +74,7 @@ const SideBar: React.FC = () => {
       ];
     } else if (user?.role === "STAFF") {
       items = [
-        getItem("Dịch vụ y tế", "medical-checkup", <BiPlusMedical />, [
-          getItem("Lịch đặt khám", "lich-dat-kham"),
-        ]),
-
+        getItem("Dịch vụ y tế", "medical-checkup", <BiPlusMedical />, [getItem("Lịch đặt khám", "lich-dat-kham")]),
         getItem("Grooming", "grooming", <SkinOutlined />, [
           getItem("Quản lí dịch vụ grooming", "quan-li-dich-vu-grooming"),
           getItem("Lịch đặt grooming", "lich-dat-grooming"),
@@ -107,16 +91,19 @@ const SideBar: React.FC = () => {
         getItem("Quản lí kê thuốc", "quan-li-ke-thuoc", <DatabaseOutlined />),
       ];
     }
-
     setMenuItems(items);
   }, [user?.role, user?.id]);
 
   return (
-    <Layout style={{ minHeight: "100vh" }}>
+    <Layout style={{ height: "100vh", overflow: "hidden" }}>
       <Sider
         width={270}
         className="Sidebar"
-        style={{ background: colorBgContainer }}
+        style={{
+          background: colorBgContainer,
+          height: "100vh",
+          overflow: "hidden",
+        }}
         collapsible
         collapsed={collapsed}
         onCollapse={(value) => setCollapsed(value)}
@@ -127,7 +114,9 @@ const SideBar: React.FC = () => {
           <img src={logo} alt="Logo" />
         </div>
 
-        <Menu mode="inline" className="Sidebar__menu" items={menuItems} />
+        <div className="Sidebar__scroll-area">
+          <Menu mode="inline" className="Sidebar__menu" items={menuItems} inlineIndent={20} />
+        </div>
 
         <div className="Sidebar__logout">
           <Button type="primary" danger icon={<PoweroffOutlined />} onClick={handleLogout}>
@@ -139,9 +128,10 @@ const SideBar: React.FC = () => {
       <Layout>
         <Content
           style={{
-            margin: "16px",
+            margin: 0,
             padding: 24,
-            minHeight: 280,
+            height: "100vh",
+            overflowY: "auto",
             background: colorBgContainer,
             borderRadius: borderRadiusLG,
           }}

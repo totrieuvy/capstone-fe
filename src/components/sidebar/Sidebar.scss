@@ -1,40 +1,59 @@
 .Sidebar {
-  display: flex;
-  flex-direction: column;
-  height: 100vh; // Đảm bảo sidebar luôn cao hết màn hình
+  height: 100vh !important;
+  .ant-layout-sider-children {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+  }
 
   &__logo {
+    flex-shrink: 0;
     padding: 16px;
     text-align: center;
-    transition: padding 0.3s ease;
 
     img {
-      max-width: 150px; // Giới hạn kích thước logo
-      height: auto;
-      transition: max-width 0.3s ease;
+      width: 100%;
+      max-width: 150px;
+      transition: all 0.3s ease;
     }
 
-    // Khi sidebar thu gọn, thu nhỏ logo lại
-    &.collapsed {
-      padding: 16px 8px;
-      img {
-        max-width: 40px; // Kích thước logo khi thu gọn
-      }
+    &.collapsed img {
+      max-width: 50px;
+    }
+  }
+
+  &__scroll-area {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+
+    scrollbar-width: thin;
+    scrollbar-color: #aaa transparent;
+
+    &::-webkit-scrollbar {
+      width: 6px;
+    }
+    &::-webkit-scrollbar-thumb {
+      background-color: #c1c1c1;
+      border-radius: 10px;
     }
   }
 
   &__menu {
-    flex: 1; // Giúp menu chiếm hết không gian còn lại
-    border-inline-end: 0;
+    border: none;
+    padding-bottom: 12px;
   }
 
   &__logout {
+    flex-shrink: 0;
     padding: 16px;
-    margin-top: auto; // Luôn đẩy nút logout xuống dưới cùng
+    text-align: center;
+    border-top: 1px solid #eee;
+    background-color: #fff;
+  }
 
-    .ant-btn {
-      width: 100%;
-      // Khi thu gọn, text đã được ẩn bằng React, AntD sẽ tự động căn giữa icon
-    }
+  .ant-menu-submenu-popup {
+    z-index: 1000;
   }
 }
