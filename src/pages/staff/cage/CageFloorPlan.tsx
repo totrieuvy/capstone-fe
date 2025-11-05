@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { 
   Card, 
   Select, 
@@ -43,6 +43,13 @@ const CageFloorPlan: React.FC = () => {
   const [cages, setCages] = useState<CageDisplayItem[]>([]);
   const [cageTypes, setCageTypes] = useState<CageTypeResponse[]>([]);
   const [selectedCageTypeId, setSelectedCageTypeId] = useState<string>('all');
+  const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const cagesRef = useRef<CageDisplayItem[]>([]);
+
+  // Keep cagesRef in sync with cages state
+  useEffect(() => {
+    cagesRef.current = cages;
+  }, [cages]);
 
   // Load initial data on component mount
   useEffect(() => {
@@ -53,6 +60,48 @@ const CageFloorPlan: React.FC = () => {
   useEffect(() => {
     loadCages();
   }, [selectedCageTypeId]);
+
+  // Update temperature data every 2 seconds
+  useEffect(() => {
+    const updateTemperatureData = useCallback(async () => {
+      const currentCages = cagesRef.current;
+      if (currentCages.length === 0) return;
+
+      try {
+        const updatedCages = await Promise.all(
+          currentCages.map(async (cage) => {
+            if (cage.iotCode) {
+              try {
+                const temperatureData = await getTemperature(cage.iotCode);
+                return {
+                  ...cage,
+                  temperatureData
+                };
+              } catch (error) {
+                console.warn(`Failed to get temperature for IoT ${cage.iotCode}:`, error);
+                return cage;
+              }
+            }
+            return cage;
+          })
+        );
+        setCages(updatedCages);
+      } catch (error) {
+        console.error('Error updating temperature data:', error);
+      }
+    }, []);
+
+    // Set up interval to update temperature data every 2 seconds
+    intervalRef.current = setInterval(updateTemperatureData, 2000);
+
+    // Cleanup interval on component unmount
+    return () => {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
+    };
+  }, []); // Empty dependency array since we use ref for latest cage data
 
   const loadInitialData = async () => {
     try {
