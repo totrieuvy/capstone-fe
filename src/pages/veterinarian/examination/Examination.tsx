@@ -979,15 +979,28 @@ const Examination: React.FC = () => {
                           filterOption={(input, option) =>
                             (option?.label?.toString() || '').toLowerCase().indexOf(input.toLowerCase()) >= 0
                           }
+                          dropdownStyle={{ maxWidth: '400px' }}
+                          optionLabelProp="label"
                         >
                           {availableServices.map(service => (
-                            <Option key={service.id} value={service.id}>
-                              <Space direction="vertical" size={0}>
-                                <Text strong>{service.serviceName}</Text>
-                                <Text type="secondary" style={{ fontSize: '12px' }}>
+                            <Option 
+                              key={service.id} 
+                              value={service.id}
+                              label={service.serviceName}
+                            >
+                              <div style={{ padding: '4px 0', lineHeight: '1.4' }}>
+                                <div style={{ fontWeight: 600, marginBottom: '2px' }}>
+                                  {service.serviceName}
+                                </div>
+                                <div style={{ 
+                                  fontSize: '12px', 
+                                  color: '#8c8c8c',
+                                  whiteSpace: 'normal',
+                                  wordWrap: 'break-word'
+                                }}>
                                   Giá gốc: {service.displayPrice} | Thời gian: {service.durationMinutes} phút
-                                </Text>
-                              </Space>
+                                </div>
+                              </div>
                             </Option>
                           ))}
                         </Select>
