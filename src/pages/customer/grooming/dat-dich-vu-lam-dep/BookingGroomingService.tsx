@@ -34,9 +34,9 @@ import type { RootState } from "../../../../redux/rootReducer";
 import { selectHamsterForGrooming } from "../../../../redux/features/selectedHamsterGroomingSlice";
 import api from "../../../../config/axios";
 import ProfileHamsterService, { type HamsterProfile } from "../../../../services/ProfileHamsterService";
-import { getFormattedPrice } from "../../../../utils/formatPrice";
 import "./BookingGroomingService.scss";
 import type { AxiosError } from "axios";
+import { Checkbox, Divider } from "antd";
 
 const { Title } = Typography;
 const { TextArea } = Input;
@@ -44,6 +44,14 @@ const { TextArea } = Input;
 dayjs.extend(customParseFormat);
 dayjs.extend(isoWeek);
 dayjs.locale("vi");
+
+interface Policy {
+  id: string;
+  policyName: string;
+  description: string;
+  applicableServices: string;
+  status: string;
+}
 
 interface Species {
   id: string;
@@ -89,7 +97,7 @@ function BookingGroomingService() {
   const [profiles, setProfiles] = useState<HamsterProfile[]>([]);
   const [allSpecies, setAllSpecies] = useState<Species[]>([]);
   const [selectedHamster, setSelectedHamster] = useState<HamsterProfile | null>(null);
-  const [groomingPrice, setGroomingPrice] = useState<number | null>(null);
+  const [groomingPrice, setGroomingPrice] = useState<string>("");
   const [slotsData, setSlotsData] = useState<SlotData[]>([]);
   const [selectedSlot, setSelectedSlot] = useState<{ date: string; slot: TimeSlot } | null>(null);
   const [selectedStaff, setSelectedStaff] = useState<Staff | null>(null);
@@ -102,11 +110,36 @@ function BookingGroomingService() {
 
   const [staffBookingCache, setStaffBookingCache] = useState<StaffBookingCache>(new Map());
 
+  const [policies, setPolicies] = useState<Policy[]>([]);
+  const [agreePolicy, setAgreePolicy] = useState(false);
+
   const steps = [
     { title: "Chọn Hamster", icon: <UserOutlined /> },
     { title: "Chọn Slot", icon: <CalendarOutlined /> },
     { title: "Xác Nhận", icon: <CheckCircleOutlined /> },
   ];
+
+  const fetchPolicies = useCallback(async () => {
+    try {
+      const res = await api.get<{ code: number; data: Policy[] }>("/api/policy");
+      if (res.data.code === 200) {
+        const groomingPolicies = res.data.data.filter(
+          (p) => p.applicableServices === "GROOMING" && p.status === "ACTIVE"
+        );
+        setPolicies(groomingPolicies);
+      } else {
+        message.error("Không thể tải danh sách chính sách!");
+      }
+    } catch {
+      message.error("Lỗi khi tải chính sách!");
+    }
+  }, []);
+
+  useEffect(() => {
+    if (currentStep === 2) {
+      fetchPolicies();
+    }
+  }, [currentStep, fetchPolicies]);
 
   const fetchProfiles = useCallback(async () => {
     setLoading(true);
@@ -147,10 +180,17 @@ function BookingGroomingService() {
       const apiPath = selectedGroomingItem.type === "service" ? "/api/services/species" : "/api/combo/species";
       const response = await api.get<{ code: number; data: GroomingPriceItem[] }>(`${apiPath}/${speciesId}`);
       if (response.data.code === 200) {
-        const foundItem = response.data.data.find((item) => item.id === selectedGroomingItem.id);
-        if (foundItem) {
-          const parsedPrice = parseFloat(String(foundItem.displayPrice));
-          setGroomingPrice(isNaN(parsedPrice) ? 0 : parsedPrice);
+        // Nếu chọn nhiều dịch vụ lẻ
+        if (selectedGroomingItem.type === "service" && selectedGroomingItem.id.includes(",")) {
+          const ids = selectedGroomingItem.id.split(",").map((id) => id.trim());
+          const matched = response.data.data.filter((item) => ids.includes(item.id));
+          const allPrices = matched.map((m) => m.displayPrice);
+          // Nối các giá lại thành chuỗi: "80,000,150,000"
+          setGroomingPrice(allPrices.join(","));
+        } else {
+          // Combo hoặc 1 dịch vụ
+          const foundItem = response.data.data.find((item) => item.id === selectedGroomingItem.id);
+          if (foundItem) setGroomingPrice(foundItem.displayPrice);
         }
       }
     },
@@ -320,35 +360,57 @@ function BookingGroomingService() {
     setLoading(true);
     try {
       const discountPercent = membership?.discountPercent || 0;
-      let totalAmount = groomingPrice || 0;
 
-      if (selectedGroomingItem.type === "service" && selectedGroomingItem.displayPrice?.includes(",")) {
-        const prices = selectedGroomingItem.displayPrice
-          .split(",")
-          .map((p) => parseFloat(p))
-          .filter((p) => !isNaN(p));
-        totalAmount = prices.reduce((sum, val) => sum + val, 0);
+      let totalAmount = 0;
+
+      // ✅ Khai báo rõ kiểu dữ liệu cho items
+      interface ServiceItem {
+        serviceId?: string;
+        serviceComboId?: string;
+        price: number;
       }
 
+      let items: ServiceItem[] = [];
+
+      // Lấy giá từ API trả về
+      const displayPriceStr = groomingPrice ?? "";
+      // ✅ Nhiều dịch vụ lẻ
+      if (selectedGroomingItem.type === "service") {
+        if (!displayPriceStr) {
+          totalAmount = 0;
+        } else {
+          // Dùng regex match để lấy đúng các nhóm số tiền có dạng ###,###
+          const priceMatches = displayPriceStr.match(/\d{1,3}(?:,\d{3})*/g) || [];
+          const prices = priceMatches.map((p) => parseFloat(p.replace(/,/g, "")));
+
+          totalAmount = prices.reduce((sum, val) => sum + val, 0);
+
+          // Lấy danh sách ID
+          const serviceIds = selectedGroomingItem.id ? selectedGroomingItem.id.split(",").map((id) => id.trim()) : [];
+
+          // Map từng id với từng giá
+          items = serviceIds.map((id, index) => ({
+            serviceId: id,
+            price: prices[index] || 0,
+          }));
+        }
+      } else {
+        // ✅ Combo chỉ có 1 giá
+        const numeric = parseFloat((displayPriceStr || "").replace(/,/g, ""));
+        totalAmount = !isNaN(numeric) ? numeric : 0;
+
+        items = [
+          {
+            serviceComboId: selectedGroomingItem.id,
+            price: totalAmount,
+          },
+        ];
+      }
+
+      // ✅ Tính giảm giá nếu có membership
       const totalAmountAfter = Math.round(totalAmount - (totalAmount * discountPercent) / 100);
 
-      // ✅ Xử lý nếu chọn nhiều dịch vụ lẻ
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      let items: { [key: string]: any; price: number }[] = [];
-
-      if (selectedGroomingItem.type === "service") {
-        const serviceIds = selectedGroomingItem.id.split(",").map((id) => id.trim());
-        const prices = selectedGroomingItem.displayPrice?.split(",").map((p) => parseFloat(p)) || [];
-
-        items = serviceIds.map((id, index) => ({
-          serviceId: id,
-          price: prices[index] || totalAmount, // fallback
-        }));
-      } else {
-        // Combo chỉ 1
-        items = [{ serviceComboId: selectedGroomingItem.id, price: totalAmount }];
-      }
-
+      // ✅ Payload gửi backend
       const payload = {
         hamsterId: selectedHamster.id,
         staffId: selectedStaff.id,
@@ -361,13 +423,16 @@ function BookingGroomingService() {
         slotEnd: selectedSlot.slot.endTime,
         serviceType: "GROOMING",
         items,
+        isConfirmed: true,
       };
 
       const res = await api.post("/api/appointment", payload);
       if (res.data.code === 200) {
         message.success("Đặt lịch thành công!");
         navigate("/booking-success");
-      } else throw new Error(res.data?.message || "Đặt lịch thất bại");
+      } else {
+        throw new Error(res.data?.message || "Đặt lịch thất bại");
+      }
     } catch (err) {
       const e = err as AxiosError;
       message.error(e.message || "Đặt lịch thất bại!");
@@ -385,18 +450,6 @@ function BookingGroomingService() {
     new Set(slotsData.flatMap((d) => d.slots.map((s) => `${s.startTime}-${s.endTime}`)))
   ).sort();
 
-  // ✅ Nếu là nhiều dịch vụ lẻ, tính tổng giá
-  let totalPriceDisplay = groomingPrice || 0;
-
-  if (selectedGroomingItem?.type === "service" && selectedGroomingItem.displayPrice?.includes(",")) {
-    const prices = selectedGroomingItem.displayPrice
-      .split(",")
-      .map((p) => parseFloat(p))
-      .filter((p) => !isNaN(p));
-
-    totalPriceDisplay = prices.reduce((sum, val) => sum + val, 0);
-  }
-
   return (
     <div className="booking-grooming-service">
       <div className="header-section">
@@ -407,7 +460,6 @@ function BookingGroomingService() {
       </div>
 
       <Spin spinning={loading}>
-        {/* ===== BƯỚC 1 ===== */}
         {currentStep === 0 && (
           <div className="step step-select-hamster">
             <Title level={4} className="step-title">
@@ -469,7 +521,6 @@ function BookingGroomingService() {
           </div>
         )}
 
-        {/* ===== BƯỚC 2 ===== */}
         {currentStep === 1 && (
           <div className="step step-weekly-schedule">
             <Title level={4} className="step-title">
@@ -483,10 +534,8 @@ function BookingGroomingService() {
                 { key: "staffFirst", label: "Chọn nhân viên trước", icon: <TeamOutlined /> },
               ]}
             />
-
             {selectMode === "scheduleFirst" ? (
               <>
-                {/* Lịch chung (chọn lịch trước) */}
                 <div className="week-header">
                   <Button icon={<LeftOutlined />} onClick={() => handleWeekChange("prev")} />
                   <Title level={5} className="week-title">
@@ -495,7 +544,6 @@ function BookingGroomingService() {
                   </Title>
                   <Button icon={<RightOutlined />} onClick={() => handleWeekChange("next")} />
                 </div>
-
                 <div className="weekly-grid">
                   <div className="time-column">
                     <div className="time-cell-header">Giờ</div>
@@ -505,7 +553,6 @@ function BookingGroomingService() {
                       </div>
                     ))}
                   </div>
-
                   {getDaysOfWeek(currentWeek).map((day) => {
                     const slotData = slotsData.find((s) => s.slotDate === day.format("DD-MM-YYYY"));
                     const isPastDay = day.isSame(dayjs(), "day") || day.isBefore(dayjs(), "day");
@@ -545,8 +592,6 @@ function BookingGroomingService() {
                     );
                   })}
                 </div>
-
-                {/* Chọn nhân viên sau khi chọn lịch */}
                 {selectedSlot && (
                   <div className="staff-section">
                     <Title level={5}>Chọn nhân viên</Title>
@@ -581,11 +626,8 @@ function BookingGroomingService() {
               </>
             ) : (
               <>
-                {/* Chọn nhân viên trước */}
-                {/* ----- START FIX 2: Đã xóa '!selectedStaff' ----- */}
                 {allStaffs.length > 0 && (
                   <div className="staff-section">
-                    {/* ----- END FIX 2 ----- */}
                     <Title level={5}>Chọn nhân viên</Title>
                     <Row gutter={[16, 16]}>
                       {allStaffs.map((staff) => (
@@ -611,8 +653,6 @@ function BookingGroomingService() {
                     </Row>
                   </div>
                 )}
-
-                {/* Hiển thị lịch của nhân viên ĐÃ CHỌN */}
                 {selectedStaff && (
                   <>
                     <Title level={5} style={{ marginTop: 20 }}>
@@ -626,7 +666,6 @@ function BookingGroomingService() {
                       </Title>
                       <Button icon={<RightOutlined />} onClick={() => handleWeekChange("next")} />
                     </div>
-
                     <div className="weekly-grid">
                       <div className="time-column">
                         <div className="time-cell-header">Giờ</div>
@@ -636,7 +675,6 @@ function BookingGroomingService() {
                           </div>
                         ))}
                       </div>
-
                       {getDaysOfWeek(currentWeek).map((day) => {
                         const slotData = slotsData.find((s) => s.slotDate === day.format("DD-MM-YYYY"));
                         const isPastDay = day.isSame(dayjs(), "day") || day.isBefore(dayjs(), "day");
@@ -651,12 +689,9 @@ function BookingGroomingService() {
                             {allSlots.map((slotRange) => {
                               const found = slotData?.slots.find((s) => `${s.startTime}-${s.endTime}` === slotRange);
                               if (!found) return <div key={slotRange} className="slot-cell empty"></div>;
-
-                              // Logic ghi đè (FIX 6)
                               const cacheKey = `${selectedStaff.id}_${currentDateStr}_${found.startTime}`;
                               const isBookedInCache = staffBookingCache.get(cacheKey);
                               const isFull = found.availableSlot === 0 || isBookedInCache === true;
-
                               const isSelected =
                                 selectedSlot?.date === currentDateStr &&
                                 selectedSlot?.slot.startTime === found.startTime;
@@ -666,7 +701,6 @@ function BookingGroomingService() {
                                   className={`slot-cell ${isPastDay ? "past" : isFull ? "full" : "available"} ${
                                     isSelected ? "selected" : ""
                                   }`}
-                                  // (FIX 7)
                                   onClick={() => !isFull && handleSlotClick(currentDateStr, found)}
                                 >
                                   {isPastDay
@@ -690,7 +724,6 @@ function BookingGroomingService() {
           </div>
         )}
 
-        {/* ===== BƯỚC 3 ===== */}
         {currentStep === 2 && selectedHamster && selectedSlot && (
           <div className="step step-confirm">
             <Title level={4} className="step-title">
@@ -709,9 +742,18 @@ function BookingGroomingService() {
                   {selectedSlot.slot.startTime} - {selectedSlot.slot.endTime}
                 </Descriptions.Item>
                 <Descriptions.Item label="Giá gốc">
-                  <Tag color="#ff6f61">{getFormattedPrice(String(totalPriceDisplay))}</Tag>
+                  <Tag color="#ff6f61">
+                    {(() => {
+                      if (groomingPrice) {
+                        const matches = groomingPrice.match(/\d{1,3}(?:,\d{3})*/g) || [];
+                        const numbers = matches.map((p) => parseFloat(p.replace(/,/g, "")));
+                        const total = numbers.reduce((sum, val) => sum + val, 0);
+                        return total.toLocaleString("vi-VN") + "đ";
+                      }
+                      return "0đ";
+                    })()}
+                  </Tag>
                 </Descriptions.Item>
-
                 {membership && (
                   <>
                     <Descriptions.Item label="Giảm giá">
@@ -719,9 +761,17 @@ function BookingGroomingService() {
                     </Descriptions.Item>
                     <Descriptions.Item label="Thành tiền sau giảm">
                       <Tag color="green">
-                        {getFormattedPrice(
-                          String(Math.round(totalPriceDisplay - (totalPriceDisplay * membership.discountPercent) / 100))
-                        )}
+                        {(() => {
+                          if (groomingPrice) {
+                            const matches = groomingPrice.match(/\d{1,3}(?:,\d{3})*/g) || [];
+                            const numbers = matches.map((p) => parseFloat(p.replace(/,/g, "")));
+                            const total = numbers.reduce((sum, val) => sum + val, 0);
+                            const discountPercent = membership?.discountPercent || 0;
+                            const discounted = Math.round(total - (total * discountPercent) / 100);
+                            return discounted.toLocaleString("vi-VN") + "đ";
+                          }
+                          return "0đ";
+                        })()}
                       </Tag>
                     </Descriptions.Item>
                   </>
@@ -735,11 +785,33 @@ function BookingGroomingService() {
                   />
                 </Descriptions.Item>
               </Descriptions>
+
+              {policies.length > 0 && (
+                <>
+                  <Divider />
+                  <div className="policy-section">
+                    <Title level={5}>Chính sách áp dụng cho dịch vụ Grooming</Title>
+                    <ul>
+                      {policies.map((policy) => (
+                        <li key={policy.id}>
+                          <strong>{policy.policyName}:</strong> {policy.description}
+                        </li>
+                      ))}
+                    </ul>
+                    <Checkbox
+                      checked={agreePolicy}
+                      onChange={(e) => setAgreePolicy(e.target.checked)}
+                      style={{ marginTop: 10 }}
+                    >
+                      Tôi đã đọc và đồng ý với các chính sách trên
+                    </Checkbox>
+                  </div>
+                </>
+              )}
             </Card>
           </div>
         )}
 
-        {/* ===== NÚT ===== */}
         <div className="steps-action">
           {currentStep > 0 && <Button onClick={() => setCurrentStep((s) => s - 1)}>Quay lại</Button>}
           {currentStep < 2 && (
@@ -748,7 +820,7 @@ function BookingGroomingService() {
             </Button>
           )}
           {currentStep === 2 && (
-            <Button type="primary" onClick={handleConfirmBooking}>
+            <Button type="primary" onClick={handleConfirmBooking} disabled={!agreePolicy}>
               Xác nhận đặt lịch
             </Button>
           )}
