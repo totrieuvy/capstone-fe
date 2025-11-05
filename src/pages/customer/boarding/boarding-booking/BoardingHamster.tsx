@@ -33,6 +33,8 @@ import { getServicesByType, ServiceType } from "../../../../services/AdditionSer
 import type { Service } from "../../../../services/AdditionService";
 import { useNavigate } from "react-router-dom";
 import { getFormattedPrice } from "../../../../utils/formatPrice";
+import { fetchBookingPolicies, type Policy } from "../../../../services/PoliciyService";
+import { toast } from "react-toastify";
 
 const { RangePicker } = DatePicker;
 
@@ -94,7 +96,6 @@ function BoardingHamster() {
   const [drawerVisible, setDrawerVisible] = useState(false);
   const [drawerCage, setDrawerCage] = useState<CageType | null>(null);
   const [loading, setLoading] = useState(false);
-  const [termsAccepted, setTermsAccepted] = useState(false);
   const [customerProfile, setCustomerProfile] = useState<CustomerProfile | null>(null);
   
   // New state for cage selection and availability
@@ -105,6 +106,10 @@ function BoardingHamster() {
   const [bookingCostData, setBookingCostData] = useState<CalculatedBookingCost | null>(null);
   const [loadingCostCalculation, setLoadingCostCalculation] = useState(false);
   const [membershipDetails, setMembershipDetails] = useState<MembershipDetails | null>(null);
+
+  // Policy state
+  const [policies, setPolicies] = useState<Policy[]>([]);
+  const [agreePolicy, setAgreePolicy] = useState(false);
 
   useEffect(() => {
     document.title = "Đặt Phòng Hamster";
@@ -128,6 +133,23 @@ function BoardingHamster() {
       calculateBookingCost();
     }
   }, [membershipDetails]);
+
+  // Fetch policies when step 2 (confirmation) is reached
+  useEffect(() => {
+    if (currentStep === 2) {
+      loadPolicies();
+    }
+  }, [currentStep]);
+
+  const loadPolicies = async () => {
+    try {
+      const bookingPolicies = await fetchBookingPolicies();
+      setPolicies(bookingPolicies);
+    } catch (error) {
+      message.error("Không thể tải danh sách chính sách!");
+      console.error("Error fetching policies:", error);
+    }
+  };
 
   const fetchProfiles = async () => {
     setLoading(true);
@@ -397,6 +419,7 @@ function BoardingHamster() {
         paymentMethod: "VNPAY",
         serviceIds: selectedServiceIds.length > 0 ? selectedServiceIds : undefined,
         notes: "", // Can be expanded to include user notes
+        isConfirmed: agreePolicy, // Set to true when policy is agreed to
       };
 
       message.loading("Đang tạo đặt phòng...", 0);
@@ -404,7 +427,7 @@ function BoardingHamster() {
       message.destroy();
       
       if (response.paymentUrl) {
-        message.success("Đặt phòng thành công! Đang chuyển đến trang thanh toán...");
+        toast.success("Đặt phòng thành công! Đang chuyển đến trang thanh toán...");
         // Small delay to show success message before redirect
         setTimeout(() => {
           window.location.href = response.paymentUrl;
@@ -458,8 +481,8 @@ function BoardingHamster() {
   };
 
   const handleConfirmBooking = async () => {
-    if (!termsAccepted) {
-      message.warning("Vui lòng đồng ý với điều khoản dịch vụ");
+    if (!agreePolicy && policies.length > 0) {
+      message.warning("Vui lòng đồng ý với chính sách đặt phòng");
       return;
     }
     // Create booking and redirect to payment
@@ -1136,26 +1159,46 @@ function BoardingHamster() {
                     }}
                   >
                     <div className="terms-section">
-                      <Checkbox
-                        checked={termsAccepted}
-                        onChange={(e) => setTermsAccepted(e.target.checked)}
-                        style={{ fontSize: 15, marginBottom: 20 }}
-                      >
-                        <span style={{ color: "#333", fontWeight: 500 }}>
-                          Tôi đã đọc và đồng ý với{" "}
-                          <a 
-                            href="/terms-of-service" 
-                            target="_blank" 
-                            style={{ 
-                              color: "#ff6f61", 
-                              textDecoration: "underline",
-                              fontWeight: 600
-                            }}
-                          >
-                            điều khoản dịch vụ
-                          </a>
-                        </span>
-                      </Checkbox>
+                      {/* Policy Section */}
+                      {policies.length > 0 && (
+                        <>
+                          <div style={{ marginBottom: 20 }}>
+                            <h4 style={{ color: "#ff6f61", marginBottom: 12, fontSize: 16, fontWeight: 600 }}>
+                              📋 Chính sách đặt phòng
+                            </h4>
+                            <div style={{ 
+                              maxHeight: "200px", 
+                              overflowY: "auto", 
+                              border: "1px solid #d9d9d9", 
+                              borderRadius: 8, 
+                              padding: 16,
+                              backgroundColor: "white",
+                              marginBottom: 16
+                            }}>
+                              {policies.map((policy, index) => (
+                                <div key={policy.id} style={{ marginBottom: index < policies.length - 1 ? 16 : 0 }}>
+                                  <h5 style={{ color: "#ff6f61", marginBottom: 8, fontSize: 14, fontWeight: 600 }}>
+                                    {policy.policyName}
+                                  </h5>
+                                  <p style={{ fontSize: 13, color: "#666", lineHeight: 1.5, margin: 0 }}>
+                                    {policy.description}
+                                  </p>
+                                  {index < policies.length - 1 && <Divider style={{ margin: "12px 0" }} />}
+                                </div>
+                              ))}
+                            </div>
+                            <Checkbox
+                              checked={agreePolicy}
+                              onChange={(e) => setAgreePolicy(e.target.checked)}
+                              style={{ fontSize: 14 }}
+                            >
+                              <span style={{ color: "#333", fontWeight: 500 }}>
+                                Tôi đã đọc và đồng ý với các chính sách đặt phòng trên
+                              </span>
+                            </Checkbox>
+                          </div>
+                        </>
+                      )}
 
                       <Row gutter={12}>
                         <Col span={8}>
@@ -1179,7 +1222,7 @@ function BoardingHamster() {
                             size="large"
                             onClick={handleConfirmBooking}
                             loading={loading}
-                            disabled={!termsAccepted || loading || !customerProfile}
+                            disabled={loading || !customerProfile || (policies.length > 0 && !agreePolicy)}
                             style={{
                               background: "linear-gradient(45deg, #ff6f61, #ffcc5c)",
                               border: "none",

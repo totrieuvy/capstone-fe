@@ -36,6 +36,7 @@ import {
 } from "../../../services/MedicalService";
 import { ProfileHamsterService, type Species } from "../../../services/ProfileHamsterService";
 import "./ManageMedical.scss";
+import { toast } from "react-toastify";
 
 interface MedicalServiceFormValues {
   id?: string;
@@ -138,9 +139,9 @@ const ManageMedical: React.FC = () => {
 
         const response = await updateService(values.id, updateServiceData);
         if (response.code === 200) {
-          message.success("Cập nhật dịch vụ y tế thành công!");
+          toast.success("Cập nhật dịch vụ y tế thành công!");
         } else {
-          message.error(response.message || "Cập nhật dịch vụ thất bại!");
+          toast.error(response.message || "Cập nhật dịch vụ thất bại!");
         }
       } else {
         // Create service logic - build species prices from form data
@@ -159,9 +160,9 @@ const ManageMedical: React.FC = () => {
 
         const response = await createService(createServiceData);
         if (response.code === 201) {
-          message.success("Thêm dịch vụ y tế thành công!");
+          toast.success("Thêm dịch vụ y tế thành công!");
         } else {
-          message.error(response.message || "Thêm dịch vụ thất bại!");
+          toast.error(response.message || "Thêm dịch vụ thất bại!");
         }
       }
 
@@ -250,13 +251,13 @@ const ManageMedical: React.FC = () => {
     try {
       const response = await deleteService(serviceId);
       if (response.code === 200) {
-        message.success("Xóa dịch vụ y tế thành công!");
+        toast.success("Xóa dịch vụ y tế thành công!");
         fetchMedicalServices();
       } else {
-        message.error(response.message || "Xóa dịch vụ thất bại!");
+        toast.error(response.message || "Xóa dịch vụ thất bại!");
       }
     } catch (error) {
-      message.error("Xóa dịch vụ thất bại: " + error);
+      toast.error("Xóa dịch vụ thất bại: " + error);
       console.error("Error deleting service:", error);
     }
   };

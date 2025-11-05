@@ -72,6 +72,7 @@ export interface CreateBookingRequest {
   paymentMethod: string;
   serviceIds?: string[]; // IDs from Service interface in AddtionService.ts
   notes?: string;
+  isConfirmed: boolean;
 }
 
 export interface CreateBookingResponse {
