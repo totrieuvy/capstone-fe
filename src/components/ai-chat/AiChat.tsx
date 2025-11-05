@@ -1,8 +1,51 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import { Input, Tag, Spin } from "antd";
-import { SendOutlined, CloseOutlined } from "@ant-design/icons";
+import { SendOutlined, CloseOutlined, AudioOutlined } from "@ant-design/icons";
 import api from "../../config/axios";
 import "./AiChat.scss";
+interface ISpeechRecognition {
+  lang: string;
+  interimResults: boolean;
+  continuous: boolean;
+  onstart?: () => void;
+  onresult?: (event: CustomSpeechRecognitionEvent) => void;
+  onerror?: (event: Event) => void;
+  onend?: () => void;
+  start: () => void;
+  stop: () => void;
+}
+
+/* Constructor type */
+interface SpeechRecognitionConstructor {
+  new (): ISpeechRecognition;
+}
+
+/* Extend window with optional props (some browsers define webkitSpeechRecognition) */
+declare global {
+  interface Window {
+    SpeechRecognition?: SpeechRecognitionConstructor;
+    webkitSpeechRecognition?: SpeechRecognitionConstructor;
+  }
+}
+
+interface SpeechRecognitionAlternative {
+  transcript: string;
+  confidence: number;
+}
+
+interface SpeechRecognitionResultLike {
+  isFinal: boolean;
+  [index: number]: SpeechRecognitionAlternative;
+}
+
+interface SpeechRecognitionEventResults {
+  length: number;
+  [index: number]: SpeechRecognitionResultLike;
+}
+
+interface CustomSpeechRecognitionEvent extends Event {
+  results: SpeechRecognitionEventResults;
+}
 
 interface ChatMessage {
   sender: "user" | "ai";
@@ -16,6 +59,10 @@ const AiChat: React.FC = () => {
   const [chat, setChat] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
+  const [listening, setListening] = useState(false);
+  const [conversationId, setConversationId] = useState<string | null>(null);
+
+  const recognitionRef = useRef<ISpeechRecognition | null>(null);
 
   const suggestedQuestions = [
     "Tui có hamster gì?",
@@ -30,8 +77,14 @@ const AiChat: React.FC = () => {
     setLoading(true);
 
     try {
-      const res = await api.post("/api/chat/ai", { message: msg });
-      const reply = res.data?.message || "Xin lỗi, mình chưa hiểu ý bạn 😅";
+      const body = conversationId ? { message: msg, conversationId } : { message: msg };
+      const res = await api.post("/api/chat/ai", body);
+
+      const reply = res.data?.data?.message || "Xin lỗi, mình chưa hiểu ý bạn 😅";
+      const newId = res.data?.data?.conversationId;
+
+      if (newId && !conversationId) setConversationId(newId);
+
       setChat((prev) => [...prev, { sender: "ai", text: reply }]);
       handleTextToSpeech(reply);
     } catch (err) {
@@ -56,22 +109,52 @@ const AiChat: React.FC = () => {
 
       const data = await res.json();
       const audioUrl = data.async;
-
-      const audio = document.createElement("audio");
-      audio.src = audioUrl;
-      audio.autoplay = true;
-      audio.style.display = "none";
-
-      const old = document.getElementById("fpt-tts-audio");
-      if (old) old.remove();
-
-      audio.id = "fpt-tts-audio";
-      document.body.appendChild(audio);
-
-      audio.onended = () => audio.remove();
+      const audio = new Audio(audioUrl);
+      audio.play().catch((e) => {
+        console.warn("TTS play blocked:", e);
+      });
     } catch (err) {
       console.error("FPT TTS error:", err);
     }
+  };
+
+  const handleStartListening = () => {
+    const SpeechRecognitionClass = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+    if (!SpeechRecognitionClass) {
+      alert("Trình duyệt của bạn không hỗ trợ Speech Recognition 😢");
+      return;
+    }
+
+    if (listening) {
+      recognitionRef.current?.stop();
+      setListening(false);
+      return;
+    }
+
+    const recognition = new SpeechRecognitionClass();
+    recognition.lang = "vi-VN";
+    recognition.interimResults = false;
+    recognition.continuous = false;
+
+    recognition.onstart = () => setListening(true);
+
+    recognition.onresult = (event: CustomSpeechRecognitionEvent) => {
+      // defensive checks
+      if (!event?.results || !event.results[0] || !event.results[0][0]) return;
+      const transcript = event.results[0][0].transcript;
+      setInput(transcript);
+    };
+
+    recognition.onerror = (event: Event) => {
+      console.error("Speech recognition error:", event);
+      setListening(false);
+    };
+
+    recognition.onend = () => setListening(false);
+
+    recognition.start();
+    recognitionRef.current = recognition;
   };
 
   return (
@@ -128,14 +211,30 @@ const AiChat: React.FC = () => {
               onChange={(e) => setInput(e.target.value)}
               onPressEnter={() => sendMessage(input)}
               suffix={
-                <SendOutlined
-                  onClick={() => sendMessage(input)}
-                  style={{
-                    cursor: "pointer",
-                    fontSize: 18,
-                    color: "#a47148",
-                  }}
-                />
+                <>
+                  <div className={`mic-wrapper ${listening ? "listening" : ""}`}>
+                    <AudioOutlined
+                      onClick={handleStartListening}
+                      className="mic-icon"
+                      style={{
+                        cursor: "pointer",
+                        fontSize: 18,
+                        marginRight: 8,
+                        color: listening ? "#ff4d4f" : "#a47148",
+                      }}
+                      aria-label={listening ? "Đang ghi âm" : "Bắt đầu ghi âm"}
+                    />
+                    {listening && <div className="mic-wave" aria-hidden="true"></div>}
+                  </div>
+                  <SendOutlined
+                    onClick={() => sendMessage(input)}
+                    style={{
+                      cursor: "pointer",
+                      fontSize: 18,
+                      color: "#a47148",
+                    }}
+                  />
+                </>
               }
             />
           </div>
