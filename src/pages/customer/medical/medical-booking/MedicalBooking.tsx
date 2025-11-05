@@ -1,8 +1,31 @@
 import { useState, useEffect, useCallback } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import { Steps, Button, Card, Row, Col, Spin, message, Tag, Descriptions, Image, Empty, Typography, Input, Tabs } from "antd";
-import { UserOutlined, CalendarOutlined, CheckCircleOutlined, LeftOutlined, RightOutlined, ClockCircleOutlined, UserSwitchOutlined } from "@ant-design/icons";
+import {
+  Steps,
+  Button,
+  Card,
+  Row,
+  Col,
+  Spin,
+  message,
+  Tag,
+  Descriptions,
+  Image,
+  Empty,
+  Typography,
+  Input,
+  Tabs,
+} from "antd";
+import {
+  UserOutlined,
+  CalendarOutlined,
+  CheckCircleOutlined,
+  LeftOutlined,
+  RightOutlined,
+  ClockCircleOutlined,
+  UserSwitchOutlined,
+} from "@ant-design/icons";
 import type { Dayjs } from "dayjs";
 import dayjs from "dayjs";
 import "dayjs/locale/vi";
@@ -14,6 +37,10 @@ import ProfileHamsterService, { type HamsterProfile } from "../../../../services
 import { getFormattedPrice } from "../../../../utils/formatPrice";
 import "./MedicalBooking.scss";
 import type { AxiosError } from "axios";
+
+import { Checkbox, Divider } from "antd";
+import api from "../../../../config/axios";
+
 import {
   getSpecies,
   getMembership,
@@ -26,7 +53,7 @@ import {
   type TimeSlot,
   type SlotData,
   type Membership,
-  type CreateAppointmentRequest
+  type CreateAppointmentRequest,
 } from "../../../../services/MedicalService";
 
 const { Title } = Typography;
@@ -35,6 +62,14 @@ const { TextArea } = Input;
 dayjs.extend(customParseFormat);
 dayjs.extend(isoWeek);
 dayjs.locale("vi");
+
+interface Policy {
+  id: string;
+  policyName: string;
+  description: string;
+  applicableServices: string;
+  status: string;
+}
 
 function MedicalBooking() {
   const navigate = useNavigate();
@@ -53,12 +88,37 @@ function MedicalBooking() {
   const [notes, setNotes] = useState("");
   const [membership, setMembership] = useState<Membership | null>(null);
   const [currentWeek, setCurrentWeek] = useState(dayjs());
-  
+
   // New state for tab functionality
   const [activeTab, setActiveTab] = useState<string>("time");
   const [availableStaffs, setAvailableStaffs] = useState<Staff[]>([]);
   const [selectedVeterinarian, setSelectedVeterinarian] = useState<Staff | null>(null);
   const [veterinarianSlots, setVeterinarianSlots] = useState<SlotData[]>([]);
+
+  const [policies, setPolicies] = useState<Policy[]>([]);
+  const [agreePolicy, setAgreePolicy] = useState(false);
+
+  const fetchPolicies = useCallback(async () => {
+    try {
+      const res = await api.get<{ code: number; data: Policy[] }>("/api/policy");
+      if (res.data.code === 200) {
+        const medicalPolicies = res.data.data.filter(
+          (p) => p.applicableServices === "MEDICAL" && p.status === "ACTIVE"
+        );
+        setPolicies(medicalPolicies);
+      } else {
+        message.error("Không thể tải danh sách chính sách!");
+      }
+    } catch {
+      message.error("Lỗi khi tải chính sách!");
+    }
+  }, []);
+
+  useEffect(() => {
+    if (currentStep === 2) {
+      fetchPolicies();
+    }
+  }, [currentStep, fetchPolicies]);
 
   const steps = [
     { title: "Chọn Hamster", icon: <UserOutlined /> },
@@ -72,7 +132,7 @@ function MedicalBooking() {
       const hamsterProfiles = await ProfileHamsterService.getProfiles();
       setProfiles(hamsterProfiles);
     } catch (error) {
-      message.error("Không thể tải danh sách hamster");
+      message.error("Không thể tải danh sách hamster" + error);
     } finally {
       setLoading(false);
     }
@@ -83,7 +143,7 @@ function MedicalBooking() {
       const response = await getSpecies();
       if (response.code === 200) setAllSpecies(response.data);
     } catch (error) {
-      message.error("Không thể tải danh sách loài");
+      message.error("Không thể tải danh sách loài" + error);
     }
   }, []);
 
@@ -122,7 +182,7 @@ function MedicalBooking() {
           }
         }
       } catch (error) {
-        message.error("Không thể tải giá dịch vụ");
+        message.error("Không thể tải giá dịch vụ" + error);
       }
     },
     [selectedMedicalItem]
@@ -158,7 +218,7 @@ function MedicalBooking() {
       if (response.code === 200) setSlotsData(response.data);
       else setSlotsData([]);
     } catch (error) {
-      message.error("Không thể tải lịch khám");
+      message.error("Không thể tải lịch khám" + error);
       setSlotsData([]);
     } finally {
       setLoading(false);
@@ -185,7 +245,7 @@ function MedicalBooking() {
         setAvailableStaffs(Array.from(uniqueStaffs.values()));
       }
     } catch (error) {
-      message.error("Không thể tải danh sách bác sĩ");
+      message.error("Không thể tải danh sách bác sĩ" + error);
     }
   }, [currentWeek]);
 
@@ -203,7 +263,7 @@ function MedicalBooking() {
         setVeterinarianSlots([]);
       }
     } catch (error) {
-      message.error("Không thể tải lịch của bác sĩ");
+      message.error("Không thể tải lịch của bác sĩ" + error);
       setVeterinarianSlots([]);
     } finally {
       setLoading(false);
@@ -220,9 +280,9 @@ function MedicalBooking() {
   const handleWeekChange = (direction: "prev" | "next") => {
     const newWeek = direction === "prev" ? currentWeek.subtract(1, "week") : currentWeek.add(1, "week");
     setCurrentWeek(newWeek);
-    
+
     // If we're in doctor priority mode and a veterinarian is selected, fetch their slots for the new week
-    if (activeTab === 'doctor' && selectedVeterinarian) {
+    if (activeTab === "doctor" && selectedVeterinarian) {
       fetchVeterinarianSlots(selectedVeterinarian.id, newWeek);
     }
   };
@@ -274,7 +334,7 @@ function MedicalBooking() {
       const discountPercent = membership?.discountPercent || 0;
       const totalAmount = medicalPrice || 0;
       const totalAmountAfter = Math.round(totalAmount - (totalAmount * discountPercent) / 100);
-      
+
       const payload: CreateAppointmentRequest = {
         hamsterId: selectedHamster.id,
         veterinarianId: selectedStaff.id,
@@ -287,8 +347,9 @@ function MedicalBooking() {
         slotEnd: selectedSlot.slot.endTime,
         serviceType: "MEDICAL",
         items: [{ serviceId: selectedMedicalItem.id, price: totalAmount }],
+        isConfirmed: true,
       };
-      
+
       const response = await createAppointment(payload);
       if (response.code === 200) {
         message.success("Đặt lịch thành công!");
@@ -391,13 +452,13 @@ function MedicalBooking() {
             <Title level={4} className="step-title">
               Bước 2: Chọn ngày, giờ và bác sĩ
             </Title>
-            
+
             <Tabs
               activeKey={activeTab}
               onChange={handleTabChange}
               items={[
                 {
-                  key: 'time',
+                  key: "time",
                   label: (
                     <span>
                       <ClockCircleOutlined />
@@ -481,7 +542,7 @@ function MedicalBooking() {
                       </div>
 
                       {/* Bác sĩ - Time Priority */}
-                      {selectedSlot && activeTab === 'time' && (
+                      {selectedSlot && activeTab === "time" && (
                         <div className="staff-section">
                           <Title level={5}>Chọn bác sĩ</Title>
                           {selectedSlot.slot.staffs.length ? (
@@ -528,7 +589,7 @@ function MedicalBooking() {
                   ),
                 },
                 {
-                  key: 'doctor',
+                  key: "doctor",
                   label: (
                     <span>
                       <UserSwitchOutlined />
@@ -577,7 +638,7 @@ function MedicalBooking() {
                           </Row>
                         </div>
                       )}
-                    <br />
+                      <br />
                       {/* Hiển thị lịch của bác sĩ ĐÃ CHỌN */}
                       {selectedVeterinarian && (
                         <>
@@ -609,21 +670,27 @@ function MedicalBooking() {
                             <div className="time-column">
                               <div className="time-cell-header">Giờ</div>
                               {Array.from(
-                                new Set(veterinarianSlots.flatMap((d) => d.slots.map((s) => `${s.startTime}-${s.endTime}`)))
-                              ).sort().map((slot) => (
-                                <div key={slot} className="time-cell">
-                                  {slot}
-                                </div>
-                              ))}
+                                new Set(
+                                  veterinarianSlots.flatMap((d) => d.slots.map((s) => `${s.startTime}-${s.endTime}`))
+                                )
+                              )
+                                .sort()
+                                .map((slot) => (
+                                  <div key={slot} className="time-cell">
+                                    {slot}
+                                  </div>
+                                ))}
                             </div>
 
                             {getDaysOfWeek(currentWeek).map((day) => {
                               const slotData = veterinarianSlots.find((s) => s.slotDate === day.format("DD-MM-YYYY"));
                               const isPastDay = day.isSame(dayjs(), "day") || day.isBefore(dayjs(), "day");
                               const daySlots = Array.from(
-                                new Set(veterinarianSlots.flatMap((d) => d.slots.map((s) => `${s.startTime}-${s.endTime}`)))
+                                new Set(
+                                  veterinarianSlots.flatMap((d) => d.slots.map((s) => `${s.startTime}-${s.endTime}`))
+                                )
                               ).sort();
-                              
+
                               return (
                                 <div key={day.format()} className={`day-column ${isPastDay ? "disabled-day" : ""}`}>
                                   <div className="day-header">
@@ -632,7 +699,9 @@ function MedicalBooking() {
                                     {day.format("DD/MM")}
                                   </div>
                                   {daySlots.map((slotRange) => {
-                                    const found = slotData?.slots.find((s) => `${s.startTime}-${s.endTime}` === slotRange);
+                                    const found = slotData?.slots.find(
+                                      (s) => `${s.startTime}-${s.endTime}` === slotRange
+                                    );
                                     if (!found) return <div key={slotRange} className="slot-cell empty"></div>;
                                     const isFull = found.availableSlot === 0;
                                     const isSelected =
@@ -722,6 +791,29 @@ function MedicalBooking() {
                   />
                 </Descriptions.Item>
               </Descriptions>
+
+              {policies.length > 0 && (
+                <>
+                  <Divider />
+                  <div className="policy-section">
+                    <Title level={5}>Chính sách áp dụng cho dịch vụ Y tế</Title>
+                    <ul>
+                      {policies.map((policy) => (
+                        <li key={policy.id}>
+                          <strong>{policy.policyName}:</strong> {policy.description}
+                        </li>
+                      ))}
+                    </ul>
+                    <Checkbox
+                      checked={agreePolicy}
+                      onChange={(e) => setAgreePolicy(e.target.checked)}
+                      style={{ marginTop: 10 }}
+                    >
+                      Tôi đã đọc và đồng ý với các chính sách trên
+                    </Checkbox>
+                  </div>
+                </>
+              )}
             </Card>
           </div>
         )}
@@ -730,8 +822,8 @@ function MedicalBooking() {
         <div className="steps-action">
           {currentStep > 0 && <Button onClick={() => setCurrentStep((s) => s - 1)}>Quay lại</Button>}
           {currentStep < 2 && (
-            <Button 
-              type="primary" 
+            <Button
+              type="primary"
               onClick={() => setCurrentStep((s) => s + 1)}
               disabled={currentStep === 0 && !selectedHamster}
             >
@@ -739,10 +831,10 @@ function MedicalBooking() {
             </Button>
           )}
           {currentStep === 2 && (
-            <Button 
-              type="primary" 
+            <Button
+              type="primary"
               onClick={handleConfirmBooking}
-              disabled={!selectedHamster || !selectedSlot || !selectedStaff}
+              disabled={!selectedHamster || !selectedSlot || !selectedStaff || !agreePolicy}
             >
               Xác nhận đặt lịch
             </Button>
