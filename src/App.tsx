@@ -71,6 +71,7 @@ import ManageMedicine from "./pages/veterinarian/manage-medicine/ManageMedicine"
 import MedicalPaymentFailure from "./pages/staff/medical/payment-screen/MedicalPaymentFailure";
 import MedicalPaymentSuccess from "./pages/staff/medical/payment-screen/MedicalPaymentSuccess";
 import CageFloorPlan from "./pages/staff/cage/CageFloorPlan";
+import Policy from "./pages/admin/policy/Policy";
 
 interface User {
   id: number;
@@ -276,6 +277,7 @@ const App = () => {
             { path: "quan-li-loai-chuong", element: <CageType /> },
             { path: "quan-li-dich-vu-y-te", element: <ManageMedical /> },
             { path: "quan-li-dich-vu-grooming/grooming-le", element: <ManageGroomingService /> },
+            { path: "chinh-sach", element: <Policy /> },
             { path: "quan-li-dich-vu-grooming/grooming-le/:id", element: <ManageGroomingServiceDetail /> },
             {
               path: "quan-li-dich-vu-grooming/grooming-combo",
@@ -346,7 +348,7 @@ const App = () => {
         {
           path: "medical-payment-failure",
           element: <MedicalPaymentFailure />,
-        }
+        },
       ],
     },
     {
@@ -363,7 +365,7 @@ const App = () => {
             { path: "quan-li-ke-thuoc", element: <ManageMedicine /> },
             { path: "*", element: <VetNotFoundPage /> },
           ],
-        }
+        },
       ],
     },
     {
