@@ -756,4 +756,19 @@
       box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2);
     }
   }
+
+  // Custom styles for service selection dropdown
+  .ant-select-dropdown {
+    .ant-select-item {
+      padding: 8px 12px !important;
+      height: auto !important;
+      white-space: normal !important;
+      
+      .ant-select-item-option-content {
+        white-space: normal !important;
+        word-wrap: break-word !important;
+        line-height: 1.4 !important;
+      }
+    }
+  }
 }
