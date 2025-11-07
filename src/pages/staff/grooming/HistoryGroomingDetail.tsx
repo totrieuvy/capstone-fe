@@ -14,8 +14,11 @@ import {
   Col,
   Divider,
   Select,
+  Popconfirm,
 } from "antd";
 import {
+  PlusOutlined,
+  RetweetOutlined,
   ArrowLeftOutlined,
   UploadOutlined,
   ClockCircleOutlined,
@@ -49,6 +52,8 @@ interface ServiceItem {
 }
 
 interface GroomingDetail {
+  customerId: string;
+  hamsterId?: string;
   id: string;
   customerName: string;
   hamsterName: string;
@@ -66,6 +71,7 @@ interface GroomingDetail {
   staff?: Staff;
   speciesId?: string;
   items: ServiceItem[];
+  discountPercent: number;
 }
 
 interface Service {
@@ -78,6 +84,11 @@ interface Service {
   isActive: boolean;
 }
 
+interface Species {
+  id: string;
+  speciesName: string;
+}
+
 const HistoryGroomingDetail = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -88,7 +99,20 @@ const HistoryGroomingDetail = () => {
   const [checkoutUploading, setCheckoutUploading] = useState(false);
   const [groomingServices, setGroomingServices] = useState<Service[]>([]);
   const [selectedServices, setSelectedServices] = useState<string[]>([]);
+  const [speciesList, setSpeciesList] = useState<Species[]>([]);
+  const [selectedSpecies, setSelectedSpecies] = useState<string | null>(null);
   const [, setCheckOutImageUrl] = useState<string | null>(null);
+
+  const fetchSpecies = async () => {
+    try {
+      const res = await api.get("/api/species");
+      if (res.data.code === 200) {
+        setSpeciesList(res.data.data);
+      }
+    } catch {
+      message.error("Không thể tải danh sách loài!");
+    }
+  };
 
   // ======================= FETCH =======================
   const fetchServicesBySpecies = useCallback(async (speciesId: string) => {
@@ -118,6 +142,89 @@ const HistoryGroomingDetail = () => {
       setLoading(false);
     }
   }, [id, fetchServicesBySpecies]);
+
+  // ======================= ĐỔI LOÀI =======================
+  const handleChangeSpecies = async () => {
+    if (!detail || !selectedSpecies) return;
+    try {
+      await api.patch(`/api/appointment/${detail.id}`, { status: "CANCELLED" });
+      await api.put(`/api/hamster/change-species`, {
+        hamsterId: detail.hamsterId,
+        speciesId: selectedSpecies,
+      });
+      message.success("Đã đổi loài và hủy lịch hiện tại!");
+      fetchDetail();
+    } catch {
+      message.error("Không thể đổi loài!");
+    }
+  };
+
+  const parseVND = (v: string | number | null | undefined): number => {
+    if (v == null) return 0;
+    if (typeof v === "number") return v;
+
+    // Bỏ hết ký tự không phải số (bao gồm dấu phẩy, chấm)
+    const onlyDigits = v.replace(/[^\d]/g, "");
+
+    return Number(onlyDigits || 0);
+  };
+
+  // luôn gửi HH:mm
+  const toHHmm = (t?: string | null) => {
+    if (!t) return undefined;
+    const m = t.match(/^(\d{2}:\d{2})/);
+    return m ? m[1] : t;
+  };
+
+  // ======================= TẠO LỊCH MỚI =======================
+  const handleCreateAppointment = async () => {
+    if (!detail) return;
+    try {
+      // map serviceId -> giá (đã bỏ dấu phẩy)
+      const speciesPriceMap = new Map(groomingServices.map((s) => [s.id, parseVND(s.displayPrice)]));
+
+      // áp giá theo speciesId hiện tại cho từng item
+      const items = (detail.items || []).map((i) => {
+        const mapped = i.serviceId ? speciesPriceMap.get(i.serviceId) : undefined;
+        return {
+          serviceId: i.serviceId,
+          price: mapped ?? parseVND(i.price), // fallback nếu không tìm thấy
+        };
+      });
+
+      // tính tổng (VND)
+      const totalAmount = items.reduce((sum, it) => sum + parseVND(it.price), 0);
+      const discountPercent = Number(detail.discountPercent || 0);
+      const totalAmountAfter = Math.round((totalAmount * (100 - discountPercent)) / 100);
+
+      await api.post(`/api/appointment`, {
+        customerId: detail.customerId,
+        hamsterId: detail.hamsterId,
+        staffId: detail.staff?.id,
+        appointmentDate: dayjs(detail.appointmentTime).format("DD-MM-YYYY"),
+        slotStart: toHHmm(detail.slotStart),
+        slotEnd: toHHmm(detail.slotEnd),
+        notes: detail.notes,
+        serviceType: "GROOMING",
+        discountPercent, // giữ nguyên %
+        totalAmount, // vd: 155000
+        totalAmountAfter, // vd: 139500 nếu discountPercent=10
+        items, // mỗi item.price là số VND (không có dấu phẩy)
+        isConfirmed: true,
+      });
+
+      message.success("Tạo lịch mới thành công!");
+      fetchDetail?.();
+    } catch {
+      message.error("Không thể tạo lịch mới!");
+    }
+  };
+
+  useEffect(() => {
+    document.title = "Chi tiết Grooming";
+    fetchSpecies();
+    fetchDetail();
+  }, [fetchDetail]);
 
   useEffect(() => {
     document.title = "Chi tiết Grooming";
@@ -277,6 +384,8 @@ const HistoryGroomingDetail = () => {
 
   const totalPrice = (detail.totalAmountAfter || 0) + (detail.additionalAmount || 0);
 
+  const currentSpecies = speciesList.find((s) => s.id === detail.speciesId)?.speciesName || "Không xác định";
+
   // ======================= RETURN =======================
   return (
     <div className="history-grooming-detail-page">
@@ -314,7 +423,44 @@ const HistoryGroomingDetail = () => {
                 size="middle"
               >
                 <Descriptions.Item label="Khách hàng">{detail.customerName}</Descriptions.Item>
-                <Descriptions.Item label="Hamster">{detail.hamsterName}</Descriptions.Item>
+                <Descriptions.Item label="Hamster">
+                  {detail.hamsterName}
+                  <br />
+                  <Text>Loài: {currentSpecies}</Text>
+                  {detail.status === "BOOKED" && (
+                    <>
+                      <Select
+                        placeholder="Chọn loài khác"
+                        style={{ width: "100%", marginTop: 6 }}
+                        onChange={setSelectedSpecies}
+                        value={selectedSpecies || undefined}
+                      >
+                        {speciesList
+                          .filter((s) => s.id !== detail.speciesId)
+                          .map((s) => (
+                            <Option key={s.id} value={s.id}>
+                              {s.speciesName}
+                            </Option>
+                          ))}
+                      </Select>
+                      {selectedSpecies && (
+                        <Popconfirm
+                          title="Xác nhận đổi loài?"
+                          description={`Đổi từ ${currentSpecies} sang ${
+                            speciesList.find((s) => s.id === selectedSpecies)?.speciesName
+                          }. Lịch hiện tại sẽ bị hủy!`}
+                          okText="Đồng ý"
+                          cancelText="Hủy"
+                          onConfirm={handleChangeSpecies}
+                        >
+                          <Button type="link" icon={<RetweetOutlined />} danger>
+                            Xác nhận đổi loài
+                          </Button>
+                        </Popconfirm>
+                      )}
+                    </>
+                  )}
+                </Descriptions.Item>
                 <Descriptions.Item label="Ngày hẹn">
                   {dayjs(detail.appointmentTime).format("DD/MM/YYYY")}
                 </Descriptions.Item>
@@ -327,6 +473,22 @@ const HistoryGroomingDetail = () => {
                 )}
                 {detail.staff && <Descriptions.Item label="Nhân viên">{detail.staff.fullName}</Descriptions.Item>}
               </Descriptions>
+
+              {detail.status === "CANCELLED" && (
+                <Card className="cancel-card section-card" bordered={false}>
+                  <Popconfirm
+                    title="Tạo lịch Grooming mới?"
+                    description="Lịch hiện tại đã bị hủy. Bạn có muốn tạo lại lịch mới không?"
+                    onConfirm={handleCreateAppointment}
+                    okText="Tạo mới"
+                    cancelText="Hủy"
+                  >
+                    <Button type="primary" icon={<PlusOutlined />} block>
+                      Tạo lịch Grooming mới
+                    </Button>
+                  </Popconfirm>
+                </Card>
+              )}
             </Card>
 
             {/* ---- Dịch vụ ---- */}
