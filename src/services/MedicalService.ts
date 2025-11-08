@@ -415,6 +415,7 @@ export interface PrescriptionMedicineDetail {
 export interface Prescription {
   id: string;
   appointmentId: string;
+  prescriptionUrl: string | null;
   medicines: PrescriptionMedicineDetail[];
 }
 
