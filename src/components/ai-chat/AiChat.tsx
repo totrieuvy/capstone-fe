@@ -80,7 +80,16 @@ const AiChat: React.FC = () => {
       const body = conversationId ? { message: msg, conversationId } : { message: msg };
       const res = await api.post("/api/chat/ai", body);
 
-      const reply = res.data?.data?.message || "Xin lỗi, mình chưa hiểu ý bạn 😅";
+      let reply = res.data?.data?.message || "Xin lỗi, mình chưa hiểu ý bạn 😅";
+
+      reply = reply.replace(/\*\*(Dịch vụ [^*]+):\*\*/g, "<strong>$1</strong>");
+
+      // 2️⃣ Làm đậm tên dịch vụ con (ví dụ: *   **Tắm Cát (Xịn):**)
+      reply = reply.replace(/\*\s+\*\*(.+?):\*\*/g, "• <strong>$1:</strong>");
+
+      // 3️⃣ Thay xuống dòng cho dễ đọc (giữa các mục)
+      reply = reply.replace(/\n/g, "<br/>");
+
       const newId = res.data?.data?.conversationId;
 
       if (newId && !conversationId) setConversationId(newId);
@@ -185,10 +194,9 @@ const AiChat: React.FC = () => {
 
           <div className="chat-body">
             {chat.map((msg, i) => (
-              <div key={i} className={`chat-bubble ${msg.sender}`}>
-                {msg.text}
-              </div>
+              <div key={i} className={`chat-bubble ${msg.sender}`} dangerouslySetInnerHTML={{ __html: msg.text }} />
             ))}
+
             {loading && (
               <div className="chat-loading">
                 <Spin size="small" />
