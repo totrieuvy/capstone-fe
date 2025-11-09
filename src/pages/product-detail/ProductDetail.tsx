@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useParams } from "react-router-dom";
 import { Card, Image, Spin, Typography, Row, Col, Button, Rate, Tag, Divider, Tabs, Avatar, Progress } from "antd";
 import { ShoppingCartOutlined, HeartOutlined, UserOutlined } from "@ant-design/icons";
@@ -22,14 +22,31 @@ interface Product {
   isActive: boolean;
 }
 
+interface Feedback {
+  feedbackId: string;
+  customerName: string;
+  rating: number;
+  comment: string;
+  createdAt: string;
+}
+
 function ProductDetail() {
   const { id } = useParams<{ id: string }>();
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
+  const [feedbacks, setFeedbacks] = useState<Feedback[]>([]);
+  const [feedbackLoading, setFeedbackLoading] = useState(true);
+
+  // Tính trung bình rating
+  const averageRating = useMemo(() => {
+    if (feedbacks.length === 0) return 0;
+    const total = feedbacks.reduce((sum, fb) => sum + fb.rating, 0);
+    return (total / feedbacks.length).toFixed(1);
+  }, [feedbacks]);
 
   useEffect(() => {
-    document.title = "Chi tiết sản phẩm";
-    const fetchData = async () => {
+    if (!id) return;
+    const fetchProduct = async () => {
       try {
         const res = await api.get(`/api/products/detail/${id}`);
         setProduct(res.data.data);
@@ -39,7 +56,22 @@ function ProductDetail() {
         setLoading(false);
       }
     };
-    fetchData();
+    fetchProduct();
+  }, [id]);
+
+  useEffect(() => {
+    if (!id) return;
+    const fetchFeedbacks = async () => {
+      try {
+        const res = await api.get(`/api/feedbacks/${id}`);
+        if (res.data.code === 200) setFeedbacks(res.data.data);
+      } catch {
+        toast.error("Không thể tải đánh giá!");
+      } finally {
+        setFeedbackLoading(false);
+      }
+    };
+    fetchFeedbacks();
   }, [id]);
 
   if (loading)
@@ -55,41 +87,6 @@ function ProductDetail() {
         <Title level={4}>Sản phẩm không tồn tại hoặc đã bị xóa.</Title>
       </div>
     );
-
-  const feedbacks = [
-    {
-      id: 1,
-      name: "Kristin Watson",
-      avatar: "https://i.pravatar.cc/150?img=47",
-      rating: 5,
-      comment:
-        "Xích đu rất chắc chắn, giao hàng nhanh và đóng gói cẩn thận. Chất liệu nhựa gỗ rất đẹp, cảm giác ngồi cực kỳ thoải mái!",
-      images: [
-        "https://images.unsplash.com/photo-1585386959984-a4155223169a",
-        "https://images.unsplash.com/photo-1616627987931-9c5e9a69b1c2",
-      ],
-      time: "1 tháng trước",
-    },
-    {
-      id: 2,
-      name: "Jenny Wilson",
-      avatar: "https://i.pravatar.cc/150?img=11",
-      rating: 4,
-      comment:
-        "Thiết kế đẹp, màu sắc nhã nhặn. Chỉ tiếc là khâu lắp ráp hơi mất thời gian. Tổng thể vẫn rất đáng tiền!",
-      images: ["https://images.unsplash.com/photo-1600185365483-26d7a1b4a4e6"],
-      time: "2 tháng trước",
-    },
-    {
-      id: 3,
-      name: "Darlene Robertson",
-      avatar: "https://i.pravatar.cc/150?img=25",
-      rating: 5,
-      comment: "Quá tuyệt! Rất phù hợp để đặt ngoài ban công, chuyển động êm ái và cảm giác ngồi thư giãn.",
-      images: ["https://images.unsplash.com/photo-1596461404969-9ae70c5aebcd"],
-      time: "2 tháng trước",
-    },
-  ];
 
   return (
     <div className="ProductDetail">
@@ -112,9 +109,12 @@ function ProductDetail() {
               <Title level={2} className="name">
                 {product.name}
               </Title>
+
               <div className="rating">
-                <Rate disabled defaultValue={4.8} allowHalf />
-                <span>4.8 (245 đánh giá)</span>
+                <Rate disabled allowHalf value={Number(averageRating)} />
+                <span>
+                  {averageRating} ({feedbacks.length} đánh giá)
+                </span>
               </div>
 
               <div className="price-box">
@@ -154,52 +154,63 @@ function ProductDetail() {
       </Card>
 
       <Tabs defaultActiveKey="1" className="product-tabs">
-        <TabPane tab="Review" key="1">
+        <TabPane tab="Đánh giá sản phẩm" key="1">
           <div className="review-summary">
             <div className="left">
-              <Title level={2}>4.8</Title>
-              <Rate disabled defaultValue={4.8} allowHalf />
-              <Text>(245 đánh giá)</Text>
+              <Title level={2}>{averageRating}</Title>
+              <Rate disabled allowHalf value={Number(averageRating)} />
+              <Text>({feedbacks.length} đánh giá)</Text>
             </div>
             <div className="right">
-              {[5, 4, 3, 2, 1].map((star) => (
-                <div className="rating-bar" key={star}>
-                  <Text>{star} sao</Text>
-                  <Progress
-                    percent={star === 5 ? 80 : star === 4 ? 15 : star === 3 ? 3 : 1}
-                    showInfo={false}
-                    strokeColor="#ff6f61"
-                    trailColor="#eee"
-                  />
-                </div>
-              ))}
+              {[5, 4, 3, 2, 1].map((star) => {
+                const count = feedbacks.filter((f) => f.rating === star).length;
+                const percent = feedbacks.length ? (count / feedbacks.length) * 100 : 0;
+                return (
+                  <div className="rating-bar" key={star}>
+                    <Text>{star} sao</Text>
+                    <Progress percent={percent} showInfo={false} strokeColor="#ffb400" trailColor="#eee" />
+                  </div>
+                );
+              })}
             </div>
           </div>
 
           <Divider />
 
           <div className="review-list">
-            {feedbacks.map((fb) => (
-              <Card key={fb.id} className="review-card">
-                <Row gutter={[16, 8]}>
-                  <Col xs={24} md={3} className="review-avatar">
-                    <Avatar src={fb.avatar} size={60} icon={<UserOutlined />} />
-                  </Col>
-                  <Col xs={24} md={21}>
-                    <div className="review-content">
-                      <Text strong>{fb.name}</Text> <Tag color="success">Verified</Tag> • <span>{fb.time}</span>
-                      <Rate disabled defaultValue={fb.rating} />
-                      <Paragraph className="comment">{fb.comment}</Paragraph>
-                      <div className="review-images">
-                        {fb.images.map((img, index) => (
-                          <Image key={index} src={img} alt="review" className="review-img" preview />
-                        ))}
+            {feedbackLoading ? (
+              <Spin tip="Đang tải đánh giá..." />
+            ) : feedbacks.length === 0 ? (
+              <p className="no-feedback">Chưa có đánh giá nào cho sản phẩm này.</p>
+            ) : (
+              feedbacks.map((fb) => (
+                <Card key={fb.feedbackId} className="review-card">
+                  <Row gutter={[16, 8]} align="middle">
+                    <Col xs={24} md={3} className="review-avatar">
+                      <Avatar
+                        src={`https://ui-avatars.com/api/?background=random&name=${encodeURIComponent(
+                          fb.customerName
+                        )}`}
+                        size={64}
+                        icon={<UserOutlined />}
+                      />
+                    </Col>
+                    <Col xs={24} md={21}>
+                      <div className="review-content">
+                        <div className="review-header">
+                          <Text strong className="reviewer-name">
+                            {fb.customerName}
+                          </Text>
+                          <span className="review-time">{new Date(fb.createdAt).toLocaleString("vi-VN")}</span>
+                        </div>
+                        <Rate disabled value={fb.rating} />
+                        <Paragraph className="comment">“{fb.comment}”</Paragraph>
                       </div>
-                    </div>
-                  </Col>
-                </Row>
-              </Card>
-            ))}
+                    </Col>
+                  </Row>
+                </Card>
+              ))
+            )}
           </div>
         </TabPane>
       </Tabs>
