@@ -4,6 +4,58 @@
   padding: 32px 16px;
   font-family: "Inter", sans-serif;
 
+  .feedback-btn {
+    align-self: flex-start;
+    background: #1890ff;
+    border-radius: 8px;
+    height: 36px;
+    padding: 0 16px;
+    font-weight: 500;
+    transition: all 0.2s;
+
+    &:hover {
+      background: #40a9ff;
+      transform: translateY(-1px);
+    }
+  }
+
+  .feedback-tag {
+    font-size: 13px;
+    align-self: flex-start;
+  }
+
+  .feedback-display {
+    background: #f5f7fa;
+    padding: 10px 14px;
+    border-radius: 10px;
+    border-left: 3px solid #1890ff;
+
+    .feedback-card {
+      margin-bottom: 10px;
+
+      .feedback-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        strong {
+          color: #333;
+          font-size: 15px;
+        }
+      }
+
+      .comment {
+        font-style: italic;
+        color: #555;
+        margin: 4px 0;
+      }
+
+      .date {
+        font-size: 12px;
+        color: #999;
+      }
+    }
+  }
+
   .container {
     max-width: 900px;
     margin: 0 auto;

@@ -301,8 +301,9 @@ const HistoryGroomingDetail = () => {
 
   // ======================= ADD SERVICE =======================
   const handleAddServices = async () => {
-    if (!id || selectedServices.length === 0) return;
+    if (!id || selectedServices.length === 0 || !detail) return;
 
+    // Lấy danh sách dịch vụ mới
     const selectedItems = groomingServices
       .filter((s) => selectedServices.includes(s.id))
       .map((s) => ({
@@ -310,11 +311,29 @@ const HistoryGroomingDetail = () => {
         price: parseInt(s.displayPrice.replace(/[^\d]/g, ""), 10),
       }));
 
-    const additionalAmount = (detail?.additionalAmount || 0) + selectedItems.reduce((sum, item) => sum + item.price, 0);
+    // Tổng giá của dịch vụ mới thêm
+    const newAddedTotal = selectedItems.reduce((sum, item) => sum + item.price, 0);
+
+    // Tổng tất cả dịch vụ hiện có
+    const totalItemsBefore = (detail.items || []).reduce((sum, item) => sum + Number(item.price || 0), 0);
+
+    // Tổng giá gốc ban đầu (dịch vụ chính, chưa giảm)
+    const baseBeforeDiscount = Number(detail.totalAmount || 0);
+
+    // Tính phần dịch vụ bổ sung (trước giảm)
+    const previousAddedBeforeDiscount =
+      totalItemsBefore > baseBeforeDiscount ? totalItemsBefore - baseBeforeDiscount : 0;
+
+    // Tổng dịch vụ bổ sung (chưa giảm)
+    const totalAddedBeforeDiscount = previousAddedBeforeDiscount + newAddedTotal;
+
+    // Áp dụng giảm giá cho phần bổ sung
+
+    // ✅ Gửi tổng dịch vụ bổ sung CHƯA GIẢM lên server
     try {
       await api.post("/api/appointment/add-service", {
         appointmentId: id,
-        additionalAmount,
+        additionalAmount: totalAddedBeforeDiscount, // gửi tổng CHƯA giảm
         items: selectedItems,
       });
       message.success("Đã thêm dịch vụ thành công!");
@@ -382,15 +401,21 @@ const HistoryGroomingDetail = () => {
     );
 
   // Tính tổng tiền các dịch vụ đã thêm (ngoài combo ban đầu)
-  const addedServicesTotal = detail.items
-    .filter((item) => !item.serviceComboName && item.serviceId) // dịch vụ đơn, không phải combo
-    .reduce((sum, item) => sum + (item.price || 0), 0);
+  const baseAfterDiscount = Number(detail.totalAmountAfter || 0); // tiền sau giảm
+  const baseBeforeDiscount = Number(detail.totalAmount || 0); // tiền gốc chưa giảm
 
-  const baseTotal = detail.totalAmountAfter || 0;
-  const additionalAmount =
-    addedServicesTotal - baseTotal > 0 ? addedServicesTotal - baseTotal : detail.additionalAmount || 0;
+  // Tổng tất cả dịch vụ hiện có (bao gồm cả dịch vụ mới thêm)
+  const itemsTotal = (detail.items || []).reduce((sum, it) => sum + Number(it.price || 0), 0);
 
-  const totalPrice = baseTotal + additionalAmount;
+  // Nếu tổng items lớn hơn tổng ban đầu → đó là phần dịch vụ bổ sung
+  const additionalAmount = itemsTotal > baseBeforeDiscount ? itemsTotal - baseBeforeDiscount : 0;
+
+  // Áp dụng giảm giá cho dịch vụ bổ sung (giống discount của đơn)
+  const discountPercent = Number(detail.discountPercent || 0);
+  const additionalAfterDiscount = Math.round((additionalAmount * (100 - discountPercent)) / 100);
+
+  // Tổng thanh toán thực tế = tiền ban đầu (đã giảm) + phần bổ sung (đã giảm)
+  const totalPrice = baseAfterDiscount + additionalAfterDiscount;
 
   const currentSpecies = speciesList.find((s) => s.id === detail.speciesId)?.speciesName || "Không xác định";
 
@@ -565,7 +590,13 @@ const HistoryGroomingDetail = () => {
                 <Descriptions.Item label="Tiền ban đầu (đã giảm)">
                   {getFormattedPrice(detail.totalAmountAfter)}
                 </Descriptions.Item>
-                <Descriptions.Item label="Dịch vụ bổ sung">{getFormattedPrice(additionalAmount)}</Descriptions.Item>
+                <Descriptions.Item label="Dịch vụ bổ sung (chưa giảm)">
+                  {getFormattedPrice(additionalAmount)}
+                </Descriptions.Item>
+                <Descriptions.Item label="Dịch vụ bổ sung (đã giảm)">
+                  {getFormattedPrice(additionalAfterDiscount)}
+                </Descriptions.Item>
+
                 <Descriptions.Item label="Tổng thanh toán">
                   <Text strong>{getFormattedPrice(totalPrice)}</Text>
                 </Descriptions.Item>
