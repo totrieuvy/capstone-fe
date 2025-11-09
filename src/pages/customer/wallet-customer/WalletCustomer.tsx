@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
-import { Card, Spin, message, Table, Tag, Button, Modal, Form, InputNumber, Radio } from "antd";
-import { WalletOutlined, PlusOutlined } from "@ant-design/icons";
+import { Card, Spin, Table, Tag, Button, Modal, Form, InputNumber, Radio, Select, Input } from "antd";
+import { WalletOutlined, PlusOutlined, MinusOutlined } from "@ant-design/icons";
+import { toast } from "react-toastify";
 import api from "../../../config/axios";
 import "./WalletCustomer.scss";
 
-// --- Interface Definitions ---
+// ======================== Interfaces ========================
 interface WalletTransaction {
   id: string;
   status: string;
@@ -24,23 +25,50 @@ interface DepositFormValues {
   paymentMethod: "VNPAY" | "PAYOS";
 }
 
-// --- Helper function to parse DD-MM-YYYY format ---
+interface WithdrawFormValues {
+  amount: number;
+  bankAccount: string;
+  bankName: string;
+  cardOwner: string;
+  note?: string;
+}
+
+interface Bank {
+  id: number;
+  name: string;
+  code: string;
+  bin: string;
+  shortName: string;
+  logo: string;
+  transferSupported: number;
+  lookupSupported: number;
+}
+
+// ======================== Helpers ========================
 const parseCustomDateString = (timeString: string): Date => {
   const [datePart, timePart] = timeString.split(" ");
   const [day, month, year] = datePart.split("-");
-  // Re-format to YYYY-MM-DDTHH:mm:ss which is reliably parsed
-  return new Date(`${year}-${month}-${day}T${timePart}`);
+  // Tạo Date object chuẩn từ giờ địa phương rồi cộng +7h (nếu cần)
+  const localDate = new Date(`${year}-${month}-${day}T${timePart}`);
+  // Cộng thêm 7 giờ để hiển thị đúng giờ Việt Nam
+  localDate.setHours(localDate.getHours() + 7);
+  return localDate;
 };
 
-// --- Component ---
+// ======================== Component ========================
 function WalletCustomer() {
   const [wallet, setWallet] = useState<WalletData | null>(null);
   const [loading, setLoading] = useState(true);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isDepositOpen, setIsDepositOpen] = useState(false);
+  const [isWithdrawOpen, setIsWithdrawOpen] = useState(false);
   const [depositing, setDepositing] = useState(false);
-  const [form] = Form.useForm();
+  const [withdrawing, setWithdrawing] = useState(false);
+  const [banks, setBanks] = useState<Bank[]>([]);
 
-  // --- Data Fetching ---
+  const [form] = Form.useForm();
+  const [withdrawForm] = Form.useForm();
+
+  // ======================== Fetch APIs ========================
   const fetchWallet = async () => {
     setLoading(true);
     try {
@@ -48,69 +76,111 @@ function WalletCustomer() {
       if (data.code === 200) {
         setWallet(data.data);
       } else {
-        message.error(data.message || "Không thể tải thông tin ví");
+        toast.error(data.message || "Không thể tải thông tin ví");
       }
     } catch {
-      message.error("Lỗi khi tải ví khách hàng");
+      toast.error("Lỗi khi tải ví khách hàng");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchBanks = async () => {
+    try {
+      const res = await fetch("https://api.vietqr.io/v2/banks");
+      const data = await res.json();
+      if (data.code === "00") setBanks(data.data);
+    } catch {
+      toast.error("Không thể tải danh sách ngân hàng");
     }
   };
 
   useEffect(() => {
     document.title = "Ví của bạn";
     fetchWallet();
+    fetchBanks();
   }, []);
 
-  // --- Modal and Deposit Handlers ---
-  const showDepositModal = () => setIsModalOpen(true);
-  const handleCancel = () => setIsModalOpen(false);
-
+  // ======================== Deposit ========================
   const handleDeposit = async (values: DepositFormValues) => {
     setDepositing(true);
     try {
-      const response = await api.post("/api/wallet/deposit", {
-        paymentMethod: values.paymentMethod,
-        amount: values.amount,
-      });
+      const response = await api.post("/api/wallet/deposit", values);
 
       if (response.data.code === 201 && response.data.data?.paymentUrl) {
-        message.success("Đang chuyển hướng đến trang thanh toán...");
+        toast.success("Đang chuyển hướng đến trang thanh toán...");
         window.location.href = response.data.data.paymentUrl;
       } else {
-        message.error(response.data.message || "Tạo giao dịch thất bại.");
+        toast.error(response.data.message || "Tạo giao dịch thất bại.");
       }
-    } catch (error) {
-      message.error("Đã xảy ra lỗi khi tạo giao dịch. Vui lòng thử lại." + (error as Error).message);
+    } catch {
+      toast.error("Đã xảy ra lỗi khi tạo giao dịch.");
     } finally {
       setDepositing(false);
-      setIsModalOpen(false);
+      setIsDepositOpen(false);
     }
   };
 
-  // --- Table Columns Definition ---
+  // ======================== Withdraw ========================
+  const handleWithdraw = async (values: WithdrawFormValues) => {
+    setWithdrawing(true);
+    try {
+      const response = await api.post("/api/wallet/withdraw", values);
+
+      if (response.data.code === 200) {
+        toast.success("Yêu cầu rút tiền đã được gửi thành công!");
+        withdrawForm.resetFields();
+        fetchWallet();
+      } else {
+        toast.error(response.data.message || "Rút tiền thất bại!");
+      }
+    } catch (err) {
+      if (err instanceof Error && "response" in err) {
+        const axiosErr = err as { response?: { data?: { message?: string } } };
+        toast.error(axiosErr.response?.data?.message || err.message || "Đã xảy ra lỗi khi rút tiền.");
+      } else {
+        toast.error("Đã xảy ra lỗi không xác định khi rút tiền.");
+      }
+    } finally {
+      setWithdrawing(false);
+      setIsWithdrawOpen(false);
+    }
+  };
+
+  // ======================== Table columns ========================
   const columns = [
+    {
+      title: "Ngày",
+      dataIndex: "transactionTime",
+      key: "date",
+      render: (time: string) => {
+        const d = parseCustomDateString(time);
+        return d.toLocaleDateString("vi-VN");
+      },
+    },
     {
       title: "Thời gian",
       dataIndex: "transactionTime",
-      key: "transactionTime",
-      // Use the helper function here
-      render: (time: string) => parseCustomDateString(time).toLocaleDateString("vi-VN"),
+      key: "time",
+      render: (time: string) => {
+        const d = parseCustomDateString(time);
+        return d.toLocaleTimeString("vi-VN", {
+          hour: "2-digit",
+          minute: "2-digit",
+          second: "2-digit",
+        });
+      },
     },
     {
       title: "Dịch vụ",
       dataIndex: "serviceName",
       key: "serviceName",
       render: (service: string) => {
-        const serviceMap: { [key: string]: string } = {
+        const serviceMap: Record<string, string> = {
           WALLET: "Nạp tiền ví ảo",
           ORDER: "Đặt hàng",
         };
-        return (
-          <Tag color="orange" className="wallet__tag">
-            {serviceMap[service] || service}
-          </Tag>
-        );
+        return <Tag color="orange">{serviceMap[service] || service}</Tag>;
       },
     },
     {
@@ -134,12 +204,12 @@ function WalletCustomer() {
             color = "red";
             text = "Thất bại";
             break;
+          case "PENDING":
+            color = "gold";
+            text = "Đang xử lý";
+            break;
         }
-        return (
-          <Tag color={color} className="wallet__tag">
-            {text}
-          </Tag>
-        );
+        return <Tag color={color}>{text}</Tag>;
       },
     },
     {
@@ -151,14 +221,12 @@ function WalletCustomer() {
     },
   ];
 
-  // Sort transactions by time descending using the helper function
-  const sortedTransactions = wallet
-    ? [...wallet.walletTransaction].sort(
-        (a, b) =>
-          parseCustomDateString(b.transactionTime).getTime() - parseCustomDateString(a.transactionTime).getTime()
-      )
-    : [];
+  const sortedTransactions =
+    wallet?.walletTransaction?.sort(
+      (a, b) => parseCustomDateString(b.transactionTime).getTime() - parseCustomDateString(a.transactionTime).getTime()
+    ) || [];
 
+  // ======================== JSX ========================
   return (
     <>
       <div className="wallet-container">
@@ -169,7 +237,7 @@ function WalletCustomer() {
                 <h2>💰 Ví của bạn</h2>
               </div>
 
-              {/* Balance Card */}
+              {/* Balance card */}
               <Card className="wallet__card wallet__balance-card" hoverable>
                 <div className="wallet__balance-content">
                   <div className="wallet__icon-container">
@@ -179,47 +247,51 @@ function WalletCustomer() {
                     <p className="wallet__balance-label">Số dư hiện tại</p>
                     <p className="wallet__balance-amount">{wallet.balance.toLocaleString("vi-VN")} đ</p>
                   </div>
-                  <Button type="primary" icon={<PlusOutlined />} className="wallet__add-btn" onClick={showDepositModal}>
-                    Nạp tiền
-                  </Button>
+
+                  <div className="wallet__btn-group">
+                    <Button
+                      type="primary"
+                      icon={<PlusOutlined />}
+                      className="wallet__add-btn"
+                      onClick={() => setIsDepositOpen(true)}
+                    >
+                      Nạp tiền
+                    </Button>
+                    <Button
+                      danger
+                      icon={<MinusOutlined />}
+                      className="wallet__withdraw-btn"
+                      onClick={() => setIsWithdrawOpen(true)}
+                    >
+                      Rút tiền
+                    </Button>
+                  </div>
                 </div>
                 <p className="wallet__created">
-                  Ví được tạo ngày {new Date(String(wallet.createdAt)).toLocaleDateString("vi-VN")}
+                  Ví được tạo ngày {new Date(wallet.createdAt).toLocaleDateString("vi-VN")}
                 </p>
               </Card>
 
-              {/* Transactions Card */}
+              {/* Transaction history */}
               <Card className="wallet__card wallet__transaction-card" hoverable>
                 <h3>Lịch sử giao dịch</h3>
-                <Table
-                  columns={columns}
-                  dataSource={sortedTransactions}
-                  pagination={{ pageSize: 5 }} // Show 5 items per page
-                  rowKey="id"
-                  size="middle"
-                />
+                <Table columns={columns} dataSource={sortedTransactions} pagination={{ pageSize: 6 }} rowKey="id" />
               </Card>
             </>
           )}
         </Spin>
       </div>
 
-      {/* Deposit Modal */}
+      {/* Modal Nạp tiền */}
       <Modal
         title="Nạp tiền vào ví"
-        open={isModalOpen}
-        onCancel={handleCancel}
+        open={isDepositOpen}
+        onCancel={() => setIsDepositOpen(false)}
         footer={[
-          <Button key="back" onClick={handleCancel}>
+          <Button key="back" onClick={() => setIsDepositOpen(false)}>
             Hủy
           </Button>,
-          <Button
-            key="submit"
-            type="primary"
-            loading={depositing}
-            onClick={() => form.submit()}
-            className="wallet__add-btn"
-          >
+          <Button key="submit" type="primary" loading={depositing} onClick={() => form.submit()}>
             Thanh toán
           </Button>,
         ]}
@@ -233,10 +305,8 @@ function WalletCustomer() {
           <Form.Item name="amount" label="Số tiền" rules={[{ required: true, message: "Vui lòng nhập số tiền!" }]}>
             <InputNumber
               style={{ width: "100%" }}
-              formatter={(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",")}
-              parser={(value: string | undefined): string | number => {
-                return value ? value.replace(/\$\s?|(,*)/g, "") : "";
-              }}
+              formatter={(v?: string | number) => `${v ?? ""}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",")}
+              parser={(v?: string) => (v ? v.replace(/,/g, "") : "")}
               min={10000}
               step={10000}
             />
@@ -250,6 +320,52 @@ function WalletCustomer() {
               <Radio value="VNPAY">VNPAY</Radio>
               <Radio value="PAYOS">PAYOS</Radio>
             </Radio.Group>
+          </Form.Item>
+        </Form>
+      </Modal>
+
+      {/* Modal Rút tiền */}
+      <Modal
+        title="Rút tiền từ ví"
+        open={isWithdrawOpen}
+        onCancel={() => setIsWithdrawOpen(false)}
+        footer={[
+          <Button key="cancel" onClick={() => setIsWithdrawOpen(false)}>
+            Hủy
+          </Button>,
+          <Button key="submit" type="primary" loading={withdrawing} onClick={() => withdrawForm.submit()}>
+            Xác nhận rút
+          </Button>,
+        ]}
+      >
+        <Form form={withdrawForm} layout="vertical" onFinish={handleWithdraw}>
+          <Form.Item name="amount" label="Số tiền muốn rút" rules={[{ required: true }]}>
+            <InputNumber
+              style={{ width: "100%" }}
+              min={10000}
+              formatter={(v?: string | number) => `${v ?? ""}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",")}
+              parser={(v?: string) => (v ? v.replace(/,/g, "") : "")}
+            />
+          </Form.Item>
+          <Form.Item name="bankName" label="Ngân hàng" rules={[{ required: true }]}>
+            <Select
+              showSearch
+              placeholder="Chọn ngân hàng"
+              options={banks.map((b) => ({
+                label: `${b.name} - ${b.shortName}`,
+                value: `${b.name} - ${b.shortName}`,
+              }))}
+            />
+          </Form.Item>
+
+          <Form.Item name="bankAccount" label="Số tài khoản" rules={[{ required: true }]}>
+            <Input placeholder="Nhập số tài khoản" />
+          </Form.Item>
+          <Form.Item name="cardOwner" label="Tên chủ thẻ" rules={[{ required: true }]}>
+            <Input placeholder="Nhập tên chủ thẻ" />
+          </Form.Item>
+          <Form.Item name="note" label="Ghi chú">
+            <Input.TextArea rows={2} placeholder="Ghi chú (không bắt buộc)" />
           </Form.Item>
         </Form>
       </Modal>
