@@ -456,6 +456,7 @@ export interface AppointmentDetail {
   staff: any | null;
   veterinarian: Veterinarian | null;
   prescription: Prescription | null;
+  discountPercent: number;
   items: AppointmentItemDetail[];
 }
 

@@ -837,7 +837,7 @@ const BoardingDetail: React.FC = () => {
                           title={
                             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                               <HomeOutlined style={{ color: '#1890ff' }} />
-                              <span>Chuồng {cage.cageId}</span>
+                              <span>{cage.cageName}</span>
                             </div>
                           }
                           description={

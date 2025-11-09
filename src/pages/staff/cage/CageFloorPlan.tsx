@@ -61,36 +61,37 @@ const CageFloorPlan: React.FC = () => {
     loadCages();
   }, [selectedCageTypeId]);
 
+  // Function to update temperature data
+  const updateTemperatureData = useCallback(async () => {
+    const currentCages = cagesRef.current;
+    if (currentCages.length === 0) return;
+
+    try {
+      const updatedCages = await Promise.all(
+        currentCages.map(async (cage) => {
+          if (cage.iotCode) {
+            try {
+              const temperatureData = await getTemperature(cage.iotCode);
+              return {
+                ...cage,
+                temperatureData
+              };
+            } catch (error) {
+              console.warn(`Failed to get temperature for IoT ${cage.iotCode}:`, error);
+              return cage;
+            }
+          }
+          return cage;
+        })
+      );
+      setCages(updatedCages);
+    } catch (error) {
+      console.error('Error updating temperature data:', error);
+    }
+  }, []);
+
   // Update temperature data every 2 seconds
   useEffect(() => {
-    const updateTemperatureData = useCallback(async () => {
-      const currentCages = cagesRef.current;
-      if (currentCages.length === 0) return;
-
-      try {
-        const updatedCages = await Promise.all(
-          currentCages.map(async (cage) => {
-            if (cage.iotCode) {
-              try {
-                const temperatureData = await getTemperature(cage.iotCode);
-                return {
-                  ...cage,
-                  temperatureData
-                };
-              } catch (error) {
-                console.warn(`Failed to get temperature for IoT ${cage.iotCode}:`, error);
-                return cage;
-              }
-            }
-            return cage;
-          })
-        );
-        setCages(updatedCages);
-      } catch (error) {
-        console.error('Error updating temperature data:', error);
-      }
-    }, []);
-
     // Set up interval to update temperature data every 2 seconds
     intervalRef.current = setInterval(updateTemperatureData, 2000);
 
@@ -101,7 +102,7 @@ const CageFloorPlan: React.FC = () => {
         intervalRef.current = null;
       }
     };
-  }, []); // Empty dependency array since we use ref for latest cage data
+  }, [updateTemperatureData]); // Include updateTemperatureData in dependency array
 
   const loadInitialData = async () => {
     try {

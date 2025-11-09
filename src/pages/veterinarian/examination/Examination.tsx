@@ -415,8 +415,12 @@ const Examination: React.FC = () => {
     try {
       setSubmittingServices(true);
       
-      // Calculate additionalAmount from service prices (already parsed from displayPrice)
-      const totalAdditionalAmount = selectedServices.reduce((sum, service) => sum + service.price, 0);
+      // Calculate new services amount from currently selected services
+      const newServicesAmount = selectedServices.reduce((sum, service) => sum + service.price, 0);
+      
+      // Add to existing additional amount to preserve previously added services
+      const currentAdditionalAmount = appointmentData?.additionalAmount || 0;
+      const totalAdditionalAmount = currentAdditionalAmount + newServicesAmount;
       
       const addServiceRequest = {
         appointmentId: appointmentId!,
@@ -843,7 +847,8 @@ const Examination: React.FC = () => {
   };
 
   const calculateTotalAdditional = () => {
-    // Calculate from the parsed price values of selected services
+    // Calculate from the parsed price values of currently selected services in UI only
+    // This is for display purposes - the actual additionalAmount includes all previously added services
     return selectedServices.reduce((sum, service) => sum + service.price, 0);
   };
 
