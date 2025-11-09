@@ -72,6 +72,7 @@ import MedicalPaymentFailure from "./pages/staff/medical/payment-screen/MedicalP
 import MedicalPaymentSuccess from "./pages/staff/medical/payment-screen/MedicalPaymentSuccess";
 import CageFloorPlan from "./pages/staff/cage/CageFloorPlan";
 import Policy from "./pages/admin/policy/Policy";
+import WithDraw from "./pages/admin/withdraw/WithDraw";
 
 interface User {
   id: number;
@@ -270,6 +271,7 @@ const App = () => {
           path: "",
           element: <SideBar />,
           children: [
+            { path: "don-rut-tien", element: <WithDraw /> },
             { path: "quan-li-tai-khoan", element: <ManageAccount /> },
             { path: "thong-ke", element: <Dashboard /> },
             { path: "quan-li-loai-hamster", element: <Species /> },
