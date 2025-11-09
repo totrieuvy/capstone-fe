@@ -159,6 +159,11 @@ const Examination: React.FC = () => {
   const [availableMedicines, setAvailableMedicines] = useState<Medicine[]>([]);
   const [prescriptionMedicines, setPrescriptionMedicines] = useState<PrescriptionMedicine[]>([]);
   const [submittingPrescription, setSubmittingPrescription] = useState(false);
+  
+  // Medicine modal state
+  const [medicineModalVisible, setMedicineModalVisible] = useState(false);
+  const [medicineForm] = Form.useForm();
+  const [editingMedicineIndex, setEditingMedicineIndex] = useState<number | null>(null);
 
   // Image preview modal states
   const [imagePreviewVisible, setImagePreviewVisible] = useState<boolean>(false);
@@ -258,29 +263,70 @@ const Examination: React.FC = () => {
     }
   };
 
-  // Add medicine to prescription
+  // Add medicine to prescription - open modal
   const handleAddMedicine = () => {
-    const newMedicine: PrescriptionMedicine = {
-      medicineId: '',
-      dosage: '',
-      note: '',
-      durationDays: 1
-    };
-    setPrescriptionMedicines([...prescriptionMedicines, newMedicine]);
+    setEditingMedicineIndex(null);
+    medicineForm.resetFields();
+    setMedicineModalVisible(true);
+  };
+
+  // Edit medicine - open modal with existing data
+  const handleEditMedicine = (index: number) => {
+    const medicine = prescriptionMedicines[index];
+    setEditingMedicineIndex(index);
+    medicineForm.setFieldsValue({
+      medicineId: medicine.medicineId,
+      dosage: medicine.dosage,
+      note: medicine.note,
+      durationDays: medicine.durationDays
+    });
+    setMedicineModalVisible(true);
+  };
+
+  // Save medicine from modal
+  const handleSaveMedicine = async () => {
+    try {
+      const values = await medicineForm.validateFields();
+      
+      const newMedicine: PrescriptionMedicine = {
+        medicineId: values.medicineId,
+        dosage: values.dosage,
+        note: values.note || '',
+        durationDays: values.durationDays
+      };
+
+      if (editingMedicineIndex !== null) {
+        // Update existing medicine
+        const updatedMedicines = [...prescriptionMedicines];
+        updatedMedicines[editingMedicineIndex] = newMedicine;
+        setPrescriptionMedicines(updatedMedicines);
+        toast.success('Đã cập nhật thuốc thành công');
+      } else {
+        // Add new medicine
+        setPrescriptionMedicines([...prescriptionMedicines, newMedicine]);
+        toast.success('Đã thêm thuốc thành công');
+      }
+      
+      setMedicineModalVisible(false);
+      medicineForm.resetFields();
+      setEditingMedicineIndex(null);
+    } catch (error) {
+      console.error('Validation failed:', error);
+    }
+  };
+
+  // Cancel medicine modal
+  const handleCancelMedicineModal = () => {
+    setMedicineModalVisible(false);
+    medicineForm.resetFields();
+    setEditingMedicineIndex(null);
   };
 
   // Remove medicine from prescription
   const handleRemoveMedicine = (index: number) => {
     const updatedMedicines = prescriptionMedicines.filter((_, i) => i !== index);
     setPrescriptionMedicines(updatedMedicines);
-  };
-
-  // Update medicine in prescription
-  const handleUpdateMedicine = (index: number, field: keyof PrescriptionMedicine, value: string | number) => {
-    const updatedMedicines = prescriptionMedicines.map((medicine, i) => 
-      i === index ? { ...medicine, [field]: value } : medicine
-    );
-    setPrescriptionMedicines(updatedMedicines);
+    toast.success('Đã xóa thuốc khỏi đơn');
   };
 
   // Submit prescription
@@ -1255,30 +1301,52 @@ const Examination: React.FC = () => {
                       <Col span={24}>
                         <Text strong style={{ fontSize: '16px' }}>Mã đơn thuốc: {appointmentData.prescription.id}</Text>
                       </Col>
-                      {appointmentData.prescription.medicines.map((medicine, index) => (
-                        <Col span={24} key={medicine.id}>
-                          <Card size="small" style={{ marginBottom: 8, border: '1px solid #d9f7be' }}>
-                            <Row gutter={[16, 8]} align="middle">
-                              <Col xs={24} md={6}>
-                                <Text strong style={{ color: '#389e0d' }}>Thuốc {index + 1}:</Text>
-                                <div>{medicine.medicineName}</div>
-                              </Col>
-                              <Col xs={24} md={6}>
-                                <Text strong>Liều dùng:</Text>
-                                <div>{medicine.dosage}</div>
-                              </Col>
-                              <Col xs={24} md={4}>
-                                <Text strong>Thời gian:</Text>
-                                <div>{medicine.durationDays} ngày</div>
-                              </Col>
-                              <Col xs={24} md={8}>
-                                <Text strong>Ghi chú:</Text>
-                                <div>{medicine.note || 'Không có ghi chú'}</div>
-                              </Col>
-                            </Row>
-                          </Card>
-                        </Col>
-                      ))}
+                      <Col span={24}>
+                        <Collapse
+                          bordered={false}
+                          defaultActiveKey={['1']}
+                          expandIcon={({ isActive }) => <CaretRightOutlined rotate={isActive ? 90 : 0} />}
+                          style={{ background: '#f6ffed' }}
+                          items={[
+                            {
+                              key: '1',
+                              label: (
+                                <Text strong style={{ color: '#389e0d' }}>
+                                  Danh sách thuốc ({appointmentData.prescription.medicines.length} loại)
+                                </Text>
+                              ),
+                              children: (
+                                <Row gutter={[16, 16]}>
+                                  {appointmentData.prescription.medicines.map((medicine, index) => (
+                                    <Col span={24} key={medicine.id}>
+                                      <Card size="small" style={{ marginBottom: 8, border: '1px solid #d9f7be' }}>
+                                        <Row gutter={[16, 8]} align="middle">
+                                          <Col xs={24} md={6}>
+                                            <Text strong style={{ color: '#389e0d' }}>Thuốc {index + 1}:</Text>
+                                            <div>{medicine.medicineName}</div>
+                                          </Col>
+                                          <Col xs={24} md={6}>
+                                            <Text strong>Liều dùng:</Text>
+                                            <div>{medicine.dosage}</div>
+                                          </Col>
+                                          <Col xs={24} md={4}>
+                                            <Text strong>Thời gian:</Text>
+                                            <div>{medicine.durationDays} ngày</div>
+                                          </Col>
+                                          <Col xs={24} md={8}>
+                                            <Text strong>Ghi chú:</Text>
+                                            <div>{medicine.note || 'Không có ghi chú'}</div>
+                                          </Col>
+                                        </Row>
+                                      </Card>
+                                    </Col>
+                                  ))}
+                                </Row>
+                              )
+                            }
+                          ]}
+                        />
+                      </Col>
                     </Row>
                   </Card>
                 </Col>
@@ -1293,100 +1361,100 @@ const Examination: React.FC = () => {
                       <Col span={24}>
                         <div style={{ marginBottom: 16 }}>
                           <Button 
-                            type="dashed" 
+                            type="primary" 
                             icon={<PlusOutlined />}
                             onClick={handleAddMedicine}
-                            block
+                            size="large"
+                            style={{ width: '100%', height: '50px' }}
                           >
-                            Thêm thuốc vào đơn
+                            Thêm đơn thuốc
                           </Button>
                         </div>
                       </Col>
 
-                      {prescriptionMedicines.map((medicine, index) => (
-                        <Col span={24} key={index}>
-                          <Card 
-                            size="small" 
-                            style={{ marginBottom: 16 }}
-                            title={`Thuốc ${index + 1}`}
-                            extra={
-                              <Button 
-                                type="text" 
-                                danger 
-                                icon={<DeleteOutlined />}
-                                onClick={() => handleRemoveMedicine(index)}
-                              >
-                                Xóa
-                              </Button>
-                            }
-                          >
-                            <Row gutter={[16, 16]}>
-                              <Col xs={24} md={12}>
-                                <Form.Item
-                                  label="Tên thuốc"
-                                  required
-                                >
-                                  <Select
-                                    placeholder="Chọn thuốc"
-                                    value={medicine.medicineId || undefined}
-                                    onChange={(value) => handleUpdateMedicine(index, 'medicineId', value)}
-                                    showSearch
-                                    optionFilterProp="children"
-                                    filterOption={(input, option) =>
-                                      (option?.label?.toString() || '').toLowerCase().indexOf(input.toLowerCase()) >= 0
-                                    }
-                                  >
-                                    {availableMedicines.map(med => (
-                                      <Option key={med.id} value={med.id} label={med.medicationName}>
-                                        {med.medicationName}
-                                      </Option>
-                                    ))}
-                                  </Select>
-                                </Form.Item>
-                              </Col>
-                              <Col xs={24} md={12}>
-                                <Form.Item
-                                  label="Liều dùng"
-                                  required
-                                >
-                                  <Input
-                                    placeholder="VD: 1 viên/ngày, 2 lần/ngày"
-                                    value={medicine.dosage}
-                                    onChange={(e) => handleUpdateMedicine(index, 'dosage', e.target.value)}
-                                  />
-                                </Form.Item>
-                              </Col>
-                              <Col xs={24} md={8}>
-                                <Form.Item
-                                  label="Số ngày"
-                                  required
-                                >
-                                  <InputNumber
-                                    min={1}
-                                    max={365}
-                                    value={medicine.durationDays}
-                                    onChange={(value) => handleUpdateMedicine(index, 'durationDays', value || 1)}
-                                    placeholder="Số ngày"
-                                    style={{ width: '100%' }}
-                                  />
-                                </Form.Item>
-                              </Col>
-                              <Col xs={24} md={16}>
-                                <Form.Item
-                                  label="Ghi chú"
-                                >
-                                  <TextArea
-                                    rows={2}
-                                    placeholder="Ghi chú cách sử dụng..."
-                                    value={medicine.note}
-                                    onChange={(e) => handleUpdateMedicine(index, 'note', e.target.value)}
-                                  />
-                                </Form.Item>
-                              </Col>
-                            </Row>
-                          </Card>
+                      {prescriptionMedicines.length > 0 && (
+                        <Col span={24}>
+                          <Collapse
+                            bordered={false}
+                            defaultActiveKey={['prescription']}
+                            expandIcon={({ isActive }) => <CaretRightOutlined rotate={isActive ? 90 : 0} />}
+                            style={{ background: '#fafafa' }}
+                            items={[
+                              {
+                                key: 'prescription',
+                                label: (
+                                  <Text strong style={{ color: '#1890ff' }}>
+                                    Đơn thuốc đang soạn ({prescriptionMedicines.length} loại thuốc)
+                                  </Text>
+                                ),
+                                children: (
+                                  <Row gutter={[16, 16]}>
+                                    {prescriptionMedicines.map((medicine, index) => {
+                                      const selectedMedicine = availableMedicines.find(med => med.id === medicine.medicineId);
+                                      return (
+                                        <Col span={24} key={index}>
+                                          <Card 
+                                            size="small" 
+                                            style={{ marginBottom: 16, border: '1px solid #d9d9d9' }}
+                                            title={
+                                              <Space>
+                                                <Text strong style={{ color: '#1890ff' }}>Thuốc {index + 1}</Text>
+                                                <Tag color="blue">{selectedMedicine?.medicationName || 'Chưa chọn thuốc'}</Tag>
+                                              </Space>
+                                            }
+                                            extra={
+                                              <Space>
+                                                <Button 
+                                                  type="text" 
+                                                  icon={<FileTextOutlined />}
+                                                  onClick={() => handleEditMedicine(index)}
+                                                  title="Chỉnh sửa"
+                                                >
+                                                  Sửa
+                                                </Button>
+                                                <Button 
+                                                  type="text" 
+                                                  danger 
+                                                  icon={<DeleteOutlined />}
+                                                  onClick={() => handleRemoveMedicine(index)}
+                                                  title="Xóa"
+                                                >
+                                                  Xóa
+                                                </Button>
+                                              </Space>
+                                            }
+                                          >
+                                            <Row gutter={[16, 8]}>
+                                              <Col xs={24} md={8}>
+                                                <Text strong>Liều dùng:</Text>
+                                                <div className="medicine-info-box">
+                                                  {medicine.dosage || 'Chưa nhập'}
+                                                </div>
+                                              </Col>
+                                              <Col xs={24} md={4}>
+                                                <Text strong>Thời gian:</Text>
+                                                <div className="medicine-info-box">
+                                                  {medicine.durationDays} ngày
+                                                </div>
+                                              </Col>
+                                              <Col xs={24} md={12}>
+                                                <Text strong>Ghi chú:</Text>
+                                                <div className="medicine-info-box">
+                                                  {medicine.note || 'Không có ghi chú'}
+                                                </div>
+                                              </Col>
+                                            </Row>
+                                          </Card>
+                                        </Col>
+                                      );
+                                    })}
+                                  </Row>
+                                )
+                              }
+                            ]}
+                          />
                         </Col>
-                      ))}
+                      )}
                     </Row>
                   </Form>
                 </Col>
@@ -1564,6 +1632,95 @@ const Examination: React.FC = () => {
           </Card>
         )}
       </div>
+
+      {/* Medicine Modal */}
+      <Modal
+        title={editingMedicineIndex !== null ? "Chỉnh sửa thuốc" : "Thêm thuốc vào đơn"}
+        open={medicineModalVisible}
+        onOk={handleSaveMedicine}
+        onCancel={handleCancelMedicineModal}
+        width={600}
+        okText={editingMedicineIndex !== null ? "Cập nhật" : "Thêm thuốc"}
+        cancelText="Hủy"
+      >
+        <Form
+          form={medicineForm}
+          layout="vertical"
+          requiredMark={true}
+        >
+          <Row gutter={[16, 16]}>
+            <Col span={24}>
+              <Form.Item
+                label="Tên thuốc"
+                name="medicineId"
+                rules={[{ required: true, message: 'Vui lòng chọn thuốc!' }]}
+              >
+                <Select
+                  placeholder="Chọn thuốc"
+                  showSearch
+                  optionFilterProp="children"
+                  filterOption={(input, option) =>
+                    (option?.label?.toString() || '').toLowerCase().indexOf(input.toLowerCase()) >= 0
+                  }
+                  size="large"
+                >
+                  {availableMedicines.map(med => (
+                    <Option key={med.id} value={med.id} label={med.medicationName}>
+                      <div style={{ fontWeight: 'bold' }}>{med.medicationName}</div>
+                    </Option>
+                  ))}
+                </Select>
+              </Form.Item>
+            </Col>
+            
+            <Col xs={24} md={16}>
+              <Form.Item
+                label="Liều dùng"
+                name="dosage"
+                rules={[{ required: true, message: 'Vui lòng nhập liều dùng!' }]}
+              >
+                <Input
+                  placeholder="VD: 1 viên/ngày, 2 lần/ngày, uống sau ăn"
+                  size="large"
+                />
+              </Form.Item>
+            </Col>
+            
+            <Col xs={24} md={8}>
+              <Form.Item
+                label="Số ngày"
+                name="durationDays"
+                rules={[
+                  { required: true, message: 'Vui lòng nhập số ngày!' },
+                  { type: 'number', min: 1, max: 365, message: 'Số ngày phải từ 1 đến 365!' }
+                ]}
+              >
+                <InputNumber
+                  min={1}
+                  max={365}
+                  placeholder="Số ngày"
+                  style={{ width: '100%' }}
+                  size="large"
+                />
+              </Form.Item>
+            </Col>
+            
+            <Col span={24}>
+              <Form.Item
+                label="Ghi chú"
+                name="note"
+              >
+                <TextArea
+                  rows={3}
+                  placeholder="Ghi chú cách sử dụng, lưu ý đặc biệt..."
+                  maxLength={500}
+                  showCount
+                />
+              </Form.Item>
+            </Col>
+          </Row>
+        </Form>
+      </Modal>
 
       {/* Image Preview Modal */}
       <Modal

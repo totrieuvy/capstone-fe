@@ -583,11 +583,18 @@ const VetAppointmentDetail: React.FC = () => {
                   </Text>
                 </Descriptions.Item>
                 {appointment.additionalAmount && (
-                  <Descriptions.Item label="Phụ phí">
-                    <Text style={{ color: '#faad14' }}>
-                      {formatPrice(appointment.additionalAmount)}
-                    </Text>
-                  </Descriptions.Item>
+                  <>
+                    <Descriptions.Item label="Phụ phí">
+                      <Text style={{ color: '#faad14' }}>
+                        {formatPrice(appointment.additionalAmount)}
+                      </Text>
+                    </Descriptions.Item>
+                    <Descriptions.Item label={`Phụ phí sau giảm (${appointment.discountPercent}%)`}>
+                      <Text style={{ color: '#52c41a' }}>
+                        {formatPrice(appointment.additionalAmount * (1 - appointment.discountPercent / 100))}
+                      </Text>
+                    </Descriptions.Item>
+                  </>
                 )}
                 <Descriptions.Item label="Phương thức thanh toán">
                   <Tag color={appointment.paymentMethod === 'PAID_AFTER' ? 'orange' : 'green'}>
