@@ -35,10 +35,8 @@ import {
   EyeOutlined,
   ExperimentOutlined,
   ClockCircleOutlined,
-  InfoCircleOutlined,
   UploadOutlined,
   AlertOutlined,
-  FieldTimeOutlined,
   FileProtectOutlined,
 } from "@ant-design/icons";
 import { useNavigate, useParams } from "react-router-dom";
