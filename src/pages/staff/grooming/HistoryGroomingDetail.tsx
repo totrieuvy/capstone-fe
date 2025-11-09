@@ -310,8 +310,7 @@ const HistoryGroomingDetail = () => {
         price: parseInt(s.displayPrice.replace(/[^\d]/g, ""), 10),
       }));
 
-    const additionalAmount = selectedItems.reduce((sum, item) => sum + item.price, 0);
-
+    const additionalAmount = (detail?.additionalAmount || 0) + selectedItems.reduce((sum, item) => sum + item.price, 0);
     try {
       await api.post("/api/appointment/add-service", {
         appointmentId: id,

@@ -64,6 +64,32 @@ const AiChat: React.FC = () => {
 
   const recognitionRef = useRef<ISpeechRecognition | null>(null);
 
+  const formatAnswerText = (text: string): string => {
+    if (!text) return text;
+
+    return (
+      text
+        // 1️⃣ Làm đậm tiêu đề nhóm dịch vụ chính
+        .replace(/\*\*(Dịch vụ [^*]+):\*\*/g, "<strong>$1</strong>")
+
+        // 2️⃣ Làm đậm tên dịch vụ con
+        .replace(/^\*\s+\*\*(.+?):\*\*/gm, "• <strong>$1:</strong>")
+
+        // 3️⃣ Làm đậm **mọi đoạn khác** còn lại
+        .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
+
+        // 4️⃣ Dấu chấm đầu dòng cho các dòng bắt đầu bằng *
+        .replace(/^\*\s+(?!<strong>)(.+)$/gm, "• $1")
+
+        // 5️⃣ Xuống dòng cho dễ đọc
+        .replace(/\n/g, "<br/>")
+
+        // 6️⃣ Dọn khoảng trắng dư
+        .replace(/\s+/g, " ")
+        .trim()
+    );
+  };
+
   const suggestedQuestions = [
     "Tui có hamster gì?",
     "Hamster của tui có khỏe không?",
@@ -81,14 +107,7 @@ const AiChat: React.FC = () => {
       const res = await api.post("/api/chat/ai", body);
 
       let reply = res.data?.data?.message || "Xin lỗi, mình chưa hiểu ý bạn 😅";
-
-      reply = reply.replace(/\*\*(Dịch vụ [^*]+):\*\*/g, "<strong>$1</strong>");
-
-      // 2️⃣ Làm đậm tên dịch vụ con (ví dụ: *   **Tắm Cát (Xịn):**)
-      reply = reply.replace(/\*\s+\*\*(.+?):\*\*/g, "• <strong>$1:</strong>");
-
-      // 3️⃣ Thay xuống dòng cho dễ đọc (giữa các mục)
-      reply = reply.replace(/\n/g, "<br/>");
+      reply = formatAnswerText(reply);
 
       const newId = res.data?.data?.conversationId;
 
