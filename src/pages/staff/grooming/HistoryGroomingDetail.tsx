@@ -307,7 +307,7 @@ const HistoryGroomingDetail = () => {
       .filter((s) => selectedServices.includes(s.id))
       .map((s) => ({
         serviceId: s.id,
-        price: parseFloat(s.displayPrice),
+        price: parseInt(s.displayPrice.replace(/[^\d]/g, ""), 10),
       }));
 
     const additionalAmount = selectedItems.reduce((sum, item) => sum + item.price, 0);
@@ -382,7 +382,16 @@ const HistoryGroomingDetail = () => {
       </div>
     );
 
-  const totalPrice = (detail.totalAmountAfter || 0) + (detail.additionalAmount || 0);
+  // Tính tổng tiền các dịch vụ đã thêm (ngoài combo ban đầu)
+  const addedServicesTotal = detail.items
+    .filter((item) => !item.serviceComboName && item.serviceId) // dịch vụ đơn, không phải combo
+    .reduce((sum, item) => sum + (item.price || 0), 0);
+
+  const baseTotal = detail.totalAmountAfter || 0;
+  const additionalAmount =
+    addedServicesTotal - baseTotal > 0 ? addedServicesTotal - baseTotal : detail.additionalAmount || 0;
+
+  const totalPrice = baseTotal + additionalAmount;
 
   const currentSpecies = speciesList.find((s) => s.id === detail.speciesId)?.speciesName || "Không xác định";
 
@@ -557,9 +566,7 @@ const HistoryGroomingDetail = () => {
                 <Descriptions.Item label="Tiền ban đầu (đã giảm)">
                   {getFormattedPrice(detail.totalAmountAfter)}
                 </Descriptions.Item>
-                <Descriptions.Item label="Dịch vụ bổ sung">
-                  {getFormattedPrice(detail.additionalAmount || 0)}
-                </Descriptions.Item>
+                <Descriptions.Item label="Dịch vụ bổ sung">{getFormattedPrice(additionalAmount)}</Descriptions.Item>
                 <Descriptions.Item label="Tổng thanh toán">
                   <Text strong>{getFormattedPrice(totalPrice)}</Text>
                 </Descriptions.Item>
