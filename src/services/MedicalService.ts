@@ -117,6 +117,7 @@ export interface CreateAppointmentRequest {
   slotEnd: string;
   serviceType: "MEDICAL";
   items: AppointmentItem[];
+  isConfirmed: true;
 }
 
 export interface CreateAppointmentResponse {
@@ -168,7 +169,9 @@ export interface AppointmentListResponse {
   data: AppointmentListData;
 }
 
-export const getServicesByType = async (serviceType: "MEDICAL" | "FOOD" | "GROOMING" = "MEDICAL"): Promise<ServiceResponse> => {
+export const getServicesByType = async (
+  serviceType: "MEDICAL" | "FOOD" | "GROOMING" = "MEDICAL"
+): Promise<ServiceResponse> => {
   try {
     const response = await api.get<ServiceResponse>(`/api/services/type/${serviceType}`);
     return response.data;
@@ -223,7 +226,10 @@ export interface UpdateServiceResponse {
   message: string;
 }
 
-export const updateService = async (serviceId: string, serviceData: UpdateServiceRequest): Promise<UpdateServiceResponse> => {
+export const updateService = async (
+  serviceId: string,
+  serviceData: UpdateServiceRequest
+): Promise<UpdateServiceResponse> => {
   try {
     const response = await api.put<UpdateServiceResponse>(`/api/services/grooming-medical/${serviceId}`, serviceData);
     return response.data;
@@ -265,7 +271,9 @@ export const getMembership = async (): Promise<{ code: number; data: Membership 
   }
 };
 
-export const getMedicalServicePriceBySpecies = async (speciesId: string): Promise<{ code: number; data: MedicalPriceItem[] }> => {
+export const getMedicalServicePriceBySpecies = async (
+  speciesId: string
+): Promise<{ code: number; data: MedicalPriceItem[] }> => {
   try {
     const response = await api.get<{ code: number; data: MedicalPriceItem[] }>(`/api/services/species/${speciesId}`);
     return response.data;
@@ -278,10 +286,10 @@ export const getMedicalServicePriceBySpecies = async (speciesId: string): Promis
 export const getSlots = async (fromDate: string, toDate: string): Promise<{ code: number; data: SlotData[] }> => {
   try {
     const response = await api.get<{ code: number; data: SlotData[] }>("/api/slot", {
-      params: { 
-        from: fromDate, 
-        to: toDate, 
-        serviceType: "MEDICAL" 
+      params: {
+        from: fromDate,
+        to: toDate,
+        serviceType: "MEDICAL",
       },
     });
     return response.data;
@@ -292,17 +300,17 @@ export const getSlots = async (fromDate: string, toDate: string): Promise<{ code
 };
 
 export const getSlotsByPersonId = async (
-  personId: string, 
-  fromDate: string, 
-  toDate: string, 
+  personId: string,
+  fromDate: string,
+  toDate: string,
   serviceType: "MEDICAL" | "GROOMING" | "FOOD" = "MEDICAL"
 ): Promise<{ code: number; message: string; data: SlotData[] }> => {
   try {
     const response = await api.get<{ code: number; message: string; data: SlotData[] }>(`/api/slot/${personId}`, {
-      params: { 
-        from: fromDate, 
-        to: toDate, 
-        serviceType 
+      params: {
+        from: fromDate,
+        to: toDate,
+        serviceType,
       },
     });
     return response.data;
@@ -312,7 +320,9 @@ export const getSlotsByPersonId = async (
   }
 };
 
-export const createAppointment = async (appointmentData: CreateAppointmentRequest): Promise<CreateAppointmentResponse> => {
+export const createAppointment = async (
+  appointmentData: CreateAppointmentRequest
+): Promise<CreateAppointmentResponse> => {
   try {
     const response = await api.post<CreateAppointmentResponse>("/api/appointment", appointmentData);
     return response.data;
@@ -336,9 +346,7 @@ export const getAppointments = async (filters: AppointmentFilters = {}): Promise
     };
 
     // Remove undefined values to avoid sending them as query parameters
-    const cleanParams = Object.fromEntries(
-      Object.entries(params).filter(([_, value]) => value !== undefined)
-    );
+    const cleanParams = Object.fromEntries(Object.entries(params).filter(([_, value]) => value !== undefined));
 
     const response = await api.get<AppointmentListResponse>("/api/appointment", {
       params: cleanParams,
@@ -350,7 +358,9 @@ export const getAppointments = async (filters: AppointmentFilters = {}): Promise
   }
 };
 
-export const getMedicalAppointmentHistory = async (filters: Omit<AppointmentFilters, 'date'> = {}): Promise<AppointmentListResponse> => {
+export const getMedicalAppointmentHistory = async (
+  filters: Omit<AppointmentFilters, "date"> = {}
+): Promise<AppointmentListResponse> => {
   try {
     // Set default values but without date filter to get all history
     const params = {
@@ -362,9 +372,7 @@ export const getMedicalAppointmentHistory = async (filters: Omit<AppointmentFilt
     };
 
     // Remove undefined values to avoid sending them as query parameters
-    const cleanParams = Object.fromEntries(
-      Object.entries(params).filter(([_, value]) => value !== undefined)
-    );
+    const cleanParams = Object.fromEntries(Object.entries(params).filter(([_, value]) => value !== undefined));
 
     const response = await api.get<AppointmentListResponse>("/api/appointment", {
       params: cleanParams,
@@ -395,9 +403,20 @@ export interface MedicalRecord {
   healthStatus: string;
 }
 
+export interface PrescriptionMedicineDetail {
+  id: string;
+  medicineId: string;
+  medicineName: string;
+  dosage: string;
+  note: string;
+  durationDays: number;
+}
+
 export interface Prescription {
   id: string;
-  // Add other prescription fields as needed when structure is available
+  appointmentId: string;
+  prescriptionUrl: string | null;
+  medicines: PrescriptionMedicineDetail[];
 }
 
 export interface AppointmentItemDetail {
@@ -494,7 +513,9 @@ export interface FileUploadResponse {
   url: string;
 }
 
-export const checkInAppointment = async (checkInData: CheckInAppointmentRequest): Promise<CheckInAppointmentResponse> => {
+export const checkInAppointment = async (
+  checkInData: CheckInAppointmentRequest
+): Promise<CheckInAppointmentResponse> => {
   try {
     // Set staffId to null by default if not provided
     const requestData = {
@@ -523,15 +544,12 @@ export const cancelAppointment = async (appointmentId: string): Promise<CancelAp
 
 // Update appointment status
 export const updateAppointmentStatus = async (
-  appointmentId: string, 
+  appointmentId: string,
   status: string
 ): Promise<UpdateAppointmentStatusResponse> => {
   try {
     const requestData: UpdateAppointmentStatusRequest = { status };
-    const response = await api.patch<UpdateAppointmentStatusResponse>(
-      `/api/appointment/${appointmentId}`, 
-      requestData
-    );
+    const response = await api.patch<UpdateAppointmentStatusResponse>(`/api/appointment/${appointmentId}`, requestData);
     return response.data;
   } catch (error) {
     console.error("Error updating appointment status:", error);
@@ -543,14 +561,14 @@ export const updateAppointmentStatus = async (
 export const uploadFile = async (file: File): Promise<FileUploadResponse> => {
   try {
     const formData = new FormData();
-    formData.append('file', file);
-    
+    formData.append("file", file);
+
     const response = await api.post<{ code: number; message: string; data: FileUploadResponse }>(
       "/api/file/upload",
       formData,
       {
         headers: {
-          'Content-Type': 'multipart/form-data',
+          "Content-Type": "multipart/form-data",
         },
       }
     );
@@ -577,7 +595,9 @@ export interface CreateMedicalRecordResponse {
 }
 
 // Create a medical record for a hamster
-export const createMedicalRecord = async (medicalRecordData: CreateMedicalRecordRequest): Promise<CreateMedicalRecordResponse> => {
+export const createMedicalRecord = async (
+  medicalRecordData: CreateMedicalRecordRequest
+): Promise<CreateMedicalRecordResponse> => {
   try {
     const response = await api.post<CreateMedicalRecordResponse>("/api/medical-record", medicalRecordData);
     return response.data;
@@ -606,7 +626,9 @@ export interface CheckOutAppointmentResponse {
 }
 
 // Check out an appointment
-export const checkOutAppointment = async (checkOutData: CheckOutAppointmentRequest): Promise<CheckOutAppointmentResponse> => {
+export const checkOutAppointment = async (
+  checkOutData: CheckOutAppointmentRequest
+): Promise<CheckOutAppointmentResponse> => {
   try {
     // Set paymentMethod to VNPAY by default if not provided
     const requestData = {
@@ -625,12 +647,12 @@ export const checkOutAppointment = async (checkOutData: CheckOutAppointmentReque
 // Interfaces for adding services to appointment
 export interface AddServiceItem {
   serviceId: string;
-  price: number;
+  price: number; // The actual price for this service (can be modified by user)
 }
 
 export interface AddServiceToAppointmentRequest {
   appointmentId: string;
-  additionalAmount: number;
+  additionalAmount: number; // Total cost calculated from service displayPrice fields from getServicesBySpeciesAndType
   items: AddServiceItem[];
 }
 
@@ -640,7 +662,9 @@ export interface AddServiceToAppointmentResponse {
 }
 
 // Add services to an existing appointment
-export const addServiceToAppointment = async (serviceData: AddServiceToAppointmentRequest): Promise<AddServiceToAppointmentResponse> => {
+export const addServiceToAppointment = async (
+  serviceData: AddServiceToAppointmentRequest
+): Promise<AddServiceToAppointmentResponse> => {
   try {
     const response = await api.post<AddServiceToAppointmentResponse>("/api/appointment/add-service", serviceData);
     return response.data;
@@ -650,3 +674,49 @@ export const addServiceToAppointment = async (serviceData: AddServiceToAppointme
   }
 };
 
+// Interfaces for prescription
+export interface PrescriptionMedicine {
+  medicineId: string;
+  dosage: string;
+  note: string;
+  durationDays: number;
+}
+
+export interface CreatePrescriptionRequest {
+  appointmentId: string;
+  medicines: PrescriptionMedicine[];
+}
+
+export interface PrescriptionMedicineResponse {
+  medicineId: string;
+  medicationName: string;
+  dosage: string;
+  note: string;
+  durationDays: number;
+}
+
+export interface PrescriptionData {
+  prescriptionId: string;
+  appointmentId: string;
+  createdBy: string;
+  medicines: PrescriptionMedicineResponse[];
+}
+
+export interface CreatePrescriptionResponse {
+  code: number;
+  message: string;
+  data: PrescriptionData;
+}
+
+// Create a prescription for a medical appointment
+export const createPrescription = async (
+  prescriptionData: CreatePrescriptionRequest
+): Promise<CreatePrescriptionResponse> => {
+  try {
+    const response = await api.post<CreatePrescriptionResponse>("/api/prescription", prescriptionData);
+    return response.data;
+  } catch (error) {
+    console.error("Error creating prescription:", error);
+    throw error;
+  }
+};

@@ -22,6 +22,7 @@ import api from "../../../config/axios";
 import "./ProfileHamster.scss";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { storage } from "../../../config/firebase";
+import { toast } from "react-toastify";
 
 const { Option } = Select;
 
@@ -145,15 +146,15 @@ function ProfileHamster() {
 
       const { data } = await api.post("/api/hamster", payload);
       if (data.code === 200) {
-        message.success("Tạo hồ sơ hamster thành công");
+        toast.success("Tạo hồ sơ hamster thành công");
         setCreateModalVisible(false);
         createForm.resetFields();
         fetchProfiles();
       } else {
-        message.error(data.message || "Không thể tạo hồ sơ hamster");
+        toast.error(data.message || "Không thể tạo hồ sơ hamster");
       }
     } catch (error) {
-      message.error("Lỗi khi tạo hồ sơ hamster" + (error as Error).message);
+      toast.error("Lỗi khi tạo hồ sơ hamster" + (error as Error).message);
     } finally {
       setLoading(false);
     }
@@ -195,15 +196,15 @@ function ProfileHamster() {
       // 4. Gửi request PUT
       const { data } = await api.put(`/api/hamster/${editingProfile.id}`, payload);
       if (data.code === 200) {
-        message.success("Cập nhật hồ sơ thành công");
+        toast.success("Cập nhật hồ sơ thành công");
         setUpdateModalVisible(false);
         setEditingProfile(null);
         fetchProfiles();
       } else {
-        message.error(data.message || "Không thể cập nhật hồ sơ");
+        toast.error(data.message || "Không thể cập nhật hồ sơ");
       }
     } catch (error) {
-      message.error("Lỗi khi cập nhật hồ sơ hamster");
+      toast.error("Lỗi khi cập nhật hồ sơ hamster");
     } finally {
       setLoading(false);
     }

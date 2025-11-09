@@ -15,6 +15,8 @@ import {
   Modal,
   Upload,
   Image,
+  Select,
+  Form,
 } from 'antd';
 import {
   ArrowLeftOutlined,
@@ -29,6 +31,7 @@ import {
   PlayCircleOutlined,
   FileTextOutlined,
   EyeOutlined,
+  EditOutlined,
 } from '@ant-design/icons';
 import { useNavigate, useParams } from 'react-router-dom';
 import type { UploadProps } from 'antd';
@@ -43,6 +46,8 @@ import {
   type AppointmentItemDetail,
   type MedicalRecord
 } from '../../../services/MedicalService';
+import ProfileHamsterService, { type Species } from '../../../services/ProfileHamsterService';
+import { toast } from 'react-toastify';
 import { storage } from '../../../config/firebase'
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import './VetAppointmentDetail.scss';
@@ -76,6 +81,14 @@ const VetAppointmentDetail: React.FC = () => {
   const [medicalRecordModalVisible, setMedicalRecordModalVisible] = useState<boolean>(false);
   const [selectedMedicalRecord, setSelectedMedicalRecord] = useState<MedicalRecord | null>(null);
   const [selectedServiceName, setSelectedServiceName] = useState<string>('');
+
+  // Species update modal states
+  const [speciesUpdateModalVisible, setSpeciesUpdateModalVisible] = useState<boolean>(false);
+  const [speciesLoading, setSpeciesLoading] = useState<boolean>(false);
+  const [speciesList, setSpeciesList] = useState<Species[]>([]);
+  const [selectedSpeciesId, setSelectedSpeciesId] = useState<string>('');
+  const [updateHamsterLoading, setUpdateHamsterLoading] = useState<boolean>(false);
+  const [form] = Form.useForm();
 
   // Fetch appointment details
   const fetchAppointmentDetails = async () => {
@@ -269,6 +282,65 @@ const VetAppointmentDetail: React.FC = () => {
     }
   };
 
+  // Fetch species list
+  const fetchSpeciesList = async () => {
+    setSpeciesLoading(true);
+    try {
+      const species = await ProfileHamsterService.getSpecies();
+      setSpeciesList(species);
+    } catch (error) {
+      message.error('Không thể tải danh sách loài. Vui lòng thử lại.');
+      console.error('Error fetching species:', error);
+    } finally {
+      setSpeciesLoading(false);
+    }
+  };
+
+  // Open species update modal
+  const openSpeciesUpdateModal = () => {
+    if (!appointment) return;
+    
+    // Find current species name from the species list or get it from appointment
+    fetchSpeciesList();
+    setSelectedSpeciesId(appointment.speciesId);
+    setSpeciesUpdateModalVisible(true);
+  };
+
+  // Handle species update
+  const handleSpeciesUpdate = async () => {
+    if (!appointment || !selectedSpeciesId) {
+      message.error('Vui lòng chọn loài hamster!');
+      return;
+    }
+
+    setUpdateHamsterLoading(true);
+    try {
+      // Use the specific change species API
+      await ProfileHamsterService.changeSpecies({
+        hamsterId: appointment.hamsterId,
+        speciesId: selectedSpeciesId,
+      });
+      
+      toast.success('Cập nhật loài hamster thành công!');
+      setSpeciesUpdateModalVisible(false);
+      
+      // Refresh appointment data to get updated species
+      await fetchAppointmentDetails();
+      
+    } catch (error) {
+      message.error('Cập nhật thất bại! Vui lòng thử lại.');
+      console.error('Error updating hamster species:', error);
+    } finally {
+      setUpdateHamsterLoading(false);
+    }
+  };
+
+  // Get species name by ID
+  const getSpeciesNameById = (speciesId: string) => {
+    const species = speciesList.find(s => s.id === speciesId);
+    return species ? species.speciesName : 'Chưa xác định';
+  };
+
   // Handle progress status update and redirect to examination
   const handleProgress = async () => {
     if (!appointmentId) {
@@ -308,6 +380,7 @@ const VetAppointmentDetail: React.FC = () => {
 
   useEffect(() => {
     fetchAppointmentDetails();
+    fetchSpeciesList();
   }, [appointmentId]);
 
   if (loading) {
@@ -384,6 +457,20 @@ const VetAppointmentDetail: React.FC = () => {
                 <Descriptions.Item label="Tên hamster">
                   <Space>
                     <Text strong>{appointment.hamsterName}</Text>
+                  </Space>
+                </Descriptions.Item>
+                <Descriptions.Item label="Loài hamster">
+                  <Space>
+                    <Text strong>{getSpeciesNameById(appointment.speciesId)}</Text>
+                    <Button
+                      type="link"
+                      size="small"
+                      icon={<EditOutlined />}
+                      onClick={openSpeciesUpdateModal}
+                      style={{ padding: 0 }}
+                    >
+                      Chỉnh sửa
+                    </Button>
                   </Space>
                 </Descriptions.Item>
               </Descriptions>
@@ -937,6 +1024,41 @@ const VetAppointmentDetail: React.FC = () => {
               </Row>
             </div>
           )}
+        </Modal>
+
+        {/* Species Update Modal */}
+        <Modal
+          title="Cập nhật loài hamster"
+          open={speciesUpdateModalVisible}
+          onOk={handleSpeciesUpdate}
+          onCancel={() => setSpeciesUpdateModalVisible(false)}
+          confirmLoading={updateHamsterLoading}
+          okText="Cập nhật"
+          cancelText="Hủy"
+          okButtonProps={{ 
+            disabled: !selectedSpeciesId || selectedSpeciesId === appointment?.speciesId 
+          }}
+        >
+          <Form form={form} layout="vertical">
+            <Form.Item label="Loài hamster hiện tại">
+              <Text strong>{getSpeciesNameById(appointment?.speciesId || '')}</Text>
+            </Form.Item>
+            <Form.Item label="Chọn loài mới" required>
+              <Select
+                value={selectedSpeciesId}
+                onChange={setSelectedSpeciesId}
+                placeholder="Chọn loài hamster"
+                loading={speciesLoading}
+                style={{ width: '100%' }}
+              >
+                {speciesList.map((species) => (
+                  <Select.Option key={species.id} value={species.id}>
+                    {species.speciesName}
+                  </Select.Option>
+                ))}
+              </Select>
+            </Form.Item>
+          </Form>
         </Modal>
       </Card>
     </div>

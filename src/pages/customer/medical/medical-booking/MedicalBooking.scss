@@ -1,6 +1,31 @@
 .booking-medical-service {
   padding: 20px 80px;
-  
+
+  .policy-section {
+    margin-top: 16px;
+    background: #fffaf5;
+    padding: 16px;
+    border-radius: 10px;
+    border: 1px solid #ffd4b3;
+
+    h5 {
+      color: #ff7a45;
+      margin-bottom: 8px;
+    }
+
+    ul {
+      margin-left: 16px;
+      li {
+        margin-bottom: 6px;
+        line-height: 1.5;
+      }
+    }
+
+    .ant-checkbox-wrapper {
+      color: #333;
+      font-weight: 500;
+    }
+  }
 
   .page-title {
     text-align: center;
@@ -69,7 +94,7 @@
 
       .best-services {
         margin-top: 8px;
-        
+
         p {
           font-size: 11px;
           color: #999;

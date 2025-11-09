@@ -206,6 +206,61 @@
     }
   }
 
+  .prescription-card {
+    .ant-card-head {
+      background: linear-gradient(135deg, #f9f0ff 0%, #f6ffed 100%);
+      border-bottom: 2px solid #efdbff;
+      
+      .ant-card-head-title {
+        color: #722ed1;
+        font-weight: 600;
+        font-size: 18px;
+      }
+    }
+
+    .medicine-item {
+      transition: all 0.3s ease;
+      height: 100%;
+
+      &:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(114, 46, 209, 0.15);
+        border-color: #722ed1 !important;
+      }
+
+      .ant-card-body {
+        padding: 16px;
+      }
+
+      .ant-descriptions {
+        .ant-descriptions-item {
+          padding-bottom: 8px;
+        }
+
+        .ant-descriptions-item-label {
+          font-weight: 600;
+          color: #595959;
+          width: 35%;
+          padding-right: 8px;
+        }
+
+        .ant-descriptions-item-content {
+          font-weight: 500;
+          color: #262626;
+          width: 65%;
+        }
+      }
+    }
+
+    .medicine-note {
+      background: #f6ffed;
+      border: 1px solid #d9f7be;
+      border-radius: 6px;
+      padding: 12px;
+      margin-top: 16px;
+    }
+  }
+
   .notes-card {
     .ant-card-head {
       background: linear-gradient(135deg, #f9f0ff 0%, #f6ffed 100%);
@@ -357,6 +412,21 @@
       }
     }
 
+    .prescription-card {
+      .medicine-item {
+        margin-bottom: 12px;
+        
+        .ant-descriptions-item-label {
+          width: 100%;
+          font-size: 14px;
+        }
+        
+        .ant-descriptions-item-content {
+          font-size: 14px;
+        }
+      }
+    }
+
     .image-container {
       min-height: 150px;
       
@@ -411,6 +481,10 @@
     }
 
     .services-card .ant-card-head .ant-card-head-title {
+      font-size: 16px;
+    }
+
+    .prescription-card .ant-card-head .ant-card-head-title {
       font-size: 16px;
     }
   }

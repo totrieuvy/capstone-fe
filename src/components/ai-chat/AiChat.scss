@@ -1,0 +1,205 @@
+.ai-chat-container {
+  position: fixed;
+  bottom: 80px;
+  right: 30px;
+  width: 360px;
+  height: 480px;
+  background-color: #fffaf5;
+  border-radius: 16px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  z-index: 9999;
+  animation: slideUp 0.3s ease-out;
+}
+
+@keyframes slideUp {
+  0% {
+    transform: translateY(50px);
+    opacity: 0;
+  }
+  100% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.floating-chat-btn {
+  position: fixed;
+  bottom: 30px;
+  right: 30px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  z-index: 9999;
+
+  .chat-avatar {
+    width: 65px;
+    height: 65px;
+    border-radius: 50%;
+    border: 3px solid #a47148;
+    object-fit: cover;
+    transition: transform 0.2s ease;
+
+    &:hover {
+      transform: scale(1.1);
+    }
+  }
+}
+
+.chat-header {
+  background-color: #a47148;
+  color: white;
+  padding: 10px 15px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-weight: bold;
+  font-size: 16px;
+
+  .chat-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+
+    .chat-hamster-icon {
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      object-fit: cover;
+    }
+  }
+
+  .close-btn {
+    font-size: 16px;
+    cursor: pointer;
+    transition: color 0.2s ease;
+
+    &:hover {
+      color: #ffd7b5;
+    }
+  }
+}
+
+.chat-body {
+  flex: 1;
+  padding: 10px 15px;
+  overflow-y: auto;
+  background-color: #fffaf5;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+
+  .chat-bubble {
+    padding: 10px 12px;
+    border-radius: 12px;
+    max-width: 80%;
+    word-break: break-word;
+    white-space: pre-wrap;
+
+    &.user {
+      align-self: flex-end;
+      background-color: #f5deb3;
+      color: #333;
+    }
+
+    &.ai {
+      align-self: flex-start;
+      background-color: #f0f0f0;
+      color: #333;
+    }
+  }
+
+  .chat-loading {
+    align-self: center;
+    margin-top: 5px;
+  }
+}
+
+.chat-suggestions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  padding: 10px 15px;
+  background-color: #fff7ed;
+  border-top: 1px solid #f2e4d9;
+
+  .suggestion-tag {
+    cursor: pointer;
+    background-color: #ffe7c2;
+    border: none;
+    color: #8b5e34;
+    transition: background-color 0.2s ease;
+
+    &:hover {
+      background-color: #ffd39b;
+    }
+  }
+}
+
+.chat-input {
+  padding: 10px 15px;
+  background-color: #fff7ed;
+  border-top: 1px solid #f2e4d9;
+
+  .ant-input {
+    border-radius: 10px;
+    height: 40px;
+  }
+}
+
+/* ==================== 🎤 Hiệu ứng mic khi đang nói ==================== */
+.mic-wrapper {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.mic-icon {
+  transition: transform 0.2s ease, color 0.3s ease;
+
+  &:hover {
+    transform: scale(1.1);
+  }
+}
+
+.mic-wrapper.listening .mic-icon {
+  animation: pulse 1s infinite;
+}
+
+.mic-wave {
+  position: absolute;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background-color: rgba(255, 77, 79, 0.4);
+  z-index: -1;
+  animation: wave 1.2s infinite ease-in-out;
+}
+
+/* Mic rung nhẹ */
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.3);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* Sóng lan tỏa */
+@keyframes wave {
+  0% {
+    transform: scale(1);
+    opacity: 0.6;
+  }
+  100% {
+    transform: scale(2);
+    opacity: 0;
+  }
+}

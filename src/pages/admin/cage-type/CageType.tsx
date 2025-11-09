@@ -12,22 +12,21 @@ import {
   Image,
   Upload,
   Spin,
+  Select,
   type UploadFile,
 } from "antd";
-import {
-  PlusOutlined,
-  SearchOutlined,
-} from "@ant-design/icons";
+import { PlusOutlined, SearchOutlined } from "@ant-design/icons";
 import type { ColumnsType } from "antd/es/table";
 import cageTypeService from "../../../services/CageTypeService";
-import type {
-  CageTypeResponse,
-  CreateCageTypeReq,
-} from "../../../services/CageTypeService";
+import type { CageTypeResponse, CreateCageTypeReq } from "../../../services/CageTypeService";
 import { getFormattedPrice } from "../../../utils/formatPrice";
 import { storage } from "../../../config/firebase";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import api from "../../../config/axios";
 import "./CageType.scss";
+import { toast } from "react-toastify";
+
+const { Option } = Select;
 
 interface CageTypeFormValues {
   id?: string;
@@ -38,10 +37,23 @@ interface CageTypeFormValues {
   material: string;
   isActive: boolean;
   imageUrl: UploadFile[];
+  iotDeviceId: string;
+  section: string;
+}
+
+interface IotDevice {
+  id: string;
+  deviceType: string;
+  name: string;
+  rtspUrl: string;
+  temperature: number | null;
+  humidity: number | null;
+  status: string;
 }
 
 const CageType: React.FC = () => {
   const [cageTypes, setCageTypes] = useState<CageTypeResponse[]>([]);
+  const [iotDevices, setIotDevices] = useState<IotDevice[]>([]);
   const [loading, setLoading] = useState(false);
   const [submitLoading, setSubmitLoading] = useState(false);
   const [isModalVisible, setIsModalVisible] = useState(false);
@@ -50,86 +62,87 @@ const CageType: React.FC = () => {
   const [searchText, setSearchText] = useState("");
   const [form] = Form.useForm();
 
-  // Fetch all cage types
+  // Fetch cage types
   const fetchCageTypes = async () => {
     setLoading(true);
     try {
       const data = await cageTypeService.getCageTypes();
       setCageTypes(data);
-    } catch (error) {
-      message.error("Failed to fetch cage types");
+    } catch {
+      message.error("Không thể tải danh sách loại chuồng");
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Fetch IoT devices
+  const fetchIotDevices = async () => {
+    try {
+      const response = await api.get("/api/iot-devices");
+      const data: IotDevice[] = response.data.data || [];
+      const filtered = data.filter((device: IotDevice) => device.deviceType === "CAMERA");
+      setIotDevices(filtered);
+    } catch {
+      message.error("Không thể tải danh sách thiết bị IoT");
     }
   };
 
   useEffect(() => {
     document.title = "Quản lý loại chuồng";
     fetchCageTypes();
+    fetchIotDevices();
   }, []);
 
-  // Handle create/update following ManageProduct pattern
- const handleSubmit = async (values: CageTypeFormValues) => {
-  setSubmitLoading(true);
-  try {
-    let imageUrl = "";
+  // Handle create/update
+  const handleSubmit = async (values: CageTypeFormValues) => {
+    setSubmitLoading(true);
+    try {
+      let imageUrl = "";
 
-    // Check if there's a new image file selected
-    const newFile = values.imageUrl?.[0]?.originFileObj as File | undefined;
-
-    if (newFile) {
-      // Create Firebase Storage reference with timestamp and file name
-      const storageRef = ref(storage, `cage-types/${Date.now()}_${newFile.name}`);
-      
-      // Upload file to Firebase
-      await uploadBytes(storageRef, newFile);
-      
-      // Get download URL
-      imageUrl = await getDownloadURL(storageRef);
-    } else {
-      // No new image
-      if (isUpdate && editingRecord?.imageUrl) {
-        // Keep existing image URL when updating without changing image
-        imageUrl = editingRecord.imageUrl;
-      } else if (!isUpdate) {
-        // For create operation, image is required
-        message.error("Vui lòng chọn ảnh cho loại chuồng!");
-        setSubmitLoading(false);
-        return;
+      const newFile = values.imageUrl?.[0]?.originFileObj as File | undefined;
+      if (newFile) {
+        const storageRef = ref(storage, `cage-types/${Date.now()}_${newFile.name}`);
+        await uploadBytes(storageRef, newFile);
+        imageUrl = await getDownloadURL(storageRef);
+      } else {
+        if (isUpdate && editingRecord?.imageUrl) {
+          imageUrl = editingRecord.imageUrl;
+        } else if (!isUpdate) {
+          message.error("Vui lòng chọn ảnh cho loại chuồng!");
+          setSubmitLoading(false);
+          return;
+        }
       }
+
+      const payload: CreateCageTypeReq = {
+        typeName: values.typeName,
+        description: values.description,
+        sizeDimensions: values.sizeDimensions,
+        price: values.price,
+        material: values.material,
+        isActive: values.isActive,
+        imageUrl: imageUrl,
+        iotDeviceId: values.iotDeviceId,
+        section: values.section,
+      };
+
+      if (isUpdate && values.id) {
+        await cageTypeService.updateCageType(values.id, payload);
+        toast.success("Cập nhật loại chuồng thành công!");
+      } else {
+        await cageTypeService.createCageType(payload);
+        toast.success("Thêm loại chuồng thành công!");
+      }
+
+      fetchCageTypes();
+      handleCancel();
+    } catch (error) {
+      message.error("Thao tác thất bại: " + String(error));
+    } finally {
+      setSubmitLoading(false);
     }
+  };
 
-    // Prepare data for API submission
-    const payload: CreateCageTypeReq = {
-      typeName: values.typeName,
-      description: values.description,
-      sizeDimensions: values.sizeDimensions,
-      price: values.price,
-      material: values.material,
-      isActive: values.isActive,
-      imageUrl: imageUrl,
-    };
-
-    // Send request to create or update
-    if (isUpdate && values.id) {
-      await cageTypeService.updateCageType(values.id, payload);
-      message.success("Cập nhật loại chuồng thành công!");
-    } else {
-      await cageTypeService.createCageType(payload);
-      message.success("Thêm loại chuồng thành công!");
-    }
-
-    fetchCageTypes();
-    handleCancel();
-  } catch (error) {
-    message.error("Thao tác thất bại: " + error);
-  } finally {
-    setSubmitLoading(false);
-  }
-};
-
-
-  // Open modal for create
   const handleOpenAdd = () => {
     setIsUpdate(false);
     setEditingRecord(null);
@@ -138,7 +151,6 @@ const CageType: React.FC = () => {
     form.setFieldsValue({ isActive: true });
   };
 
-  // Open modal for edit following ManageProduct pattern
   const handleOpenEdit = (record: CageTypeResponse) => {
     setIsUpdate(true);
     setEditingRecord(record);
@@ -158,7 +170,6 @@ const CageType: React.FC = () => {
     });
   };
 
-  // Close modal
   const handleCancel = () => {
     setIsModalVisible(false);
     form.resetFields();
@@ -166,14 +177,10 @@ const CageType: React.FC = () => {
     setIsUpdate(false);
   };
 
-  // Filter data based on search
   const filteredData = cageTypes.filter((item) =>
-    Object.values(item).some((val) =>
-      String(val).toLowerCase().includes(searchText.toLowerCase())
-    )
+    Object.values(item).some((val) => String(val).toLowerCase().includes(searchText.toLowerCase()))
   );
 
-  // Table columns
   const columns: ColumnsType<CageTypeResponse> = [
     {
       title: "Hình ảnh",
@@ -197,12 +204,6 @@ const CageType: React.FC = () => {
       key: "typeName",
       sorter: (a, b) => a.typeName.localeCompare(b.typeName),
     },
-    // {
-    //   title: "Mô tả",
-    //   dataIndex: "description",
-    //   key: "description",
-    //   ellipsis: true,
-    // },
     {
       title: "Kích thước",
       dataIndex: "sizeDimensions",
@@ -225,9 +226,7 @@ const CageType: React.FC = () => {
       dataIndex: "isActive",
       key: "isActive",
       render: (isActive: boolean) => (
-        <span style={{ color: isActive ? "#52c41a" : "#ff4d4f" }}>
-          {isActive ? "Hoạt động" : "Không hoạt động"}
-        </span>
+        <span style={{ color: isActive ? "#52c41a" : "#ff4d4f" }}>{isActive ? "Hoạt động" : "Không hoạt động"}</span>
       ),
     },
     {
@@ -236,14 +235,9 @@ const CageType: React.FC = () => {
       width: 200,
       render: (_, record) => (
         <Space>
-          <Button
-            type="primary"
-            // icon={<EditOutlined />}
-            onClick={() => handleOpenEdit(record)}
-          >
+          <Button type="primary" onClick={() => handleOpenEdit(record)}>
             Cập nhật
           </Button>
-      
         </Space>
       ),
     },
@@ -262,12 +256,7 @@ const CageType: React.FC = () => {
             onChange={(e) => setSearchText(e.target.value)}
             style={{ width: 300 }}
           />
-          <Button
-            type="primary"
-            icon={<PlusOutlined />}
-            onClick={handleOpenAdd}
-            style={{ marginLeft: "auto" }}
-          >
+          <Button type="primary" icon={<PlusOutlined />} onClick={handleOpenAdd} style={{ marginLeft: "auto" }}>
             Thêm loại chuồng mới
           </Button>
         </Space>
@@ -281,7 +270,7 @@ const CageType: React.FC = () => {
         pagination={{
           pageSize: 10,
           showSizeChanger: true,
-          showTotal: (total) => `Total ${total} items`,
+          showTotal: (total) => `Tổng ${total} loại chuồng`,
         }}
       />
 
@@ -293,12 +282,7 @@ const CageType: React.FC = () => {
         width={700}
       >
         <Spin spinning={submitLoading}>
-          <Form
-            form={form}
-            layout="vertical"
-            onFinish={handleSubmit}
-            initialValues={{ isActive: true }}
-          >
+          <Form form={form} layout="vertical" onFinish={handleSubmit} initialValues={{ isActive: true }}>
             <Form.Item name="id" hidden>
               <Input />
             </Form.Item>
@@ -306,34 +290,21 @@ const CageType: React.FC = () => {
             <Form.Item
               name="typeName"
               label="Tên loại chuồng"
-              rules={[
-                { required: true, message: "Vui lòng nhập tên loại chuồng!" },
-              ]}
+              rules={[{ required: true, message: "Vui lòng nhập tên loại chuồng!" }]}
             >
               <Input placeholder="Nhập tên loại chuồng" />
             </Form.Item>
 
-            <Form.Item
-              name="description"
-              label="Mô tả"
-              rules={[
-                { required: true, message: "Vui lòng nhập mô tả!" },
-              ]}
-            >
-              <Input.TextArea
-                rows={3}
-                placeholder="Nhập mô tả loại chuồng"
-              />
+            <Form.Item name="description" label="Mô tả" rules={[{ required: true, message: "Vui lòng nhập mô tả!" }]}>
+              <Input.TextArea rows={3} placeholder="Nhập mô tả loại chuồng" />
             </Form.Item>
 
             <Form.Item
               name="sizeDimensions"
               label="Kích thước"
-              rules={[
-                { required: true, message: "Vui lòng nhập kích thước!" },
-              ]}
+              rules={[{ required: true, message: "Vui lòng nhập kích thước!" }]}
             >
-              <Input placeholder="VD: 24x18x21 inches" />
+              <Input placeholder="VD: 60x40x40 cm" />
             </Form.Item>
 
             <Form.Item
@@ -341,7 +312,7 @@ const CageType: React.FC = () => {
               label="Chất liệu"
               rules={[{ required: true, message: "Vui lòng nhập chất liệu!" }]}
             >
-              <Input placeholder="VD: Thép không gỉ" />
+              <Input placeholder="VD: Nhựa mica" />
             </Form.Item>
 
             <Form.Item
@@ -349,7 +320,12 @@ const CageType: React.FC = () => {
               label="Giá (VND)"
               rules={[
                 { required: true, message: "Vui lòng nhập giá!" },
-                { type: "number", min: 1, max: 999999999, message: "Giá phải từ 1 đến 999,999,999!" },
+                {
+                  type: "number",
+                  min: 1,
+                  max: 999999999,
+                  message: "Giá phải từ 1 đến 999,999,999!",
+                },
               ]}
             >
               <InputNumber
@@ -358,15 +334,37 @@ const CageType: React.FC = () => {
                 step={1000}
                 style={{ width: "100%" }}
                 placeholder="Nhập giá"
-                formatter={(value) =>
-                  `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",")
-                }
-                parser={(value) => {
-                  const parsed = parseFloat(value!.replace(/\$\s?|(,*)/g, "")) || 0;
-                  return parsed > 999999999 ? 999999999 : parsed as 0 | 999999999;
+                formatter={(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",")}
+                parser={(value: string | undefined): number => {
+                  if (!value) return 0;
+                  const cleaned = value.replace(/\$\s?|(,*)/g, "");
+                  const parsed = parseFloat(cleaned);
+                  return isNaN(parsed) ? 0 : parsed;
                 }}
                 addonAfter="đ"
               />
+            </Form.Item>
+
+            <Form.Item
+              name="iotDeviceId"
+              label="Thiết bị IoT (Camera)"
+              rules={[{ required: true, message: "Vui lòng chọn thiết bị IoT!" }]}
+            >
+              <Select placeholder="Chọn thiết bị IoT">
+                {iotDevices.map((device) => (
+                  <Option key={device.id} value={device.id}>
+                    {device.name}
+                  </Option>
+                ))}
+              </Select>
+            </Form.Item>
+
+            <Form.Item
+              name="section"
+              label="Khu vực (Section)"
+              rules={[{ required: true, message: "Vui lòng nhập khu vực!" }]}
+            >
+              <Input placeholder="VD: A1, B2, C3..." />
             </Form.Item>
 
             <Form.Item
@@ -376,12 +374,7 @@ const CageType: React.FC = () => {
               getValueFromEvent={(e) => (Array.isArray(e) ? e : e?.fileList)}
               rules={[{ required: !isUpdate, message: "Vui lòng chọn ảnh!" }]}
             >
-              <Upload 
-                listType="picture-card" 
-                beforeUpload={() => false} 
-                maxCount={1} 
-                accept="image/*"
-              >
+              <Upload listType="picture-card" beforeUpload={() => false} maxCount={1} accept="image/*">
                 <div>Chọn ảnh</div>
               </Upload>
             </Form.Item>

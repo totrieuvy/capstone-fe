@@ -29,6 +29,7 @@ import { boardingService, type CareLogItem } from '../../../services/BoardingSer
 import { storage } from '../../../config/firebase';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import './CareLog.scss';
+import { toast } from 'react-toastify';
 
 const { Title, Text } = Typography;
 const { TextArea } = Input;
@@ -103,11 +104,11 @@ const CareLog: React.FC = () => {
       console.log('Download URL obtained:', downloadURL);
       
       setUploadedImageUrl(downloadURL);
-      message.success('Tải ảnh lên thành công!');
+      toast.success('Tải ảnh lên thành công!');
       return downloadURL;
     } catch (error) {
       console.error('Error uploading image to Firebase:', error);
-      message.error('Không thể tải ảnh lên. Vui lòng thử lại.');
+      toast.error('Không thể tải ảnh lên. Vui lòng thử lại.');
       throw error;
     } finally {
       setUploading(false);
@@ -181,7 +182,7 @@ const CareLog: React.FC = () => {
       await boardingService.createCareLog(careLogData);
       console.log('Care log created successfully');
 
-      message.success('Tạo báo cáo chăm sóc thành công!');
+      toast.success('Tạo báo cáo chăm sóc thành công!');
       
       // Reset form and image
       form.resetFields();

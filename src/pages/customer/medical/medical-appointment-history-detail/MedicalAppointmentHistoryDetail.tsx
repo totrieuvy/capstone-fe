@@ -25,6 +25,9 @@ import {
   FileImageOutlined,
   FileTextOutlined,
   EyeOutlined,
+  ExperimentOutlined,
+  ClockCircleOutlined,
+  InfoCircleOutlined,
 } from '@ant-design/icons';
 import { useNavigate, useParams } from 'react-router-dom';
 import dayjs from 'dayjs';
@@ -536,6 +539,138 @@ const ManageAppointmentDetail: React.FC = () => {
               </Row>
             </Card>
           </Col>
+
+          {/* Prescription Section */}
+          {appointment.prescription && appointment.prescription.medicines.length > 0 && (
+            <Col span={24}>
+              <Card
+                title={
+                  <Space>
+                    <ExperimentOutlined style={{ color: '#722ed1' }} />
+                    <span>Đơn thuốc</span>
+                  </Space>
+                }
+                className="prescription-card"
+              >
+                <div style={{ marginBottom: '16px' }}>
+                  <Text type="secondary">
+                    <InfoCircleOutlined style={{ marginRight: '8px' }} />
+                    Đơn thuốc được kê cho cuộc hẹn này
+                  </Text>
+                </div>
+                
+                <Row gutter={[16, 16]}>
+                  {appointment.prescription.medicines.map((medicine, index) => (
+                    <Col xs={24} md={12} lg={8} key={medicine.id}>
+                      <Card 
+                        size="small" 
+                        className="medicine-item"
+                        style={{ 
+                          border: '2px solid #f0f2ff',
+                          borderRadius: '8px',
+                          background: 'linear-gradient(135deg, #fafbff 0%, #f0f2ff 100%)'
+                        }}
+                      >
+                        <Space direction="vertical" style={{ width: '100%' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', marginBottom: '8px' }}>
+                            <div 
+                              style={{ 
+                                width: '32px', 
+                                height: '32px', 
+                                borderRadius: '50%', 
+                                background: '#722ed1', 
+                                display: 'flex', 
+                                alignItems: 'center', 
+                                justifyContent: 'center',
+                                marginRight: '12px'
+                              }}
+                            >
+                              <Text style={{ color: 'white', fontWeight: 'bold', fontSize: '14px' }}>
+                                {index + 1}
+                              </Text>
+                            </div>
+                            <Text strong style={{ fontSize: '16px', color: '#262626' }}>
+                              {medicine.medicineName}
+                            </Text>
+                          </div>
+                          
+                          <Descriptions size="small" column={1}>
+                            <Descriptions.Item 
+                              label={
+                                <Text style={{ fontWeight: 600, color: '#595959' }}>
+                                  Liều dùng
+                                </Text>
+                              }
+                            >
+                              <Text style={{ color: '#1890ff', fontWeight: 500 }}>
+                                {medicine.dosage}
+                              </Text>
+                            </Descriptions.Item>
+                            
+                            <Descriptions.Item 
+                              label={
+                                <Text style={{ fontWeight: 600, color: '#595959' }}>
+                                  <ClockCircleOutlined style={{ marginRight: '4px' }} />
+                                  Thời gian
+                                </Text>
+                              }
+                            >
+                              <Tag color="orange" style={{ fontSize: '12px' }}>
+                                {medicine.durationDays} ngày
+                              </Tag>
+                            </Descriptions.Item>
+                            
+                            {medicine.note && (
+                              <Descriptions.Item 
+                                label={
+                                  <Text style={{ fontWeight: 600, color: '#595959' }}>
+                                    Ghi chú
+                                  </Text>
+                                }
+                              >
+                                <Text 
+                                  style={{ 
+                                    color: '#52c41a', 
+                                    fontStyle: 'italic',
+                                    fontSize: '13px'
+                                  }}
+                                >
+                                  {medicine.note}
+                                </Text>
+                              </Descriptions.Item>
+                            )}
+                          </Descriptions>
+                        </Space>
+                      </Card>
+                    </Col>
+                  ))}
+                </Row>
+                
+                <div 
+                  style={{ 
+                    marginTop: '20px', 
+                    padding: '16px', 
+                    background: '#f6ffed', 
+                    border: '1px solid #d9f7be',
+                    borderRadius: '8px'
+                  }}
+                >
+                  <Space align="start">
+                    <InfoCircleOutlined style={{ color: '#52c41a', marginTop: '2px' }} />
+                    <div>
+                      <Text strong style={{ color: '#389e0d', display: 'block', marginBottom: '4px' }}>
+                        Lưu ý quan trọng:
+                      </Text>
+                      <Text style={{ color: '#595959', fontSize: '13px' }}>
+                        Vui lòng tuân thủ đúng liều dùng và thời gian dùng thuốc theo chỉ định của bác sĩ. 
+                        Nếu có bất kỳ phản ứng bất thường nào, hãy liên hệ ngay với phòng khám.
+                      </Text>
+                    </div>
+                  </Space>
+                </div>
+              </Card>
+            </Col>
+          )}
 
           {/* Notes */}
           {appointment.notes && (

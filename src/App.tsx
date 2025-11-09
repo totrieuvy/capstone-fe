@@ -40,11 +40,10 @@ import StaffBoardingDetail from "./pages/staff/boarding-detail/StaffBoardingDeta
 import StaffCheckOut from "./pages/staff/checkout/StaffCheckOut";
 import StaffNotFoundPage from "./pages/not-found/staff/StaffNotFoundPage";
 import AdminNotFoundPage from "./pages/not-found/admin/AdminNotFoundPage";
-import BoardingPaymentSuccess from "./pages/staff/BoardingPaymentSuccess";
-import BoardingPaymentFailure from "./pages/staff/BoardingPaymentFailure";
+import BoardingPaymentSuccess from "./pages/staff/medical/payment-screen/BoardingPaymentSuccess";
+import BoardingPaymentFailure from "./pages/staff/medical/payment-screen/BoardingPaymentFailure";
 import GroomingPage from "./pages/customer/grooming/dich-vu-lam-dep/GroomingPage";
 import ManageGroomingService from "./pages/admin/manage-grooming-service/ManageGroomingService";
-import CageManagement from "./pages/staff/cage/CageManagement";
 import CareLog from "./pages/staff/care-log/CareLog";
 import Iot from "./pages/staff/Iot/Iot";
 import ManageComboGrooming from "./pages/admin/manage-grooming-service/manage-combo-grooming/ManageComboGrooming";
@@ -68,6 +67,11 @@ import VetNotFoundPage from "./pages/not-found/veterinarian/VetNotFoundPage";
 import HamsterSchedule from "./pages/veterinarian/today-schedule/TodaySchedule";
 import VetAppointmentDetail from "./pages/veterinarian/vet-appointment-detail/VetAppointmentDetail";
 import Examination from "./pages/veterinarian/examination/Examination";
+import ManageMedicine from "./pages/veterinarian/manage-medicine/ManageMedicine";
+import MedicalPaymentFailure from "./pages/staff/medical/payment-screen/MedicalPaymentFailure";
+import MedicalPaymentSuccess from "./pages/staff/medical/payment-screen/MedicalPaymentSuccess";
+import CageFloorPlan from "./pages/staff/cage/CageFloorPlan";
+import Policy from "./pages/admin/policy/Policy";
 
 interface User {
   id: number;
@@ -273,6 +277,7 @@ const App = () => {
             { path: "quan-li-loai-chuong", element: <CageType /> },
             { path: "quan-li-dich-vu-y-te", element: <ManageMedical /> },
             { path: "quan-li-dich-vu-grooming/grooming-le", element: <ManageGroomingService /> },
+            { path: "chinh-sach", element: <Policy /> },
             { path: "quan-li-dich-vu-grooming/grooming-le/:id", element: <ManageGroomingServiceDetail /> },
             {
               path: "quan-li-dich-vu-grooming/grooming-combo",
@@ -317,7 +322,7 @@ const App = () => {
             { path: "booking-detail/:bookingId", element: <StaffBoardingDetail /> },
             { path: "care-log/:bookingId", element: <CareLog /> },
             { path: "checkout", element: <StaffCheckOut /> },
-            { path: "quan-li-chuong", element: <CageManagement /> },
+            { path: "so-do-chuong", element: <CageFloorPlan /> },
             { path: "*", element: <StaffNotFoundPage /> },
             { path: "thong-so-iot", element: <Iot /> },
             { path: "lich-dat-grooming", element: <HistoryGrooming /> },
@@ -336,6 +341,14 @@ const App = () => {
           path: "boardingpayment-failure",
           element: <BoardingPaymentFailure />,
         },
+        {
+          path: "medical-payment-success",
+          element: <MedicalPaymentSuccess />,
+        },
+        {
+          path: "medical-payment-failure",
+          element: <MedicalPaymentFailure />,
+        },
       ],
     },
     {
@@ -349,9 +362,10 @@ const App = () => {
             { path: "lich-kham-hom-nay", element: <HamsterSchedule /> },
             { path: "lich-kham/:appointmentId", element: <VetAppointmentDetail /> },
             { path: "examination/:appointmentId", element: <Examination /> },
+            { path: "quan-li-ke-thuoc", element: <ManageMedicine /> },
             { path: "*", element: <VetNotFoundPage /> },
           ],
-        }
+        },
       ],
     },
     {

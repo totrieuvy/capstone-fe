@@ -8,7 +8,7 @@ import './Iot.scss';
 const { Title, Text } = Typography;
 
 interface TemperatureData {
-  iotId?: string;
+  iotId: string;
   humidity: number;
   temperature: number;
 }
