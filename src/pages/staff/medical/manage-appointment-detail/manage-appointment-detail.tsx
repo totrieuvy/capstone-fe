@@ -1220,7 +1220,12 @@ const ManageAppointmentDetail: React.FC = () => {
                       <Text strong>Dịch vụ bổ sung:</Text>
                       <div style={{ color: "#1890ff" }}>{formatPrice(appointment.additionalAmount)}</div>
                     </Col>
-                    <Col span={12}></Col>
+                    <Col span={12}>
+                      <Text strong>Dịch vụ bổ sung sau giảm ({appointment.discountPercent}%):</Text>
+                      <div style={{ color: "#52c41a" }}>
+                        {formatPrice(appointment.additionalAmount * (1 - appointment.discountPercent / 100))}
+                      </div>
+                    </Col>
                   </>
                 )}
                 <Col span={24}>
@@ -1234,7 +1239,12 @@ const ManageAppointmentDetail: React.FC = () => {
                     <Col>
                       <Text strong style={{ fontSize: "18px", color: "#f5222d" }}>
                         {appointment
-                          ? formatPrice(appointment.totalAmountAfter + (appointment.additionalAmount || 0))
+                          ? formatPrice(
+                              appointment.totalAmountAfter + 
+                              (appointment.additionalAmount 
+                                ? appointment.additionalAmount * (1 - appointment.discountPercent / 100)
+                                : 0)
+                            )
                           : "0 đ"}
                       </Text>
                     </Col>
