@@ -73,6 +73,7 @@ import MedicalPaymentSuccess from "./pages/staff/medical/payment-screen/MedicalP
 import CageFloorPlan from "./pages/staff/cage/CageFloorPlan";
 import Policy from "./pages/admin/policy/Policy";
 import WithDraw from "./pages/admin/withdraw/WithDraw";
+import HistoryMedicalHamster from "./pages/customer/profile-hamster/HistoryMedicalHamster";
 
 interface User {
   id: number;
@@ -198,6 +199,10 @@ const App = () => {
             {
               path: "",
               element: <ProfileHamster />,
+            },
+            {
+              path: "medical/:hamsterId",
+              element: <HistoryMedicalHamster />,
             },
           ],
         },
