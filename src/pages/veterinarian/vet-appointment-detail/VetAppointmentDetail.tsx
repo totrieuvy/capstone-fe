@@ -17,6 +17,11 @@ import {
   Image,
   Select,
   Form,
+  Alert,
+  Table,
+  Tooltip,
+  Badge,
+  Collapse,
 } from 'antd';
 import {
   ArrowLeftOutlined,
@@ -32,6 +37,8 @@ import {
   FileTextOutlined,
   EyeOutlined,
   EditOutlined,
+  ExperimentOutlined,
+  ClockCircleOutlined,
 } from '@ant-design/icons';
 import { useNavigate, useParams } from 'react-router-dom';
 import type { UploadProps } from 'antd';
@@ -583,11 +590,18 @@ const VetAppointmentDetail: React.FC = () => {
                   </Text>
                 </Descriptions.Item>
                 {appointment.additionalAmount && (
-                  <Descriptions.Item label="Phụ phí">
-                    <Text style={{ color: '#faad14' }}>
-                      {formatPrice(appointment.additionalAmount)}
-                    </Text>
-                  </Descriptions.Item>
+                  <>
+                    <Descriptions.Item label="Phụ phí">
+                      <Text style={{ color: '#faad14' }}>
+                        {formatPrice(appointment.additionalAmount)}
+                      </Text>
+                    </Descriptions.Item>
+                    <Descriptions.Item label={`Phụ phí sau giảm (${appointment.discountPercent}%)`}>
+                      <Text style={{ color: '#52c41a' }}>
+                        {formatPrice(appointment.additionalAmount * (1 - appointment.discountPercent / 100))}
+                      </Text>
+                    </Descriptions.Item>
+                  </>
                 )}
                 <Descriptions.Item label="Phương thức thanh toán">
                   <Tag color={appointment.paymentMethod === 'PAID_AFTER' ? 'orange' : 'green'}>
@@ -694,15 +708,19 @@ const VetAppointmentDetail: React.FC = () => {
 
           {/* Services Information */}
           <Col span={24}>
-            <Card
-              title={
-                <Space>
-                  <MedicineBoxOutlined />
-                  <span>Dịch vụ đã đăng ký</span>
-                </Space>
-              }
+            <Collapse 
+              defaultActiveKey={['services']} 
               className="services-card"
             >
+              <Collapse.Panel 
+                header={
+                  <Space>
+                    <MedicineBoxOutlined />
+                    <span>Dịch vụ đã đăng ký</span>
+                  </Space>
+                } 
+                key="services"
+              >
               <Row gutter={[16, 16]}>
                 {appointment.items.map((item) => (
                   <Col xs={24} md={12} lg={8} key={item.id}>
@@ -748,8 +766,198 @@ const VetAppointmentDetail: React.FC = () => {
                   </Col>
                 ))}
               </Row>
-            </Card>
+              </Collapse.Panel>
+            </Collapse>
           </Col>
+
+          {/* Prescription Section */}
+          {appointment.prescription && appointment.prescription.medicines.length > 0 && (
+            <Col span={24}>
+              <Collapse 
+                defaultActiveKey={['prescription']} 
+                className="prescription-card"
+              >
+                <Collapse.Panel 
+                  header={
+                    <Space>
+                      <ExperimentOutlined style={{ color: "#722ed1" }} />
+                      <span>Đơn thuốc</span>
+                      <Badge 
+                        count={appointment.prescription.medicines.length} 
+                        style={{ backgroundColor: '#722ed1' }}
+                      />
+                    </Space>
+                  } 
+                  key="prescription"
+                  extra={
+                    appointment.prescription?.prescriptionUrl && (
+                      <Button
+                        type="primary"
+                        icon={<FileTextOutlined />}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          window.open(appointment.prescription!.prescriptionUrl!, "_blank");
+                        }}
+                        style={{ backgroundColor: '#722ed1', borderColor: '#722ed1' }}
+                        size="small"
+                      >
+                        Xem đơn thuốc (PDF)
+                      </Button>
+                    )
+                  }
+                >
+                <div style={{ marginBottom: "20px" }}>
+                  <Alert
+                    message="Thông tin đơn thuốc"
+                    description="Đơn thuốc được kê bởi bác sĩ thú y cho cuộc hẹn này. Vui lòng tuân thủ đúng liều dùng và thời gian dùng thuốc."
+                    type="info"
+                    showIcon
+                    style={{ border: '1px solid #d6e4ff', background: '#f6f9ff' }}
+                  />
+                </div>
+
+                <Table
+                  dataSource={appointment.prescription.medicines.map((medicine, index) => ({
+                    key: medicine.id,
+                    index: index + 1,
+                    ...medicine
+                  }))}
+                  pagination={false}
+                  size="middle"
+                  bordered
+                  style={{ 
+                    background: 'white',
+                    borderRadius: '8px',
+                    overflow: 'hidden'
+                  }}
+                  scroll={{ x: 800 }}
+                  columns={[
+                    {
+                      title: '#',
+                      dataIndex: 'index',
+                      key: 'index',
+                      width: 50,
+                      align: 'center',
+                      render: (index: number) => (
+                        <div
+                          style={{
+                            width: '24px',
+                            height: '24px',
+                            borderRadius: '50%',
+                            background: 'linear-gradient(135deg, #722ed1, #9254de)',
+                            color: 'white',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            fontSize: '12px',
+                            fontWeight: 'bold',
+                            margin: '0 auto'
+                          }}
+                        >
+                          {index}
+                        </div>
+                      ),
+                    },
+                    {
+                      title: (
+                        <Space>
+                          <MedicineBoxOutlined style={{ color: '#722ed1' }} />
+                          <span>Tên thuốc</span>
+                        </Space>
+                      ),
+                      dataIndex: 'medicineName',
+                      key: 'medicineName',
+                      width: 200,
+                      render: (name: string) => (
+                        <Text strong style={{ color: '#262626', fontSize: '14px' }}>
+                          {name}
+                        </Text>
+                      ),
+                    },
+                    {
+                      title: (
+                        <Space>
+                          <ExperimentOutlined style={{ color: '#1890ff' }} />
+                          <span>Liều dùng</span>
+                        </Space>
+                      ),
+                      dataIndex: 'dosage',
+                      key: 'dosage',
+                      width: 150,
+                      render: (dosage: string) => (
+                        <Tag 
+                          color="blue" 
+                          style={{ 
+                            fontSize: '13px', 
+                            padding: '4px 8px',
+                            borderRadius: '6px'
+                          }}
+                        >
+                          {dosage}
+                        </Tag>
+                      ),
+                    },
+                    {
+                      title: (
+                        <Space>
+                          <ClockCircleOutlined style={{ color: '#fa8c16' }} />
+                          <span>Thời gian</span>
+                        </Space>
+                      ),
+                      dataIndex: 'durationDays',
+                      key: 'durationDays',
+                      width: 120,
+                      align: 'center',
+                      render: (days: number) => (
+                        <Tag 
+                          color="orange" 
+                          style={{ 
+                            fontSize: '13px',
+                            padding: '4px 8px',
+                            borderRadius: '6px',
+                            fontWeight: '500'
+                          }}
+                        >
+                          {days} ngày
+                        </Tag>
+                      ),
+                    },
+                    {
+                      title: (
+                        <Space>
+                          <FileTextOutlined style={{ color: '#52c41a' }} />
+                          <span>Ghi chú</span>
+                        </Space>
+                      ),
+                      dataIndex: 'note',
+                      key: 'note',
+                      ellipsis: true,
+                      render: (note: string) => (
+                        note ? (
+                          <Tooltip title={note} placement="topLeft">
+                            <Text 
+                              style={{ 
+                                color: '#52c41a', 
+                                fontStyle: 'italic',
+                                fontSize: '13px'
+                              }}
+                            >
+                              {note}
+                            </Text>
+                          </Tooltip>
+                        ) : (
+                          <Text type="secondary" style={{ fontSize: '12px' }}>
+                            Không có ghi chú
+                          </Text>
+                        )
+                      ),
+                    },
+                  ]}
+                />
+                </Collapse.Panel>
+              </Collapse>
+            </Col>
+          )}
 
           {/* Notes */}
           {appointment.notes && (

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 import {
   Card,
   Typography,
@@ -14,7 +14,12 @@ import {
   Space,
   Modal,
   Image,
-} from 'antd';
+  Alert,
+  Table,
+  Tooltip,
+  Badge,
+  Collapse,
+} from "antd";
 import {
   ArrowLeftOutlined,
   UserOutlined,
@@ -27,21 +32,22 @@ import {
   EyeOutlined,
   ExperimentOutlined,
   ClockCircleOutlined,
-  InfoCircleOutlined,
-} from '@ant-design/icons';
-import { useNavigate, useParams } from 'react-router-dom';
-import dayjs from 'dayjs';
-import timezone from 'dayjs/plugin/timezone';
-import utc from 'dayjs/plugin/utc';
-import { toast } from 'react-toastify';
-import { 
-  getAppointmentById, 
+  AlertOutlined,
+  FileProtectOutlined,
+} from "@ant-design/icons";
+import { useNavigate, useParams } from "react-router-dom";
+import dayjs from "dayjs";
+import timezone from "dayjs/plugin/timezone";
+import utc from "dayjs/plugin/utc";
+import { toast } from "react-toastify";
+import {
+  getAppointmentById,
   cancelAppointment,
   type AppointmentDetail,
   type AppointmentItemDetail,
-  type MedicalRecord
-} from '../../../../services/MedicalService';
-import './MedicalAppointmentHistoryDetail.scss';
+  type MedicalRecord,
+} from "../../../../services/MedicalService";
+import "./MedicalAppointmentHistoryDetail.scss";
 
 // Extend dayjs with timezone plugins
 dayjs.extend(utc);
@@ -54,32 +60,32 @@ const ManageAppointmentDetail: React.FC = () => {
   const { appointmentId } = useParams<{ appointmentId: string }>();
   const [appointment, setAppointment] = useState<AppointmentDetail | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
-  
+
   // Cancel modal states
   const [cancelModalVisible, setCancelModalVisible] = useState<boolean>(false);
   const [cancelLoading, setCancelLoading] = useState<boolean>(false);
-  
+
   // Image preview modal states
   const [imagePreviewVisible, setImagePreviewVisible] = useState<boolean>(false);
-  const [previewImage, setPreviewImage] = useState<string>('');
-  const [previewTitle, setPreviewTitle] = useState<string>('');
+  const [previewImage, setPreviewImage] = useState<string>("");
+  const [previewTitle, setPreviewTitle] = useState<string>("");
 
   // Medical record modal states
   const [medicalRecordModalVisible, setMedicalRecordModalVisible] = useState<boolean>(false);
   const [selectedMedicalRecord, setSelectedMedicalRecord] = useState<MedicalRecord | null>(null);
-  const [selectedServiceName, setSelectedServiceName] = useState<string>('');
+  const [selectedServiceName, setSelectedServiceName] = useState<string>("");
 
   // Fetch appointment details
   const fetchAppointmentDetails = async () => {
     if (!appointmentId) return;
-    
+
     setLoading(true);
     try {
       const response = await getAppointmentById(appointmentId);
       setAppointment(response.data);
     } catch (error) {
-      message.error('Không thể tải thông tin cuộc hẹn. Vui lòng thử lại.');
-      console.error('Error fetching appointment details:', error);
+      message.error("Không thể tải thông tin cuộc hẹn. Vui lòng thử lại.");
+      console.error("Error fetching appointment details:", error);
     } finally {
       setLoading(false);
     }
@@ -88,56 +94,56 @@ const ManageAppointmentDetail: React.FC = () => {
   // Get status color
   const getStatusColor = (status: string) => {
     switch (status.toLowerCase()) {
-      case 'booked':
-        return 'blue';
-      case 'checked_in':
-      case 'check_in':
-        return 'cyan';
-      case 'in_progress':
-        return 'orange';
-      case 'check_out':
-      case 'checked_out':
-        return 'green';
-      case 'NO-SHOW':
-        return 'volcano';
-      case 'cancelled':
-        return 'red';
-      case 'completed':
-        return 'green';
+      case "booked":
+        return "blue";
+      case "checked_in":
+      case "check_in":
+        return "cyan";
+      case "in_progress":
+        return "orange";
+      case "check_out":
+      case "checked_out":
+        return "green";
+      case "NO-SHOW":
+        return "volcano";
+      case "cancelled":
+        return "red";
+      case "completed":
+        return "green";
       default:
-        return 'default';
+        return "default";
     }
   };
 
   // Get status text in Vietnamese
   const getStatusText = (status: string) => {
     switch (status.toUpperCase()) {
-      case 'BOOKED':
-        return 'Đã đặt';
-      case 'CHECKED_IN':
-      case 'CHECK_IN':
-        return 'Đã check-in';
-      case 'IN_PROGRESS':
-        return 'Đang thực hiện';
-      case 'CHECK_OUT':
-      case 'CHECKED_OUT':
-        return 'Đã check-out';
-      case 'NO-SHOW':
-        return 'Không đến';
-      case 'CANCELLED':
-        return 'Đã hủy';
-      case 'COMPLETED':
-        return 'Hoàn thành';
+      case "BOOKED":
+        return "Đã đặt";
+      case "CHECKED_IN":
+      case "CHECK_IN":
+        return "Đã check-in";
+      case "IN_PROGRESS":
+        return "Đang thực hiện";
+      case "CHECK_OUT":
+      case "CHECKED_OUT":
+        return "Đã check-out";
+      case "NO-SHOW":
+        return "Không đến";
+      case "CANCELLED":
+        return "Đã hủy";
+      case "COMPLETED":
+        return "Hoàn thành";
       default:
-        return status.replace('_', ' ');
+        return status.replace("_", " ");
     }
   };
 
   // Format price
   const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('vi-VN', {
-      style: 'currency',
-      currency: 'VND',
+    return new Intl.NumberFormat("vi-VN", {
+      style: "currency",
+      currency: "VND",
     }).format(price);
   };
 
@@ -155,28 +161,28 @@ const ManageAppointmentDetail: React.FC = () => {
       setSelectedServiceName(item.serviceName);
       setMedicalRecordModalVisible(true);
     } else {
-      message.info('Dịch vụ này chưa có hồ sơ bệnh án');
+      message.info("Dịch vụ này chưa có hồ sơ bệnh án");
     }
   };
 
   // Handle cancel appointment
   const handleCancel = async () => {
     if (!appointmentId) {
-      message.error('Không tìm thấy ID cuộc hẹn!');
+      message.error("Không tìm thấy ID cuộc hẹn!");
       return;
     }
 
     setCancelLoading(true);
     try {
       await cancelAppointment(appointmentId);
-      toast.success('Hủy thành công');
+      toast.success("Hủy thành công");
       setCancelModalVisible(false);
-      
+
       // Refresh appointment data
       await fetchAppointmentDetails();
     } catch (error) {
-      message.error('Hủy thất bại! Vui lòng thử lại.');
-      console.error('Error cancelling appointment:', error);
+      message.error("Hủy thất bại! Vui lòng thử lại.");
+      console.error("Error cancelling appointment:", error);
     } finally {
       setCancelLoading(false);
     }
@@ -184,6 +190,7 @@ const ManageAppointmentDetail: React.FC = () => {
 
   useEffect(() => {
     fetchAppointmentDetails();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [appointmentId]);
 
   if (loading) {
@@ -199,11 +206,7 @@ const ManageAppointmentDetail: React.FC = () => {
       <div className="appointment-detail-error">
         <Card>
           <Title level={4}>Không tìm thấy thông tin cuộc hẹn</Title>
-          <Button 
-            type="primary" 
-            icon={<ArrowLeftOutlined />}
-            onClick={() => navigate('/lich-su-kham')}
-          >
+          <Button type="primary" icon={<ArrowLeftOutlined />} onClick={() => navigate("/lich-su-kham")}>
             Quay lại
           </Button>
         </Card>
@@ -219,10 +222,7 @@ const ManageAppointmentDetail: React.FC = () => {
           <Row justify="space-between" align="middle">
             <Col>
               <Space>
-                <Button
-                  icon={<ArrowLeftOutlined />}
-                  onClick={() => navigate('/lich-su-kham')}
-                >
+                <Button icon={<ArrowLeftOutlined />} onClick={() => navigate("/lich-su-kham")}>
                   Quay lại
                 </Button>
                 <Title level={2} style={{ margin: 0 }}>
@@ -279,9 +279,7 @@ const ManageAppointmentDetail: React.FC = () => {
             >
               <Descriptions column={1} size="middle">
                 <Descriptions.Item label="Ngày hẹn">
-                  <Text strong>
-                    {dayjs(appointment.appointmentTime).tz('Asia/Ho_Chi_Minh').format('DD/MM/YYYY')}
-                  </Text>
+                  <Text strong>{dayjs(appointment.appointmentTime).tz("Asia/Ho_Chi_Minh").format("DD/MM/YYYY")}</Text>
                 </Descriptions.Item>
                 <Descriptions.Item label="Giờ hẹn">
                   <Text strong>
@@ -289,7 +287,7 @@ const ManageAppointmentDetail: React.FC = () => {
                   </Text>
                 </Descriptions.Item>
                 <Descriptions.Item label="Thời gian tạo">
-                  {dayjs(appointment.createdAt).tz('Asia/Ho_Chi_Minh').format('DD/MM/YYYY HH:mm:ss')}
+                  {dayjs(appointment.createdAt).tz("Asia/Ho_Chi_Minh").format("DD/MM/YYYY HH:mm:ss")}
                 </Descriptions.Item>
               </Descriptions>
             </Card>
@@ -308,22 +306,20 @@ const ManageAppointmentDetail: React.FC = () => {
             >
               {appointment.veterinarian ? (
                 <div className="veterinarian-info">
-                  <Space direction="vertical" size="middle" style={{ width: '100%' }}>
+                  <Space direction="vertical" size="middle" style={{ width: "100%" }}>
                     <div className="vet-header">
                       <Space>
                         <Avatar size="large" icon={<UserOutlined />} />
                         <div>
-                          <Text strong style={{ fontSize: '16px' }}>
+                          <Text strong style={{ fontSize: "16px" }}>
                             {appointment.veterinarian.name}
                           </Text>
                           <br />
-                          <Text type="secondary">
-                            {appointment.veterinarian.gender === 'MALE' ? 'Nam' : 'Nữ'}
-                          </Text>
+                          <Text type="secondary">{appointment.veterinarian.gender === "MALE" ? "Nam" : "Nữ"}</Text>
                         </div>
                       </Space>
                     </div>
-                    
+
                     <Descriptions column={1} size="small">
                       <Descriptions.Item label="Kinh nghiệm">
                         {appointment.veterinarian.experienceYears} năm
@@ -362,30 +358,33 @@ const ManageAppointmentDetail: React.FC = () => {
             >
               <Descriptions column={1} size="middle">
                 <Descriptions.Item label="Tổng tiền ban đầu">
-                  <Text strong style={{ color: '#1890ff' }}>
+                  <Text strong style={{ color: "#1890ff" }}>
                     {formatPrice(appointment.totalAmount)}
                   </Text>
                 </Descriptions.Item>
                 <Descriptions.Item label="Tổng tiền sau giảm giá">
-                  <Text strong style={{ color: '#52c41a', fontSize: '16px' }}>
+                  <Text strong style={{ color: "#52c41a", fontSize: "16px" }}>
                     {formatPrice(appointment.totalAmountAfter)}
                   </Text>
                 </Descriptions.Item>
                 {appointment.additionalAmount && (
-                  <Descriptions.Item label="Phụ phí">
-                    <Text style={{ color: '#faad14' }}>
-                      {formatPrice(appointment.additionalAmount)}
-                    </Text>
-                  </Descriptions.Item>
+                  <>
+                    <Descriptions.Item label="Phụ phí">
+                      <Text style={{ color: "#faad14" }}>{formatPrice(appointment.additionalAmount)}</Text>
+                    </Descriptions.Item>
+                    <Descriptions.Item label={`Phụ phí sau giảm (${appointment.discountPercent}%)`}>
+                      <Text style={{ color: "#52c41a" }}>
+                        {formatPrice(appointment.additionalAmount * (1 - appointment.discountPercent / 100))}
+                      </Text>
+                    </Descriptions.Item>
+                  </>
                 )}
                 <Descriptions.Item label="Phương thức thanh toán">
-                  <Tag color={appointment.paymentMethod === 'PAID_AFTER' ? 'orange' : 'green'}>
-                    {appointment.paymentMethod === 'PAID_AFTER' ? 'Thanh toán sau' : 'Đã thanh toán'}
+                  <Tag color={appointment.paymentMethod === "PAID_AFTER" ? "orange" : "green"}>
+                    {appointment.paymentMethod === "PAID_AFTER" ? "Thanh toán sau" : "Đã thanh toán"}
                   </Tag>
                 </Descriptions.Item>
-                <Descriptions.Item label="Thời gian giao dịch">
-                  {appointment.transactionTime}
-                </Descriptions.Item>
+                <Descriptions.Item label="Thời gian giao dịch">{appointment.transactionTime}</Descriptions.Item>
               </Descriptions>
             </Card>
           </Col>
@@ -402,33 +401,31 @@ const ManageAppointmentDetail: React.FC = () => {
               className="info-card"
             >
               {appointment.checkInImage ? (
-                <div 
+                <div
                   className="image-container clickable-image"
-                  onClick={() => handleImagePreview(appointment.checkInImage!, 'Hình ảnh check-in')}
-                  style={{ cursor: 'pointer' }}
+                  onClick={() => handleImagePreview(appointment.checkInImage!, "Hình ảnh check-in")}
+                  style={{ cursor: "pointer" }}
                 >
                   <img
                     src={appointment.checkInImage}
                     alt="Check-in"
                     style={{
-                      width: '100%',
-                      maxHeight: '300px',
-                      objectFit: 'cover',
-                      borderRadius: '8px',
-                      border: '1px solid #d9d9d9',
-                      transition: 'transform 0.2s ease, box-shadow 0.2s ease'
+                      width: "100%",
+                      maxHeight: "300px",
+                      objectFit: "cover",
+                      borderRadius: "8px",
+                      border: "1px solid #d9d9d9",
+                      transition: "transform 0.2s ease, box-shadow 0.2s ease",
                     }}
                   />
                   <div className="image-overlay">
-                    <Text style={{ color: 'white', fontSize: '14px' }}>
-                      Nhấn để xem chi tiết
-                    </Text>
+                    <Text style={{ color: "white", fontSize: "14px" }}>Nhấn để xem chi tiết</Text>
                   </div>
                 </div>
               ) : (
                 <div className="no-image-placeholder">
-                  <Space direction="vertical" style={{ textAlign: 'center', width: '100%' }}>
-                    <FileImageOutlined style={{ fontSize: '48px', color: '#d9d9d9' }} />
+                  <Space direction="vertical" style={{ textAlign: "center", width: "100%" }}>
+                    <FileImageOutlined style={{ fontSize: "48px", color: "#d9d9d9" }} />
                     <Text type="secondary">Chưa có hình ảnh check-in</Text>
                   </Space>
                 </div>
@@ -447,33 +444,31 @@ const ManageAppointmentDetail: React.FC = () => {
               className="info-card"
             >
               {appointment.checkoutImage ? (
-                <div 
+                <div
                   className="image-container clickable-image"
-                  onClick={() => handleImagePreview(appointment.checkoutImage!, 'Hình ảnh check-out')}
-                  style={{ cursor: 'pointer' }}
+                  onClick={() => handleImagePreview(appointment.checkoutImage!, "Hình ảnh check-out")}
+                  style={{ cursor: "pointer" }}
                 >
                   <img
                     src={appointment.checkoutImage}
                     alt="Check-out"
                     style={{
-                      width: '100%',
-                      maxHeight: '300px',
-                      objectFit: 'cover',
-                      borderRadius: '8px',
-                      border: '1px solid #d9d9d9',
-                      transition: 'transform 0.2s ease, box-shadow 0.2s ease'
+                      width: "100%",
+                      maxHeight: "300px",
+                      objectFit: "cover",
+                      borderRadius: "8px",
+                      border: "1px solid #d9d9d9",
+                      transition: "transform 0.2s ease, box-shadow 0.2s ease",
                     }}
                   />
                   <div className="image-overlay">
-                    <Text style={{ color: 'white', fontSize: '14px' }}>
-                      Nhấn để xem chi tiết
-                    </Text>
+                    <Text style={{ color: "white", fontSize: "14px" }}>Nhấn để xem chi tiết</Text>
                   </div>
                 </div>
               ) : (
                 <div className="no-image-placeholder">
-                  <Space direction="vertical" style={{ textAlign: 'center', width: '100%' }}>
-                    <FileImageOutlined style={{ fontSize: '48px', color: '#d9d9d9' }} />
+                  <Space direction="vertical" style={{ textAlign: "center", width: "100%" }}>
+                    <FileImageOutlined style={{ fontSize: "48px", color: "#d9d9d9" }} />
                     <Text type="secondary">Chưa có hình ảnh check-out</Text>
                   </Space>
                 </div>
@@ -483,192 +478,493 @@ const ManageAppointmentDetail: React.FC = () => {
 
           {/* Services Information */}
           <Col span={24}>
-            <Card
-              title={
-                <Space>
-                  <MedicineBoxOutlined />
-                  <span>Dịch vụ đã đăng ký</span>
-                </Space>
-              }
-              className="services-card"
-            >
-              <Row gutter={[16, 16]}>
-                {appointment.items.map((item) => (
-                  <Col xs={24} md={12} lg={8} key={item.id}>
-                    <Card 
-                      size="small" 
-                      className="service-item"
-                      hoverable={!!item.medicalRecord}
-                      onClick={() => handleMedicalRecordClick(item)}
-                      style={{ 
-                        cursor: item.medicalRecord ? 'pointer' : 'default',
-                        border: item.medicalRecord ? '2px solid #52c41a' : '2px solid #f0f0f0'
-                      }}
-                    >
-                      <Space direction="vertical" style={{ width: '100%' }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                          <Text strong style={{ fontSize: '16px', flex: 1 }}>
-                            {item.serviceName}
-                          </Text>
-                          {item.medicalRecord && (
-                            <Tag color="green" icon={<FileTextOutlined />}>
-                              Có hồ sơ
-                            </Tag>
-                          )}
-                        </div>
-                        <Text strong style={{ color: '#52c41a', fontSize: '18px' }}>
-                          {formatPrice(item.price)}
-                        </Text>
-                        {item.serviceComboName && (
-                          <Tag color="purple">Combo: {item.serviceComboName}</Tag>
-                        )}
-                        {item.medicalRecord && (
-                          <div style={{ marginTop: '8px' }}>
-                            <Space>
-                              <EyeOutlined style={{ color: '#1890ff' }} />
-                              <Text type="secondary" style={{ fontSize: '12px' }}>
-                                Nhấn để xem hồ sơ bệnh án
-                              </Text>
-                            </Space>
-                          </div>
-                        )}
-                      </Space>
-                    </Card>
-                  </Col>
-                ))}
-              </Row>
-            </Card>
-          </Col>
-
-          {/* Prescription Section */}
-          {appointment.prescription && appointment.prescription.medicines.length > 0 && (
-            <Col span={24}>
-              <Card
-                title={
+            <Collapse defaultActiveKey={["services"]} className="services-card">
+              <Collapse.Panel
+                header={
                   <Space>
-                    <ExperimentOutlined style={{ color: '#722ed1' }} />
-                    <span>Đơn thuốc</span>
+                    <MedicineBoxOutlined />
+                    <span>Dịch vụ đã đăng ký</span>
                   </Space>
                 }
-                className="prescription-card"
+                key="services"
               >
-                <div style={{ marginBottom: '16px' }}>
-                  <Text type="secondary">
-                    <InfoCircleOutlined style={{ marginRight: '8px' }} />
-                    Đơn thuốc được kê cho cuộc hẹn này
-                  </Text>
-                </div>
-                
                 <Row gutter={[16, 16]}>
-                  {appointment.prescription.medicines.map((medicine, index) => (
-                    <Col xs={24} md={12} lg={8} key={medicine.id}>
-                      <Card 
-                        size="small" 
-                        className="medicine-item"
-                        style={{ 
-                          border: '2px solid #f0f2ff',
-                          borderRadius: '8px',
-                          background: 'linear-gradient(135deg, #fafbff 0%, #f0f2ff 100%)'
+                  {appointment.items.map((item) => (
+                    <Col xs={24} md={12} lg={8} key={item.id}>
+                      <Card
+                        size="small"
+                        className="service-item"
+                        hoverable={!!item.medicalRecord}
+                        onClick={() => handleMedicalRecordClick(item)}
+                        style={{
+                          cursor: item.medicalRecord ? "pointer" : "default",
+                          border: item.medicalRecord ? "2px solid #52c41a" : "2px solid #f0f0f0",
                         }}
                       >
-                        <Space direction="vertical" style={{ width: '100%' }}>
-                          <div style={{ display: 'flex', alignItems: 'center', marginBottom: '8px' }}>
-                            <div 
-                              style={{ 
-                                width: '32px', 
-                                height: '32px', 
-                                borderRadius: '50%', 
-                                background: '#722ed1', 
-                                display: 'flex', 
-                                alignItems: 'center', 
-                                justifyContent: 'center',
-                                marginRight: '12px'
-                              }}
-                            >
-                              <Text style={{ color: 'white', fontWeight: 'bold', fontSize: '14px' }}>
-                                {index + 1}
-                              </Text>
-                            </div>
-                            <Text strong style={{ fontSize: '16px', color: '#262626' }}>
-                              {medicine.medicineName}
+                        <Space direction="vertical" style={{ width: "100%" }}>
+                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                            <Text strong style={{ fontSize: "16px", flex: 1 }}>
+                              {item.serviceName}
                             </Text>
-                          </div>
-                          
-                          <Descriptions size="small" column={1}>
-                            <Descriptions.Item 
-                              label={
-                                <Text style={{ fontWeight: 600, color: '#595959' }}>
-                                  Liều dùng
-                                </Text>
-                              }
-                            >
-                              <Text style={{ color: '#1890ff', fontWeight: 500 }}>
-                                {medicine.dosage}
-                              </Text>
-                            </Descriptions.Item>
-                            
-                            <Descriptions.Item 
-                              label={
-                                <Text style={{ fontWeight: 600, color: '#595959' }}>
-                                  <ClockCircleOutlined style={{ marginRight: '4px' }} />
-                                  Thời gian
-                                </Text>
-                              }
-                            >
-                              <Tag color="orange" style={{ fontSize: '12px' }}>
-                                {medicine.durationDays} ngày
+                            {item.medicalRecord && (
+                              <Tag color="green" icon={<FileTextOutlined />}>
+                                Có hồ sơ
                               </Tag>
-                            </Descriptions.Item>
-                            
-                            {medicine.note && (
-                              <Descriptions.Item 
-                                label={
-                                  <Text style={{ fontWeight: 600, color: '#595959' }}>
-                                    Ghi chú
-                                  </Text>
-                                }
-                              >
-                                <Text 
-                                  style={{ 
-                                    color: '#52c41a', 
-                                    fontStyle: 'italic',
-                                    fontSize: '13px'
-                                  }}
-                                >
-                                  {medicine.note}
-                                </Text>
-                              </Descriptions.Item>
                             )}
-                          </Descriptions>
+                          </div>
+                          <Text strong style={{ color: "#52c41a", fontSize: "18px" }}>
+                            {formatPrice(item.price)}
+                          </Text>
+                          {item.serviceComboName && <Tag color="purple">Combo: {item.serviceComboName}</Tag>}
+                          {item.medicalRecord && (
+                            <div style={{ marginTop: "8px" }}>
+                              <Space>
+                                <EyeOutlined style={{ color: "#1890ff" }} />
+                                <Text type="secondary" style={{ fontSize: "12px" }}>
+                                  Nhấn để xem hồ sơ bệnh án
+                                </Text>
+                              </Space>
+                            </div>
+                          )}
                         </Space>
                       </Card>
                     </Col>
                   ))}
                 </Row>
-                
-                <div 
-                  style={{ 
-                    marginTop: '20px', 
-                    padding: '16px', 
-                    background: '#f6ffed', 
-                    border: '1px solid #d9f7be',
-                    borderRadius: '8px'
-                  }}
+              </Collapse.Panel>
+            </Collapse>
+          </Col>
+
+          {/* Prescription Section */}
+          {appointment.prescription && appointment.prescription.medicines.length > 0 && (
+            <Col span={24}>
+              <Collapse defaultActiveKey={["prescription"]} className="prescription-card">
+                <Collapse.Panel
+                  header={
+                    <Space>
+                      <ExperimentOutlined style={{ color: "#722ed1" }} />
+                      <span>Đơn thuốc</span>
+                      <Badge count={appointment.prescription.medicines.length} style={{ backgroundColor: "#722ed1" }} />
+                    </Space>
+                  }
+                  key="prescription"
+                  extra={
+                    appointment.prescription?.prescriptionUrl && (
+                      <Button
+                        type="primary"
+                        icon={<FileTextOutlined />}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          window.open(appointment.prescription!.prescriptionUrl!, "_blank");
+                        }}
+                        style={{ backgroundColor: "#722ed1", borderColor: "#722ed1" }}
+                        size="small"
+                      >
+                        Xem đơn thuốc (PDF)
+                      </Button>
+                    )
+                  }
                 >
-                  <Space align="start">
-                    <InfoCircleOutlined style={{ color: '#52c41a', marginTop: '2px' }} />
-                    <div>
-                      <Text strong style={{ color: '#389e0d', display: 'block', marginBottom: '4px' }}>
-                        Lưu ý quan trọng:
-                      </Text>
-                      <Text style={{ color: '#595959', fontSize: '13px' }}>
-                        Vui lòng tuân thủ đúng liều dùng và thời gian dùng thuốc theo chỉ định của bác sĩ. 
-                        Nếu có bất kỳ phản ứng bất thường nào, hãy liên hệ ngay với phòng khám.
-                      </Text>
+                  <div style={{ marginBottom: "20px" }}>
+                    <Alert
+                      message="Thông tin đơn thuốc"
+                      description="Đơn thuốc được kê bởi bác sĩ thú y cho cuộc hẹn này. Vui lòng tuân thủ đúng liều dùng và thời gian dùng thuốc."
+                      type="info"
+                      showIcon
+                      style={{ border: "1px solid #d6e4ff", background: "#f6f9ff" }}
+                    />
+                  </div>
+
+                  <Table
+                    dataSource={appointment.prescription.medicines.map((medicine, index) => ({
+                      key: medicine.id,
+                      index: index + 1,
+                      ...medicine,
+                    }))}
+                    pagination={false}
+                    size="middle"
+                    bordered
+                    style={{
+                      background: "white",
+                      borderRadius: "8px",
+                      overflow: "hidden",
+                    }}
+                    scroll={{ x: 800 }}
+                    columns={[
+                      {
+                        title: "#",
+                        dataIndex: "index",
+                        key: "index",
+                        width: 50,
+                        align: "center",
+                        render: (index: number) => (
+                          <div
+                            style={{
+                              width: "24px",
+                              height: "24px",
+                              borderRadius: "50%",
+                              background: "linear-gradient(135deg, #722ed1, #9254de)",
+                              color: "white",
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              fontSize: "12px",
+                              fontWeight: "bold",
+                              margin: "0 auto",
+                            }}
+                          >
+                            {index}
+                          </div>
+                        ),
+                      },
+                      {
+                        title: (
+                          <Space>
+                            <MedicineBoxOutlined style={{ color: "#722ed1" }} />
+                            <span>Tên thuốc</span>
+                          </Space>
+                        ),
+                        dataIndex: "medicineName",
+                        key: "medicineName",
+                        width: 200,
+                        render: (name: string) => (
+                          <Text strong style={{ color: "#262626", fontSize: "14px" }}>
+                            {name}
+                          </Text>
+                        ),
+                      },
+                      {
+                        title: (
+                          <Space>
+                            <ExperimentOutlined style={{ color: "#1890ff" }} />
+                            <span>Liều dùng</span>
+                          </Space>
+                        ),
+                        dataIndex: "dosage",
+                        key: "dosage",
+                        width: 150,
+                        render: (dosage: string) => (
+                          <Tag
+                            color="blue"
+                            style={{
+                              fontSize: "13px",
+                              padding: "4px 8px",
+                              borderRadius: "6px",
+                            }}
+                          >
+                            {dosage}
+                          </Tag>
+                        ),
+                      },
+                      {
+                        title: (
+                          <Space>
+                            <ClockCircleOutlined style={{ color: "#fa8c16" }} />
+                            <span>Thời gian</span>
+                          </Space>
+                        ),
+                        dataIndex: "durationDays",
+                        key: "durationDays",
+                        width: 120,
+                        align: "center",
+                        render: (days: number) => (
+                          <Tag
+                            color="orange"
+                            style={{
+                              fontSize: "13px",
+                              padding: "4px 8px",
+                              borderRadius: "6px",
+                              fontWeight: "500",
+                            }}
+                          >
+                            {days} ngày
+                          </Tag>
+                        ),
+                      },
+                      {
+                        title: (
+                          <Space>
+                            <FileTextOutlined style={{ color: "#52c41a" }} />
+                            <span>Ghi chú</span>
+                          </Space>
+                        ),
+                        dataIndex: "note",
+                        key: "note",
+                        ellipsis: true,
+                        render: (note: string) =>
+                          note ? (
+                            <Tooltip title={note} placement="topLeft">
+                              <Text
+                                style={{
+                                  color: "#52c41a",
+                                  fontStyle: "italic",
+                                  fontSize: "13px",
+                                }}
+                              >
+                                {note}
+                              </Text>
+                            </Tooltip>
+                          ) : (
+                            <Text type="secondary" style={{ fontSize: "12px" }}>
+                              Không có ghi chú
+                            </Text>
+                          ),
+                      },
+                    ]}
+                  />
+                </Collapse.Panel>
+              </Collapse>
+            </Col>
+          )}
+
+          {/* Medicine Usage Guidelines Section */}
+          {appointment.prescription && appointment.prescription.medicines.length > 0 && (
+            <Col span={24}>
+              <Collapse defaultActiveKey={["guidelines"]} className="medicine-guidelines-card">
+                <Collapse.Panel
+                  header={
+                    <Space>
+                      <AlertOutlined style={{ color: "#52c41a" }} />
+                      <span>📋 Hướng dẫn sử dụng thuốc</span>
+                    </Space>
+                  }
+                  key="guidelines"
+                >
+                  <div
+                    style={{
+                      background: "linear-gradient(135deg, #f6ffed, #f0f9ff)",
+                      border: "1px solid #d9f7be",
+                      borderRadius: "12px",
+                      overflow: "hidden",
+                      boxShadow: "0 2px 8px rgba(0, 0, 0, 0.06)",
+                    }}
+                  >
+                    {/* Header Section */}
+                    <div
+                      style={{
+                        background: "linear-gradient(135deg, #52c41a, #73d13d)",
+                        padding: "16px 20px",
+                        borderBottom: "1px solid #d9f7be",
+                      }}
+                    >
+                      <Space align="center">
+                        <div
+                          style={{
+                            width: "32px",
+                            height: "32px",
+                            borderRadius: "50%",
+                            background: "rgba(255, 255, 255, 0.2)",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            flexShrink: 0,
+                          }}
+                        >
+                          <AlertOutlined style={{ color: "white", fontSize: "16px" }} />
+                        </div>
+                        <div>
+                          <Text strong style={{ color: "white", fontSize: "16px", display: "block" }}>
+                            📋 Hướng dẫn sử dụng thuốc
+                          </Text>
+                          <Text style={{ color: "rgba(255, 255, 255, 0.8)", fontSize: "12px" }}>
+                            Thông tin quan trọng cho người chăm sóc thú cưng
+                          </Text>
+                        </div>
+                      </Space>
                     </div>
-                  </Space>
-                </div>
-              </Card>
+
+                    {/* Content Section */}
+                    <div style={{ padding: "20px" }}>
+                      <Row gutter={[16, 16]}>
+                        {/* General Instructions */}
+                        <Col xs={24} md={12}>
+                          <Card
+                            size="small"
+                            title={
+                              <Space>
+                                <MedicineBoxOutlined style={{ color: "#1890ff" }} />
+                                <Text strong style={{ fontSize: "14px" }}>
+                                  Hướng dẫn chung
+                                </Text>
+                              </Space>
+                            }
+                            style={{ height: "100%", border: "1px solid #e6f4ff" }}
+                            headStyle={{ background: "#f6f9ff", borderBottom: "1px solid #d6e4ff" }}
+                          >
+                            <Space direction="vertical" style={{ width: "100%" }} size="small">
+                              <div style={{ display: "flex", alignItems: "flex-start", gap: "8px" }}>
+                                <div
+                                  style={{
+                                    width: "6px",
+                                    height: "6px",
+                                    borderRadius: "50%",
+                                    background: "#52c41a",
+                                    marginTop: "6px",
+                                    flexShrink: 0,
+                                  }}
+                                />
+                                <Text style={{ fontSize: "13px", lineHeight: "1.5" }}>
+                                  <Text strong>Tuân thủ liều dùng:</Text> Cho thuốc đúng liều lượng và thời gian theo
+                                  chỉ định của bác sĩ thú y
+                                </Text>
+                              </div>
+                              <div style={{ display: "flex", alignItems: "flex-start", gap: "8px" }}>
+                                <div
+                                  style={{
+                                    width: "6px",
+                                    height: "6px",
+                                    borderRadius: "50%",
+                                    background: "#fa8c16",
+                                    marginTop: "6px",
+                                    flexShrink: 0,
+                                  }}
+                                />
+                                <Text style={{ fontSize: "13px", lineHeight: "1.5" }}>
+                                  <Text strong>Không tự ý thay đổi:</Text> Không được tăng, giảm liều hoặc ngừng thuốc
+                                  khi chưa hoàn thành liệu trình
+                                </Text>
+                              </div>
+                              <div style={{ display: "flex", alignItems: "flex-start", gap: "8px" }}>
+                                <div
+                                  style={{
+                                    width: "6px",
+                                    height: "6px",
+                                    borderRadius: "50%",
+                                    background: "#722ed1",
+                                    marginTop: "6px",
+                                    flexShrink: 0,
+                                  }}
+                                />
+                                <Text style={{ fontSize: "13px", lineHeight: "1.5" }}>
+                                  <Text strong>Theo dõi phản ứng:</Text> Quan sát thú cưng trong quá trình dùng thuốc và
+                                  ghi chú bất thường
+                                </Text>
+                              </div>
+                            </Space>
+                          </Card>
+                        </Col>
+
+                        {/* Storage & Safety */}
+                        <Col xs={24} md={12}>
+                          <Card
+                            size="small"
+                            title={
+                              <Space>
+                                <FileProtectOutlined style={{ color: "#fa8c16" }} />
+                                <Text strong style={{ fontSize: "14px" }}>
+                                  Bảo quản & An toàn
+                                </Text>
+                              </Space>
+                            }
+                            style={{ height: "100%", border: "1px solid #fff2e8" }}
+                            headStyle={{ background: "#fff7e6", borderBottom: "1px solid #ffe7ba" }}
+                          >
+                            <Space direction="vertical" style={{ width: "100%" }} size="small">
+                              <div style={{ display: "flex", alignItems: "flex-start", gap: "8px" }}>
+                                <div
+                                  style={{
+                                    width: "6px",
+                                    height: "6px",
+                                    borderRadius: "50%",
+                                    background: "#1890ff",
+                                    marginTop: "6px",
+                                    flexShrink: 0,
+                                  }}
+                                />
+                                <Text style={{ fontSize: "13px", lineHeight: "1.5" }}>
+                                  <Text strong>Bảo quản đúng cách:</Text> Giữ thuốc ở nơi khô ráo, thoáng mát, tránh ánh
+                                  sáng trực tiếp
+                                </Text>
+                              </div>
+                              <div style={{ display: "flex", alignItems: "flex-start", gap: "8px" }}>
+                                <div
+                                  style={{
+                                    width: "6px",
+                                    height: "6px",
+                                    borderRadius: "50%",
+                                    background: "#f5222d",
+                                    marginTop: "6px",
+                                    flexShrink: 0,
+                                  }}
+                                />
+                                <Text style={{ fontSize: "13px", lineHeight: "1.5" }}>
+                                  <Text strong>Tránh xa trẻ em:</Text> Để thuốc ngoài tầm với của trẻ nhỏ và các thú
+                                  cưng khác
+                                </Text>
+                              </div>
+                              <div style={{ display: "flex", alignItems: "flex-start", gap: "8px" }}>
+                                <div
+                                  style={{
+                                    width: "6px",
+                                    height: "6px",
+                                    borderRadius: "50%",
+                                    background: "#52c41a",
+                                    marginTop: "6px",
+                                    flexShrink: 0,
+                                  }}
+                                />
+                                <Text style={{ fontSize: "13px", lineHeight: "1.5" }}>
+                                  <Text strong>Kiểm tra hạn sử dụng:</Text> Không sử dụng thuốc đã hết hạn hoặc có dấu
+                                  hiệu hư hỏng
+                                </Text>
+                              </div>
+                            </Space>
+                          </Card>
+                        </Col>
+
+                        {/* Emergency Contact */}
+                        <Col span={24}>
+                          <Alert
+                            message={
+                              <Space>
+                                <ClockCircleOutlined style={{ color: "#f5222d" }} />
+                                <Text strong style={{ color: "#f5222d" }}>
+                                  Liên hệ khẩn cấp
+                                </Text>
+                              </Space>
+                            }
+                            description={
+                              <div style={{ marginTop: "8px" }}>
+                                <Text style={{ fontSize: "13px", lineHeight: "1.6" }}>
+                                  Nếu thú cưng có các triệu chứng bất thường như:{" "}
+                                  <Text strong>
+                                    buồn nôn, nôn mửa, tiêu chảy, co giật, khó thở, sốt cao hoặc bất kỳ phản ứng bất
+                                    thường nào khác
+                                  </Text>{" "}
+                                  - hãy{" "}
+                                  <Text strong style={{ color: "#f5222d" }}>
+                                    ngừng dùng thuốc ngay lập tức
+                                  </Text>{" "}
+                                  và liên hệ với phòng khám để được tư vấn và hỗ trợ kịp thời.
+                                </Text>
+                                <div
+                                  style={{
+                                    marginTop: "12px",
+                                    padding: "8px 12px",
+                                    background: "#fff2f0",
+                                    border: "1px solid #ffccc7",
+                                    borderRadius: "6px",
+                                  }}
+                                >
+                                  <Text strong style={{ fontSize: "14px", color: "#cf1322" }}>
+                                    📞 Hotline 24/7: Liên hệ phòng khám để được hỗ trợ
+                                  </Text>
+                                </div>
+                              </div>
+                            }
+                            type="warning"
+                            showIcon
+                            style={{
+                              border: "1px solid #ffe7ba",
+                              background: "linear-gradient(135deg, #fff7e6, #fffbf0)",
+                            }}
+                          />
+                        </Col>
+                      </Row>
+                    </div>
+                  </div>
+                </Collapse.Panel>
+              </Collapse>
             </Col>
           )}
 
@@ -682,18 +978,18 @@ const ManageAppointmentDetail: React.FC = () => {
           )}
 
           {/* Cancel Button */}
-          {(appointment.status === 'BOOKED') && (
+          {appointment.status === "BOOKED" && (
             <Col span={24}>
-              <div style={{ textAlign: 'center', marginTop: '24px' }}>
+              <div style={{ textAlign: "center", marginTop: "24px" }}>
                 <Button
                   type="primary"
                   size="large"
                   danger
                   onClick={() => setCancelModalVisible(true)}
                   style={{
-                    fontSize: '16px',
-                    height: '48px',
-                    padding: '0 32px',
+                    fontSize: "16px",
+                    height: "48px",
+                    padding: "0 32px",
                   }}
                 >
                   Hủy cuộc hẹn
@@ -709,28 +1005,17 @@ const ManageAppointmentDetail: React.FC = () => {
           open={cancelModalVisible}
           onCancel={() => setCancelModalVisible(false)}
           footer={[
-            <Button
-              key="cancel"
-              onClick={() => setCancelModalVisible(false)}
-            >
+            <Button key="cancel" onClick={() => setCancelModalVisible(false)}>
               Không
             </Button>,
-            <Button
-              key="confirm"
-              type="primary"
-              danger
-              loading={cancelLoading}
-              onClick={handleCancel}
-            >
+            <Button key="confirm" type="primary" danger loading={cancelLoading} onClick={handleCancel}>
               Có, hủy cuộc hẹn
             </Button>,
           ]}
           centered
         >
           <p>Bạn có chắc chắn muốn hủy cuộc hẹn này không?</p>
-          <p style={{ color: '#666', fontSize: '14px' }}>
-            Hành động này không thể hoàn tác.
-          </p>
+          <p style={{ color: "#666", fontSize: "14px" }}>Hành động này không thể hoàn tác.</p>
         </Modal>
 
         {/* Image Preview Modal */}
@@ -741,18 +1026,18 @@ const ManageAppointmentDetail: React.FC = () => {
           onCancel={() => setImagePreviewVisible(false)}
           width="80%"
           centered
-          style={{ maxWidth: '800px' }}
+          style={{ maxWidth: "800px" }}
         >
-          <div style={{ textAlign: 'center' }}>
+          <div style={{ textAlign: "center" }}>
             <img
               src={previewImage}
               alt={previewTitle}
               style={{
-                width: '100%',
-                height: 'auto',
-                maxHeight: '70vh',
-                objectFit: 'contain',
-                borderRadius: '8px'
+                width: "100%",
+                height: "auto",
+                maxHeight: "70vh",
+                objectFit: "contain",
+                borderRadius: "8px",
               }}
             />
           </div>
@@ -763,56 +1048,56 @@ const ManageAppointmentDetail: React.FC = () => {
           open={medicalRecordModalVisible}
           title={
             <Space>
-              <FileTextOutlined style={{ color: '#52c41a' }} />
+              <FileTextOutlined style={{ color: "#52c41a" }} />
               <span>Hồ sơ bệnh án - {selectedServiceName}</span>
             </Space>
           }
           footer={[
-            <Button
-              key="close"
-              type="primary"
-              onClick={() => setMedicalRecordModalVisible(false)}
-            >
+            <Button key="close" type="primary" onClick={() => setMedicalRecordModalVisible(false)}>
               Đóng
-            </Button>
+            </Button>,
           ]}
           onCancel={() => setMedicalRecordModalVisible(false)}
           width={800}
           className="medical-record-modal"
         >
           {selectedMedicalRecord && (
-            <div style={{ padding: '16px 0' }}>
+            <div style={{ padding: "16px 0" }}>
               <Row gutter={[24, 24]}>
                 <Col span={24}>
                   <Card
                     size="small"
                     title={
                       <Space>
-                        <MedicineBoxOutlined style={{ color: '#1890ff' }} />
+                        <MedicineBoxOutlined style={{ color: "#1890ff" }} />
                         <span>Thông tin chẩn đoán</span>
                       </Space>
                     }
-                    style={{ marginBottom: '16px' }}
+                    style={{ marginBottom: "16px" }}
                   >
                     <Descriptions column={1} bordered size="small">
                       <Descriptions.Item label="Triệu chứng">
-                        <Text>{selectedMedicalRecord.symptom || 'Không có thông tin'}</Text>
+                        <Text>{selectedMedicalRecord.symptom || "Không có thông tin"}</Text>
                       </Descriptions.Item>
                       <Descriptions.Item label="Chẩn đoán">
-                        <Text strong style={{ color: '#fa8c16' }}>
-                          {selectedMedicalRecord.diagnosis || 'Chưa có chẩn đoán'}
+                        <Text strong style={{ color: "#fa8c16" }}>
+                          {selectedMedicalRecord.diagnosis || "Chưa có chẩn đoán"}
                         </Text>
                       </Descriptions.Item>
                       <Descriptions.Item label="Tình trạng sức khỏe">
-                        <Tag 
+                        <Tag
                           color={
-                            selectedMedicalRecord.healthStatus === 'Good' ? 'green' :
-                            selectedMedicalRecord.healthStatus === 'Normal' ? 'blue' :
-                            selectedMedicalRecord.healthStatus === 'Poor' ? 'red' : 'default'
+                            selectedMedicalRecord.healthStatus === "Good"
+                              ? "green"
+                              : selectedMedicalRecord.healthStatus === "Normal"
+                              ? "blue"
+                              : selectedMedicalRecord.healthStatus === "Poor"
+                              ? "red"
+                              : "default"
                           }
-                          style={{ fontSize: '14px', padding: '4px 8px' }}
+                          style={{ fontSize: "14px", padding: "4px 8px" }}
                         >
-                          {selectedMedicalRecord.healthStatus || 'Chưa xác định'}
+                          {selectedMedicalRecord.healthStatus || "Chưa xác định"}
                         </Tag>
                       </Descriptions.Item>
                     </Descriptions>
@@ -825,28 +1110,28 @@ const ManageAppointmentDetail: React.FC = () => {
                       size="small"
                       title={
                         <Space>
-                          <FileImageOutlined style={{ color: '#722ed1' }} />
+                          <FileImageOutlined style={{ color: "#722ed1" }} />
                           <span>Hình ảnh kết quả</span>
                         </Space>
                       }
                     >
-                      <div style={{ textAlign: 'center' }}>
+                      <div style={{ textAlign: "center" }}>
                         <Image
                           src={selectedMedicalRecord.linkResult}
                           alt="Kết quả xét nghiệm"
                           style={{
-                            maxWidth: '100%',
-                            maxHeight: '400px',
-                            borderRadius: '8px',
-                            border: '1px solid #d9d9d9'
+                            maxWidth: "100%",
+                            maxHeight: "400px",
+                            borderRadius: "8px",
+                            border: "1px solid #d9d9d9",
                           }}
                           preview={{
                             mask: (
-                              <div style={{ textAlign: 'center' }}>
-                                <EyeOutlined style={{ fontSize: '20px', marginBottom: '8px' }} />
+                              <div style={{ textAlign: "center" }}>
+                                <EyeOutlined style={{ fontSize: "20px", marginBottom: "8px" }} />
                                 <div>Xem ảnh phóng to</div>
                               </div>
-                            )
+                            ),
                           }}
                         />
                       </div>

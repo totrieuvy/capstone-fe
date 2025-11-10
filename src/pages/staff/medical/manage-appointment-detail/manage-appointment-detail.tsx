@@ -16,6 +16,10 @@ import {
   Upload,
   Image,
   Alert,
+  Table,
+  Tooltip,
+  Badge,
+  Collapse,
 } from "antd";
 import {
   ArrowLeftOutlined,
@@ -31,8 +35,9 @@ import {
   EyeOutlined,
   ExperimentOutlined,
   ClockCircleOutlined,
-  InfoCircleOutlined,
   UploadOutlined,
+  AlertOutlined,
+  FileProtectOutlined,
 } from "@ant-design/icons";
 import { useNavigate, useParams } from "react-router-dom";
 import type { UploadProps } from "antd";
@@ -528,9 +533,16 @@ const ManageAppointmentDetail: React.FC = () => {
                   </Text>
                 </Descriptions.Item>
                 {appointment.additionalAmount && (
-                  <Descriptions.Item label="Phụ phí">
-                    <Text style={{ color: "#faad14" }}>{formatPrice(appointment.additionalAmount)}</Text>
-                  </Descriptions.Item>
+                  <>
+                    <Descriptions.Item label="Phụ phí">
+                      <Text style={{ color: "#faad14" }}>{formatPrice(appointment.additionalAmount)}</Text>
+                    </Descriptions.Item>
+                    <Descriptions.Item label={`Phụ phí sau giảm (${appointment.discountPercent}%)`}>
+                      <Text style={{ color: "#52c41a" }}>
+                        {formatPrice(appointment.additionalAmount * (1 - appointment.discountPercent / 100))}
+                      </Text>
+                    </Descriptions.Item>
+                  </>
                 )}
                 <Descriptions.Item label="Phương thức thanh toán">
                   <Tag color={appointment.paymentMethod === "PAID_AFTER" ? "orange" : "green"}>
@@ -631,15 +643,19 @@ const ManageAppointmentDetail: React.FC = () => {
 
           {/* Services Information */}
           <Col span={24}>
-            <Card
-              title={
-                <Space>
-                  <MedicineBoxOutlined />
-                  <span>Dịch vụ đã đăng ký</span>
-                </Space>
-              }
+            <Collapse 
+              defaultActiveKey={['services']} 
               className="services-card"
             >
+              <Collapse.Panel 
+                header={
+                  <Space>
+                    <MedicineBoxOutlined />
+                    <span>Dịch vụ đã đăng ký</span>
+                  </Space>
+                } 
+                key="services"
+              >
               <Row gutter={[16, 16]}>
                 {appointment.items.map((item) => (
                   <Col xs={24} md={12} lg={8} key={item.id}>
@@ -683,138 +699,418 @@ const ManageAppointmentDetail: React.FC = () => {
                   </Col>
                 ))}
               </Row>
-            </Card>
+              </Collapse.Panel>
+            </Collapse>
           </Col>
 
           {/* Prescription Section */}
           {appointment.prescription && appointment.prescription.medicines.length > 0 && (
             <Col span={24}>
-              <Card
-                title={
-                  <Space>
-                    <ExperimentOutlined style={{ color: "#722ed1" }} />
-                    <span>Đơn thuốc</span>
-                  </Space>
-                }
+              <Collapse 
+                defaultActiveKey={['prescription']} 
                 className="prescription-card"
               >
-                {appointment.prescription?.prescriptionUrl && (
-                  <div style={{ textAlign: "right", marginBottom: "16px" }}>
-                    <Button
-                      type="primary"
-                      icon={<FileTextOutlined />}
-                      onClick={() => window.open(appointment.prescription!.prescriptionUrl!, "_blank")}
-                    >
-                      Xem đơn thuốc (PDF)
-                    </Button>
-                  </div>
-                )}
-
-                <div style={{ marginBottom: "16px" }}>
-                  <Text type="secondary">
-                    <InfoCircleOutlined style={{ marginRight: "8px" }} />
-                    Đơn thuốc được kê cho cuộc hẹn này
-                  </Text>
+                <Collapse.Panel 
+                  header={
+                    <Space>
+                      <ExperimentOutlined style={{ color: "#722ed1" }} />
+                      <span>Đơn thuốc</span>
+                      <Badge 
+                        count={appointment.prescription.medicines.length} 
+                        style={{ backgroundColor: '#722ed1' }}
+                      />
+                    </Space>
+                  } 
+                  key="prescription"
+                  extra={
+                    appointment.prescription?.prescriptionUrl && (
+                      <Button
+                        type="primary"
+                        icon={<FileTextOutlined />}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          window.open(appointment.prescription!.prescriptionUrl!, "_blank");
+                        }}
+                        style={{ backgroundColor: '#722ed1', borderColor: '#722ed1' }}
+                        size="small"
+                      >
+                        Xem đơn thuốc (PDF)
+                      </Button>
+                    )
+                  }
+                >
+                <div style={{ marginBottom: "20px" }}>
+                  <Alert
+                    message="Thông tin đơn thuốc"
+                    description="Đơn thuốc được kê bởi bác sĩ thú y cho cuộc hẹn này. Vui lòng tuân thủ đúng liều dùng và thời gian dùng thuốc."
+                    type="info"
+                    showIcon
+                    style={{ border: '1px solid #d6e4ff', background: '#f6f9ff' }}
+                  />
                 </div>
 
-                <Row gutter={[16, 16]}>
-                  {appointment.prescription.medicines.map((medicine, index) => (
-                    <Col xs={24} md={12} lg={8} key={medicine.id}>
-                      <Card
-                        size="small"
-                        className="medicine-item"
-                        style={{
-                          border: "2px solid #f0f2ff",
-                          borderRadius: "8px",
-                          background: "linear-gradient(135deg, #fafbff 0%, #f0f2ff 100%)",
-                        }}
-                      >
-                        <Space direction="vertical" style={{ width: "100%" }}>
-                          <div style={{ display: "flex", alignItems: "center", marginBottom: "8px" }}>
-                            <div
-                              style={{
-                                width: "32px",
-                                height: "32px",
-                                borderRadius: "50%",
-                                background: "#722ed1",
-                                display: "flex",
-                                alignItems: "center",
-                                justifyContent: "center",
-                                marginRight: "12px",
+                <Table
+                  dataSource={appointment.prescription.medicines.map((medicine, index) => ({
+                    key: medicine.id,
+                    index: index + 1,
+                    ...medicine
+                  }))}
+                  pagination={false}
+                  size="middle"
+                  bordered
+                  style={{ 
+                    background: 'white',
+                    borderRadius: '8px',
+                    overflow: 'hidden'
+                  }}
+                  scroll={{ x: 800 }}
+                  columns={[
+                    {
+                      title: '#',
+                      dataIndex: 'index',
+                      key: 'index',
+                      width: 50,
+                      align: 'center',
+                      render: (index: number) => (
+                        <div
+                          style={{
+                            width: '24px',
+                            height: '24px',
+                            borderRadius: '50%',
+                            background: 'linear-gradient(135deg, #722ed1, #9254de)',
+                            color: 'white',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            fontSize: '12px',
+                            fontWeight: 'bold',
+                            margin: '0 auto'
+                          }}
+                        >
+                          {index}
+                        </div>
+                      ),
+                    },
+                    {
+                      title: (
+                        <Space>
+                          <MedicineBoxOutlined style={{ color: '#722ed1' }} />
+                          <span>Tên thuốc</span>
+                        </Space>
+                      ),
+                      dataIndex: 'medicineName',
+                      key: 'medicineName',
+                      width: 200,
+                      render: (name: string) => (
+                        <Text strong style={{ color: '#262626', fontSize: '14px' }}>
+                          {name}
+                        </Text>
+                      ),
+                    },
+                    {
+                      title: (
+                        <Space>
+                          <ExperimentOutlined style={{ color: '#1890ff' }} />
+                          <span>Liều dùng</span>
+                        </Space>
+                      ),
+                      dataIndex: 'dosage',
+                      key: 'dosage',
+                      width: 150,
+                      render: (dosage: string) => (
+                        <Tag 
+                          color="blue" 
+                          style={{ 
+                            fontSize: '13px', 
+                            padding: '4px 8px',
+                            borderRadius: '6px'
+                          }}
+                        >
+                          {dosage}
+                        </Tag>
+                      ),
+                    },
+                    {
+                      title: (
+                        <Space>
+                          <ClockCircleOutlined style={{ color: '#fa8c16' }} />
+                          <span>Thời gian</span>
+                        </Space>
+                      ),
+                      dataIndex: 'durationDays',
+                      key: 'durationDays',
+                      width: 120,
+                      align: 'center',
+                      render: (days: number) => (
+                        <Tag 
+                          color="orange" 
+                          style={{ 
+                            fontSize: '13px',
+                            padding: '4px 8px',
+                            borderRadius: '6px',
+                            fontWeight: '500'
+                          }}
+                        >
+                          {days} ngày
+                        </Tag>
+                      ),
+                    },
+                    {
+                      title: (
+                        <Space>
+                          <FileTextOutlined style={{ color: '#52c41a' }} />
+                          <span>Ghi chú</span>
+                        </Space>
+                      ),
+                      dataIndex: 'note',
+                      key: 'note',
+                      ellipsis: true,
+                      render: (note: string) => (
+                        note ? (
+                          <Tooltip title={note} placement="topLeft">
+                            <Text 
+                              style={{ 
+                                color: '#52c41a', 
+                                fontStyle: 'italic',
+                                fontSize: '13px'
                               }}
                             >
-                              <Text style={{ color: "white", fontWeight: "bold", fontSize: "14px" }}>{index + 1}</Text>
-                            </div>
-                            <Text strong style={{ fontSize: "16px", color: "#262626" }}>
-                              {medicine.medicineName}
+                              {note}
                             </Text>
-                          </div>
+                          </Tooltip>
+                        ) : (
+                          <Text type="secondary" style={{ fontSize: '12px' }}>
+                            Không có ghi chú
+                          </Text>
+                        )
+                      ),
+                    },
+                  ]}
+                />
+                </Collapse.Panel>
+              </Collapse>
+            </Col>
+          )}
 
-                          <Descriptions size="small" column={1}>
-                            <Descriptions.Item
-                              label={<Text style={{ fontWeight: 600, color: "#595959" }}>Liều dùng</Text>}
-                            >
-                              <Text style={{ color: "#1890ff", fontWeight: 500 }}>{medicine.dosage}</Text>
-                            </Descriptions.Item>
-
-                            <Descriptions.Item
-                              label={
-                                <Text style={{ fontWeight: 600, color: "#595959" }}>
-                                  <ClockCircleOutlined style={{ marginRight: "4px" }} />
-                                  Thời gian
-                                </Text>
-                              }
-                            >
-                              <Tag color="orange" style={{ fontSize: "12px" }}>
-                                {medicine.durationDays} ngày
-                              </Tag>
-                            </Descriptions.Item>
-
-                            {medicine.note && (
-                              <Descriptions.Item
-                                label={<Text style={{ fontWeight: 600, color: "#595959" }}>Ghi chú</Text>}
-                              >
-                                <Text
-                                  style={{
-                                    color: "#52c41a",
-                                    fontStyle: "italic",
-                                    fontSize: "13px",
-                                  }}
-                                >
-                                  {medicine.note}
-                                </Text>
-                              </Descriptions.Item>
-                            )}
-                          </Descriptions>
-                        </Space>
-                      </Card>
-                    </Col>
-                  ))}
-                </Row>
-
+          {/* Medicine Usage Guidelines Section */}
+          {appointment.prescription && appointment.prescription.medicines.length > 0 && (
+            <Col span={24}>
+              <Collapse 
+                defaultActiveKey={['guidelines']} 
+                className="medicine-guidelines-card"
+              >
+                <Collapse.Panel 
+                  header={
+                    <Space>
+                      <AlertOutlined style={{ color: "#52c41a" }} />
+                      <span> Hướng dẫn sử dụng thuốc</span>
+                    </Space>
+                  } 
+                  key="guidelines"
+                >
                 <div
                   style={{
-                    marginTop: "20px",
-                    padding: "16px",
-                    background: "#f6ffed",
+                    background: "linear-gradient(135deg, #f6ffed, #f0f9ff)",
                     border: "1px solid #d9f7be",
-                    borderRadius: "8px",
+                    borderRadius: "12px",
+                    overflow: 'hidden',
+                    boxShadow: '0 2px 8px rgba(0, 0, 0, 0.06)'
                   }}
                 >
-                  <Space align="start">
-                    <InfoCircleOutlined style={{ color: "#52c41a", marginTop: "2px" }} />
-                    <div>
-                      <Text strong style={{ color: "#389e0d", display: "block", marginBottom: "4px" }}>
-                        Lưu ý quan trọng:
-                      </Text>
-                      <Text style={{ color: "#595959", fontSize: "13px" }}>
-                        Vui lòng tuân thủ đúng liều dùng và thời gian dùng thuốc theo chỉ định của bác sĩ. Nếu có bất kỳ
-                        phản ứng bất thường nào, hãy liên hệ ngay với phòng khám.
-                      </Text>
-                    </div>
-                  </Space>
+                  {/* Header Section */}
+                  <div
+                    style={{
+                      background: 'linear-gradient(135deg, #52c41a, #73d13d)',
+                      padding: '16px 20px',
+                      borderBottom: '1px solid #d9f7be'
+                    }}
+                  >
+                    <Space align="center">
+                      <div
+                        style={{
+                          width: '32px',
+                          height: '32px',
+                          borderRadius: '50%',
+                          background: 'rgba(255, 255, 255, 0.2)',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          flexShrink: 0
+                        }}
+                      >
+                        <AlertOutlined style={{ color: 'white', fontSize: '16px' }} />
+                      </div>
+                      <div>
+                        <Text strong style={{ color: 'white', fontSize: '16px', display: 'block' }}>
+                          📋 Hướng dẫn sử dụng thuốc
+                        </Text>
+                        <Text style={{ color: 'rgba(255, 255, 255, 0.8)', fontSize: '12px' }}>
+                          Thông tin quan trọng cho người chăm sóc thú cưng
+                        </Text>
+                      </div>
+                    </Space>
+                  </div>
+
+                  {/* Content Section */}
+                  <div style={{ padding: '20px' }}>
+                    <Row gutter={[16, 16]}>
+                      {/* General Instructions */}
+                      <Col xs={24} md={12}>
+                        <Card 
+                          size="small" 
+                          title={
+                            <Space>
+                              <MedicineBoxOutlined style={{ color: '#1890ff' }} />
+                              <Text strong style={{ fontSize: '14px' }}>Hướng dẫn chung</Text>
+                            </Space>
+                          }
+                          style={{ height: '100%', border: '1px solid #e6f4ff' }}
+                          headStyle={{ background: '#f6f9ff', borderBottom: '1px solid #d6e4ff' }}
+                        >
+                          <Space direction="vertical" style={{ width: '100%' }} size="small">
+                            <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                              <div style={{ 
+                                width: '6px', 
+                                height: '6px', 
+                                borderRadius: '50%', 
+                                background: '#52c41a', 
+                                marginTop: '6px',
+                                flexShrink: 0
+                              }} />
+                              <Text style={{ fontSize: '13px', lineHeight: '1.5' }}>
+                                <Text strong>Tuân thủ liều dùng:</Text> Cho thuốc đúng liều lượng và thời gian theo chỉ định của bác sĩ thú y
+                              </Text>
+                            </div>
+                            <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                              <div style={{ 
+                                width: '6px', 
+                                height: '6px', 
+                                borderRadius: '50%', 
+                                background: '#fa8c16', 
+                                marginTop: '6px',
+                                flexShrink: 0
+                              }} />
+                              <Text style={{ fontSize: '13px', lineHeight: '1.5' }}>
+                                <Text strong>Không tự ý thay đổi:</Text> Không được tăng, giảm liều hoặc ngừng thuốc khi chưa hoàn thành liệu trình
+                              </Text>
+                            </div>
+                            <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                              <div style={{ 
+                                width: '6px', 
+                                height: '6px', 
+                                borderRadius: '50%', 
+                                background: '#722ed1', 
+                                marginTop: '6px',
+                                flexShrink: 0
+                              }} />
+                              <Text style={{ fontSize: '13px', lineHeight: '1.5' }}>
+                                <Text strong>Theo dõi phản ứng:</Text> Quan sát thú cưng trong quá trình dùng thuốc và ghi chú bất thường
+                              </Text>
+                            </div>
+                          </Space>
+                        </Card>
+                      </Col>
+
+                      {/* Storage & Safety */}
+                      <Col xs={24} md={12}>
+                        <Card 
+                          size="small" 
+                          title={
+                            <Space>
+                              <FileProtectOutlined style={{ color: '#fa8c16' }} />
+                              <Text strong style={{ fontSize: '14px' }}>Bảo quản & An toàn</Text>
+                            </Space>
+                          }
+                          style={{ height: '100%', border: '1px solid #fff2e8' }}
+                          headStyle={{ background: '#fff7e6', borderBottom: '1px solid #ffe7ba' }}
+                        >
+                          <Space direction="vertical" style={{ width: '100%' }} size="small">
+                            <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                              <div style={{ 
+                                width: '6px', 
+                                height: '6px', 
+                                borderRadius: '50%', 
+                                background: '#1890ff', 
+                                marginTop: '6px',
+                                flexShrink: 0
+                              }} />
+                              <Text style={{ fontSize: '13px', lineHeight: '1.5' }}>
+                                <Text strong>Bảo quản đúng cách:</Text> Giữ thuốc ở nơi khô ráo, thoáng mát, tránh ánh sáng trực tiếp
+                              </Text>
+                            </div>
+                            <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                              <div style={{ 
+                                width: '6px', 
+                                height: '6px', 
+                                borderRadius: '50%', 
+                                background: '#f5222d', 
+                                marginTop: '6px',
+                                flexShrink: 0
+                              }} />
+                              <Text style={{ fontSize: '13px', lineHeight: '1.5' }}>
+                                <Text strong>Tránh xa trẻ em:</Text> Để thuốc ngoài tầm với của trẻ nhỏ và các thú cưng khác
+                              </Text>
+                            </div>
+                            <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                              <div style={{ 
+                                width: '6px', 
+                                height: '6px', 
+                                borderRadius: '50%', 
+                                background: '#52c41a', 
+                                marginTop: '6px',
+                                flexShrink: 0
+                              }} />
+                              <Text style={{ fontSize: '13px', lineHeight: '1.5' }}>
+                                <Text strong>Kiểm tra hạn sử dụng:</Text> Không sử dụng thuốc đã hết hạn hoặc có dấu hiệu hư hỏng
+                              </Text>
+                            </div>
+                          </Space>
+                        </Card>
+                      </Col>
+
+                      {/* Emergency Contact */}
+                      <Col span={24}>
+                        <Alert
+                          message={
+                            <Space>
+                              <ClockCircleOutlined style={{ color: '#f5222d' }} />
+                              <Text strong style={{ color: '#f5222d' }}>Liên hệ khẩn cấp</Text>
+                            </Space>
+                          }
+                          description={
+                            <div style={{ marginTop: '8px' }}>
+                              <Text style={{ fontSize: '13px', lineHeight: '1.6' }}>
+                                Nếu thú cưng có các triệu chứng bất thường như: <Text strong>buồn nôn, nôn mửa, tiêu chảy, 
+                                co giật, khó thở, sốt cao hoặc bất kỳ phản ứng bất thường nào khác</Text> - 
+                                hãy <Text strong style={{ color: '#f5222d' }}>ngừng dùng thuốc ngay lập tức</Text> và 
+                                liên hệ với phòng khám để được tư vấn và hỗ trợ kịp thời.
+                              </Text>
+                              <div style={{ 
+                                marginTop: '12px', 
+                                padding: '8px 12px', 
+                                background: '#fff2f0', 
+                                border: '1px solid #ffccc7', 
+                                borderRadius: '6px' 
+                              }}>
+                                <Text strong style={{ fontSize: '14px', color: '#cf1322' }}>
+                                  📞 Hotline 24/7: Liên hệ phòng khám để được hỗ trợ
+                                </Text>
+                              </div>
+                            </div>
+                          }
+                          type="warning"
+                          showIcon
+                          style={{ 
+                            border: '1px solid #ffe7ba',
+                            background: 'linear-gradient(135deg, #fff7e6, #fffbf0)'
+                          }}
+                        />
+                      </Col>
+                    </Row>
+                  </div>
                 </div>
-              </Card>
+                </Collapse.Panel>
+              </Collapse>
             </Col>
           )}
 
@@ -1220,7 +1516,12 @@ const ManageAppointmentDetail: React.FC = () => {
                       <Text strong>Dịch vụ bổ sung:</Text>
                       <div style={{ color: "#1890ff" }}>{formatPrice(appointment.additionalAmount)}</div>
                     </Col>
-                    <Col span={12}></Col>
+                    <Col span={12}>
+                      <Text strong>Dịch vụ bổ sung sau giảm ({appointment.discountPercent}%):</Text>
+                      <div style={{ color: "#52c41a" }}>
+                        {formatPrice(appointment.additionalAmount * (1 - appointment.discountPercent / 100))}
+                      </div>
+                    </Col>
                   </>
                 )}
                 <Col span={24}>
@@ -1234,7 +1535,12 @@ const ManageAppointmentDetail: React.FC = () => {
                     <Col>
                       <Text strong style={{ fontSize: "18px", color: "#f5222d" }}>
                         {appointment
-                          ? formatPrice(appointment.totalAmountAfter + (appointment.additionalAmount || 0))
+                          ? formatPrice(
+                              appointment.totalAmountAfter + 
+                              (appointment.additionalAmount 
+                                ? appointment.additionalAmount * (1 - appointment.discountPercent / 100)
+                                : 0)
+                            )
                           : "0 đ"}
                       </Text>
                     </Col>

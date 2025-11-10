@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { message, Spin, Button, Popconfirm, Tag } from "antd";
-import { StopOutlined, ClockCircleOutlined, ArrowLeftOutlined } from "@ant-design/icons";
+import { StopOutlined, ClockCircleOutlined, ArrowLeftOutlined, CommentOutlined } from "@ant-design/icons";
+import { Modal, Input, Rate } from "antd";
+
 import api from "../../../../config/axios";
 import "./TrackOrderDetail.scss";
 import dayjs from "dayjs";
@@ -37,6 +39,14 @@ interface OrderDetail {
   deliveredAt: string | null;
 }
 
+interface Feedback {
+  feedbackId: string;
+  customerName: string;
+  rating: number;
+  comment: string;
+  createdAt: string;
+}
+
 const TrackOrderDetail = () => {
   const { orderId } = useParams<{ orderId: string }>();
   const navigate = useNavigate();
@@ -45,11 +55,22 @@ const TrackOrderDetail = () => {
   const [countdown, setCountdown] = useState<string>("");
   const [cancelDisabled, setCancelDisabled] = useState(false);
   const [isCancelling, setIsCancelling] = useState(false);
+  const [isFeedbackModalOpen, setIsFeedbackModalOpen] = useState(false);
+  const [selectedProductId, setSelectedProductId] = useState<string | null>(null);
+  const [rating, setRating] = useState<number>(5);
+  const [comment, setComment] = useState<string>("");
+  const [feedbacks, setFeedbacks] = useState<Record<string, Feedback[]>>({});
 
   useEffect(() => {
     document.title = `Chi tiết đơn hàng #${orderId}`;
     if (orderId) fetchOrderDetail(orderId);
   }, [orderId]);
+
+  useEffect(() => {
+    if (order && order.status === "DELIVERED") {
+      order.items.forEach((item) => fetchFeedbacks(item.productId));
+    }
+  }, [order]);
 
   useEffect(() => {
     let interval: NodeJS.Timeout | null = null;
@@ -82,6 +103,17 @@ const TrackOrderDetail = () => {
       if (interval) clearInterval(interval);
     };
   }, [order]);
+
+  const fetchFeedbacks = async (productId: string) => {
+    try {
+      const { data } = await api.get(`/api/feedbacks/${productId}`);
+      if (data.code === 200) {
+        setFeedbacks((prev) => ({ ...prev, [productId]: data.data }));
+      }
+    } catch {
+      console.warn("Không thể tải feedbacks cho sản phẩm:", productId);
+    }
+  };
 
   const fetchOrderDetail = async (id: string) => {
     setLoading(true);
@@ -139,6 +171,26 @@ const TrackOrderDetail = () => {
     return <Tag color={colorMap[status]}>{textMap[status]}</Tag>;
   };
 
+  const handleSubmitFeedback = async () => {
+    if (!selectedProductId) return;
+    try {
+      const { data } = await api.post("/api/feedbacks", {
+        productId: selectedProductId,
+        rating,
+        comment,
+      });
+      if (data.code === 200) {
+        message.success("Cảm ơn bạn đã đánh giá sản phẩm!");
+        setIsFeedbackModalOpen(false);
+        fetchFeedbacks(selectedProductId);
+      } else {
+        message.error(data.message || "Không thể gửi đánh giá.");
+      }
+    } catch {
+      message.error("Lỗi khi gửi đánh giá.");
+    }
+  };
+
   const discountValue = order ? (order.totalAmount * order.discountPercent) / 100 : 0;
 
   if (loading)
@@ -179,10 +231,10 @@ const TrackOrderDetail = () => {
         {/* Items */}
         <div className="order-items">
           <h3>Sản phẩm ({order.items.length})</h3>
-          {order.items.length === 0 ? (
-            <p style={{ color: "#999", fontStyle: "italic" }}>Không có sản phẩm trong đơn này.</p>
-          ) : (
-            order.items.map((item) => (
+          {order.items.map((item) => {
+            const fb = feedbacks[item.productId];
+            const hasFeedback = fb && fb.length > 0;
+            return (
               <div key={item.productId} className="item">
                 <div className="item-info">
                   <p className="name">{item.name}</p>
@@ -192,9 +244,45 @@ const TrackOrderDetail = () => {
                   <p className="unit-price">{item.unitPrice.toLocaleString()}đ</p>
                   <p className="total">{(item.unitPrice * item.quantity).toLocaleString()}đ</p>
                 </div>
+
+                {order.status === "DELIVERED" &&
+                  (hasFeedback ? (
+                    <Tag color="blue" className="feedback-tag">
+                      Đã đánh giá
+                    </Tag>
+                  ) : (
+                    <Button
+                      icon={<CommentOutlined />}
+                      type="primary"
+                      className="feedback-btn"
+                      onClick={() => {
+                        setSelectedProductId(item.productId);
+                        setIsFeedbackModalOpen(true);
+                      }}
+                    >
+                      Gửi đánh giá
+                    </Button>
+                  ))}
+
+                {/* {hasFeedback && (
+                  <div className="feedback-display">
+                    {fb.map((f) => (
+                      <div key={f.feedbackId} className="feedback-card">
+                        <div className="feedback-header">
+                          <strong>{f.customerName}</strong>
+                          <Rate disabled value={f.rating} />
+                        </div>
+                        <p className="comment">“{f.comment}”</p>
+                        <span className="date">
+                          {dayjs(f.createdAt).tz("Asia/Ho_Chi_Minh").format("HH:mm DD/MM/YYYY")}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )} */}
               </div>
-            ))
-          )}
+            );
+          })}
         </div>
 
         {/* Shipping & Payment */}
@@ -287,6 +375,25 @@ const TrackOrderDetail = () => {
           )}
         </div>
       </div>
+
+      <Modal
+        title="Đánh giá sản phẩm"
+        open={isFeedbackModalOpen}
+        onCancel={() => setIsFeedbackModalOpen(false)}
+        onOk={handleSubmitFeedback}
+        okText="Gửi đánh giá"
+        cancelText="Hủy"
+      >
+        <p>Chấm sao:</p>
+        <Rate value={rating} onChange={(v) => setRating(v)} />
+        <p>Bình luận:</p>
+        <Input.TextArea
+          rows={4}
+          value={comment}
+          onChange={(e) => setComment(e.target.value)}
+          placeholder="Chia sẻ trải nghiệm của bạn..."
+        />
+      </Modal>
     </div>
   );
 };

@@ -789,7 +789,6 @@ function BoardingHamster() {
 
                         // Check if this cage type is available for all selected dates
                         const isFullyAvailable = cageAvailability.dailyAvailability.every(day => day.isAvailable);
-                        const totalAvailableCages = Math.min(...cageAvailability.dailyAvailability.map(day => day.availableCages));
 
                         return (
                           <Card
@@ -872,53 +871,22 @@ function BoardingHamster() {
                               <Col xs={24} sm={8} md={8}>
                                 <div style={{ textAlign: "center" }}>
                                   <div style={{ 
-                                    padding: "12px", 
+                                    padding: "16px", 
                                     borderRadius: 8, 
                                     background: isFullyAvailable ? "#f6ffed" : "#fff2f0",
                                     border: isFullyAvailable ? "1px solid #b7eb8f" : "1px solid #ffccc7",
-                                    marginBottom: 12
                                   }}>
                                     <p style={{ 
                                       margin: 0, 
-                                      fontSize: 14, 
+                                      fontSize: 16, 
                                       color: isFullyAvailable ? "#52c41a" : "#ff4d4f", 
                                       fontWeight: 600 
                                     }}>
-                                      {isFullyAvailable ? "✅ Có sẵn" : "❌ Không đủ chuồng"}
+                                      {isFullyAvailable ? "✅ Có sẵn" : "❌ Không có sẵn"}
                                     </p>
-                                    <p style={{ margin: "4px 0 0 0", fontSize: 12, color: "#666" }}>
-                                      Tối thiểu {totalAvailableCages} chuồng trống
+                                    <p style={{ margin: "4px 0 0 0", fontSize: 14, color: "#666" }}>
+                                      {isFullyAvailable ? "Sẵn sàng cho thời gian đã chọn" : "Không đủ chuồng cho khoảng thời gian này"}
                                     </p>
-                                  </div>
-
-                                  {/* Daily availability breakdown */}
-                                  <div style={{ 
-                                    maxHeight: 100, 
-                                    overflowY: "auto",
-                                    display: "grid",
-                                    gridTemplateColumns: "repeat(auto-fit, minmax(50px, 1fr))",
-                                    gap: 4
-                                  }}>
-                                    {cageAvailability.dailyAvailability.map((day) => (
-                                      <div 
-                                        key={day.date}
-                                        style={{ 
-                                          textAlign: "center", 
-                                          padding: "4px 2px", 
-                                          borderRadius: 4, 
-                                          border: "1px solid #f0f0f0",
-                                          background: day.isAvailable ? "#f6ffed" : "#fff2f0",
-                                          fontSize: 10
-                                        }}
-                                      >
-                                        <div style={{ fontWeight: 600, color: "#333" }}>
-                                          {dayjs(day.date).format("DD/MM")}
-                                        </div>
-                                        <div style={{ color: day.isAvailable ? "#52c41a" : "#ff4d4f" }}>
-                                          {day.availableCages}
-                                        </div>
-                                      </div>
-                                    ))}
                                   </div>
                                 </div>
                               </Col>

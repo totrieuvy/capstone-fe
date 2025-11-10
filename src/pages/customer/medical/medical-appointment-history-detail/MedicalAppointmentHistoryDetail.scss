@@ -528,3 +528,446 @@
     background: #a8a8a8;
   }
 }
+
+// Collapsible sections styles
+.appointment-detail {
+  .services-card,
+  .prescription-card,
+  .medicine-guidelines-card {
+    .ant-collapse {
+      border: 1px solid #e8e8e8;
+      border-radius: 8px;
+      background: white;
+      
+      .ant-collapse-item {
+        border-bottom: none;
+        
+        .ant-collapse-header {
+          padding: 16px 20px;
+          font-weight: 600;
+          font-size: 16px;
+          color: #262626;
+          background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+          border-bottom: 2px solid #e6f4ff;
+          
+          .ant-collapse-arrow {
+            color: #1890ff;
+            font-size: 14px;
+          }
+        }
+        
+        .ant-collapse-content {
+          .ant-collapse-content-box {
+            padding: 20px;
+          }
+        }
+      }
+    }
+  }
+
+  .services-card {
+    .ant-collapse-header {
+      background: linear-gradient(135deg, #fff2e8 0%, #fff7e6 100%);
+      border-bottom: 2px solid #ffe7ba;
+      
+      .ant-collapse-arrow {
+        color: #fa8c16;
+      }
+    }
+
+    .service-item {
+      border: 2px solid #f0f0f0;
+      border-radius: 8px;
+      transition: all 0.3s ease;
+      height: 100%;
+
+      &:hover {
+        border-color: #52c41a;
+        box-shadow: 0 4px 8px rgba(82, 196, 26, 0.2);
+        transform: translateY(-2px);
+      }
+
+      .ant-card-body {
+        padding: 16px;
+        text-align: center;
+      }
+    }
+  }
+
+  .prescription-card {
+    .ant-collapse-header {
+      background: linear-gradient(135deg, #f9f0ff 0%, #f6ffed 100%);
+      border-bottom: 2px solid #efdbff;
+      
+      .ant-collapse-arrow {
+        color: #722ed1;
+      }
+    }
+
+    .ant-table {
+      .ant-table-thead > tr > th {
+        background: linear-gradient(135deg, #f9f0ff 0%, #f6ffed 100%);
+        border-bottom: 2px solid #d3adf7;
+        font-weight: 600;
+        color: #262626;
+        font-size: 14px;
+        padding: 12px 16px;
+        
+        &:first-child {
+          border-top-left-radius: 8px;
+        }
+        
+        &:last-child {
+          border-top-right-radius: 8px;
+        }
+      }
+
+      .ant-table-tbody > tr {
+        transition: all 0.3s ease;
+        
+        &:hover {
+          background-color: #f6f9ff !important;
+          transform: translateY(-1px);
+          box-shadow: 0 4px 12px rgba(114, 46, 209, 0.1);
+        }
+
+        > td {
+          padding: 16px;
+          border-bottom: 1px solid #f0f0f0;
+          vertical-align: middle;
+        }
+
+        &:last-child > td {
+          border-bottom: none;
+        }
+      }
+
+      .ant-table-container {
+        border-radius: 8px;
+        overflow: hidden;
+        border: 1px solid #d9d9d9;
+      }
+    }
+  }
+
+  .medicine-guidelines-card {
+    .ant-collapse-header {
+      background: linear-gradient(135deg, #f6ffed 0%, #f0f9ff 100%);
+      border-bottom: 2px solid #d9f7be;
+      
+      .ant-collapse-arrow {
+        color: #52c41a;
+      }
+    }
+
+    .medicine-summary {
+      background: linear-gradient(135deg, #f6ffed, #f0f9ff);
+      border: 1px solid #d9f7be;
+      border-radius: 12px;
+      margin-top: 24px;
+      overflow: hidden;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+
+      .summary-header {
+        background: linear-gradient(135deg, #52c41a, #73d13d);
+        padding: 16px 20px;
+        border-bottom: 1px solid #d9f7be;
+
+        .summary-icon {
+          width: 32px;
+          height: 32px;
+          border-radius: 50%;
+          background: rgba(255, 255, 255, 0.2);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          flex-shrink: 0;
+        }
+
+        .summary-title {
+          color: white;
+          font-weight: 600;
+          font-size: 16px;
+        }
+
+        .summary-subtitle {
+          color: rgba(255, 255, 255, 0.8);
+          font-size: 12px;
+        }
+      }
+
+      .summary-content {
+        padding: 20px;
+
+        .instruction-card {
+          height: 100%;
+          border: 1px solid #e6f4ff;
+
+          &.general-instructions {
+            .ant-card-head {
+              background: #f6f9ff;
+              border-bottom: 1px solid #d6e4ff;
+            }
+          }
+
+          &.safety-instructions {
+            .ant-card-head {
+              background: #fff7e6;
+              border-bottom: 1px solid #ffe7ba;
+            }
+          }
+
+          .instruction-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+            margin-bottom: 8px;
+
+            &:last-child {
+              margin-bottom: 0;
+            }
+
+            .instruction-bullet {
+              width: 6px;
+              height: 6px;
+              border-radius: 50%;
+              margin-top: 6px;
+              flex-shrink: 0;
+
+              &.primary { background: #52c41a; }
+              &.warning { background: #fa8c16; }
+              &.info { background: #1890ff; }
+              &.danger { background: #f5222d; }
+              &.purple { background: #722ed1; }
+            }
+
+            .instruction-text {
+              font-size: 13px;
+              line-height: 1.5;
+            }
+          }
+        }
+
+        .emergency-contact {
+          border: 1px solid #ffe7ba;
+          background: linear-gradient(135deg, #fff7e6, #fffbf0);
+
+          .emergency-details {
+            margin-top: 12px;
+            padding: 8px 12px;
+            background: #fff2f0;
+            border: 1px solid #ffccc7;
+            border-radius: 6px;
+          }
+        }
+      }
+    }
+  }
+
+  // Responsive Design for collapsible sections
+  @media (max-width: 768px) {
+    .services-card,
+    .prescription-card,
+    .medicine-guidelines-card {
+      .ant-collapse {
+        .ant-collapse-item {
+          .ant-collapse-header {
+            padding: 12px 16px;
+            font-size: 14px;
+          }
+          
+          .ant-collapse-content {
+            .ant-collapse-content-box {
+              padding: 16px;
+            }
+          }
+        }
+      }
+    }
+
+    .prescription-card {
+      .ant-table-wrapper {
+        .ant-table {
+          font-size: 12px;
+          
+          .ant-table-thead > tr > th {
+            padding: 8px 12px;
+            font-size: 12px;
+          }
+          
+          .ant-table-tbody > tr > td {
+            padding: 12px;
+            font-size: 12px;
+          }
+        }
+        
+        .ant-table-scroll {
+          .ant-table-body {
+            overflow-x: auto;
+          }
+        }
+      }
+    }
+
+    .medicine-guidelines-card {
+      .medicine-summary {
+        margin-top: 16px;
+
+        .summary-header {
+          padding: 12px 16px;
+          flex-direction: column;
+          align-items: flex-start;
+          gap: 8px;
+
+          .summary-icon {
+            width: 28px;
+            height: 28px;
+          }
+
+          .summary-title {
+            font-size: 14px;
+          }
+
+          .summary-subtitle {
+            font-size: 11px;
+          }
+        }
+
+        .summary-content {
+          padding: 16px;
+
+          .instruction-card {
+            margin-bottom: 12px;
+
+            .ant-card-head {
+              .ant-card-head-title {
+                font-size: 13px;
+              }
+            }
+
+            .instruction-item {
+              .instruction-text {
+                font-size: 12px;
+              }
+            }
+          }
+
+          .emergency-contact {
+            .ant-alert-message {
+              font-size: 13px;
+            }
+
+            .ant-alert-description {
+              font-size: 12px;
+            }
+
+            .emergency-details {
+              font-size: 12px;
+            }
+          }
+        }
+      }
+    }
+  }
+
+  @media (max-width: 576px) {
+    .services-card,
+    .prescription-card,
+    .medicine-guidelines-card {
+      .ant-collapse {
+        .ant-collapse-item {
+          .ant-collapse-header {
+            padding: 10px 12px;
+            font-size: 13px;
+          }
+          
+          .ant-collapse-content {
+            .ant-collapse-content-box {
+              padding: 12px;
+            }
+          }
+        }
+      }
+    }
+
+    .prescription-card {
+      .ant-table-wrapper {
+        .ant-table {
+          .ant-table-thead > tr > th {
+            padding: 6px 8px;
+            font-size: 11px;
+            
+            .anticon {
+              display: none;
+            }
+          }
+          
+          .ant-table-tbody > tr > td {
+            padding: 8px;
+            font-size: 11px;
+          }
+        }
+      }
+    }
+
+    .medicine-guidelines-card {
+      .medicine-summary {
+        margin-top: 12px;
+
+        .summary-header {
+          padding: 10px 12px;
+
+          .summary-icon {
+            width: 24px;
+            height: 24px;
+          }
+
+          .summary-title {
+            font-size: 13px;
+          }
+
+          .summary-subtitle {
+            font-size: 10px;
+          }
+        }
+
+        .summary-content {
+          padding: 12px;
+
+          .ant-row {
+            flex-direction: column;
+          }
+
+          .instruction-card {
+            margin-bottom: 8px;
+
+            .ant-card-head .ant-card-head-title {
+              font-size: 12px;
+            }
+
+            .instruction-item {
+              .instruction-text {
+                font-size: 11px;
+              }
+            }
+          }
+
+          .emergency-contact {
+            .ant-alert-message {
+              font-size: 12px;
+            }
+
+            .ant-alert-description {
+              font-size: 11px;
+            }
+
+            .emergency-details {
+              padding: 6px 8px;
+              font-size: 11px;
+            }
+          }
+        }
+      }
+    }
+  }
+}

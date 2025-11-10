@@ -64,6 +64,32 @@ const AiChat: React.FC = () => {
 
   const recognitionRef = useRef<ISpeechRecognition | null>(null);
 
+  const formatAnswerText = (text: string): string => {
+    if (!text) return text;
+
+    return (
+      text
+        // 1️⃣ Làm đậm tiêu đề nhóm dịch vụ chính
+        .replace(/\*\*(Dịch vụ [^*]+):\*\*/g, "<strong>$1</strong>")
+
+        // 2️⃣ Làm đậm tên dịch vụ con
+        .replace(/^\*\s+\*\*(.+?):\*\*/gm, "• <strong>$1:</strong>")
+
+        // 3️⃣ Làm đậm **mọi đoạn khác** còn lại
+        .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
+
+        // 4️⃣ Dấu chấm đầu dòng cho các dòng bắt đầu bằng *
+        .replace(/^\*\s+(?!<strong>)(.+)$/gm, "• $1")
+
+        // 5️⃣ Xuống dòng cho dễ đọc
+        .replace(/\n/g, "<br/>")
+
+        // 6️⃣ Dọn khoảng trắng dư
+        .replace(/\s+/g, " ")
+        .trim()
+    );
+  };
+
   const suggestedQuestions = [
     "Tui có hamster gì?",
     "Hamster của tui có khỏe không?",
@@ -80,7 +106,9 @@ const AiChat: React.FC = () => {
       const body = conversationId ? { message: msg, conversationId } : { message: msg };
       const res = await api.post("/api/chat/ai", body);
 
-      const reply = res.data?.data?.message || "Xin lỗi, mình chưa hiểu ý bạn 😅";
+      let reply = res.data?.data?.message || "Xin lỗi, mình chưa hiểu ý bạn 😅";
+      reply = formatAnswerText(reply);
+
       const newId = res.data?.data?.conversationId;
 
       if (newId && !conversationId) setConversationId(newId);
@@ -185,10 +213,9 @@ const AiChat: React.FC = () => {
 
           <div className="chat-body">
             {chat.map((msg, i) => (
-              <div key={i} className={`chat-bubble ${msg.sender}`}>
-                {msg.text}
-              </div>
+              <div key={i} className={`chat-bubble ${msg.sender}`} dangerouslySetInnerHTML={{ __html: msg.text }} />
             ))}
+
             {loading && (
               <div className="chat-loading">
                 <Spin size="small" />
