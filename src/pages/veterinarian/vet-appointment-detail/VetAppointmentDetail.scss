@@ -1,22 +1,22 @@
-.appointment-detail {
+.veterinarian-appointment-detail {
   padding: 24px;
   background-color: #f5f5f5;
   min-height: 100vh;
 
-  .appointment-detail-container {
+  .veterinarian-appointment-detail-container {
     border-radius: 12px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
     background: white;
   }
 
-  .appointment-detail-loading {
+  .veterinarian-appointment-detail-loading {
     display: flex;
     justify-content: center;
     align-items: center;
     min-height: 50vh;
   }
 
-  .appointment-detail-error {
+  .veterinarian-appointment-detail-error {
     display: flex;
     justify-content: center;
     align-items: center;
@@ -28,7 +28,7 @@
     }
   }
 
-  .detail-header {
+  .veterinarian-detail-header {
     margin-bottom: 0;
     
     .ant-typography {
@@ -37,7 +37,7 @@
     }
   }
 
-  .status-tag-large {
+  .veterinarian-status-tag-large {
     font-size: 14px;
     padding: 8px 16px;
     border-radius: 20px;
@@ -50,7 +50,7 @@
     display: inline-block;
   }
 
-  .info-card {
+  .veterinarian-info-card {
     height: 100%;
     border-radius: 8px;
     border: 1px solid #e8e8e8;
@@ -101,7 +101,7 @@
     }
   }
 
-  .image-container {
+  .veterinarian-image-container {
     display: flex;
     justify-content: center;
     align-items: center;
@@ -149,7 +149,7 @@
     }
   }
 
-  .no-image-placeholder {
+  .veterinarian-no-image-placeholder {
     display: flex;
     justify-content: center;
     align-items: center;
@@ -165,7 +165,7 @@
     }
   }
 
-  .services-card {
+  .veterinarian-services-card {
     .ant-card-head {
       background: linear-gradient(135deg, #fff2e8 0%, #fff7e6 100%);
       border-bottom: 2px solid #ffe7ba;
@@ -177,7 +177,7 @@
       }
     }
 
-    .service-item {
+    .veterinarian-service-item {
       border: 2px solid #f0f0f0;
       border-radius: 8px;
       transition: all 0.3s ease;
@@ -206,7 +206,7 @@
     }
   }
 
-  .notes-card {
+  .veterinarian-notes-card {
     .ant-card-head {
       background: linear-gradient(135deg, #f9f0ff 0%, #f6ffed 100%);
       border-bottom: 2px solid #efdbff;
@@ -235,7 +235,7 @@
     }
   }
 
-  .check-in-modal {
+  .veterinarian-check-in-modal {
     .ant-modal-header {
       background: linear-gradient(135deg, #f6ffed 0%, #f0f9ff 100%);
       border-bottom: 2px solid #d9f7be;
@@ -271,7 +271,7 @@
     }
   }
 
-  .medical-record-modal {
+  .veterinarian-medical-record-modal {
     .ant-modal-header {
       background: linear-gradient(135deg, #f6ffed 0%, #f0f9ff 100%);
       border-bottom: 2px solid #d9f7be;
@@ -320,13 +320,13 @@
   @media (max-width: 768px) {
     padding: 16px;
 
-    .detail-header {
+    .veterinarian-detail-header {
       .ant-typography {
         font-size: 20px;
       }
     }
 
-    .status-tag-large {
+    .veterinarian-status-tag-large {
       font-size: 12px;
       padding: 6px 12px;
       margin-left: 0;
@@ -334,7 +334,7 @@
       min-width: 70px;
     }
 
-    .info-card {
+    .veterinarian-info-card {
       margin-bottom: 16px;
       
       .ant-descriptions-item-label {
@@ -351,13 +351,13 @@
       padding: 12px;
     }
 
-    .services-card {
-      .service-item {
+    .veterinarian-services-card {
+      .veterinarian-service-item {
         margin-bottom: 12px;
       }
     }
 
-    .image-container {
+    .veterinarian-image-container {
       min-height: 150px;
       
       img {
@@ -365,11 +365,11 @@
       }
     }
 
-    .no-image-placeholder {
+    .veterinarian-no-image-placeholder {
       min-height: 150px;
     }
 
-    .check-in-modal {
+    .veterinarian-check-in-modal {
       .ant-modal-body {
         padding: 16px;
       }
@@ -392,11 +392,11 @@
   @media (max-width: 576px) {
     padding: 12px;
     
-    .appointment-detail-container {
+    .veterinarian-appointment-detail-container {
       border-radius: 8px;
     }
 
-    .detail-header {
+    .veterinarian-detail-header {
       flex-direction: column;
       align-items: flex-start;
       gap: 16px;
@@ -406,11 +406,11 @@
       }
     }
 
-    .info-card .ant-card-head .ant-card-head-title {
+    .veterinarian-info-card .ant-card-head .ant-card-head-title {
       font-size: 14px;
     }
 
-    .services-card .ant-card-head .ant-card-head-title {
+    .veterinarian-services-card .ant-card-head .ant-card-head-title {
       font-size: 16px;
     }
   }
@@ -428,25 +428,25 @@
   }
 }
 
-.appointment-detail .info-card {
+.veterinarian-appointment-detail .veterinarian-info-card {
   animation: fadeInUp 0.4s ease-out;
 }
 
-.appointment-detail .services-card .service-item {
+.veterinarian-appointment-detail .veterinarian-services-card .veterinarian-service-item {
   animation: fadeInUp 0.5s ease-out;
 }
 
 // Custom scrollbar for better UX
-.appointment-detail::-webkit-scrollbar {
+.veterinarian-appointment-detail::-webkit-scrollbar {
   width: 8px;
 }
 
-.appointment-detail::-webkit-scrollbar-track {
+.veterinarian-appointment-detail::-webkit-scrollbar-track {
   background: #f1f1f1;
   border-radius: 4px;
 }
 
-.appointment-detail::-webkit-scrollbar-thumb {
+.veterinarian-appointment-detail::-webkit-scrollbar-thumb {
   background: #c1c1c1;
   border-radius: 4px;
   
@@ -456,7 +456,7 @@
 }
 
 // Enhanced Collapsible Sections Styling
-.services-card {
+.veterinarian-services-card {
   .ant-collapse {
     border: none;
     background: transparent;
@@ -505,7 +505,7 @@
   }
 }
 
-.prescription-card {
+.veterinarian-prescription-card {
   .ant-collapse {
     border: none;
     background: transparent;
@@ -626,8 +626,8 @@
 
 // Responsive Design for Collapsible Sections
 @media (max-width: 768px) {
-  .services-card,
-  .prescription-card {
+  .veterinarian-services-card,
+  .veterinarian-prescription-card {
     .ant-collapse-item {
       .ant-collapse-header {
         padding: 12px 16px;
@@ -644,7 +644,7 @@
     }
   }
   
-  .prescription-card {
+  .veterinarian-prescription-card {
     .ant-table {
       .ant-table-thead > tr > th {
         padding: 12px 8px;
@@ -660,8 +660,8 @@
 }
 
 @media (max-width: 576px) {
-  .services-card,
-  .prescription-card {
+  .veterinarian-services-card,
+  .veterinarian-prescription-card {
     .ant-collapse-item {
       border-radius: 8px;
       margin-bottom: 12px;
@@ -677,7 +677,7 @@
     }
   }
   
-  .prescription-card {
+  .veterinarian-prescription-card {
     .ant-table {
       .ant-table-thead > tr > th {
         padding: 8px 6px;
