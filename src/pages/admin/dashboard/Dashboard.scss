@@ -1,0 +1,61 @@
+.Dashboard {
+  padding: 24px;
+  background-color: #fff;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+
+  .dashboard-title {
+    text-align: center;
+    font-size: 28px;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 20px;
+  }
+
+  .dashboard__date-picker {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 24px;
+  }
+
+  .stat-card {
+    text-align: center;
+    border-radius: 12px;
+    background-color: #f9f9f9;
+
+    h2 {
+      font-size: 36px;
+      color: #1890ff;
+      margin: 0;
+    }
+
+    .ant-card-head-title {
+      text-align: center;
+      font-weight: 500;
+    }
+  }
+
+  .chart-card {
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+
+    .chart-container {
+      position: relative;
+      height: 350px; // default (the bigger one)
+    }
+
+    /* smaller bar charts */
+    .small-bar {
+      height: 260px; // -> smaller than before
+      padding-top: 8px;
+    }
+
+    &.small-pie {
+      .pie {
+        height: 280px;
+        width: 46%;
+        margin: 0 auto;
+      }
+    }
+  }
+}

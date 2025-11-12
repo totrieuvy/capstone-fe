@@ -58,6 +58,7 @@ const SideBar: React.FC = () => {
     let items: MenuItem[] = [];
     if (user?.role === "ADMIN") {
       items = [
+        getItem("Dashboard", "thong-ke", <GiPawPrint />),
         getItem("Đơn rút tiền", "don-rut-tien", <GiPawPrint />),
         getItem("Chính sách", "chinh-sach", <GiPawPrint />),
         getItem("Quản lí loài hamster", "quan-li-loai-hamster", <GiPawPrint />),
