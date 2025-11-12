@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { FaUserCircle, FaUser, FaSignOutAlt, FaShoppingCart, FaTrash } from "react-icons/fa";
 import { useDispatch, useSelector } from "react-redux";
 import "./header.scss";
@@ -31,6 +31,7 @@ interface RootState {
 
 function Header() {
   const dispatch = useDispatch();
+  const location = useLocation();
   const user = useSelector((state: RootState) => state.user);
   const cartItems = useSelector((state: RootState) => state.cart.items);
   const cartItemCount = cartItems.reduce((total: number, item: CartItem) => total + item.quantity, 0);
@@ -81,7 +82,11 @@ function Header() {
 
       <div className="header__middle">
         {Navigation.map((item) => (
-          <Link key={item.id} to={item.path} className="nav-link">
+          <Link 
+            key={item.id} 
+            to={item.path} 
+            className={`nav-link ${location.pathname === item.path ? 'active' : ''}`}
+          >
             {item.name}
           </Link>
         ))}
