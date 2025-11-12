@@ -185,6 +185,7 @@ const CageFloorPlan: React.FC = () => {
         {/* Filters */}
         <Card className="info-card" style={{ marginBottom: 24 }}>
           <div className="section-title">
+            <HomeOutlined />
             <span>Bộ Lọc</span>
           </div>
           <Row gutter={[16, 16]} style={{ marginTop: 16 }}>
@@ -211,15 +212,6 @@ const CageFloorPlan: React.FC = () => {
         {/* Statistics */}
         {cages.length > 0 && (
           <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
-             <Col xs={12} sm={8} md={6}>
-              <Card className="stat-card">
-                <div className="stat-content">
-                  <div className="stat-number total">{cages.length}</div>
-                  <div className="stat-label">Tổng Số</div>
-                </div>
-              </Card>
-            </Col>
-            
             <Col xs={12} sm={8} md={6}>
               <Card className="stat-card">
                 <div className="stat-content">
@@ -236,7 +228,14 @@ const CageFloorPlan: React.FC = () => {
                 </div>
               </Card>
             </Col>
-        
+            <Col xs={12} sm={8} md={6}>
+              <Card className="stat-card">
+                <div className="stat-content">
+                  <div className="stat-number total">{cages.length}</div>
+                  <div className="stat-label">Tổng Số</div>
+                </div>
+              </Card>
+            </Col>
             <Col xs={12} sm={8} md={6}>
               <Card className="stat-card">
                 <div className="stat-content">
