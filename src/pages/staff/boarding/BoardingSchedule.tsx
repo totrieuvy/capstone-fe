@@ -572,7 +572,7 @@ const BoardingSchedule = () => {
               Tháng trước
             </Button>
             <h2 style={{ margin: 0, minWidth: '200px', textAlign: 'center' }}>
-              {currentMonth.format('MMMM YYYY')}
+              {currentMonth.format('MM/YYYY')}
             </h2>
             <Button
               type="default"
