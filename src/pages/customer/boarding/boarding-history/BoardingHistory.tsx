@@ -103,7 +103,7 @@ const BoardingHistory: React.FC = () => {
       case 'NO-SHOW':
         return 'volcano';
       case 'IN_PROGRESS':
-        return 'processing';
+        return 'orange';
       case 'CHECK_OUT':
         return 'green';
       case 'CANCELLED':
