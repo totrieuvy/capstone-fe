@@ -10,8 +10,8 @@ import {
   TagOutlined,
   DatabaseOutlined,
 } from "@ant-design/icons";
-import { GiPawPrint, GiCage } from "react-icons/gi";
-import { BiCategory, BiPlusMedical } from "react-icons/bi";
+import { GiCage } from "react-icons/gi";
+import { BiPlusMedical } from "react-icons/bi";
 import { Layout, Menu, Button, theme } from "antd";
 import type { ItemType } from "antd/es/menu/interface";
 import { Link, Outlet, useNavigate } from "react-router-dom";
@@ -58,22 +58,27 @@ const SideBar: React.FC = () => {
     let items: MenuItem[] = [];
     if (user?.role === "ADMIN") {
       items = [
-        getItem("Dashboard", "thong-ke", <GiPawPrint />),
-        getItem("Đơn rút tiền", "don-rut-tien", <GiPawPrint />),
-        getItem("Chính sách", "chinh-sach", <GiPawPrint />),
-        getItem("Quản lí loài hamster", "quan-li-loai-hamster", <GiPawPrint />),
-        getItem("Quản lí danh mục sản phẩm", "quan-li-danh-muc-san-pham", <BiCategory />),
-        getItem("Quản lí sản phẩm", "quan-li-san-pham", <TagOutlined />),
-        getItem("Quản lí loại chuồng", "quan-li-loai-chuong", <GiCage />),
-        getItem("Quản lí dịch vụ y tế", "quan-li-dich-vu-y-te", <BiPlusMedical />),
-        getItem("Quản lí dịch vụ grooming", "quan-li-dich-vu-grooming", <GiCage />, [
+        getItem("Dashboard", "thong-ke", <AreaChartOutlined />),
+        getItem("Quản lí sản phẩm", "product-management", <TagOutlined />, [
+          getItem("Loài hamster", "quan-li-loai-hamster"),
+          getItem("Danh mục sản phẩm", "quan-li-danh-muc-san-pham"),
+          getItem("Sản phẩm", "quan-li-san-pham"),
+        ]),
+        getItem("Quản lí dịch vụ", "service-management", <BiPlusMedical />, [
+          getItem("Dịch vụ y tế", "quan-li-dich-vu-y-te"),
           getItem("Grooming lẻ", "quan-li-dich-vu-grooming/grooming-le"),
           getItem("Grooming combo", "quan-li-dich-vu-grooming/grooming-combo"),
         ]),
-        getItem("Thống kê", "thong-ke", <AreaChartOutlined />),
+        getItem("Cơ sở hạ tầng", "infrastructure", <GiCage />, [
+          getItem("Loại chuồng", "quan-li-loai-chuong"),
+          getItem("Chính sách", "chinh-sach"),
+        ]),
+        getItem("Vận hành kinh doanh", "business-operations", <ShoppingOutlined />, [
+          getItem("Đơn hàng", "quan-li-don-hang"),
+          getItem("Giao dịch", "quan-li-giao-dich"),
+          getItem("Rút tiền", "don-rut-tien"),
+        ]),
         getItem("Quản lí tài khoản", "quan-li-tai-khoan", <UserOutlined />),
-        getItem("Quản lí đơn hàng", "quan-li-don-hang", <ShoppingOutlined />),
-        getItem("Quản lí giao dịch", "quan-li-giao-dich", <ShoppingOutlined />),
       ];
     } else if (user?.role === "STAFF") {
       items = [

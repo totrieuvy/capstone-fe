@@ -1,0 +1,171 @@
+.ManageAccount {
+  padding: 24px;
+  background-color: #f9fafc;
+  min-height: 100vh;
+
+  h1 {
+    font-size: 24px;
+    font-weight: bold;
+    margin-bottom: 20px;
+    color: #f58232;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    text-align: center;
+  }
+
+  .search-box {
+    margin-bottom: 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    .ant-space {
+      display: flex;
+      width: 100%;
+      justify-content: space-between;
+    }
+
+    .ant-btn-primary {
+      background-color: #f58232;
+      border-color: #f58232;
+      
+      &:hover {
+        background-color: #ff9447;
+        border-color: #ff9447;
+      }
+    }
+  }
+
+  .ant-table {
+    background: #fff;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+
+    .ant-table-thead > tr > th {
+      background: #f0f2f5;
+      color: #444;
+      font-weight: 600;
+      text-align: center;
+    }
+
+    .ant-table-tbody > tr > td {
+      text-align: center;
+      padding: 12px;
+      font-size: 14px;
+      color: #333;
+    }
+
+    .ant-table-tbody > tr:hover > td {
+      background: #fff6f0;
+      cursor: pointer;
+    }
+  }
+
+  .ant-modal {
+    .ant-modal-header {
+      background: linear-gradient(135deg, #f58232 0%, #ff9447 100%);
+      border-radius: 12px 12px 0 0;
+
+      .ant-modal-title {
+        color: #fff;
+        font-weight: 600;
+        font-size: 18px;
+      }
+    }
+
+    .ant-modal-close-x {
+      color: #fff;
+    }
+
+    .ant-form-item-label > label {
+      font-weight: 500;
+      color: #444;
+    }
+
+    .ant-btn-primary {
+      background-color: #f58232;
+      border-color: #f58232;
+
+      &:hover {
+        background-color: #ff9447;
+        border-color: #ff9447;
+      }
+    }
+  }
+
+  .ant-btn-link {
+    padding: 4px 8px;
+
+    &:hover {
+      color: #f58232;
+    }
+  }
+
+  .ant-pagination {
+    margin-top: 16px;
+    text-align: right;
+
+    .ant-pagination-item-active {
+      border-color: #f58232;
+
+      a {
+        color: #f58232;
+      }
+    }
+  }
+
+  .staff-detail {
+    .ant-descriptions {
+      &.ant-descriptions-bordered {
+        .ant-descriptions-item-label {
+          background-color: #fafafa;
+          font-weight: 600;
+          color: #333;
+          width: 35%;
+        }
+
+        .ant-descriptions-item-content {
+          background-color: #fff;
+          color: #666;
+        }
+      }
+
+      .ant-descriptions-title {
+        color: #f58232;
+        font-weight: 600;
+        margin-bottom: 16px;
+      }
+    }
+
+    code {
+      background-color: #f5f5f5;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-family: 'Courier New', monospace;
+      font-size: 12px;
+      color: #666;
+    }
+
+    .detail-row {
+      display: flex;
+      margin-bottom: 12px;
+      padding: 8px 0;
+      border-bottom: 1px solid #f0f0f0;
+
+      &:last-child {
+        border-bottom: none;
+      }
+
+      strong {
+        min-width: 140px;
+        color: #333;
+        font-weight: 600;
+      }
+    }
+  }
+
+  .ant-tag {
+    margin: 0;
+  }
+}
