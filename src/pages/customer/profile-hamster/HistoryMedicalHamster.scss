@@ -144,3 +144,52 @@ $shadow-hover: 0 6px 16px rgba(0, 0, 0, 0.12);
   object-fit: cover;
   cursor: pointer; // Cho thấy có thể nhấp
 }
+
+.timeline-summary {
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.timeline-card {
+  transition: all 0.3s ease;
+  border-radius: 10px;
+}
+
+.timeline-card:hover {
+  transform: scale(1.01);
+}
+
+.timeline-details {
+  margin-top: 15px;
+  border-top: 1px solid #eee;
+  padding-top: 15px;
+  animation: slideDown 0.25s ease;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.service-item {
+  margin-top: 15px;
+}
+
+.service-item-title {
+  color: #0052cc;
+  margin-bottom: 10px !important;
+}
+
+.result-image {
+  border-radius: 8px;
+}
+
+.prescription-button {
+  margin-bottom: 12px;
+}
