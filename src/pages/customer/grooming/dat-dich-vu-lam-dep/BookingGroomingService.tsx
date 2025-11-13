@@ -183,10 +183,16 @@ function BookingGroomingService() {
         // Nếu chọn nhiều dịch vụ lẻ
         if (selectedGroomingItem.type === "service" && selectedGroomingItem.id.includes(",")) {
           const ids = selectedGroomingItem.id.split(",").map((id) => id.trim());
+
           const matched = response.data.data.filter((item) => ids.includes(item.id));
-          const allPrices = matched.map((m) => m.displayPrice);
-          // Nối các giá lại thành chuỗi: "80,000,150,000"
-          setGroomingPrice(allPrices.join(","));
+
+          // Nếu thiếu giá thì gán 0 để tránh undefined
+          const allPrices = ids.map((id) => {
+            const item = matched.find((m) => m.id === id);
+            return item ? item.displayPrice : "0";
+          });
+
+          setGroomingPrice(allPrices.join("|")); // dùng pipe tránh trùng dấu phẩy số tiền
         } else {
           // Combo hoặc 1 dịch vụ
           const foundItem = response.data.data.find((item) => item.id === selectedGroomingItem.id);
@@ -744,16 +750,17 @@ function BookingGroomingService() {
                 <Descriptions.Item label="Giá gốc">
                   <Tag color="#ff6f61">
                     {(() => {
-                      if (groomingPrice) {
-                        const matches = groomingPrice.match(/\d{1,3}(?:,\d{3})*/g) || [];
-                        const numbers = matches.map((p) => parseFloat(p.replace(/,/g, "")));
-                        const total = numbers.reduce((sum, val) => sum + val, 0);
-                        return total.toLocaleString("vi-VN") + "đ";
-                      }
-                      return "0đ";
+                      if (!groomingPrice) return "0đ";
+
+                      const prices = groomingPrice.split("|").map((p) => parseFloat(p.replace(/[^\d]/g, "")) || 0);
+
+                      const total = prices.reduce((a, b) => a + b, 0);
+
+                      return total.toLocaleString("vi-VN") + "đ";
                     })()}
                   </Tag>
                 </Descriptions.Item>
+
                 {membership && (
                   <>
                     <Descriptions.Item label="Giảm giá">
@@ -763,11 +770,22 @@ function BookingGroomingService() {
                       <Tag color="green">
                         {(() => {
                           if (groomingPrice) {
-                            const matches = groomingPrice.match(/\d{1,3}(?:,\d{3})*/g) || [];
-                            const numbers = matches.map((p) => parseFloat(p.replace(/,/g, "")));
-                            const total = numbers.reduce((sum, val) => sum + val, 0);
+                            // const matches = groomingPrice.match(/\d{1,3}(?:,\d{3})*/g) || [];
+                            // const numbers = matches.map((p) => parseFloat(p.replace(/,/g, "")));
+                            // const total = numbers.reduce((sum, val) => sum + val, 0);
+                            // const discountPercent = membership?.discountPercent || 0;
+                            // const discounted = Math.round(total - (total * discountPercent) / 100);
+                            // return discounted.toLocaleString("vi-VN") + "đ";
+                            const prices = groomingPrice
+                              .split("|")
+                              .map((p) => parseFloat(p.replace(/[^\d]/g, "")) || 0);
+
+                            const total = prices.reduce((a, b) => a + b, 0);
+
                             const discountPercent = membership?.discountPercent || 0;
+
                             const discounted = Math.round(total - (total * discountPercent) / 100);
+
                             return discounted.toLocaleString("vi-VN") + "đ";
                           }
                           return "0đ";

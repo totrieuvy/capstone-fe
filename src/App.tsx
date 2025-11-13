@@ -74,6 +74,7 @@ import CageFloorPlan from "./pages/staff/cage/CageFloorPlan";
 import Policy from "./pages/admin/policy/Policy";
 import WithDraw from "./pages/admin/withdraw/WithDraw";
 import HistoryMedicalHamster from "./pages/customer/profile-hamster/HistoryMedicalHamster";
+import ManageFeedback from "./pages/admin/feedback/ManageFeedback";
 
 interface User {
   id: number;
@@ -276,6 +277,7 @@ const App = () => {
           path: "",
           element: <SideBar />,
           children: [
+            { path: "quan-li-feedback", element: <ManageFeedback /> },
             { path: "don-rut-tien", element: <WithDraw /> },
             { path: "quan-li-tai-khoan", element: <ManageAccount /> },
             { path: "thong-ke", element: <Dashboard /> },

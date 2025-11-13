@@ -78,14 +78,14 @@ const SideBar: React.FC = () => {
           getItem("Giao dịch", "quan-li-giao-dich"),
           getItem("Rút tiền", "don-rut-tien"),
         ]),
+        getItem("Quản lí feedback", "quan-li-feedback", <UserOutlined />),
+
         getItem("Quản lí tài khoản", "quan-li-tai-khoan", <UserOutlined />),
       ];
     } else if (user?.role === "STAFF") {
       items = [
         getItem("Dịch vụ y tế", "medical-checkup", <BiPlusMedical />, [getItem("Lịch đặt khám", "lich-dat-kham")]),
-        getItem("Grooming", "grooming", <SkinOutlined />, [
-          getItem("Lịch đặt grooming", "lich-dat-grooming"),
-        ]),
+        getItem("Grooming", "grooming", <SkinOutlined />, [getItem("Lịch đặt grooming", "lich-dat-grooming")]),
         getItem("Boarding", "boarding", <HomeOutlined />, [
           getItem("Lịch đặt boarding", "lich-dat-boarding"),
           getItem("Sơ đồ chuồng", "so-do-chuong"),
