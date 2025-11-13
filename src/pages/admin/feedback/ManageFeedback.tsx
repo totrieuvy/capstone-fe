@@ -1,11 +1,9 @@
 import { useEffect, useState } from "react";
-import { Table, Tag, Button, Modal, Form, Input, Select, message, Card } from "antd";
+import { Table, Tag, Button, Modal, Form, Input, message, Card } from "antd";
 import type { TableColumnsType } from "antd";
 import api from "../../../config/axios";
 import "./ManageFeedback.scss";
 import { toast } from "react-toastify";
-
-const { Option } = Select;
 
 interface FeedbackResponse {
   responseId: string;
@@ -27,6 +25,10 @@ interface Feedback {
   responses: FeedbackResponse[];
 }
 
+interface ReplyFormValues {
+  reply: string;
+}
+
 function ManageFeedback() {
   const [feedbacks, setFeedbacks] = useState<Feedback[]>([]);
   const [filtered, setFiltered] = useState<Feedback[]>([]);
@@ -42,7 +44,7 @@ function ManageFeedback() {
       const res = await api.get("/api/feedbacks");
       setFeedbacks(res.data.data);
       setFiltered(res.data.data);
-    } catch (e) {
+    } catch {
       message.error("Không thể tải feedback!");
     }
   };
@@ -66,7 +68,7 @@ function ManageFeedback() {
     setReplyModalOpen(true);
   };
 
-  const handleReplySubmit = async (values: any) => {
+  const handleReplySubmit = async (values: ReplyFormValues) => {
     if (!selectedFeedback) return;
 
     setLoading(true);
@@ -80,7 +82,7 @@ function ManageFeedback() {
       fetchFeedbacks();
       setReplyModalOpen(false);
       replyForm.resetFields();
-    } catch (error) {
+    } catch {
       toast.error("Phản hồi thất bại!");
     } finally {
       setLoading(false);
