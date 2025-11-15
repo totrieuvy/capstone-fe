@@ -8,7 +8,6 @@ import {
   HomeOutlined,
   ScheduleOutlined,
   TagOutlined,
-  DatabaseOutlined,
 } from "@ant-design/icons";
 import { GiCage } from "react-icons/gi";
 import { BiPlusMedical } from "react-icons/bi";
@@ -19,6 +18,8 @@ import { useDispatch, useSelector } from "react-redux";
 import { logout } from "../../redux/features/userSlice";
 import logo from "../../assets/logo.png";
 import "./Sidebar.scss";
+import { VscFeedback } from "react-icons/vsc";
+import { AiOutlineMedicineBox } from "react-icons/ai";
 
 interface User {
   id: number;
@@ -78,7 +79,7 @@ const SideBar: React.FC = () => {
           getItem("Giao dịch", "quan-li-giao-dich"),
           getItem("Rút tiền", "don-rut-tien"),
         ]),
-        getItem("Quản lí feedback", "quan-li-feedback", <UserOutlined />),
+        getItem("Quản lí feedback", "quan-li-feedback", <VscFeedback />),
 
         getItem("Quản lí tài khoản", "quan-li-tai-khoan", <UserOutlined />),
       ];
@@ -94,7 +95,7 @@ const SideBar: React.FC = () => {
     } else if (user?.role === "VET") {
       items = [
         getItem("Lịch khám hôm nay", "lich-kham-hom-nay", <ScheduleOutlined />),
-        getItem("Quản lí kê thuốc", "quan-li-ke-thuoc", <DatabaseOutlined />),
+        getItem("Quản lí thuốc", "quan-li-ke-thuoc", <AiOutlineMedicineBox  />),
       ];
     }
     setMenuItems(items);

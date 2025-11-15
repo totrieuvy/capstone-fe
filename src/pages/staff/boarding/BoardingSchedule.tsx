@@ -553,8 +553,8 @@ const BoardingSchedule = () => {
     <div className="boarding-schedule">
       <div className="schedule-container">
         <div className="page-header">
-          <h1 className="page-title">Quản Lý Lịch Ký Gửi Hamster</h1>
-          <p className="page-subtitle">Theo dõi và quản lý lịch trình ký gửi theo thời gian thực</p>
+          <h1 className="page-title">Quản lí Lịch Ký Gửi Hamster</h1>
+          <p className="page-subtitle">Theo dõi và Quản lí lịch trình ký gửi theo thời gian thực</p>
 
           {/* Month Navigation */}
           <div className="month-navigation" style={{

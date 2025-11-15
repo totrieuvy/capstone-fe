@@ -113,7 +113,7 @@ const ManageMedical: React.FC = () => {
   };
 
   useEffect(() => {
-    document.title = "Quản lý dịch vụ y tế";
+    document.title = "Quản lí dịch vụ y tế";
     fetchMedicalServices();
     fetchSpecies();
   }, []);
@@ -374,7 +374,7 @@ const ManageMedical: React.FC = () => {
 
   return (
     <div className="ManageMedical">
-      <h1>Quản lý dịch vụ y tế</h1>
+      <h1>Quản lí dịch vụ y tế</h1>
 
       <div className="search-box">
         <Space style={{ marginBottom: 16, width: "100%" }}>

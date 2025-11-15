@@ -7,7 +7,7 @@
     font-size: 24px;
     font-weight: bold;
     margin-bottom: 20px;
-    color: #f58232;
+    color: #ff6f61;
     text-transform: uppercase;
     letter-spacing: 1px;
     text-align: center;
@@ -26,8 +26,8 @@
     }
 
     .ant-btn-primary {
-      background-color: #f58232;
-      border-color: #f58232;
+      background-color: #ff6f61;
+      border-color: #ff6f61;
       
       &:hover {
         background-color: #ff9447;
@@ -64,7 +64,7 @@
 
   .ant-modal {
     .ant-modal-header {
-      background: linear-gradient(135deg, #f58232 0%, #ff9447 100%);
+      background: linear-gradient(135deg, #ff6f61 0%, #ff9447 100%);
       border-radius: 12px 12px 0 0;
 
       .ant-modal-title {
@@ -84,8 +84,8 @@
     }
 
     .ant-btn-primary {
-      background-color: #f58232;
-      border-color: #f58232;
+      background-color: #ff6f61;
+      border-color: #ff6f61;
 
       &:hover {
         background-color: #ff9447;
@@ -98,7 +98,7 @@
     padding: 4px 8px;
 
     &:hover {
-      color: #f58232;
+      color: #ff6f61;
     }
   }
 
@@ -107,10 +107,10 @@
     text-align: right;
 
     .ant-pagination-item-active {
-      border-color: #f58232;
+      border-color: #ff6f61;
 
       a {
-        color: #f58232;
+        color: #ff6f61;
       }
     }
   }
@@ -132,7 +132,7 @@
       }
 
       .ant-descriptions-title {
-        color: #f58232;
+        color: #ff6f61;
         font-weight: 600;
         margin-bottom: 16px;
       }

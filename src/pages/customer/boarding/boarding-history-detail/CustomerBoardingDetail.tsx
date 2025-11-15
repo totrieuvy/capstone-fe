@@ -15,7 +15,7 @@ import {
   Modal,
   Avatar,
   List,
-  Radio,
+  Checkbox,
   DatePicker,
   message,
   Space,
@@ -46,6 +46,8 @@ import { toast } from "react-toastify";
 import "./BoardingDetail.scss";
 import api from "../../../../config/axios";
 import type { Dayjs } from "dayjs";
+import { BiCategory } from "react-icons/bi";
+import { GiCage } from "react-icons/gi";
 
 const { Title, Text } = Typography;
 
@@ -133,7 +135,7 @@ const BoardingDetail: React.FC = () => {
   // Grooming service modal states
   const [isGroomingModalVisible, setIsGroomingModalVisible] = useState(false);
   const [groomingServices, setGroomingServices] = useState<Service[]>([]);
-  const [selectedServiceId, setSelectedServiceId] = useState<string>("");
+  const [selectedServiceIds, setSelectedServiceIds] = useState<string[]>([]);
   const [selectedDate, setSelectedDate] = useState<string>("");
   const [groomingLoading, setGroomingLoading] = useState(false);
   const [addingService, setAddingService] = useState(false);
@@ -250,8 +252,8 @@ const BoardingDetail: React.FC = () => {
   };
 
   const handleAddServiceToBooking = async () => {
-    if (!selectedServiceId || !selectedDate) {
-      message.warning("Vui lòng chọn dịch vụ và ngày thực hiện.");
+    if (selectedServiceIds.length === 0 || !selectedDate) {
+      message.warning("Vui lòng chọn ít nhất một dịch vụ và ngày thực hiện.");
       return;
     }
 
@@ -260,17 +262,17 @@ const BoardingDetail: React.FC = () => {
       await boardingService.addServiceToBooking({
         bookingId: bookingId!,
         serviceDate: selectedDate,
-        serviceIds: [selectedServiceId],
+        serviceIds: selectedServiceIds,
       });
 
-      toast.success("Thêm dịch vụ thành công");
+      toast.success(`Thêm ${selectedServiceIds.length} dịch vụ thành công`);
 
       // Refresh booking details
       await fetchBookingDetails();
 
       // Reset modal state
       setIsGroomingModalVisible(false);
-      setSelectedServiceId("");
+      setSelectedServiceIds([]);
       setSelectedDate("");
     } catch (error) {
       message.error("Không thể thêm dịch vụ. Vui lòng thử lại.");
@@ -282,7 +284,7 @@ const BoardingDetail: React.FC = () => {
 
   const handleCloseGroomingModal = () => {
     setIsGroomingModalVisible(false);
-    setSelectedServiceId("");
+    setSelectedServiceIds([]);
     setSelectedDate("");
   };
 
@@ -478,7 +480,7 @@ const BoardingDetail: React.FC = () => {
                 <div className="info-item">
                   <Text type="secondary">Loại chuồng</Text>
                   <div className="info-value">
-                    <HomeOutlined style={{ marginRight: 8, color: "#fa8c16" }} />
+                    <BiCategory  style={{ marginRight: 8, color: "#fa8c16" }} />
                     {booking.cageTypeName}
                   </div>
                 </div>
@@ -487,7 +489,7 @@ const BoardingDetail: React.FC = () => {
                 <div className="info-item">
                   <Text type="secondary">Tên chuồng</Text>
                   <div className="info-value">
-                    <HomeOutlined style={{ marginRight: 8, color: "#fa8c16" }} />
+                    <GiCage  style={{ marginRight: 8, color: "#fa8c16" }} />
                     {booking.cageName || "Chưa phân chuồng"}
                   </div>
                 </div>
@@ -817,11 +819,11 @@ const BoardingDetail: React.FC = () => {
             key="add"
             type="primary"
             loading={addingService}
-            disabled={!selectedServiceId || !selectedDate || groomingServices.length === 0}
+            disabled={selectedServiceIds.length === 0 || !selectedDate || groomingServices.length === 0}
             onClick={handleAddServiceToBooking}
             icon={<ScissorOutlined />}
           >
-            Đặt dịch vụ
+            Đặt {selectedServiceIds.length > 0 ? `${selectedServiceIds.length} ` : ""}dịch vụ
           </Button>,
         ]}
         className="grooming-modal"
@@ -838,6 +840,9 @@ const BoardingDetail: React.FC = () => {
                 <Title level={5}>
                   Chọn dịch vụ làm đẹp cho {booking?.species}:
                 </Title>
+                <Text type="secondary" style={{ fontSize: 12, marginBottom: 16, display: "block" }}>
+                  * Có thể chọn nhiều dịch vụ cùng lúc
+                </Text>
                 {groomingServices.length === 0 ? (
                   <div style={{ textAlign: "center", padding: "20px 0" }}>
                     <Text type="secondary">
@@ -845,16 +850,17 @@ const BoardingDetail: React.FC = () => {
                     </Text>
                   </div>
                 ) : (
-                  <Radio.Group
-                    value={selectedServiceId}
-                    onChange={(e) => setSelectedServiceId(e.target.value)}
-                    className="service-radio-group"
+                  <Checkbox.Group
+                    value={selectedServiceIds}
+                    onChange={(checkedValues: string[]) => setSelectedServiceIds(checkedValues)}
+                    className="service-checkbox-group"
+                    style={{ width: "100%" }}
                   >
                     <List
                       dataSource={groomingServices}
                       renderItem={(service) => (
                         <List.Item className="service-list-item">
-                          <Radio value={service.id} className="service-radio">
+                          <Checkbox value={service.id} className="service-checkbox">
                             <div className="service-info">
                               <div className="service-header">
                                 <Text strong>{service.serviceName}</Text>
@@ -867,11 +873,11 @@ const BoardingDetail: React.FC = () => {
                                 Thời gian: {service.durationMinutes} phút
                               </Text>
                             </div>
-                          </Radio>
+                          </Checkbox>
                         </List.Item>
                       )}
                     />
-                  </Radio.Group>
+                  </Checkbox.Group>
                 )}
               </div>
 
@@ -887,7 +893,7 @@ const BoardingDetail: React.FC = () => {
                   style={{ width: "100%" }}
                 />
                 <Text type="secondary" style={{ fontSize: 12, marginTop: 8, display: "block" }}>
-                  * Chỉ có thể chọn ngày trong khoảng thời gian gửi gài
+                  * Chỉ có thể chọn ngày trong khoảng thời gian gửi gài. Tất cả dịch vụ sẽ được thực hiện trong cùng một ngày.
                 </Text>
               </div>
             </>

@@ -176,7 +176,7 @@ const CageFloorPlan: React.FC = () => {
               Sơ Đồ Chuồng
             </Title>
             <Text className="booking-id">
-              Quản lý và theo dõi tình trạng chuồng theo thời gian thực
+              Quản lí và theo dõi tình trạng chuồng theo thời gian thực
             </Text>
           </div>
         </div>
