@@ -95,7 +95,7 @@ const SideBar: React.FC = () => {
     } else if (user?.role === "VET") {
       items = [
         getItem("Lịch khám hôm nay", "lich-kham-hom-nay", <ScheduleOutlined />),
-        getItem("Quản lí thuốc", "quan-li-ke-thuoc", <AiOutlineMedicineBox  />),
+        getItem("Quản lí kê thuốc", "quan-li-ke-thuoc", <AiOutlineMedicineBox  />),
       ];
     }
     setMenuItems(items);

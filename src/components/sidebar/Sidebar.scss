@@ -60,12 +60,12 @@
 
       &:hover {
         background-color: #f7f9fb !important;
-        color: #ff6f61 !important;
+        color: #1890ff !important;
       }
 
       &.ant-menu-item-selected {
         background-color: #eaf3ff !important;
-        color: #ff6f61 !important;
+        color: #1890ff !important;
         font-weight: 600;
       }
 
@@ -87,7 +87,7 @@
 
         &:hover {
           background-color: #f7f9fb !important;
-          color: #ff6f61 !important;
+          color: #1890ff !important;
         }
 
         .ant-menu-submenu-arrow {
@@ -99,7 +99,7 @@
       &.ant-menu-submenu-open {
         .ant-menu-submenu-title {
           background-color: #eaf3ff !important;
-          color: #ff6f61 !important;
+          color: #1890ff !important;
           font-weight: 600;
         }
       }
@@ -116,12 +116,12 @@
 
           &:hover {
             background-color: #f7f9fb !important;
-            color: #ff6f61 !important;
+            color: #1890ff !important;
           }
 
           &.ant-menu-item-selected {
             background-color: #eaf3ff !important;
-            color: #ff6f61 !important;
+            color: #1890ff !important;
             font-weight: 600;
           }
         }
@@ -146,15 +146,15 @@
 
       &:hover {
         background-color: #f7f9fb !important;
-        color: #ff6f61 !important;
-        border-color: #ff6f61 !important;
+        color: #1890ff !important;
+        border-color: #1890ff !important;
       }
 
       &:active,
       &:focus {
         background-color: #eaf3ff !important;
-        color: #ff6f61 !important;
-        border-color: #ff6f61 !important;
+        color: #1890ff !important;
+        border-color: #1890ff !important;
       }
     }
   }
