@@ -23,7 +23,6 @@ import {
 import {
   ArrowLeftOutlined,
   CalendarOutlined,
-  HomeOutlined,
   UserOutlined,
   PhoneOutlined,
   VideoCameraOutlined,

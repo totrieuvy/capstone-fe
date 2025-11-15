@@ -397,7 +397,15 @@ const BoardingSchedule = () => {
                                 trigger={['contextMenu']}
                               >
                                 <div
-                                  className={`booking-bar ${isBookingExtended(booking.id) ? 'booking-bar-extended' : 'booking-bar-green'} ${continuesFromPrevious ? 'continues-from-previous' : ''} ${continuesIntoNext ? 'continues-into-next' : ''}`}
+                                  className={`booking-bar ${
+                                    isBookingExtended(booking.id) 
+                                      ? 'booking-bar-extended' 
+                                      : booking.status === 'IN_PROGRESS'
+                                        ? 'booking-bar-blue'
+                                        : booking.status === 'CHECK_OUT'
+                                          ? 'booking-bar-green'
+                                          : 'booking-bar-green'
+                                  } ${continuesFromPrevious ? 'continues-from-previous' : ''} ${continuesIntoNext ? 'continues-into-next' : ''}`}
                                   style={{
                                     left: `${leftPosition + 4}px`,
                                     width: `${barWidth - 8}px`,
@@ -491,7 +499,11 @@ const BoardingSchedule = () => {
                             ? 'booking-bar-red'
                             : booking.status === 'CANCELLED'
                               ? 'booking-bar-red'
-                              : (isBookingExtended(booking.id) ? 'booking-bar-extended' : 'booking-bar-orange')
+                              : booking.status === 'IN_PROGRESS'
+                                ? 'booking-bar-blue'
+                                : booking.status === 'CHECK_OUT'
+                                  ? 'booking-bar-green'
+                                  : (isBookingExtended(booking.id) ? 'booking-bar-extended' : 'booking-bar-orange')
                           } ${continuesFromPrevious ? 'continues-from-previous' : ''} ${continuesIntoNext ? 'continues-into-next' : ''}`}
                         style={{
                           left: `${leftPosition + 4}px`,
