@@ -201,7 +201,7 @@ const BoardingDetail: React.FC = () => {
 
   const getStatusColor = (status: string) => {
     const statusColors = {
-      BOOKED: "success",
+      BOOKED: "cyan",
       PENDING: "warning",
       CANCELLED: "error",
       FAILED: "error",
@@ -240,7 +240,12 @@ const BoardingDetail: React.FC = () => {
     try {
       setGroomingLoading(true);
       const response = await getServicesBySpeciesAndType(speciesId, ServiceType.GROOMING);
-      setGroomingServices(response.data);
+
+      // Filter out services that are already added to the booking
+      const existingServiceIds = booking.services ? booking.services.map(service => service.serviceId) : [];
+      const availableServices = response.data.filter(service => !existingServiceIds.includes(service.id));
+
+      setGroomingServices(availableServices);
       setIsGroomingModalVisible(true);
     } catch (error) {
       message.error("Không thể tải danh sách dịch vụ. Vui lòng thử lại.");
@@ -453,7 +458,7 @@ const BoardingDetail: React.FC = () => {
               </Col>
             </Row>
           </Card>
-
+          <br />
           {/* Booking Details */}
           <Card title="Thông tin đặt chỗ" className="booking-info-card">
             <Row gutter={[16, 16]}>
@@ -479,7 +484,7 @@ const BoardingDetail: React.FC = () => {
                 <div className="info-item">
                   <Text type="secondary">Loại chuồng</Text>
                   <div className="info-value">
-                    <BiCategory  style={{ marginRight: 8, color: "#fa8c16" }} />
+                    <BiCategory style={{ marginRight: 8, color: "#fa8c16" }} />
                     {booking.cageTypeName}
                   </div>
                 </div>
@@ -488,7 +493,7 @@ const BoardingDetail: React.FC = () => {
                 <div className="info-item">
                   <Text type="secondary">Tên chuồng</Text>
                   <div className="info-value">
-                    <GiCage  style={{ marginRight: 8, color: "#fa8c16" }} />
+                    <GiCage style={{ marginRight: 8, color: "#fa8c16" }} />
                     {booking.cageName || "Chưa phân chuồng"}
                   </div>
                 </div>
@@ -521,7 +526,7 @@ const BoardingDetail: React.FC = () => {
             {booking.status !== "CANCELLED" && booking.status !== "COMPLETED" && (
               <>
                 <Divider />
-                
+
                 {/* Current Services */}
                 {booking.services && booking.services.length > 0 && (
                   <div className="service-info">
@@ -530,9 +535,9 @@ const BoardingDetail: React.FC = () => {
                     </Text>
                     <div style={{ marginTop: 8 }}>
                       {booking.services.map((service) => (
-                        <div key={service.serviceId} className="service-item" style={{ 
-                          display: 'flex', 
-                          justifyContent: 'space-between', 
+                        <div key={service.serviceId} className="service-item" style={{
+                          display: 'flex',
+                          justifyContent: 'space-between',
                           alignItems: 'center',
                           padding: '8px 12px',
                           backgroundColor: '#f6f8fa',
@@ -548,62 +553,63 @@ const BoardingDetail: React.FC = () => {
                   </div>
                 )}
 
-                {/* Add Service Button */}
-                <div style={{ marginTop: booking.services && booking.services.length > 0 ? 16 : 8, textAlign: "center" }}>
-                  <Button 
-                    type="primary" 
-                    size="middle" 
-                    className="book-service-button" 
-                    onClick={handleBookService}
-                    icon={<ScissorOutlined />}
-                    style={{
-                      backgroundColor: '#ff7a45',
-                      borderColor: '#ff7a45',
-                      fontWeight: 500
-                    }}
-                  >
-                    Thêm dịch vụ làm đẹp cho {booking.species}
-                  </Button>
-                  <div style={{ marginTop: 8 }}>
-                    <Text type="secondary" style={{ fontSize: '12px' }}>
-                      Dịch vụ spa, cắt tỉa lông, vệ sinh chuyên dụng cho {booking.species}
-                    </Text>
+                {/* Add Service Button - Hidden for BOOKED and CHECK_OUT statuses */}
+                {booking.status !== "BOOKED" && booking.status !== "CHECK_OUT" && (
+                  <div style={{ marginTop: booking.services && booking.services.length > 0 ? 16 : 8, textAlign: "center" }}>
+                    <Button
+                      type="primary"
+                      size="middle"
+                      className="book-service-button"
+                      onClick={handleBookService}
+                      icon={<ScissorOutlined />}
+                      style={{
+                        backgroundColor: '#ff7a45',
+                        borderColor: '#ff7a45',
+                        fontWeight: 500
+                      }}
+                    >
+                      Thêm dịch vụ làm đẹp
+                    </Button>
+                    <div style={{ marginTop: 8 }}>
+                      <Text type="secondary" style={{ fontSize: '12px' }}>
+                        Dịch vụ spa, cắt tỉa lông, vệ sinh chuyên dụng cho {booking.species}
+                      </Text>
+                    </div>
                   </div>
-                </div>
+                )}
               </>
             )}
 
             {/* Show services for completed/cancelled bookings (read-only) */}
-            {(booking.status === "CANCELLED" || booking.status === "COMPLETED") && 
-             booking.services && booking.services.length > 0 && (
-              <>
-                <Divider />
-                <div className="service-info">
-                  <Text type="secondary" style={{ fontSize: '14px', fontWeight: 500 }}>
-                    Dịch vụ đã đặt:
-                  </Text>
-                  <div style={{ marginTop: 8 }}>
-                    {booking.services.map((service) => (
-                      <div key={service.serviceId} className="service-item" style={{ 
-                        display: 'flex', 
-                        justifyContent: 'space-between', 
-                        alignItems: 'center',
-                        padding: '8px 12px',
-                        backgroundColor: '#f6f8fa',
-                        borderRadius: '6px',
-                        marginBottom: '6px',
-                        border: '1px solid #e1e5e9'
-                      }}>
-                        <span style={{ fontWeight: 500 }}>{service.serviceName}</span>
-                        <Tag color="blue">{getFormattedPrice(service.price)}</Tag>
-                      </div>
-                    ))}
+            {(booking.status === "CANCELLED" || booking.status === "COMPLETED") &&
+              booking.services && booking.services.length > 0 && (
+                <>
+                  <Divider />
+                  <div className="service-info">
+                    <Text type="secondary" style={{ fontSize: '14px', fontWeight: 500 }}>
+                      Dịch vụ đã đặt:
+                    </Text>
+                    <div style={{ marginTop: 8 }}>
+                      {booking.services.map((service) => (
+                        <div key={service.serviceId} className="service-item" style={{
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          alignItems: 'center',
+                          padding: '8px 12px',
+                          backgroundColor: '#f6f8fa',
+                          borderRadius: '6px',
+                          marginBottom: '6px',
+                          border: '1px solid #e1e5e9'
+                        }}>
+                          <span style={{ fontWeight: 500 }}>{service.serviceName}</span>
+                          <Tag color="blue">{getFormattedPrice(service.price)}</Tag>
+                        </div>
+                      ))}
+                    </div>
                   </div>
-                </div>
-              </>
-            )}
+                </>
+              )}
           </Card>
-
           {/* Check-in Image Section */}
           {booking.checkInImage && (
             <Card title="Hình ảnh check-in" className="checkin-image-card">
@@ -639,7 +645,7 @@ const BoardingDetail: React.FC = () => {
               </div>
             </Card>
           )}
-
+          <br />
           {/* Payment Summary */}
           <Card title="Chi tiết thanh toán" className="payment-card">
             <div className="payment-item">
