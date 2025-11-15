@@ -1,61 +1,129 @@
+// .Dashboard {
+//   padding: 24px;
+//   background-color: #fff;
+//   border-radius: 12px;
+//   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+
+//   .dashboard-title {
+//     text-align: center;
+//     font-size: 28px;
+//     font-weight: 600;
+//     color: #333;
+//     margin-bottom: 20px;
+//   }
+
+//   .dashboard__date-picker {
+//     display: flex;
+//     justify-content: center;
+//     margin-bottom: 24px;
+//   }
+
+//   .stat-card {
+//     text-align: center;
+//     border-radius: 12px;
+//     background-color: #f9f9f9;
+
+//     h2 {
+//       font-size: 36px;
+//       color: #1890ff;
+//       margin: 0;
+//     }
+
+//     .ant-card-head-title {
+//       text-align: center;
+//       font-weight: 500;
+//     }
+//   }
+
+//   .chart-card {
+//     border-radius: 12px;
+//     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+
+//     .chart-container {
+//       position: relative;
+//       height: 350px; // default (the bigger one)
+//     }
+
+//     /* smaller bar charts */
+//     .small-bar {
+//       height: 260px; // -> smaller than before
+//       padding-top: 8px;
+//     }
+
+//     &.small-pie {
+//       .pie {
+//         height: 280px;
+//         width: 46%;
+//         margin: 0 auto;
+//       }
+//     }
+//   }
+// }
+
 .Dashboard {
-  padding: 24px;
-  background-color: #fff;
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  padding: 20px;
 
   .dashboard-title {
-    text-align: center;
-    font-size: 28px;
-    font-weight: 600;
-    color: #333;
+    font-size: 26px;
+    font-weight: 700;
     margin-bottom: 20px;
+    color: #333;
   }
 
   .dashboard__date-picker {
+    margin-bottom: 20px;
     display: flex;
-    justify-content: center;
-    margin-bottom: 24px;
+    justify-content: flex-end;
   }
 
+  // Card thông số
   .stat-card {
     text-align: center;
     border-radius: 12px;
-    background-color: #f9f9f9;
+    padding: 16px 0;
 
     h2 {
-      font-size: 36px;
+      font-size: 32px;
+      font-weight: 700;
+      margin-top: 10px;
       color: #1890ff;
-      margin: 0;
-    }
-
-    .ant-card-head-title {
-      text-align: center;
-      font-weight: 500;
     }
   }
 
+  // Card chứa biểu đồ
   .chart-card {
     border-radius: 12px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 
-    .chart-container {
-      position: relative;
-      height: 350px; // default (the bigger one)
+    .ant-card-head {
+      border-bottom: none;
+      padding: 16px;
     }
 
-    /* smaller bar charts */
-    .small-bar {
-      height: 260px; // -> smaller than before
-      padding-top: 8px;
+    .ant-card-head-title {
+      font-size: 18px;
+      font-weight: 600;
+      color: #444;
     }
 
-    &.small-pie {
-      .pie {
-        height: 280px;
-        width: 46%;
-        margin: 0 auto;
-      }
+    .ant-card-body {
+      padding: 0 20px 20px 20px;
     }
+  }
+
+  // Chart container
+  .chart-container {
+    width: 100%;
+    height: 350px;
+    position: relative;
+  }
+
+  // Phiên bản to cho Pie hoặc full width
+  .chart-container.large {
+    height: 420px;
+  }
+
+  // Top sản phẩm bán chạy (horizontal bar) chiều cao lớn hơn
+  .chart-container.product-horizontal {
+    height: 450px;
   }
 }

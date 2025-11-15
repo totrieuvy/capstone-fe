@@ -86,6 +86,8 @@ const SideBar: React.FC = () => {
       items = [
         getItem("Dịch vụ y tế", "medical-checkup", <BiPlusMedical />, [getItem("Lịch đặt khám", "lich-dat-kham")]),
         getItem("Grooming", "grooming", <SkinOutlined />, [getItem("Lịch đặt grooming", "lich-dat-grooming")]),
+        getItem("Chat", "chat", <SkinOutlined />, [getItem("Quản lí chat", "quan-li-chat")]),
+
         getItem("Boarding", "boarding", <HomeOutlined />, [
           getItem("Lịch đặt boarding", "lich-dat-boarding"),
           getItem("Sơ đồ chuồng", "so-do-chuong"),
