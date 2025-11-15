@@ -142,8 +142,7 @@ const ManageAppointmentDetail: React.FC = () => {
       case "IN_PROGRESS":
         return "Đang thực hiện";
       case "CHECK_OUT":
-      case "CHECKED_OUT":
-        return "Đã check-out";
+        return "Hoàn thành";
       case "NO-SHOW":
         return "Không đến";
       case "CANCELLED":

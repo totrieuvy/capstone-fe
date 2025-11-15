@@ -88,7 +88,7 @@ const CageType: React.FC = () => {
   };
 
   useEffect(() => {
-    document.title = "Quản lý loại chuồng";
+    document.title = "Quản lí loại chuồng";
     fetchCageTypes();
     fetchIotDevices();
   }, []);
@@ -245,7 +245,7 @@ const CageType: React.FC = () => {
 
   return (
     <div className="CageType">
-      <h1>Quản lý loại chuồng</h1>
+      <h1>Quản lí loại chuồng</h1>
 
       <div className="search-box">
         <Space style={{ marginBottom: 16, width: "100%" }}>
@@ -348,7 +348,7 @@ const CageType: React.FC = () => {
             <Form.Item
               name="iotDeviceId"
               label="Thiết bị IoT (Camera)"
-              rules={[{ required: true, message: "Vui lòng chọn thiết bị IoT!" }]}
+              rules={[{  message: "Vui lòng chọn thiết bị IoT!" }]}
             >
               <Select placeholder="Chọn thiết bị IoT">
                 {iotDevices.map((device) => (
@@ -362,7 +362,7 @@ const CageType: React.FC = () => {
             <Form.Item
               name="section"
               label="Khu vực (Section)"
-              rules={[{ required: true, message: "Vui lòng nhập khu vực!" }]}
+              rules={[{ message: "Vui lòng nhập khu vực!" }]}
             >
               <Input placeholder="VD: A1, B2, C3..." />
             </Form.Item>

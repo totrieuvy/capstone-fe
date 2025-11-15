@@ -61,7 +61,7 @@ function ManageTransaction() {
   };
 
   useEffect(() => {
-    document.title = "Quản lý giao dịch";
+    document.title = "Quản lí giao dịch";
     void fetchTransactions(pagination.current, pagination.pageSize);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pagination.current, pagination.pageSize]);
@@ -164,7 +164,7 @@ function ManageTransaction() {
 
   return (
     <div className="ManageTransaction">
-      <h1 className="page-title">Quản lý giao dịch</h1>
+      <h1 className="page-title">Quản lí giao dịch</h1>
 
       <div className="filter-status">
         {statuses.map((s) => (

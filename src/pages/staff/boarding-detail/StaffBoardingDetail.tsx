@@ -55,7 +55,7 @@ const BoardingDetail: React.FC = () => {
   const getStatusColor = (status: string) => {
     const statusColors: Record<string, string> = {
       'BOOKED': 'cyan',
-      'IN_PROGRESS': 'purple',
+      'IN_PROGRESS': 'blue',
       'CHECK_OUT': 'green',
       'CANCELLED': 'red',
       'NO-SHOW': 'red',

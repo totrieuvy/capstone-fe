@@ -54,7 +54,7 @@ const Policy: React.FC = () => {
   };
 
   useEffect(() => {
-    document.title = "Quản lý chính sách";
+    document.title = "Quản lí chính sách";
     fetchPolicies();
   }, []);
 
@@ -185,7 +185,7 @@ const Policy: React.FC = () => {
 
   return (
     <div className="Policy">
-      <h1>Quản lý chính sách</h1>
+      <h1>Quản lí chính sách</h1>
 
       <div className="policy__filters">
         <Space style={{ width: "100%", marginBottom: 16 }}>

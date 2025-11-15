@@ -76,7 +76,7 @@ const ManageAccount: React.FC = () => {
   };
 
   useEffect(() => {
-    document.title = "Quản lý tài khoản nhân viên";
+    document.title = "Quản lí tài khoản nhân viên";
     fetchStaffAccounts(currentPage, pageSize);
   }, [currentPage, pageSize]);
 
@@ -286,7 +286,7 @@ const ManageAccount: React.FC = () => {
 
   return (
     <div className="ManageAccount">
-      <h1>Quản lý tài khoản nhân viên</h1>
+      <h1>Quản lí tài khoản nhân viên</h1>
 
       <div className="search-box">
         <Space style={{ marginBottom: 16, width: "100%" }}>

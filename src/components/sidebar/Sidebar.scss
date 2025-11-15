@@ -1,15 +1,19 @@
 .Sidebar {
   height: 100vh !important;
+  background-color: #ffffff;
+  
   .ant-layout-sider-children {
     display: flex;
     flex-direction: column;
     height: 100%;
+    background-color: #ffffff;
   }
 
   &__logo {
     flex-shrink: 0;
     padding: 16px;
     text-align: center;
+    background-color: #ffffff;
 
     img {
       width: 100%;
@@ -27,9 +31,10 @@
     min-height: 0;
     overflow-y: auto;
     overflow-x: hidden;
+    background-color: #ffffff;
 
     scrollbar-width: thin;
-    scrollbar-color: #aaa transparent;
+    scrollbar-color: #c1c1c1 transparent;
 
     &::-webkit-scrollbar {
       width: 6px;
@@ -43,17 +48,124 @@
   &__menu {
     border: none;
     padding-bottom: 12px;
+    background-color: #ffffff;
+
+    // Menu items styling
+    .ant-menu-item {
+      color: #444;
+      font-weight: 500;
+      margin: 4px 8px;
+      border-radius: 10px;
+      transition: all 0.25s ease;
+
+      &:hover {
+        background-color: #f7f9fb !important;
+        color: #1890ff !important;
+      }
+
+      &.ant-menu-item-selected {
+        background-color: #eaf3ff !important;
+        color: #1890ff !important;
+        font-weight: 600;
+      }
+
+      .ant-menu-item-icon {
+        font-size: 20px;
+        min-width: 24px;
+      }
+    }
+
+    // Submenu styling
+    .ant-menu-submenu {
+      margin: 4px 8px;
+
+      .ant-menu-submenu-title {
+        color: #444;
+        font-weight: 500;
+        border-radius: 10px;
+        transition: all 0.25s ease;
+
+        &:hover {
+          background-color: #f7f9fb !important;
+          color: #1890ff !important;
+        }
+
+        .ant-menu-submenu-arrow {
+          transition: transform 0.3s ease;
+          color: inherit;
+        }
+      }
+
+      &.ant-menu-submenu-open {
+        .ant-menu-submenu-title {
+          background-color: #eaf3ff !important;
+          color: #1890ff !important;
+          font-weight: 600;
+        }
+      }
+
+      .ant-menu-sub {
+        background-color: #ffffff;
+
+        .ant-menu-item {
+          color: #555;
+          font-weight: 400;
+          padding-left: 48px;
+          margin: 2px 8px;
+          border-radius: 8px;
+
+          &:hover {
+            background-color: #f7f9fb !important;
+            color: #1890ff !important;
+          }
+
+          &.ant-menu-item-selected {
+            background-color: #eaf3ff !important;
+            color: #1890ff !important;
+            font-weight: 600;
+          }
+        }
+      }
+    }
   }
 
   &__logout {
     flex-shrink: 0;
     padding: 16px;
     text-align: center;
-    border-top: 1px solid #eee;
-    background-color: #fff;
+    border-top: 1px solid #e5e5e5;
+    background-color: #ffffff;
+
+    .ant-btn {
+      color: #444;
+      background-color: #ffffff;
+      border: 1px solid #e5e5e5;
+      border-radius: 10px;
+      font-weight: 500;
+      transition: all 0.25s ease;
+
+      &:hover {
+        background-color: #f7f9fb !important;
+        color: #1890ff !important;
+        border-color: #1890ff !important;
+      }
+
+      &:active,
+      &:focus {
+        background-color: #eaf3ff !important;
+        color: #1890ff !important;
+        border-color: #1890ff !important;
+      }
+    }
   }
 
   .ant-menu-submenu-popup {
     z-index: 1000;
+    
+    .ant-menu-sub {
+      background-color: #ffffff;
+      border-radius: 10px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
   }
 }

@@ -133,7 +133,7 @@ const ManageMedicine: React.FC = () => {
               <Space align="center" size="middle">
                 <MedicineBoxOutlined className="header-icon" />
                 <Title level={2} className="page-title">
-                  Quản lý thuốc
+                  Quản lí thuốc
                 </Title>
               </Space>
             </Card>

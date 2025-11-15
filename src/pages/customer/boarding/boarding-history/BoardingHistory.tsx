@@ -99,11 +99,11 @@ const BoardingHistory: React.FC = () => {
       case 'PENDING':
         return 'orange';
       case 'BOOKED':
-        return 'blue';
+        return 'cyan';
       case 'NO-SHOW':
         return 'volcano';
       case 'IN_PROGRESS':
-        return 'orange';
+        return 'blue';
       case 'CHECK_OUT':
         return 'green';
       case 'CANCELLED':

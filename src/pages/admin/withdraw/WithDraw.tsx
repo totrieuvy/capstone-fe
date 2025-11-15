@@ -57,7 +57,7 @@ const WithDraw: React.FC = () => {
   };
 
   useEffect(() => {
-    document.title = "Quản lý rút tiền";
+    document.title = "Quản lí rút tiền";
     fetchWithdraws();
   }, []);
 
@@ -207,7 +207,7 @@ const WithDraw: React.FC = () => {
 
   return (
     <div className="withdraw-page">
-      <h1>Quản lý rút tiền</h1>
+      <h1>Quản lí rút tiền</h1>
 
       <div className="withdraw__filters">
         <Space style={{ width: "100%", marginBottom: 16 }}>
