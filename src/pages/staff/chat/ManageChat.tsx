@@ -6,7 +6,7 @@ import Chat from "../../customer/chat/Chat";
 import { getLocalUser } from "../../../config/websocketConfig";
 
 // ==========================
-// TYPES TRONG FILE
+// TYPES
 // ==========================
 type ConversationMembers = {
   customerId?: string;
@@ -57,9 +57,9 @@ export default function ManageChat() {
     return () => unsub();
   }, []);
 
-  // join conversation as staff
+  // join conversation
   const joinConversation = async (conversationId: string) => {
-    const staffRef = ref(db, `chats/${conversationId}/members/staffs/${staffUser?.accountId || "staff"}`);
+    const staffRef = ref(db, `chats/${conversationId}/members/staffs/${staffUser?.accountId}`);
 
     await set(staffRef, {
       staffId: staffUser?.accountId,
@@ -86,7 +86,7 @@ export default function ManageChat() {
                   background: selected?.id === c.id ? "#eee" : "",
                 }}
               >
-                <List.Item.Meta avatar={<Avatar>{c.name[0]}</Avatar>} title={c.name} description={c.id} />
+                <List.Item.Meta avatar={<Avatar>{c.name[0]}</Avatar>} title={c.name} />
               </List.Item>
             )}
           />
@@ -94,7 +94,7 @@ export default function ManageChat() {
         </Card>
       </Col>
 
-      {/* Right Chat Box */}
+      {/* Chat Box */}
       <Col span={18}>
         <Card style={{ height: "100%" }}>
           {selected ? <Chat conversationId={selected.id} /> : <Empty description="Chọn khách để chat" />}

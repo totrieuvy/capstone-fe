@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Button, Input, List, Avatar, Typography, message as antdMessage } from "antd";
+import { Button, Input, Avatar, Typography, message as antdMessage } from "antd";
 import { db } from "../../../config/firebase";
 import { ref, onValue, push, set } from "firebase/database";
 import { getLocalUser } from "../../../config/websocketConfig";
@@ -8,7 +8,7 @@ const { TextArea } = Input;
 const { Text } = Typography;
 
 // ==========================
-// TYPES NGAY TRONG FILE
+// TYPES
 // ==========================
 type Message = {
   id: string;
@@ -33,14 +33,10 @@ export default function Chat({ conversationId: propConversationId }: Props) {
 
   const user = getLocalUser();
 
-  // ================================
-  // Helper: check user đang ở cuối
-  // ================================
+  // Kiểm tra user đang ở đáy
   const isUserAtBottom = () => {
     const el = containerRef.current;
     if (!el) return true;
-
-    // khoảng cách 50px được xem là "ở cuối"
     return el.scrollHeight - el.scrollTop - el.clientHeight < 50;
   };
 
@@ -49,7 +45,7 @@ export default function Chat({ conversationId: propConversationId }: Props) {
     if (propConversationId) setConversationId(propConversationId);
   }, [propConversationId]);
 
-  // Auto-create conversation cho customer
+  // CUSTOMER auto create conversation
   useEffect(() => {
     if (conversationId || !user) return;
 
@@ -80,22 +76,21 @@ export default function Chat({ conversationId: propConversationId }: Props) {
       }));
 
       list.sort((a, b) => a.timestamp - b.timestamp);
+
       setMessages(list);
     });
 
     return () => unsub();
   }, [conversationId]);
 
-  // ================================
-  // Scroll mượt CHỈ khi user đang ở cuối
-  // ================================
+  // Auto scroll nếu user đang ở đáy
   useEffect(() => {
     if (isUserAtBottom()) {
       bottomRef.current?.scrollIntoView({ behavior: "smooth" });
     }
   }, [messages]);
 
-  // Send message
+  // Gửi tin nhắn
   const send = async () => {
     if (!text.trim() || !conversationId) return;
 
@@ -132,30 +127,55 @@ export default function Chat({ conversationId: propConversationId }: Props) {
           scrollBehavior: "smooth",
         }}
       >
-        <List
-          dataSource={messages}
-          renderItem={(m) => (
-            <List.Item
+        {messages.map((m) => {
+          const isMine = m.senderId === user?.accountId;
+
+          return (
+            <div
               key={m.id}
               style={{
-                justifyContent: m.isCustomer ? "flex-end" : "flex-start",
+                display: "flex",
+                justifyContent: isMine ? "flex-end" : "flex-start",
+                marginBottom: 12,
               }}
             >
-              <List.Item.Meta
-                avatar={<Avatar>{m.fullName[0]}</Avatar>}
-                title={m.fullName}
-                description={m.messageContent}
-              />
-            </List.Item>
-          )}
-        />
+              {!isMine && <Avatar style={{ marginRight: 8 }}>{m.fullName[0]}</Avatar>}
+
+              <div
+                style={{
+                  maxWidth: "60%",
+                  background: isMine ? "#1890ff" : "#f5f5f5",
+                  color: isMine ? "white" : "black",
+                  padding: "8px 12px",
+                  borderRadius: 12,
+                  borderBottomRightRadius: isMine ? 0 : 12,
+                  borderBottomLeftRadius: isMine ? 12 : 0,
+                  wordBreak: "break-word",
+                }}
+              >
+                {!isMine && <div style={{ fontSize: 12, fontWeight: 600, marginBottom: 3 }}>{m.fullName}</div>}
+                {m.messageContent}
+              </div>
+
+              {isMine && <Avatar style={{ marginLeft: 8, backgroundColor: "#1890ff" }}>{m.fullName[0]}</Avatar>}
+            </div>
+          );
+        })}
 
         <div ref={bottomRef} />
       </div>
 
       {/* Input */}
       <div style={{ padding: 10, borderTop: "1px solid #ddd" }}>
-        <TextArea rows={2} value={text} onChange={(e) => setText(e.target.value)} onPressEnter={() => {}} />
+        <TextArea
+          rows={2}
+          value={text}
+          onChange={(e) => setText(e.target.value)}
+          onPressEnter={(e) => {
+            e.preventDefault();
+            send();
+          }}
+        />
 
         <Button type="primary" disabled={!text.trim()} onClick={send} style={{ marginTop: 10, float: "right" }}>
           Gửi
