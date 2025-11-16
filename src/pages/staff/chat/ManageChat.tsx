@@ -3,23 +3,12 @@ import { Card, List, Avatar, Row, Col, Empty } from "antd";
 import { db } from "../../../config/firebase";
 import { ref, onValue, set } from "firebase/database";
 import Chat from "../../customer/chat/Chat";
-import { getLocalUser } from "../../../config/websocketConfig";
 
-// ==========================
-// TYPES
-// ==========================
 type ConversationMembers = {
   customerId?: string;
   customerName?: string;
   createdAt?: number;
-  staffs?: Record<
-    string,
-    {
-      staffId: string;
-      staffName: string;
-      joinedAt: number;
-    }
-  >;
+  staffs?: Record<string, { staffId: string; staffName: string; joinedAt: number }>;
 };
 
 type Conversation = {
@@ -33,20 +22,17 @@ export default function ManageChat() {
   const [selected, setSelected] = useState<Conversation | null>(null);
   const [selectedName, setSelectedName] = useState<string>("");
 
-  const staffUser = getLocalUser();
+  // Lấy user từ localStorage
+  const staffUser = JSON.parse(localStorage.getItem("user") || "{}");
 
-  // ==========================
-  // Load list conversations
-  // ==========================
   useEffect(() => {
     const convRef = ref(db, "chats");
 
-    const unsubscribe = onValue(convRef, (snapshot) => {
+    const unsub = onValue(convRef, (snapshot) => {
       const raw = snapshot.val() || {};
 
       const list: Conversation[] = Object.keys(raw).map((key) => {
         const members = raw[key].members || {};
-
         return {
           id: key,
           name: members.customerName || `Khách ${key}`,
@@ -57,14 +43,11 @@ export default function ManageChat() {
       setConversations(list);
     });
 
-    return () => unsubscribe();
+    return () => unsub();
   }, []);
 
-  // ==========================
-  // Staff join conversation
-  // ==========================
   const joinConversation = async (conversationId: string) => {
-    if (!staffUser) return;
+    if (!staffUser?.accountId) return;
 
     const staffRef = ref(db, `chats/${conversationId}/members/staffs/${staffUser.accountId}`);
 
@@ -74,7 +57,6 @@ export default function ManageChat() {
       joinedAt: Date.now(),
     });
 
-    // Set selected conversation
     const conv = conversations.find((c) => c.id === conversationId) || null;
     setSelected(conv);
     setSelectedName(conv?.name || "");
@@ -82,7 +64,6 @@ export default function ManageChat() {
 
   return (
     <Row gutter={16} style={{ height: "calc(100vh - 120px)" }}>
-      {/* ========================== LEFT SIDE – LIST CUSTOMERS ========================== */}
       <Col span={6}>
         <Card title="Khách đang chat">
           <List
@@ -105,7 +86,6 @@ export default function ManageChat() {
         </Card>
       </Col>
 
-      {/* ========================== RIGHT SIDE – CHAT BOX ========================== */}
       <Col span={18}>
         <Card style={{ height: "100%" }}>
           {selected ? (
