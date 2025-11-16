@@ -62,68 +62,85 @@
 
 .Dashboard {
   padding: 20px;
+}
 
-  .dashboard-title {
-    font-size: 26px;
-    font-weight: 700;
-    margin-bottom: 20px;
-    color: #333;
+.dashboard-title {
+  font-size: 28px;
+  font-weight: 700;
+  margin-bottom: 20px;
+}
+
+/* Center Pickers */
+.dashboard-center-picker {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 15px;
+
+  span {
+    font-size: 16px;
+    font-weight: 600;
   }
+}
 
-  .dashboard__date-picker {
-    margin-bottom: 20px;
-    display: flex;
-    justify-content: flex-end;
-  }
+/* Chart area */
+.chart-container {
+  height: 350px;
+  position: relative;
+}
 
-  // Card thông số
-  .stat-card {
-    text-align: center;
-    border-radius: 12px;
-    padding: 16px 0;
+.chart-card {
+  border-radius: 12px;
+  padding: 10px;
+}
 
-    h2 {
-      font-size: 32px;
-      font-weight: 700;
-      margin-top: 10px;
-      color: #1890ff;
-    }
-  }
+/* Table Cards */
+.dashboard-table-card {
+  border-radius: 12px;
+  margin-bottom: 20px;
+}
 
-  // Card chứa biểu đồ
-  .chart-card {
-    border-radius: 12px;
+/* Equal height cards (Staff & Vets) */
+.equal-row {
+  display: flex;
+  align-items: stretch;
+}
 
-    .ant-card-head {
-      border-bottom: none;
-      padding: 16px;
-    }
+.equal-row .equal-card {
+  height: 100%;
+}
 
-    .ant-card-head-title {
-      font-size: 18px;
+/* Table */
+.dashboard-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+  font-size: 15px;
+
+  thead {
+    background: #f5f6f8;
+
+    th {
+      padding: 12px;
+      text-align: left;
       font-weight: 600;
-      color: #444;
-    }
-
-    .ant-card-body {
-      padding: 0 20px 20px 20px;
+      color: #555;
+      font-size: 14px;
     }
   }
 
-  // Chart container
-  .chart-container {
-    width: 100%;
-    height: 350px;
-    position: relative;
-  }
+  tbody tr {
+    transition: 0.2s ease;
+    border-bottom: 1px solid #eee;
 
-  // Phiên bản to cho Pie hoặc full width
-  .chart-container.large {
-    height: 420px;
-  }
+    &:hover {
+      background: #f0f7ff;
+    }
 
-  // Top sản phẩm bán chạy (horizontal bar) chiều cao lớn hơn
-  .chart-container.product-horizontal {
-    height: 450px;
+    td {
+      padding: 12px;
+      color: #333;
+    }
   }
 }

@@ -3,15 +3,55 @@ import { Card, Row, Col, DatePicker, Spin } from "antd";
 import dayjs, { Dayjs } from "dayjs";
 import api from "../../../config/axios";
 import { toast } from "react-toastify";
-import { Pie, Bar } from "react-chartjs-2";
-import { Chart as ChartJS, ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement } from "chart.js";
+import { Line, Bar } from "react-chartjs-2";
+import {
+  Chart as ChartJS,
+  Tooltip,
+  Legend,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  BarElement,
+  Filler,
+} from "chart.js";
 import "./Dashboard.scss";
 
-ChartJS.register(ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement);
+ChartJS.register(Tooltip, Legend, CategoryScale, LinearScale, PointElement, LineElement, BarElement, Filler);
 
-// ==========================================================
-// INTERFACES
-// ==========================================================
+interface DashboardTableProps {
+  title: string;
+  columns: string[];
+  data: Record<string, string | number>[];
+}
+
+// ======================= TABLE COMPONENT =======================
+
+const DashboardTable: React.FC<DashboardTableProps> = ({ title, columns, data }) => (
+  <Card title={title} className="dashboard-table-card equal-card">
+    <table className="dashboard-table">
+      <thead>
+        <tr>
+          {columns.map((c: string, i: number) => (
+            <th key={i}>{c}</th>
+          ))}
+        </tr>
+      </thead>
+
+      <tbody>
+        {data.map((row, i: number) => (
+          <tr key={i}>
+            {Object.values(row).map((v, j: number) => (
+              <td key={j}>{v}</td>
+            ))}
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  </Card>
+);
+
+// ======================= INTERFACES =======================
 
 interface RevenueStats {
   medicalRevenue: number;
@@ -22,39 +62,30 @@ interface RevenueStats {
 }
 
 interface TopService {
-  serviceId: string;
   serviceName: string;
-  serviceType: string;
   totalRevenue: number;
   totalTimesPerformed: number;
 }
 
 interface TopProduct {
-  productId: string;
   productName: string;
   totalQuantitySold: number;
   totalRevenue: number;
 }
 
 interface TopCustomer {
-  customerId: string;
   customerName: string;
-  email: string;
   totalAppointments: number;
   totalSpent: number;
 }
 
 interface TopVet {
-  vetId: string;
   vetName: string;
-  email: string;
   totalAppointmentsCompleted: number;
 }
 
 interface TopStaff {
-  staffId: string;
   staffName: string;
-  email: string;
   totalServicesCompleted: number;
 }
 
@@ -64,12 +95,10 @@ interface UserStats {
   totalVets: number;
 }
 
-// ==========================================================
-// COMPONENT
-// ==========================================================
+// ======================= DASHBOARD =======================
 
 function Dashboard() {
-  const [loading, setLoading] = useState<boolean>(false);
+  const [loading, setLoading] = useState(false);
 
   const [revenue, setRevenue] = useState<RevenueStats | null>(null);
   const [services, setServices] = useState<TopService[]>([]);
@@ -81,9 +110,37 @@ function Dashboard() {
 
   const [dateRange, setDateRange] = useState<[Dayjs, Dayjs]>([dayjs().startOf("year"), dayjs()]);
 
-  // ==========================================================
-  // API CALLS
-  // ==========================================================
+  const [selectedYear, setSelectedYear] = useState(dayjs().year());
+
+  const [monthlyMedical, setMonthlyMedical] = useState<number[]>([]);
+  const [monthlyGrooming, setMonthlyGrooming] = useState<number[]>([]);
+  const [monthlyBoarding, setMonthlyBoarding] = useState<number[]>([]);
+  const [monthlyOrder, setMonthlyOrder] = useState<number[]>([]);
+  const [monthlyTotal, setMonthlyTotal] = useState<number[]>([]);
+
+  // ======================= FETCH 12 MONTHS =======================
+
+  const fetchMonthlyRevenue = async (year: number) => {
+    try {
+      const calls = Array.from({ length: 12 }, (_, m) => {
+        const start = dayjs().year(year).month(m).startOf("month").format("YYYY-MM-DD");
+        const end = dayjs().year(year).month(m).endOf("month").format("YYYY-MM-DD");
+        return api.get("/api/dashboard/revenue", { params: { startDate: start, endDate: end } });
+      });
+
+      const res = await Promise.all(calls);
+
+      setMonthlyMedical(res.map((r) => r.data.data.medicalRevenue));
+      setMonthlyGrooming(res.map((r) => r.data.data.groomingRevenue));
+      setMonthlyBoarding(res.map((r) => r.data.data.boardingRevenue));
+      setMonthlyOrder(res.map((r) => r.data.data.orderRevenue));
+      setMonthlyTotal(res.map((r) => r.data.data.totalRevenue));
+    } catch {
+      toast.error("Lỗi tải doanh thu theo năm!");
+    }
+  };
+
+  // ======================= APIs =======================
 
   const fetchRevenue = async (start: string, end: string) => {
     const res = await api.get<{ data: RevenueStats }>("/api/dashboard/revenue", {
@@ -145,223 +202,179 @@ function Dashboard() {
         fetchUserStats(),
       ]);
     } catch {
-      toast.error("Lỗi tải dữ liệu dashboard");
+      toast.error("Lỗi tải dashboard");
     } finally {
       setLoading(false);
     }
   };
 
-  // ==========================================================
-  // INIT LOAD
-  // ==========================================================
+  // ======================= INIT LOAD =======================
 
   useEffect(() => {
     const start = dateRange[0].format("YYYY-MM-DD");
     const end = dateRange[1].format("YYYY-MM-DD");
+
     loadAll(start, end);
+    fetchMonthlyRevenue(selectedYear);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // ==========================================================
-  // HANDLE DATE CHANGE (NO ANY)
-  // ==========================================================
-
   const handleDateChange = (dates: [Dayjs | null, Dayjs | null] | null, dateStrings: [string, string]) => {
     if (!dates || !dates[0] || !dates[1]) return;
-
-    const [start, end] = dates;
-    const [startStr, endStr] = dateStrings;
-
-    setDateRange([start, end]);
-    loadAll(startStr, endStr);
+    setDateRange([dates[0], dates[1]]);
+    loadAll(dateStrings[0], dateStrings[1]);
   };
 
-  // ==========================================================
-  // LOADING
-  // ==========================================================
-
-  if (loading || !revenue || !users) {
+  if (!revenue || !users || loading) {
     return <Spin spinning style={{ width: "100%", marginTop: 60 }} />;
   }
 
-  // ==========================================================
-  // CHART DATA
-  // ==========================================================
+  const months = Array.from({ length: 12 }, (_, i) => `Tháng ${i + 1}`);
 
-  const revenueData = {
-    labels: ["Khám bệnh", "Grooming", "Boarding", "Đơn hàng"],
+  const multiLineData = {
+    labels: months,
     datasets: [
+      { label: "Khám bệnh", data: monthlyMedical, borderColor: "#1890ff", tension: 0.4 },
+      { label: "Grooming", data: monthlyGrooming, borderColor: "#13c2c2", tension: 0.4 },
+      { label: "Boarding", data: monthlyBoarding, borderColor: "#fa8c16", tension: 0.4 },
+      { label: "Đơn hàng", data: monthlyOrder, borderColor: "#f5222d", tension: 0.4 },
       {
-        label: "Doanh thu",
-        data: [revenue.medicalRevenue, revenue.groomingRevenue, revenue.boardingRevenue, revenue.orderRevenue],
-        backgroundColor: ["#1890ff", "#13c2c2", "#fa8c16", "#f5222d"],
+        label: "TỔNG DOANH THU",
+        data: monthlyTotal,
+        borderColor: "#52c41a",
+        tension: 0.4,
+        borderWidth: 3,
       },
     ],
   };
-
-  const serviceData = {
-    labels: services.map((s) => s.serviceName),
-    datasets: [
-      {
-        label: "Doanh thu",
-        data: services.map((s) => s.totalRevenue),
-        backgroundColor: "#722ed1",
-      },
-    ],
-  };
-
-  const customerData = {
-    labels: customers.map((c) => c.customerName),
-    datasets: [
-      {
-        label: "Chi tiêu",
-        data: customers.map((c) => c.totalSpent),
-        backgroundColor: "#52c41a",
-      },
-    ],
-  };
-
-  const vetData = {
-    labels: vets.map((v) => v.vetName),
-    datasets: [
-      {
-        label: "Lịch hẹn hoàn thành",
-        data: vets.map((v) => v.totalAppointmentsCompleted),
-        backgroundColor: "#eb2f96",
-      },
-    ],
-  };
-
-  const staffData = {
-    labels: staff.map((s) => s.staffName),
-    datasets: [
-      {
-        label: "Dịch vụ hoàn thành",
-        data: staff.map((s) => s.totalServicesCompleted),
-        backgroundColor: "#fa541c",
-      },
-    ],
-  };
-
-  const productData = {
-    labels: products.map((p) => p.productName),
-    datasets: [
-      {
-        label: "Số lượng bán",
-        data: products.map((p) => Math.round(p.totalQuantitySold)),
-        backgroundColor: "#faad14",
-      },
-    ],
-  };
-
-  const verticalOptions = {
-    responsive: true,
-    maintainAspectRatio: false,
-  };
-
-  const horizontalOptions = {
-    indexAxis: "y" as const,
-    responsive: true,
-    maintainAspectRatio: false,
-    scales: {
-      x: {
-        ticks: {
-          callback: function (value: number | string) {
-            return Number(value).toFixed(0); // HIỂN THỊ NGUYÊN
-          },
-        },
-      },
-    },
-  };
-
-  // ==========================================================
-  // UI
-  // ==========================================================
 
   return (
     <div className="Dashboard">
       <h1 className="dashboard-title">Thống kê tổng quan</h1>
 
-      <div className="dashboard__date-picker">
+      {/* YEAR PICKER */}
+      <div className="dashboard-center-picker">
+        <span>Chọn năm:</span>
+        <DatePicker
+          picker="year"
+          value={dayjs(`${selectedYear}`)}
+          onChange={(d) => {
+            if (d) {
+              const y = d.year();
+              setSelectedYear(y);
+              fetchMonthlyRevenue(y);
+            }
+          }}
+        />
+      </div>
+
+      {/* LINE CHART */}
+      <Row gutter={[16, 16]}>
+        <Col xs={24}>
+          <Card title={`Doanh thu theo 12 tháng của năm ${selectedYear}`}>
+            <div className="chart-container">
+              <Line data={multiLineData} options={{ responsive: true, maintainAspectRatio: false }} />
+            </div>
+          </Card>
+        </Col>
+      </Row>
+
+      {/* RANGE PICKER */}
+      <div className="dashboard-center-picker" style={{ marginTop: 30 }}>
         <DatePicker.RangePicker value={dateRange} onChange={handleDateChange} format="YYYY-MM-DD" />
       </div>
 
-      {/* ROW 2: Revenue + Top Services */}
-      <Row gutter={[16, 16]} style={{ marginTop: 20 }}>
-        <Col xs={24} md={12}>
-          <Card title="Doanh thu theo dịch vụ" className="chart-card">
-            <div className="chart-container">
-              <Pie data={revenueData} />
-            </div>
-          </Card>
-        </Col>
-
-        <Col xs={24} md={12}>
-          <Card title="Top dịch vụ" className="chart-card">
-            <div className="chart-container" style={{ height: 400 }}>
-              <Bar data={serviceData} options={horizontalOptions} />
-            </div>
-          </Card>
-        </Col>
-      </Row>
-
-      {/* ROW 5 — Top Products horizontal */}
+      {/* ====================== TOP SERVICES — BAR ====================== */}
       <Row gutter={[16, 16]} style={{ marginTop: 20 }}>
         <Col xs={24}>
-          <Card title="Top sản phẩm bán chạy" className="chart-card">
-            <div className="chart-container" style={{ height: 400 }}>
-              <Bar data={productData} options={horizontalOptions} />
-            </div>
-          </Card>
-        </Col>
-      </Row>
-
-      {/* ROW 3 — Top Customers full width */}
-      <Row gutter={[16, 16]} style={{ marginTop: 20 }}>
-        <Col xs={24}>
-          <Card title="Top khách hàng chi tiêu nhiều nhất" className="chart-card">
-            <div className="chart-container" style={{ height: 400 }}>
-              <Bar data={customerData} options={verticalOptions} />
-            </div>
-          </Card>
-        </Col>
-      </Row>
-
-      {/* ROW 4 — Staff + Vet */}
-      <Row gutter={[16, 16]} style={{ marginTop: 20 }}>
-        <Col xs={24} md={12}>
-          <Card title="Top nhân viên" className="chart-card">
+          <Card title="Top Services (Doanh thu theo dịch vụ)" className="chart-card">
             <div className="chart-container" style={{ height: 350 }}>
-              <Bar data={staffData} options={verticalOptions} />
-            </div>
-          </Card>
-        </Col>
-
-        <Col xs={24} md={12}>
-          <Card title="Top bác sĩ thú y" className="chart-card">
-            <div className="chart-container" style={{ height: 350 }}>
-              <Bar data={vetData} options={verticalOptions} />
+              <Bar
+                data={{
+                  labels: services.map((s) => s.serviceName),
+                  datasets: [
+                    {
+                      label: "Doanh thu",
+                      data: services.map((s) => s.totalRevenue),
+                      backgroundColor: "#722ed1",
+                    },
+                  ],
+                }}
+                options={{
+                  indexAxis: "y",
+                  responsive: true,
+                  maintainAspectRatio: false,
+                }}
+              />
             </div>
           </Card>
         </Col>
       </Row>
 
-      {/* USER STATS */}
+      {/* ====================== TOP PRODUCTS — BAR ====================== */}
       <Row gutter={[16, 16]}>
-        <Col xs={24} md={8}>
-          <Card className="stat-card" title="Nhân viên">
-            <h2>{users.totalStaff}</h2>
+        <Col xs={24}>
+          <Card title="Top Products" className="chart-card">
+            <div className="chart-container" style={{ height: 350 }}>
+              <Bar
+                data={{
+                  labels: products.map((p) => p.productName),
+                  datasets: [
+                    {
+                      label: "Doanh thu",
+                      data: products.map((p) => p.totalRevenue),
+                      backgroundColor: "#fa8c16",
+                    },
+                  ],
+                }}
+                options={{
+                  indexAxis: "y",
+                  responsive: true,
+                  maintainAspectRatio: false,
+                }}
+              />
+            </div>
           </Card>
         </Col>
-        <Col xs={24} md={8}>
-          <Card className="stat-card" title="Khách hàng">
-            <h2>{users.totalCustomers}</h2>
-          </Card>
+      </Row>
+
+      {/* ====================== TOP CUSTOMERS ====================== */}
+      <Row gutter={[16, 16]}>
+        <Col xs={24}>
+          <DashboardTable
+            title="Top Customers"
+            columns={["CUSTOMER", "APPOINTMENTS", "SPENT"]}
+            data={customers.map((c) => ({
+              CUSTOMER: c.customerName,
+              APPOINTMENTS: c.totalAppointments,
+              SPENT: c.totalSpent.toLocaleString() + " VND",
+            }))}
+          />
         </Col>
-        <Col xs={24} md={8}>
-          <Card className="stat-card" title="Bác sĩ thú y">
-            <h2>{users.totalVets}</h2>
-          </Card>
+      </Row>
+
+      {/* ====================== TOP STAFF + TOP VETS (SIDE BY SIDE) ====================== */}
+      <Row gutter={[16, 16]} className="equal-row">
+        <Col xs={24} md={12}>
+          <DashboardTable
+            title="Top Staff"
+            columns={["STAFF", "COMPLETED SERVICES"]}
+            data={staff.map((s) => ({
+              STAFF: s.staffName,
+              "COMPLETED SERVICES": s.totalServicesCompleted,
+            }))}
+          />
+        </Col>
+
+        <Col xs={24} md={12}>
+          <DashboardTable
+            title="Top Vets"
+            columns={["VET", "APPOINTMENTS COMPLETED"]}
+            data={vets.map((v) => ({
+              VET: v.vetName,
+              "APPOINTMENTS COMPLETED": v.totalAppointmentsCompleted,
+            }))}
+          />
         </Col>
       </Row>
     </div>
