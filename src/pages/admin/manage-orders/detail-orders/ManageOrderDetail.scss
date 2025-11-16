@@ -1,6 +1,15 @@
 .ManageOrderDetail {
   padding: 20px;
 
+  .status-timeline {
+    margin-top: 20px;
+
+    h3 {
+      margin-bottom: 10px;
+      font-weight: 600;
+    }
+  }
+
   .payment-logo {
     height: 50px;
     width: auto;
@@ -31,7 +40,11 @@
   }
 
   .header-row {
-    margin-bottom: 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: static !important;
+    margin-bottom: 20px;
 
     .back-btn {
       border-radius: 8px;
@@ -124,8 +137,16 @@
         font-weight: 600;
       }
 
+      .ant-table-wrapper {
+        margin-bottom: 0;
+      }
+
+      .ant-spin-container {
+        min-height: 0;
+      }
+
       .order-summary {
-        margin-top: 20px;
+        margin-top: 0px;
         padding-top: 16px;
         border-top: 1px solid #f0f0f0;
         display: flex;

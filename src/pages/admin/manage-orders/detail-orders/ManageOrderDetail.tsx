@@ -1,16 +1,32 @@
 import { useEffect, useState, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { Card, Descriptions, Button, Spin, Table, Tag, Modal } from "antd";
+import { Card, Descriptions, Button, Spin, Table, Tag, Modal, Timeline } from "antd";
 import { toast } from "react-toastify";
 import dayjs from "dayjs";
 import api from "../../../../config/axios";
 import "./ManageOrderDetail.scss";
+
+const statusTextVI: Record<string, string> = {
+  PREPARING: "Đang chuẩn bị",
+  PENDING_DELIVERY: "Chờ giao hàng",
+  DELIVERED: "Đã giao",
+  PAID: "Đã thanh toán",
+  PENDING: "Chờ thanh toán",
+  REFUNDED: "Đã hoàn tiền",
+};
 
 interface OrderItem {
   productId: string;
   name: string;
   quantity: number;
   unitPrice: number;
+}
+
+interface StatusHistory {
+  status: string;
+  changedAt: string;
+  changedBy: string;
+  note: string | null;
 }
 
 interface CustomerProfile {
@@ -20,7 +36,7 @@ interface CustomerProfile {
   citizenId: string;
 }
 
-type OrderStatus = "PENDING" | "PAID" | "PENDING_DELIVERY" | "DELIVERED" | "REFUNDED";
+type OrderStatus = "PENDING" | "PAID" | "PENDING_DELIVERY" | "DELIVERED" | "REFUNDED" | "PREPARING";
 
 interface OrderDetail {
   id: string;
@@ -37,6 +53,7 @@ interface OrderDetail {
   paymentMethod: string;
   items: OrderItem[];
   customerProfile: CustomerProfile;
+  statusHistory: StatusHistory[];
 }
 
 function ManageOrderDetail() {
@@ -62,7 +79,7 @@ function ManageOrderDetail() {
     }
   };
 
-  const handleUpdateStatus = async (newStatus: "PENDING_DELIVERY" | "DELIVERED"): Promise<void> => {
+  const handleUpdateStatus = async (newStatus: string): Promise<void> => {
     if (!orderId) return;
     setUpdating(true);
     try {
@@ -113,6 +130,7 @@ function ManageOrderDetail() {
     PENDING_DELIVERY: { color: "cyan", text: "Đang giao hàng" },
     DELIVERED: { color: "green", text: "Đã giao" },
     REFUNDED: { color: "purple", text: "Đã hoàn tiền" },
+    PREPARING: { color: "gold", text: "Đang chuẩn bị" },
   };
 
   const renderStatusTag = (status: OrderStatus) => <Tag color={statusMap[status].color}>{statusMap[status].text}</Tag>;
@@ -194,16 +212,43 @@ function ManageOrderDetail() {
           >
             <div className="status-actions">
               {order.status === "PAID" && (
+                <Button type="primary" loading={updating} onClick={() => handleUpdateStatus("PREPARING")} block>
+                  Chuẩn bị đơn hàng
+                </Button>
+              )}
+
+              {order.status === "PREPARING" && (
                 <Button type="primary" loading={updating} onClick={() => handleUpdateStatus("PENDING_DELIVERY")} block>
                   Xác nhận đơn hàng
                 </Button>
               )}
+
               {order.status === "PENDING_DELIVERY" && (
                 <Button type="primary" loading={updating} onClick={() => handleUpdateStatus("DELIVERED")} block>
                   Đã giao
                 </Button>
               )}
             </div>
+
+            {order.statusHistory && order.statusHistory.length > 0 && (
+              <div className="status-timeline">
+                <h3>Lịch sử trạng thái</h3>
+                <Timeline>
+                  {order.statusHistory.map((item, index) => (
+                    <Timeline.Item key={index} color="blue">
+                      <b>{statusTextVI[item.status] || item.status}</b> <br />
+                      {dayjs(item.changedAt, "DD-MM-YYYY HH:mm:ss").add(7, "hour").format("HH:mm DD/MM/YYYY")}
+                      {item.note && (
+                        <>
+                          <br />
+                          <i>Ghi chú: {item.note}</i>
+                        </>
+                      )}
+                    </Timeline.Item>
+                  ))}
+                </Timeline>
+              </div>
+            )}
           </Card>
         </div>
       </div>
