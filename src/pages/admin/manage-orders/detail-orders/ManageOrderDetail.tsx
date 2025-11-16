@@ -120,7 +120,7 @@ function ManageOrderDetail() {
   useEffect(() => {
     document.title = "Chi tiết đơn hàng";
     fetchOrderDetail();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [orderId]);
 
   if (loading || !order)
@@ -160,6 +160,29 @@ function ManageOrderDetail() {
               <Descriptions.Item label="Email">{order.customerProfile.email}</Descriptions.Item>
               <Descriptions.Item label="CMND/CCCD">{order.customerProfile.citizenId}</Descriptions.Item>
               <Descriptions.Item label="Địa chỉ KH">{order.customerProfile.address}</Descriptions.Item>
+              <Descriptions.Item label="Phương thức thanh toán">
+                {order.paymentMethod === "VNPAY" ? (
+                  <img
+                    src="https://itviec.com/rails/active_storage/representations/proxy/eyJfcmFpbHMiOnsiZGF0YSI6NDAzODMzMCwicHVyIjoiYmxvYl9pZCJ9fQ==--d01b1b407f49d33d4ea19b9218e10da4dc7f231d/eyJfcmFpbHMiOnsiZGF0YSI6eyJmb3JtYXQiOiJwbmciLCJyZXNpemVfdG9fbGltaXQiOlszMDAsMzAwXX0sInB1ciI6InZhcmlhdGlvbiJ9fQ==--e1d036817a0840c585f202e70291f5cdd058753d/logo%20d%E1%BB%8Dc.png"
+                    alt="VNPAY"
+                    className="payment-logo"
+                  />
+                ) : order.paymentMethod === "PAYOS" ? (
+                  <img
+                    src="https://media.zenfs.com/en/globenewswire.com/d572fcc587598e58786c3856ba2bc978"
+                    alt="PAYOS"
+                    className="payment-logo"
+                  />
+                ) : order.paymentMethod === "WALLET" ? (
+                  <img
+                    src="https://i.pinimg.com/1200x/b4/9f/f9/b49ff9a83a19ebc745cb4ed40970b6e6.jpg"
+                    alt="WALLET"
+                    className="payment-logo"
+                  />
+                ) : (
+                  order.paymentMethod
+                )}
+              </Descriptions.Item>
             </Descriptions>
           </Card>
         </div>

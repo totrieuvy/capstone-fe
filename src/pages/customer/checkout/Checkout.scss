@@ -103,28 +103,51 @@ $box-shadow-base: 0 4px 12px rgba(0, 0, 0, 0.08);
 
   .payment-method-group {
     display: flex;
-    gap: 16px;
+    justify-content: center;
+    gap: 25px;
+
+    /* Xóa toàn bộ style radio mặc định */
     .ant-radio-button-wrapper {
-      flex: 1;
-      height: 48px;
-      line-height: 46px;
-      border-radius: 8px !important;
-      border-color: $border-color;
-      font-weight: 500;
-      color: $secondary-text-color;
+      border: none !important;
+      background: transparent !important;
+      padding: 0 !important;
+      box-shadow: none !important;
+      position: relative;
 
-      &:hover {
-        color: $primary-color;
+      &:before {
+        display: none !important;
       }
+    }
 
-      &.ant-radio-button-wrapper-checked {
-        border-color: $primary-color;
-        color: $primary-color;
-        box-shadow: 0 0 0 2px rgba(22, 119, 255, 0.2);
-        &::before {
-          background-color: $primary-color;
-        }
-      }
+    /* Khung (ô) chứa logo */
+    .payment-option {
+      width: 150px;
+      height: 80px;
+
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      border: 2px solid #d9d9d9;
+      border-radius: 12px;
+
+      background: #fff;
+
+      transition: all 0.2s ease;
+    }
+
+    /* Khi được chọn */
+    .ant-radio-button-wrapper-checked .payment-option {
+      border-color: #1677ff !important;
+      box-shadow: 0 0 0 4px rgba(22, 119, 255, 0.25) !important;
+    }
+
+    /* Logo */
+    .payment-logo {
+      max-width: 70%;
+      max-height: 65%;
+      object-fit: contain;
+      pointer-events: none;
     }
   }
 

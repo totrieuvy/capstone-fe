@@ -309,6 +309,14 @@ const TrackOrderDetail = () => {
                   className="payment-logo"
                 />
               </>
+            ) : order.paymentMethod === "WALLET" ? (
+              <>
+                <img
+                  src="https://i.pinimg.com/1200x/b4/9f/f9/b49ff9a83a19ebc745cb4ed40970b6e6.jpg"
+                  alt="WALLET"
+                  className="payment-logo"
+                />
+              </>
             ) : (
               order.paymentMethod || "Chưa cập nhật"
             )}
