@@ -142,8 +142,7 @@ const ManageAppointmentDetail: React.FC = () => {
       case "IN_PROGRESS":
         return "Đang thực hiện";
       case "CHECK_OUT":
-      case "CHECKED_OUT":
-        return "Đã check-out";
+        return "Hoàn thành";
       case "NO-SHOW":
         return "Không đến";
       case "CANCELLED":
@@ -360,7 +359,7 @@ const ManageAppointmentDetail: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="appointment-detail-loading">
+      <div className="staff-appointment-detail-loading">
         <Spin size="large" />
       </div>
     );
@@ -368,7 +367,7 @@ const ManageAppointmentDetail: React.FC = () => {
 
   if (!appointment) {
     return (
-      <div className="appointment-detail-error">
+      <div className="staff-appointment-detail-error">
         <Card>
           <Title level={4}>Không tìm thấy thông tin cuộc hẹn</Title>
           <Button type="primary" icon={<ArrowLeftOutlined />} onClick={() => navigate("/STAFF/lich-dat-kham")}>
@@ -380,10 +379,10 @@ const ManageAppointmentDetail: React.FC = () => {
   }
 
   return (
-    <div className="appointment-detail">
-      <Card className="appointment-detail-container">
+    <div className="staff-appointment-detail">
+      <Card className="staff-appointment-detail-container">
         {/* Header */}
-        <div className="detail-header">
+        <div className="staff-detail-header">
           <Row justify="space-between" align="middle">
             <Col>
               <Space>
@@ -396,7 +395,7 @@ const ManageAppointmentDetail: React.FC = () => {
               </Space>
             </Col>
             <Col>
-              <Tag color={getStatusColor(appointment.status)} className="status-tag-large">
+              <Tag color={getStatusColor(appointment.status)} className="staff-status-tag-large">
                 {getStatusText(appointment.status)}
               </Tag>
             </Col>
@@ -416,7 +415,7 @@ const ManageAppointmentDetail: React.FC = () => {
                   <span>Thông tin khách hàng & thú cưng</span>
                 </Space>
               }
-              className="info-card"
+              className="staff-info-card"
             >
               <Descriptions column={1} size="middle">
                 <Descriptions.Item label="Tên khách hàng">
@@ -440,7 +439,7 @@ const ManageAppointmentDetail: React.FC = () => {
                   <span>Thông tin cuộc hẹn</span>
                 </Space>
               }
-              className="info-card"
+              className="staff-info-card"
             >
               <Descriptions column={1} size="middle">
                 <Descriptions.Item label="Ngày hẹn">
@@ -467,7 +466,7 @@ const ManageAppointmentDetail: React.FC = () => {
                   <span>Thông tin bác sĩ thú y</span>
                 </Space>
               }
-              className="info-card"
+              className="staff-info-card"
             >
               {appointment.veterinarian ? (
                 <div className="veterinarian-info">
@@ -519,7 +518,7 @@ const ManageAppointmentDetail: React.FC = () => {
                   <span>Thông tin thanh toán</span>
                 </Space>
               }
-              className="info-card"
+              className="staff-info-card"
             >
               <Descriptions column={1} size="middle">
                 <Descriptions.Item label="Tổng tiền ban đầu">
@@ -563,11 +562,11 @@ const ManageAppointmentDetail: React.FC = () => {
                   <span>Hình ảnh check-in</span>
                 </Space>
               }
-              className="info-card"
+              className="staff-info-card"
             >
               {appointment.checkInImage ? (
                 <div
-                  className="image-container clickable-image"
+                  className="staff-image-container clickable-image"
                   onClick={() => handleImagePreview(appointment.checkInImage!, "Hình ảnh check-in")}
                   style={{ cursor: "pointer" }}
                 >
@@ -588,7 +587,7 @@ const ManageAppointmentDetail: React.FC = () => {
                   </div>
                 </div>
               ) : (
-                <div className="no-image-placeholder">
+                <div className="staff-no-image-placeholder">
                   <Space direction="vertical" style={{ textAlign: "center", width: "100%" }}>
                     <FileImageOutlined style={{ fontSize: "48px", color: "#d9d9d9" }} />
                     <Text type="secondary">Chưa có hình ảnh check-in</Text>
@@ -606,11 +605,11 @@ const ManageAppointmentDetail: React.FC = () => {
                   <span>Hình ảnh check-out</span>
                 </Space>
               }
-              className="info-card"
+              className="staff-info-card"
             >
               {appointment.checkoutImage ? (
                 <div
-                  className="image-container clickable-image"
+                  className="staff-image-container clickable-image"
                   onClick={() => handleImagePreview(appointment.checkoutImage!, "Hình ảnh check-out")}
                   style={{ cursor: "pointer" }}
                 >
@@ -631,7 +630,7 @@ const ManageAppointmentDetail: React.FC = () => {
                   </div>
                 </div>
               ) : (
-                <div className="no-image-placeholder">
+                <div className="staff-no-image-placeholder">
                   <Space direction="vertical" style={{ textAlign: "center", width: "100%" }}>
                     <FileImageOutlined style={{ fontSize: "48px", color: "#d9d9d9" }} />
                     <Text type="secondary">Chưa có hình ảnh check-out</Text>
@@ -645,7 +644,7 @@ const ManageAppointmentDetail: React.FC = () => {
           <Col span={24}>
             <Collapse 
               defaultActiveKey={['services']} 
-              className="services-card"
+              className="staff-services-card"
             >
               <Collapse.Panel 
                 header={
@@ -661,7 +660,7 @@ const ManageAppointmentDetail: React.FC = () => {
                   <Col xs={24} md={12} lg={8} key={item.id}>
                     <Card
                       size="small"
-                      className="service-item"
+                      className="staff-service-item"
                       hoverable={!!item.medicalRecord}
                       onClick={() => handleMedicalRecordClick(item)}
                       style={{
@@ -708,7 +707,7 @@ const ManageAppointmentDetail: React.FC = () => {
             <Col span={24}>
               <Collapse 
                 defaultActiveKey={['prescription']} 
-                className="prescription-card"
+                className="staff-prescription-card"
               >
                 <Collapse.Panel 
                   header={
@@ -897,7 +896,7 @@ const ManageAppointmentDetail: React.FC = () => {
             <Col span={24}>
               <Collapse 
                 defaultActiveKey={['guidelines']} 
-                className="medicine-guidelines-card"
+                className="staff-medicine-guidelines-card"
               >
                 <Collapse.Panel 
                   header={
@@ -1117,7 +1116,7 @@ const ManageAppointmentDetail: React.FC = () => {
           {/* Notes */}
           {appointment.notes && (
             <Col span={24}>
-              <Card title="Ghi chú" className="notes-card">
+              <Card title="Ghi chú" className="staff-notes-card">
                 <Text>{appointment.notes}</Text>
               </Card>
             </Col>
@@ -1199,7 +1198,7 @@ const ManageAppointmentDetail: React.FC = () => {
             </Button>,
           ]}
           width={600}
-          className="check-in-modal"
+          className="staff-check-in-modal"
         >
           <div style={{ padding: "20px 0" }}>
             <Space direction="vertical" style={{ width: "100%" }} size="large">
@@ -1300,7 +1299,7 @@ const ManageAppointmentDetail: React.FC = () => {
           ]}
           onCancel={() => setMedicalRecordModalVisible(false)}
           width={800}
-          className="medical-record-modal"
+          className="staff-medical-record-modal"
         >
           {selectedMedicalRecord && (
             <div style={{ padding: "16px 0" }}>

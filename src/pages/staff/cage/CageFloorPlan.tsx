@@ -173,11 +173,10 @@ const CageFloorPlan: React.FC = () => {
         <div className="detail-header">
           <div className="header-content">
             <Title level={2} className="page-title">
-              <HomeOutlined style={{ marginRight: 12 }} />
               Sơ Đồ Chuồng
             </Title>
             <Text className="booking-id">
-              Quản lý và theo dõi tình trạng chuồng theo thời gian thực
+              Quản lí và theo dõi tình trạng chuồng theo thời gian thực
             </Text>
           </div>
         </div>

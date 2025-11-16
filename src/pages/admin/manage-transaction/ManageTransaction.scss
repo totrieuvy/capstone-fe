@@ -9,6 +9,7 @@
     font-size: 24px;
     font-weight: 600;
     margin-bottom: 16px;
+    color: #ff6f61;
   }
 
   .filter-status {
@@ -17,6 +18,7 @@
     gap: 10px;
     margin-bottom: 16px;
     justify-content: center;
+    
 
     .status-btn {
       border-radius: 20px;
@@ -44,7 +46,7 @@
   }
 
   .transaction__id {
-    color: #1890ff;
+    color: #ff6f61;
     font-weight: 500;
   }
 

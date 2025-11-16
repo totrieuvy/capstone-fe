@@ -63,7 +63,7 @@ function ManageOrder() {
   };
 
   useEffect(() => {
-    document.title = "Quản lý đơn hàng";
+    document.title = "Quản lí đơn hàng";
     fetchOrders(pagination.current, pagination.pageSize);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pagination.current, pagination.pageSize]);
@@ -158,6 +158,15 @@ function ManageOrder() {
               className="payment-logo"
             />
           );
+
+        if (method === "WALLET")
+          return (
+            <img
+              src="https://i.pinimg.com/1200x/b4/9f/f9/b49ff9a83a19ebc745cb4ed40970b6e6.jpg"
+              alt="WALLET"
+              className="payment-logo"
+            />
+          );
         return <span>{method || "Chưa cập nhật"}</span>;
       },
     },
@@ -181,7 +190,7 @@ function ManageOrder() {
 
   return (
     <div className="ManageOrder">
-      <h1>Quản lý đơn hàng</h1>
+      <h1>Quản lí đơn hàng</h1>
 
       <div className="filter-status">
         {statuses.map((s) => (

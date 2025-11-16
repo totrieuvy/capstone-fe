@@ -55,7 +55,8 @@ const ManageAppointment: React.FC = () => {
     { value: 'IN_PROGRESS', label: 'Đang thực hiện' },
     { value: 'NO-SHOW', label: 'Không đến' },
     { value: 'CANCELLED', label: 'Đã hủy' },
-    { value: 'CHECKED_OUT', label: 'Đã check-out' },
+    { value: 'CHECK_OUT', label: 'Hoàn thành' },
+    { value: 'FAILED', label: 'Thanh toán thất bại' },
   ];
 
   // Fetch appointments
@@ -123,8 +124,10 @@ const ManageAppointment: React.FC = () => {
         return 'volcano';
       case 'CANCELLED':
         return 'red';
-      case 'CHECKED_OUT':
+      case 'CHECK_OUT':
         return 'green';
+      case 'FAILED':
+        return 'red';
       default:
         return 'default';
     }
@@ -143,8 +146,10 @@ const ManageAppointment: React.FC = () => {
         return 'Không đến';
       case 'CANCELLED':
         return 'Đã hủy';
-      case 'CHECKED_OUT':
-        return 'Đã check-out';
+      case 'CHECK_OUT':
+        return 'Hoàn thành';
+        case 'FAILED':
+        return 'Thanh toán thất bại';
       default:
         return status.replace('_', ' ');
     }

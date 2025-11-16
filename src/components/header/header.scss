@@ -59,6 +59,11 @@
       &:hover {
         color: #e0732f;
       }
+
+      &.active {
+        color: #e0732f;
+        font-weight: 600;
+      }
     }
   }
 

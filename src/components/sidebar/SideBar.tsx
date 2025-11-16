@@ -8,10 +8,9 @@ import {
   HomeOutlined,
   ScheduleOutlined,
   TagOutlined,
-  DatabaseOutlined,
 } from "@ant-design/icons";
-import { GiPawPrint, GiCage } from "react-icons/gi";
-import { BiCategory, BiPlusMedical } from "react-icons/bi";
+import { GiCage } from "react-icons/gi";
+import { BiPlusMedical } from "react-icons/bi";
 import { Layout, Menu, Button, theme } from "antd";
 import type { ItemType } from "antd/es/menu/interface";
 import { Link, Outlet, useNavigate } from "react-router-dom";
@@ -19,6 +18,9 @@ import { useDispatch, useSelector } from "react-redux";
 import { logout } from "../../redux/features/userSlice";
 import logo from "../../assets/logo.png";
 import "./Sidebar.scss";
+import { VscFeedback } from "react-icons/vsc";
+import { AiOutlineMedicineBox } from "react-icons/ai";
+import { IoChatboxEllipsesOutline } from "react-icons/io5";
 
 interface User {
   id: number;
@@ -58,31 +60,37 @@ const SideBar: React.FC = () => {
     let items: MenuItem[] = [];
     if (user?.role === "ADMIN") {
       items = [
-        getItem("Đơn rút tiền", "don-rut-tien", <GiPawPrint />),
-        getItem("Chính sách", "chinh-sach", <GiPawPrint />),
-        getItem("Quản lí loài hamster", "quan-li-loai-hamster", <GiPawPrint />),
-        getItem("Quản lí danh mục sản phẩm", "quan-li-danh-muc-san-pham", <BiCategory />),
-        getItem("Quản lí sản phẩm", "quan-li-san-pham", <TagOutlined />),
-        getItem("Quản lí loại chuồng", "quan-li-loai-chuong", <GiCage />),
-        getItem("Quản lí dịch vụ y tế", "quan-li-dich-vu-y-te", <BiPlusMedical />),
-        getItem("Quản lí dịch vụ grooming", "quan-li-dich-vu-grooming", <GiCage />, [
+        getItem("Dashboard", "thong-ke", <AreaChartOutlined />),
+        getItem("Quản lí sản phẩm", "product-management", <TagOutlined />, [
+          getItem("Loài hamster", "quan-li-loai-hamster"),
+          getItem("Danh mục sản phẩm", "quan-li-danh-muc-san-pham"),
+          getItem("Sản phẩm", "quan-li-san-pham"),
+        ]),
+        getItem("Quản lí dịch vụ", "service-management", <BiPlusMedical />, [
+          getItem("Dịch vụ y tế", "quan-li-dich-vu-y-te"),
           getItem("Grooming lẻ", "quan-li-dich-vu-grooming/grooming-le"),
           getItem("Grooming combo", "quan-li-dich-vu-grooming/grooming-combo"),
         ]),
-        getItem("Thống kê", "thong-ke", <AreaChartOutlined />),
+        getItem("Cơ sở hạ tầng", "infrastructure", <GiCage />, [
+          getItem("Loại chuồng", "quan-li-loai-chuong"),
+          getItem("Chính sách", "chinh-sach"),
+        ]),
+        getItem("Vận hành kinh doanh", "business-operations", <ShoppingOutlined />, [
+          getItem("Đơn hàng", "quan-li-don-hang"),
+          getItem("Giao dịch", "quan-li-giao-dich"),
+          getItem("Rút tiền", "don-rut-tien"),
+        ]),
+        getItem("Quản lí feedback", "quan-li-feedback", <VscFeedback />),
+
         getItem("Quản lí tài khoản", "quan-li-tai-khoan", <UserOutlined />),
-        getItem("Quản lí đơn hàng", "quan-li-don-hang", <ShoppingOutlined />),
-        getItem("Quản lí giao dịch", "quan-li-giao-dich", <ShoppingOutlined />),
       ];
     } else if (user?.role === "STAFF") {
       items = [
         getItem("Dịch vụ y tế", "medical-checkup", <BiPlusMedical />, [getItem("Lịch đặt khám", "lich-dat-kham")]),
-        getItem("Grooming", "grooming", <SkinOutlined />, [
-          getItem("Quản lí dịch vụ grooming", "quan-li-dich-vu-grooming"),
-          getItem("Lịch đặt grooming", "lich-dat-grooming"),
-        ]),
+        getItem("Grooming", "grooming", <SkinOutlined />, [getItem("Lịch đặt grooming", "lich-dat-grooming")]),
+        getItem("Chat", "chat", <IoChatboxEllipsesOutline  />, [getItem("Quản lí chat", "quan-li-chat")]),
+
         getItem("Boarding", "boarding", <HomeOutlined />, [
-          getItem("Quản lí dịch vụ boarding", "quan-li-dich-vu-boarding"),
           getItem("Lịch đặt boarding", "lich-dat-boarding"),
           getItem("Sơ đồ chuồng", "so-do-chuong"),
         ]),
@@ -90,7 +98,7 @@ const SideBar: React.FC = () => {
     } else if (user?.role === "VET") {
       items = [
         getItem("Lịch khám hôm nay", "lich-kham-hom-nay", <ScheduleOutlined />),
-        getItem("Quản lí kê thuốc", "quan-li-ke-thuoc", <DatabaseOutlined />),
+        getItem("Quản lí kê thuốc", "quan-li-ke-thuoc", <AiOutlineMedicineBox  />),
       ];
     }
     setMenuItems(items);

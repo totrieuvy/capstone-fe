@@ -98,7 +98,7 @@ const MedicalAppointmentHistory: React.FC = () => {
                 return 'volcano';
             case 'CANCELLED':
                 return 'red';
-            case 'CHECKED_OUT':
+            case 'CHECK_OUT':
                 return 'green';
             case 'CONFIRMED':
                 return 'success';
@@ -108,6 +108,8 @@ const MedicalAppointmentHistory: React.FC = () => {
                 return 'cyan';
             case 'COMPLETED':
                 return 'green';
+                case 'FAILED':
+                return 'red';
             default:
                 return 'default';
         }
@@ -125,8 +127,8 @@ const MedicalAppointmentHistory: React.FC = () => {
                 return 'Không đến';
             case 'CANCELLED':
                 return 'Đã hủy';
-            case 'CHECKED_OUT':
-                return 'Đã check-out';
+            case 'CHECK_OUT':
+                return 'Hoàn tất';
             case 'CONFIRMED':
                 return 'Đã xác nhận';
             case 'PAID':
@@ -135,6 +137,8 @@ const MedicalAppointmentHistory: React.FC = () => {
                 return 'Đã check-in';
             case 'COMPLETED':
                 return 'Hoàn thành';
+                case 'FAILED':
+                return 'Thanh toán thất bại';
             default:
                 return status.replace('_', ' ');
         }

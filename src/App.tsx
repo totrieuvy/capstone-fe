@@ -73,6 +73,10 @@ import MedicalPaymentSuccess from "./pages/staff/medical/payment-screen/MedicalP
 import CageFloorPlan from "./pages/staff/cage/CageFloorPlan";
 import Policy from "./pages/admin/policy/Policy";
 import WithDraw from "./pages/admin/withdraw/WithDraw";
+import HistoryMedicalHamster from "./pages/customer/profile-hamster/HistoryMedicalHamster";
+import ManageFeedback from "./pages/admin/feedback/ManageFeedback";
+import Chat from "./pages/customer/chat/Chat";
+import ManageChat from "./pages/staff/chat/ManageChat";
 
 interface User {
   id: number;
@@ -145,6 +149,7 @@ const App = () => {
       path: "/",
       element: <Layout />,
       children: [
+        { path: "/chat", element: <Chat /> },
         { path: "/", element: <Homepage /> },
         { path: "/product/:id", element: <ProductDetail /> },
         { path: "*", element: <NotFoundPage /> },
@@ -198,6 +203,10 @@ const App = () => {
             {
               path: "",
               element: <ProfileHamster />,
+            },
+            {
+              path: "medical/:hamsterId",
+              element: <HistoryMedicalHamster />,
             },
           ],
         },
@@ -271,6 +280,7 @@ const App = () => {
           path: "",
           element: <SideBar />,
           children: [
+            { path: "quan-li-feedback", element: <ManageFeedback /> },
             { path: "don-rut-tien", element: <WithDraw /> },
             { path: "quan-li-tai-khoan", element: <ManageAccount /> },
             { path: "thong-ke", element: <Dashboard /> },
@@ -320,6 +330,8 @@ const App = () => {
           path: "",
           element: <SideBar />,
           children: [
+            { path: "quan-li-chat", element: <ManageChat /> },
+
             { path: "lich-dat-boarding", element: <BoardingSchedule /> },
             { path: "booking-detail/:bookingId", element: <StaffBoardingDetail /> },
             { path: "care-log/:bookingId", element: <CareLog /> },

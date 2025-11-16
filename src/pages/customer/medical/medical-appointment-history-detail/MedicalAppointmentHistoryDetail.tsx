@@ -93,22 +93,20 @@ const ManageAppointmentDetail: React.FC = () => {
 
   // Get status color
   const getStatusColor = (status: string) => {
-    switch (status.toLowerCase()) {
-      case "booked":
+    switch (status.toUpperCase()) {
+      case "BOOKED":
         return "blue";
-      case "checked_in":
-      case "check_in":
+      case "CHECKED_IN":
         return "cyan";
-      case "in_progress":
+      case "IN_PROGRESS":
         return "orange";
-      case "check_out":
-      case "checked_out":
+      case "CHECK_OUT":
         return "green";
       case "NO-SHOW":
         return "volcano";
-      case "cancelled":
+      case "CANCELLED":
         return "red";
-      case "completed":
+      case "COMPLETED":
         return "green";
       default:
         return "default";
@@ -126,8 +124,7 @@ const ManageAppointmentDetail: React.FC = () => {
       case "IN_PROGRESS":
         return "Đang thực hiện";
       case "CHECK_OUT":
-      case "CHECKED_OUT":
-        return "Đã check-out";
+        return "Hoàn tất";
       case "NO-SHOW":
         return "Không đến";
       case "CANCELLED":

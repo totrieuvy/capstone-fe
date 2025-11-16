@@ -192,7 +192,7 @@ function ManageComboGrooming() {
 
   // --- Effects ---
   useEffect(() => {
-    document.title = "Quản lý Combo Grooming";
+    document.title = "Quản lí Combo Grooming";
     const loadData = async () => {
       await fetchSpecies();
       await fetchServices();
@@ -447,7 +447,7 @@ function ManageComboGrooming() {
 
   return (
     <div className="ManageComboGrooming">
-      <h1>Quản lý Combo Grooming</h1>
+      <h1>Quản lí Combo Grooming</h1>
 
       <div className="toolbar">
         <Search
@@ -520,7 +520,7 @@ function ManageComboGrooming() {
               />
             </Form.Item>
 
-            <h3 style={{ marginBottom: "16px", marginTop: "20px", color: "#f58232" }}>
+            <h3 style={{ marginBottom: "16px", marginTop: "20px", color: "#ff6f61" }}>
               Giá Combo Theo Loài (Sau Giảm Giá)
             </h3>
             <Form.List name="prices">

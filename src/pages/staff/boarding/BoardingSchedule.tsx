@@ -397,7 +397,15 @@ const BoardingSchedule = () => {
                                 trigger={['contextMenu']}
                               >
                                 <div
-                                  className={`booking-bar ${isBookingExtended(booking.id) ? 'booking-bar-extended' : 'booking-bar-green'} ${continuesFromPrevious ? 'continues-from-previous' : ''} ${continuesIntoNext ? 'continues-into-next' : ''}`}
+                                  className={`booking-bar ${
+                                    isBookingExtended(booking.id) 
+                                      ? 'booking-bar-extended' 
+                                      : booking.status === 'IN_PROGRESS'
+                                        ? 'booking-bar-blue'
+                                        : booking.status === 'CHECK_OUT'
+                                          ? 'booking-bar-green'
+                                          : 'booking-bar-green'
+                                  } ${continuesFromPrevious ? 'continues-from-previous' : ''} ${continuesIntoNext ? 'continues-into-next' : ''}`}
                                   style={{
                                     left: `${leftPosition + 4}px`,
                                     width: `${barWidth - 8}px`,
@@ -491,7 +499,11 @@ const BoardingSchedule = () => {
                             ? 'booking-bar-red'
                             : booking.status === 'CANCELLED'
                               ? 'booking-bar-red'
-                              : (isBookingExtended(booking.id) ? 'booking-bar-extended' : 'booking-bar-orange')
+                              : booking.status === 'IN_PROGRESS'
+                                ? 'booking-bar-blue'
+                                : booking.status === 'CHECK_OUT'
+                                  ? 'booking-bar-green'
+                                  : (isBookingExtended(booking.id) ? 'booking-bar-extended' : 'booking-bar-orange')
                           } ${continuesFromPrevious ? 'continues-from-previous' : ''} ${continuesIntoNext ? 'continues-into-next' : ''}`}
                         style={{
                           left: `${leftPosition + 4}px`,
@@ -553,8 +565,8 @@ const BoardingSchedule = () => {
     <div className="boarding-schedule">
       <div className="schedule-container">
         <div className="page-header">
-          <h1 className="page-title">Quản Lý Lịch Ký Gửi Hamster</h1>
-          <p className="page-subtitle">Theo dõi và quản lý lịch trình ký gửi theo thời gian thực</p>
+          <h1 className="page-title">Quản lí Lịch Ký Gửi Hamster</h1>
+          <p className="page-subtitle">Theo dõi và Quản lí lịch trình ký gửi theo thời gian thực</p>
 
           {/* Month Navigation */}
           <div className="month-navigation" style={{
@@ -572,7 +584,7 @@ const BoardingSchedule = () => {
               Tháng trước
             </Button>
             <h2 style={{ margin: 0, minWidth: '200px', textAlign: 'center' }}>
-              {currentMonth.format('MMMM YYYY')}
+              {currentMonth.format('MM/YYYY')}
             </h2>
             <Button
               type="default"

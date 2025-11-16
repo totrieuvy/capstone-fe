@@ -99,14 +99,16 @@ const BoardingHistory: React.FC = () => {
       case 'PENDING':
         return 'orange';
       case 'BOOKED':
-        return 'blue';
+        return 'cyan';
       case 'NO-SHOW':
         return 'volcano';
       case 'IN_PROGRESS':
-        return 'processing';
+        return 'blue';
       case 'CHECK_OUT':
         return 'green';
       case 'CANCELLED':
+        return 'red';
+        case 'FAILED':
         return 'red';
       default:
         return 'default';
@@ -127,6 +129,8 @@ const BoardingHistory: React.FC = () => {
         return 'Hoàn tất';
       case 'CANCELLED':
         return 'Đã hủy';
+        case 'FAILED':
+        return 'Thanh toán thất bại';
       default:
         return status.replace('_', ' ');
     }
