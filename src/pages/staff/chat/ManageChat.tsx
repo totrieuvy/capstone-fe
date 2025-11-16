@@ -82,7 +82,7 @@ export default function ManageChat() {
             )}
           />
 
-          {conversations.length === 0 && <Empty description="Không có cuộc chat nào" />}
+          {/* {conversations.length === 0 && <Empty description="Không có cuộc chat nào" />} */}
         </Card>
       </Col>
 
