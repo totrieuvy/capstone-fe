@@ -202,9 +202,9 @@ const BoardingDetail: React.FC = () => {
   const getStatusColor = (status: string) => {
     const statusColors = {
       BOOKED: "cyan",
-      PENDING: "warning",
-      CANCELLED: "error",
-      FAILED: "error",
+      PENDING: "orange",
+      CANCELLED: "red",
+      FAILED: "red",
       COMPLETED: "blue",
       IN_PROGRESS: "processing",
       CHECK_OUT: "green",
@@ -217,7 +217,7 @@ const BoardingDetail: React.FC = () => {
       BOOKED: "Đã đặt",
       PENDING: "Đang chờ",
       CANCELLED: "Đã hủy",
-      FAILED: "Thất bại",
+      FAILED: "Thanh toán thất bại",
       COMPLETED: "Hoàn thành",
       IN_PROGRESS: "Đang thực hiện",
       CHECK_OUT: "Hoàn tất",
