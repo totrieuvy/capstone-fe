@@ -158,6 +158,15 @@ function ManageOrder() {
               className="payment-logo"
             />
           );
+
+        if (method === "WALLET")
+          return (
+            <img
+              src="https://i.pinimg.com/1200x/b4/9f/f9/b49ff9a83a19ebc745cb4ed40970b6e6.jpg"
+              alt="WALLET"
+              className="payment-logo"
+            />
+          );
         return <span>{method || "Chưa cập nhật"}</span>;
       },
     },
