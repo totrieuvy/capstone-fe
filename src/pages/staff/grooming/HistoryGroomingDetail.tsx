@@ -238,7 +238,8 @@ const HistoryGroomingDetail = () => {
       CHECKED_IN: "processing",
       IN_PROGRESS: "cyan",
       CHECKOUT: "success",
-      CANCELLED: "error",
+      CANCELLED: "red",
+      CHECK_OUT: "green",
     };
     const textMap: Record<string, string> = {
       BOOKED: "Đã đặt",
@@ -246,6 +247,7 @@ const HistoryGroomingDetail = () => {
       IN_PROGRESS: "Đang thực hiện",
       CHECKOUT: "Hoàn tất",
       CANCELLED: "Đã hủy",
+      CHECK_OUT: "Hoàn tất",
     };
     return (
       <Tag color={colorMap[status] || "default"} style={{ fontWeight: 600, fontSize: "14px" }}>
@@ -495,7 +497,7 @@ const HistoryGroomingDetail = () => {
                   )}
                 </Descriptions.Item>
                 <Descriptions.Item label="Ngày hẹn">
-                  {dayjs(detail.appointmentTime).format("DD/MM/YYYY")}
+                  {dayjs(detail.appointmentTime, "DD-MM-YYYY").format("DD/MM/YYYY")}
                 </Descriptions.Item>
                 {detail.slotStart && (
                   <Descriptions.Item label="Khung giờ">
@@ -523,7 +525,7 @@ const HistoryGroomingDetail = () => {
                 </Card>
               )}
             </Card>
-
+<br />
             {/* ---- Dịch vụ ---- */}
             <Card className="services-card section-card" bordered={false}>
               <Title level={4}>
@@ -644,7 +646,7 @@ const HistoryGroomingDetail = () => {
                 </Button>
               )}
             </Card>
-
+<br />
             {/* ---- Check-out ---- */}
             {detail.status === "IN_PROGRESS" ? (
               <Card className="image-card section-card" bordered={false}>
