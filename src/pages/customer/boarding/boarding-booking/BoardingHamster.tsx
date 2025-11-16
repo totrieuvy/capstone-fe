@@ -111,6 +111,9 @@ function BoardingHamster() {
   const [policies, setPolicies] = useState<Policy[]>([]);
   const [agreePolicy, setAgreePolicy] = useState(false);
 
+  // Payment method state
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<'WALLET' | 'VNPAY' | 'PAYOS'>('VNPAY');
+
   useEffect(() => {
     document.title = "Đặt Phòng Hamster";
     fetchProfiles();
@@ -416,7 +419,7 @@ function BoardingHamster() {
         endDate: dateRange[1].format("YYYY-MM-DD"),
         cageTypeId: selectedCageId,
         hamsterId: selectedHamsterId,
-        paymentMethod: "VNPAY",
+        paymentMethod: selectedPaymentMethod,
         serviceIds: selectedServiceIds.length > 0 ? selectedServiceIds : undefined,
         notes: "", // Can be expanded to include user notes
         isConfirmed: agreePolicy, // Set to true when policy is agreed to
@@ -426,7 +429,13 @@ function BoardingHamster() {
       const response = await boardingService.createBooking(request);
       message.destroy();
       
-      if (response.paymentUrl) {
+      if (selectedPaymentMethod === 'WALLET') {
+        toast.success("Đặt phòng và thanh toán thành công!");
+        // Small delay to show success message before redirect
+        setTimeout(() => {
+          navigate('/payment-success');
+        }, 1000);
+      } else if (response.paymentUrl) {
         toast.success("Đặt phòng thành công! Đang chuyển đến trang thanh toán...");
         // Small delay to show success message before redirect
         setTimeout(() => {
@@ -1127,6 +1136,189 @@ function BoardingHamster() {
                     }}
                   >
                     <div className="terms-section">
+                      {/* Payment Method Selection */}
+                      <div style={{ marginBottom: 24 }}>
+                        <h4 style={{ color: "#ff6f61", marginBottom: 16, fontSize: 16, fontWeight: 600 }}>
+                          💳 Chọn phương thức thanh toán
+                        </h4>
+                        <Row gutter={[12, 12]}>
+                          <Col xs={24} sm={8}>
+                            <Card
+                              hoverable
+                              className={`payment-method-card ${selectedPaymentMethod === 'WALLET' ? 'selected' : ''}`}
+                              onClick={() => setSelectedPaymentMethod('WALLET')}
+                              style={{
+                                borderRadius: 12,
+                                border: selectedPaymentMethod === 'WALLET'
+                                  ? "2px solid #ff6f61"
+                                  : "1px solid #f0f0f0",
+                                cursor: "pointer",
+                                textAlign: "center",
+                                height: 100,
+                                display: "flex",
+                                flexDirection: "column",
+                                justifyContent: "center",
+                                alignItems: "center",
+                                position: "relative",
+                              }}
+                              bodyStyle={{ padding: 12 }}
+                            >
+                              <div style={{
+                                width: 40,
+                                height: 40,
+                                background: "#f0f0f0",
+                                borderRadius: 8,
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                marginBottom: 8,
+                                fontSize: 20
+                              }}>
+                                👛
+                              </div>
+                              <p style={{ margin: 0, fontSize: 14, fontWeight: 600, color: "#333" }}>
+                                Ví ảo
+                              </p>
+                              {selectedPaymentMethod === 'WALLET' && (
+                                <div style={{
+                                  position: "absolute",
+                                  top: 8,
+                                  right: 8,
+                                  background: "#ff6f61",
+                                  color: "white",
+                                  borderRadius: "50%",
+                                  width: 20,
+                                  height: 20,
+                                  display: "flex",
+                                  alignItems: "center",
+                                  justifyContent: "center",
+                                  fontSize: 12,
+                                  fontWeight: "bold"
+                                }}>
+                                  ✓
+                                </div>
+                              )}
+                            </Card>
+                          </Col>
+                          <Col xs={24} sm={8}>
+                            <Card
+                              hoverable
+                              className={`payment-method-card ${selectedPaymentMethod === 'VNPAY' ? 'selected' : ''}`}
+                              onClick={() => setSelectedPaymentMethod('VNPAY')}
+                              style={{
+                                borderRadius: 12,
+                                border: selectedPaymentMethod === 'VNPAY'
+                                  ? "2px solid #ff6f61"
+                                  : "1px solid #f0f0f0",
+                                cursor: "pointer",
+                                textAlign: "center",
+                                height: 100,
+                                display: "flex",
+                                flexDirection: "column",
+                                justifyContent: "center",
+                                alignItems: "center",
+                                position: "relative",
+                              }}
+                              bodyStyle={{ padding: 12 }}
+                            >
+                              <div style={{
+                                width: 40,
+                                height: 40,
+                                background: "#f0f0f0",
+                                borderRadius: 8,
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                marginBottom: 8,
+                                fontSize: 20
+                              }}>
+                                🏦
+                              </div>
+                              <p style={{ margin: 0, fontSize: 14, fontWeight: 600, color: "#333" }}>
+                                VNPay
+                              </p>
+                              {selectedPaymentMethod === 'VNPAY' && (
+                                <div style={{
+                                  position: "absolute",
+                                  top: 8,
+                                  right: 8,
+                                  background: "#ff6f61",
+                                  color: "white",
+                                  borderRadius: "50%",
+                                  width: 20,
+                                  height: 20,
+                                  display: "flex",
+                                  alignItems: "center",
+                                  justifyContent: "center",
+                                  fontSize: 12,
+                                  fontWeight: "bold"
+                                }}>
+                                  ✓
+                                </div>
+                              )}
+                            </Card>
+                          </Col>
+                          <Col xs={24} sm={8}>
+                            <Card
+                              hoverable
+                              className={`payment-method-card ${selectedPaymentMethod === 'PAYOS' ? 'selected' : ''}`}
+                              onClick={() => setSelectedPaymentMethod('PAYOS')}
+                              style={{
+                                borderRadius: 12,
+                                border: selectedPaymentMethod === 'PAYOS'
+                                  ? "2px solid #ff6f61"
+                                  : "1px solid #f0f0f0",
+                                cursor: "pointer",
+                                textAlign: "center",
+                                height: 100,
+                                display: "flex",
+                                flexDirection: "column",
+                                justifyContent: "center",
+                                alignItems: "center",
+                                position: "relative",
+                              }}
+                              bodyStyle={{ padding: 12 }}
+                            >
+                              <div style={{
+                                width: 40,
+                                height: 40,
+                                background: "#f0f0f0",
+                                borderRadius: 8,
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                marginBottom: 8,
+                                fontSize: 20
+                              }}>
+                                💳
+                              </div>
+                              <p style={{ margin: 0, fontSize: 14, fontWeight: 600, color: "#333" }}>
+                                PayOS
+                              </p>
+                              {selectedPaymentMethod === 'PAYOS' && (
+                                <div style={{
+                                  position: "absolute",
+                                  top: 8,
+                                  right: 8,
+                                  background: "#ff6f61",
+                                  color: "white",
+                                  borderRadius: "50%",
+                                  width: 20,
+                                  height: 20,
+                                  display: "flex",
+                                  alignItems: "center",
+                                  justifyContent: "center",
+                                  fontSize: 12,
+                                  fontWeight: "bold"
+                                }}>
+                                  ✓
+                                </div>
+                              )}
+                            </Card>
+                          </Col>
+                        </Row>
+                      </div>
+
                       {/* Policy Section */}
                       {policies.length > 0 && (
                         <>
