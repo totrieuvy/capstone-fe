@@ -31,18 +31,21 @@ type Conversation = {
 export default function ManageChat() {
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [selected, setSelected] = useState<Conversation | null>(null);
+  const [selectedName, setSelectedName] = useState<string>("");
 
   const staffUser = getLocalUser();
 
-  // load conversations
+  // ==========================
+  // Load list conversations
+  // ==========================
   useEffect(() => {
     const convRef = ref(db, "chats");
 
-    const unsub = onValue(convRef, (snapshot) => {
+    const unsubscribe = onValue(convRef, (snapshot) => {
       const raw = snapshot.val() || {};
 
       const list: Conversation[] = Object.keys(raw).map((key) => {
-        const members: ConversationMembers = raw[key].members || {};
+        const members = raw[key].members || {};
 
         return {
           id: key,
@@ -54,26 +57,32 @@ export default function ManageChat() {
       setConversations(list);
     });
 
-    return () => unsub();
+    return () => unsubscribe();
   }, []);
 
-  // join conversation
+  // ==========================
+  // Staff join conversation
+  // ==========================
   const joinConversation = async (conversationId: string) => {
-    const staffRef = ref(db, `chats/${conversationId}/members/staffs/${staffUser?.accountId}`);
+    if (!staffUser) return;
+
+    const staffRef = ref(db, `chats/${conversationId}/members/staffs/${staffUser.accountId}`);
 
     await set(staffRef, {
-      staffId: staffUser?.accountId,
-      staffName: staffUser?.fullName,
+      staffId: staffUser.accountId,
+      staffName: staffUser.fullName,
       joinedAt: Date.now(),
     });
 
+    // Set selected conversation
     const conv = conversations.find((c) => c.id === conversationId) || null;
     setSelected(conv);
+    setSelectedName(conv?.name || "");
   };
 
   return (
     <Row gutter={16} style={{ height: "calc(100vh - 120px)" }}>
-      {/* Left list */}
+      {/* ========================== LEFT SIDE – LIST CUSTOMERS ========================== */}
       <Col span={6}>
         <Card title="Khách đang chat">
           <List
@@ -84,20 +93,26 @@ export default function ManageChat() {
                 style={{
                   cursor: "pointer",
                   background: selected?.id === c.id ? "#eee" : "",
+                  borderRadius: 6,
                 }}
               >
                 <List.Item.Meta avatar={<Avatar>{c.name[0]}</Avatar>} title={c.name} />
               </List.Item>
             )}
           />
+
           {conversations.length === 0 && <Empty description="Không có cuộc chat nào" />}
         </Card>
       </Col>
 
-      {/* Chat Box */}
+      {/* ========================== RIGHT SIDE – CHAT BOX ========================== */}
       <Col span={18}>
         <Card style={{ height: "100%" }}>
-          {selected ? <Chat conversationId={selected.id} /> : <Empty description="Chọn khách để chat" />}
+          {selected ? (
+            <Chat conversationId={selected.id} customerName={selectedName} />
+          ) : (
+            <Empty description="Chọn khách để chat" />
+          )}
         </Card>
       </Col>
     </Row>
