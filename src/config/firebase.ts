@@ -4,6 +4,7 @@ import { getAnalytics } from "firebase/analytics";
 import { getAuth, GoogleAuthProvider } from "firebase/auth";
 import { getStorage } from "firebase/storage";
 import { getMessaging } from "firebase/messaging"; // 👈 thêm dòng này
+import { getDatabase } from "firebase/database";
 
 // TODO: Add SDKs for Firebase products that you want to use
 // https://firebase.google.com/docs/web/setup#available-libraries
@@ -29,5 +30,8 @@ const googleProvider = new GoogleAuthProvider();
 const auth = getAuth();
 const storage = getStorage(app);
 const messaging = getMessaging(app); // 👈 thêm dòng này
+
+const db = getDatabase(app);
+export { db };
 
 export { app, storage, analytics, googleProvider, auth, messaging };
