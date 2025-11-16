@@ -26,20 +26,15 @@ const ManageAppointment: React.FC = () => {
   const navigate = useNavigate();
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
+  const [allAppointments, setAllAppointments] = useState<Appointment[]>([]); // Store unfiltered data for filter options
   const [pagination, setPagination] = useState({
     current: 1,
     pageSize: 10,
     total: 0,
   });
 
-  // Veterinarian options (can be fetched from API later)
-  const veterinarians = [
-    { value: '', label: 'Tất cả Bác sĩ' },
-    // Add more veterinarians as needed
-  ];
-
   // Filter states
-  const [filters, setFilters] = useState<AppointmentFilters>({
+  const [filters, setFilters] = useState<AppointmentFilters & { veterinarianName?: string }>({
     date: dayjs().format('YYYY-MM-DD'),
     serviceType: 'MEDICAL',
     sortDir: 'asc',
@@ -47,30 +42,44 @@ const ManageAppointment: React.FC = () => {
     size: 10,
   });
 
-  // Status options for filter
-  const statusOptions = [
-    { value: '', label: 'Tất cả Trạng thái' },
-    { value: 'BOOKED', label: 'Đã đặt' },
-    { value: 'CHECKED_IN', label: 'Đã check-in' },
-    { value: 'IN_PROGRESS', label: 'Đang thực hiện' },
-    { value: 'NO-SHOW', label: 'Không đến' },
-    { value: 'CANCELLED', label: 'Đã hủy' },
-    { value: 'CHECK_OUT', label: 'Hoàn thành' },
-    { value: 'FAILED', label: 'Thanh toán thất bại' },
-  ];
-
   // Fetch appointments
-  const fetchAppointments = async (newFilters?: Partial<AppointmentFilters>) => {
+  const fetchAppointments = async (newFilters?: Partial<AppointmentFilters & { veterinarianName?: string }>) => {
     setLoading(true);
     try {
       const filterParams = { ...filters, ...newFilters };
-      const response = await getAppointments(filterParams);
       
-      setAppointments(response.data.content);
+      // Separate veterinarianName from API filters since it's not supported by the API
+      const { veterinarianName, ...apiFilters } = filterParams;
+      
+      // Fetch all appointments for the date without status filter to populate filter options
+      const allAppointmentsForDate = await getAppointments({
+        date: apiFilters.date,
+        serviceType: apiFilters.serviceType,
+        sortDir: apiFilters.sortDir,
+        page: 0,
+        size: 1000, // Get a large number to capture all appointments for the day
+        // Don't include status filter here to get all appointments for filter options
+      });
+      
+      setAllAppointments(allAppointmentsForDate.data.content);
+      
+      // Then fetch filtered appointments (with status filter if applied)
+      const response = await getAppointments(apiFilters);
+      
+      let filteredAppointments = response.data.content;
+      
+      // Apply client-side filtering for veterinarian name
+      if (veterinarianName) {
+        filteredAppointments = filteredAppointments.filter(appointment => 
+          appointment.veterinarianName === veterinarianName
+        );
+      }
+      
+      setAppointments(filteredAppointments);
       setPagination({
         current: response.data.pageNumber + 1,
         pageSize: response.data.pageSize,
-        total: response.data.totalElements,
+        total: veterinarianName ? filteredAppointments.length : response.data.totalElements,
       });
     } catch (error) {
       message.error('Không thể tải danh sách cuộc hẹn. Vui lòng thử lại.');
@@ -81,7 +90,7 @@ const ManageAppointment: React.FC = () => {
   };
 
   // Handle filter changes
-  const handleFilterChange = (key: keyof AppointmentFilters, value: any) => {
+  const handleFilterChange = (key: keyof (AppointmentFilters & { veterinarianName?: string }), value: any) => {
     const newFilters = { ...filters, [key]: value, page: 0 };
     setFilters(newFilters);
     fetchAppointments(newFilters);
@@ -106,6 +115,7 @@ const ManageAppointment: React.FC = () => {
       sortDir: 'asc' as const,
       page: 0,
       size: 10,
+      veterinarianName: undefined,
     };
     setFilters(defaultFilters);
     fetchAppointments(defaultFilters);
@@ -154,6 +164,34 @@ const ManageAppointment: React.FC = () => {
         return status.replace('_', ' ');
     }
   };
+
+  // Helper function to get unique statuses from appointments
+  const getUniqueStatuses = (appointments: Appointment[]) => {
+    const statuses = [...new Set(appointments.map(apt => apt.status))];
+    return [
+      { value: '', label: 'Tất cả Trạng thái' },
+      ...statuses.map(status => ({
+        value: status,
+        label: getStatusText(status)
+      }))
+    ];
+  };
+
+  // Helper function to get unique veterinarians from appointments
+  const getUniqueVeterinarians = (appointments: Appointment[]) => {
+    const vets = [...new Set(appointments.map(apt => apt.veterinarianName).filter(Boolean))];
+    return [
+      { value: '', label: 'Tất cả Bác sĩ' },
+      ...vets.map(vet => ({
+        value: vet,
+        label: vet
+      }))
+    ];
+  };
+
+  // Generate dynamic filter options from all available appointment data
+  const statusOptions = getUniqueStatuses(allAppointments);
+  const veterinarians = getUniqueVeterinarians(allAppointments);
 
   // Table columns
   const columns: ColumnsType<Appointment> = [
@@ -273,8 +311,8 @@ const ManageAppointment: React.FC = () => {
                 <div className="filter-item">
                     {/* Filter by veterinarian */}
                   <Select
-                    value={filters.veterinarianId || ''}
-                    onChange={(value) => handleFilterChange('veterinarianId', value || undefined)}
+                    value={filters.veterinarianName || ''}
+                    onChange={(value) => handleFilterChange('veterinarianName', value || undefined)}
                     style={{ width: '100%' }}
                     placeholder="Chọn bác sĩ"
                   >
