@@ -219,6 +219,23 @@
   }
 }
 
+// Payment method card styles
+.payment-method-card {
+  transition: all 0.3s ease;
+  position: relative;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(255, 111, 97, 0.2);
+  }
+
+  &.selected {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(255, 111, 97, 0.3);
+    background: linear-gradient(135deg, #fff5f5 0%, #ffe6e6 100%);
+  }
+}
+
 // Cage details drawer
 .cage-details {
   h4 {

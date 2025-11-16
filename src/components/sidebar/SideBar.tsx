@@ -20,6 +20,7 @@ import logo from "../../assets/logo.png";
 import "./Sidebar.scss";
 import { VscFeedback } from "react-icons/vsc";
 import { AiOutlineMedicineBox } from "react-icons/ai";
+import { IoChatboxEllipsesOutline } from "react-icons/io5";
 
 interface User {
   id: number;
@@ -87,7 +88,7 @@ const SideBar: React.FC = () => {
       items = [
         getItem("Dịch vụ y tế", "medical-checkup", <BiPlusMedical />, [getItem("Lịch đặt khám", "lich-dat-kham")]),
         getItem("Grooming", "grooming", <SkinOutlined />, [getItem("Lịch đặt grooming", "lich-dat-grooming")]),
-        getItem("Chat", "chat", <SkinOutlined />, [getItem("Quản lí chat", "quan-li-chat")]),
+        getItem("Chat", "chat", <IoChatboxEllipsesOutline  />, [getItem("Quản lí chat", "quan-li-chat")]),
 
         getItem("Boarding", "boarding", <HomeOutlined />, [
           getItem("Lịch đặt boarding", "lich-dat-boarding"),
