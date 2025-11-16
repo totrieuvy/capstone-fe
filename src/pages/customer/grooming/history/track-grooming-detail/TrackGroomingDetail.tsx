@@ -101,7 +101,8 @@ const TrackGroomingDetail: React.FC = () => {
       CHECKED_IN: "processing",
       IN_PROGRESS: "cyan",
       CHECKOUT: "success",
-      CANCELLED: "error",
+      CANCELLED: "red",
+      CHECK_OUT: "green",
     };
     const textMap: Record<string, string> = {
       BOOKED: "Đã đặt",
@@ -109,6 +110,7 @@ const TrackGroomingDetail: React.FC = () => {
       IN_PROGRESS: "Đang thực hiện",
       CHECKOUT: "Hoàn tất",
       CANCELLED: "Đã hủy",
+      CHECK_OUT: "Hoàn tất",
     };
     return <Tag color={colorMap[status] || "default"}>{textMap[status] || status}</Tag>;
   };
@@ -184,7 +186,7 @@ const TrackGroomingDetail: React.FC = () => {
                 <Descriptions.Item label="Khách hàng">{detail.customerName}</Descriptions.Item>
                 <Descriptions.Item label="Hamster">{detail.hamsterName}</Descriptions.Item>
                 <Descriptions.Item label="Ngày hẹn">
-                  {dayjs(detail.appointmentTime).format("DD/MM/YYYY")}
+                  {dayjs(detail.appointmentTime, "DD-MM-YYYY").format("DD/MM/YYYY")}
                 </Descriptions.Item>
                 {detail.slotStart && (
                   <Descriptions.Item label="Khung giờ">

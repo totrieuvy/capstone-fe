@@ -109,23 +109,25 @@ const ManageAppointmentDetail: React.FC = () => {
 
   // Get status color
   const getStatusColor = (status: string) => {
-    switch (status.toLowerCase()) {
-      case "booked":
+    switch (status.toUpperCase()) {
+      case "BOOKED":
         return "blue";
-      case "checked_in":
-      case "check_in":
+      case "CHECKED_IN":
+      case "CHECK_IN":
         return "cyan";
-      case "in_progress":
+      case "IN_PROGRESS":
         return "orange";
-      case "check_out":
-      case "checked_out":
+      case "CHECK_OUT":
+      case "CHECKED_OUT":
         return "green";
       case "NO-SHOW":
         return "volcano";
-      case "cancelled":
+      case "CANCELLED":
         return "red";
-      case "completed":
+      case "COMPLETED":
         return "green";
+      case "FAILED":
+        return "red";
       default:
         return "default";
     }
@@ -151,6 +153,8 @@ const ManageAppointmentDetail: React.FC = () => {
         return "Hoàn thành";
       case "CONFIRMED":
         return "Đã xác nhận";
+        case "FAILED":
+          return "Thanh toán thất bại";
       default:
         return status.replace("_", " ");
     }
@@ -443,7 +447,7 @@ const ManageAppointmentDetail: React.FC = () => {
             >
               <Descriptions column={1} size="middle">
                 <Descriptions.Item label="Ngày hẹn">
-                  <Text strong>{dayjs(appointment.appointmentTime).tz("Asia/Ho_Chi_Minh").format("DD/MM/YYYY")}</Text>
+                  <Text strong>{dayjs(appointment.appointmentTime, "DD-MM-YYYY").tz("Asia/Ho_Chi_Minh").format("DD/MM/YYYY")}</Text>
                 </Descriptions.Item>
                 <Descriptions.Item label="Giờ hẹn">
                   <Text strong>
