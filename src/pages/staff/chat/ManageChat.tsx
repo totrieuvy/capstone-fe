@@ -1,46 +1,100 @@
-// src/staff/chat/ManageChat.tsx
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Card, List, Avatar, Row, Col, Empty } from "antd";
+import { db } from "../../../config/firebase";
+import { ref, onValue, set } from "firebase/database";
 import Chat from "../../customer/chat/Chat";
+import { getLocalUser } from "../../../config/websocketConfig";
+
+// ==========================
+// TYPES TRONG FILE
+// ==========================
+type ConversationMembers = {
+  customerId?: string;
+  customerName?: string;
+  createdAt?: number;
+  staffs?: Record<
+    string,
+    {
+      staffId: string;
+      staffName: string;
+      joinedAt: number;
+    }
+  >;
+};
+
+type Conversation = {
+  id: string;
+  name: string;
+  members: ConversationMembers;
+};
 
 export default function ManageChat() {
-  const [customers, setCustomers] = useState<any[]>([]);
-  const [selected, setSelected] = useState<any>(null);
+  const [conversations, setConversations] = useState<Conversation[]>([]);
+  const [selected, setSelected] = useState<Conversation | null>(null);
 
+  const staffUser = getLocalUser();
+
+  // load conversations
   useEffect(() => {
-    // TODO: Gọi API để lấy danh sách các customer đang chat
-    // ví dụ:
-    // GET /api/chat/customers
-    //
-    // tạm thời demo:
-    setCustomers([
-      { id: "cus-123", name: "Nguyen A" },
-      { id: "cus-456", name: "Tran B" },
-    ]);
+    const convRef = ref(db, "chats");
+
+    const unsub = onValue(convRef, (snapshot) => {
+      const raw = snapshot.val() || {};
+
+      const list: Conversation[] = Object.keys(raw).map((key) => {
+        const members: ConversationMembers = raw[key].members || {};
+
+        return {
+          id: key,
+          name: members.customerName || `Khách ${key}`,
+          members,
+        };
+      });
+
+      setConversations(list);
+    });
+
+    return () => unsub();
   }, []);
+
+  // join conversation as staff
+  const joinConversation = async (conversationId: string) => {
+    const staffRef = ref(db, `chats/${conversationId}/members/staffs/${staffUser?.accountId || "staff"}`);
+
+    await set(staffRef, {
+      staffId: staffUser?.accountId,
+      staffName: staffUser?.fullName,
+      joinedAt: Date.now(),
+    });
+
+    const conv = conversations.find((c) => c.id === conversationId) || null;
+    setSelected(conv);
+  };
 
   return (
     <Row gutter={16} style={{ height: "calc(100vh - 120px)" }}>
+      {/* Left list */}
       <Col span={6}>
         <Card title="Khách đang chat">
           <List
-            dataSource={customers}
+            dataSource={conversations}
             renderItem={(c) => (
               <List.Item
-                onClick={() => setSelected(c)}
+                onClick={() => joinConversation(c.id)}
                 style={{
                   cursor: "pointer",
                   background: selected?.id === c.id ? "#eee" : "",
                 }}
               >
-                <List.Item.Meta avatar={<Avatar>{c.name[0]}</Avatar>} title={c.name} description={`ID: ${c.id}`} />
+                <List.Item.Meta avatar={<Avatar>{c.name[0]}</Avatar>} title={c.name} description={c.id} />
               </List.Item>
             )}
           />
-          {customers.length === 0 && <Empty description="Không có khách nào" />}
+          {conversations.length === 0 && <Empty description="Không có cuộc chat nào" />}
         </Card>
       </Col>
 
+      {/* Right Chat Box */}
       <Col span={18}>
         <Card style={{ height: "100%" }}>
           {selected ? <Chat conversationId={selected.id} /> : <Empty description="Chọn khách để chat" />}

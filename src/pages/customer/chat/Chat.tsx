@@ -1,56 +1,118 @@
-// src/customer/chat/Chat.tsx
-import React, { useEffect, useRef, useState } from "react";
-import { Button, Input, List, Avatar, Typography } from "antd";
-import { connectWebSocket, sendChatMessage, getLocalUser } from "../../../config/websocketConfig";
+import { useEffect, useRef, useState } from "react";
+import { Button, Input, List, Avatar, Typography, message as antdMessage } from "antd";
+import { db } from "../../../config/firebase";
+import { ref, onValue, push, set } from "firebase/database";
+import { getLocalUser } from "../../../config/websocketConfig";
 
 const { TextArea } = Input;
 const { Text } = Typography;
 
-export default function Chat() {
-  const [client, setClient] = useState<any>(null);
-  const [connected, setConnected] = useState(false);
-  const [messages, setMessages] = useState<any[]>([]);
+// ==========================
+// TYPES NGAY TRONG FILE
+// ==========================
+type Message = {
+  id: string;
+  senderId: string;
+  fullName: string;
+  messageContent: string;
+  isCustomer: boolean;
+  timestamp: number;
+};
+
+type Props = {
+  conversationId?: string | null;
+};
+
+export default function Chat({ conversationId: propConversationId }: Props) {
+  const [conversationId, setConversationId] = useState<string | null>(propConversationId || null);
+  const [messages, setMessages] = useState<Message[]>([]);
   const [text, setText] = useState("");
-  const bottomRef = useRef(null);
 
+  const bottomRef = useRef<HTMLDivElement | null>(null);
+  const containerRef = useRef<HTMLDivElement | null>(null);
+
+  const user = getLocalUser();
+
+  // ================================
+  // Helper: check user đang ở cuối
+  // ================================
+  const isUserAtBottom = () => {
+    const el = containerRef.current;
+    if (!el) return true;
+
+    // khoảng cách 50px được xem là "ở cuối"
+    return el.scrollHeight - el.scrollTop - el.clientHeight < 50;
+  };
+
+  // Sync prop -> local state
   useEffect(() => {
-    const wsClient = connectWebSocket((payload) => {
-      if (payload.type === "CONNECTED") {
-        setConnected(true);
-        return;
-      }
-      if (payload.type === "DISCONNECTED") {
-        setConnected(false);
-        return;
-      }
+    if (propConversationId) setConversationId(propConversationId);
+  }, [propConversationId]);
 
-      setMessages((prev) => [...prev, payload]);
+  // Auto-create conversation cho customer
+  useEffect(() => {
+    if (conversationId || !user) return;
+
+    const cid = `customer-${user.accountId || user.userId || Date.now()}`;
+    const membersRef = ref(db, `chats/${cid}/members`);
+
+    set(membersRef, {
+      customerId: user.accountId || user.userId,
+      customerName: user.fullName || "Khách",
+      createdAt: Date.now(),
+    })
+      .then(() => setConversationId(cid))
+      .catch(() => antdMessage.error("Không tạo được cuộc chat"));
+  }, [conversationId, user]);
+
+  // Load messages
+  useEffect(() => {
+    if (!conversationId) return;
+
+    const messagesRef = ref(db, `chats/${conversationId}/messages`);
+
+    const unsub = onValue(messagesRef, (snapshot) => {
+      const raw = snapshot.val() || {};
+
+      const list: Message[] = Object.entries(raw).map(([id, value]) => ({
+        id,
+        ...(value as Omit<Message, "id">),
+      }));
+
+      list.sort((a, b) => a.timestamp - b.timestamp);
+      setMessages(list);
     });
 
-    setClient(wsClient);
+    return () => unsub();
+  }, [conversationId]);
 
-    return () => wsClient?.deactivate();
-  }, []);
-
+  // ================================
+  // Scroll mượt CHỈ khi user đang ở cuối
+  // ================================
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+    if (isUserAtBottom()) {
+      bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+    }
   }, [messages]);
 
-  const send = () => {
-    const user = getLocalUser();
+  // Send message
+  const send = async () => {
+    if (!text.trim() || !conversationId) return;
 
     const payload = {
-      senderId: user?.accountId || user?.userId,
-      fullName: user?.fullName,
-      messageContent: text,
-      conversationId: null, // 1 customer = 1 conversation
+      senderId: user?.accountId || "unknown",
+      fullName: user?.fullName || "Khách",
+      messageContent: text.trim(),
       isCustomer: true,
+      timestamp: Date.now(),
     };
 
-    sendChatMessage(client, payload);
-
-    setMessages((prev) => [...prev, { ...payload, self: true }]);
-    setText("");
+    try {
+      await push(ref(db, `chats/${conversationId}/messages`), payload);
+      setText("");
+    } catch {
+      antdMessage.error("Gửi tin nhắn thất bại");
+    }
   };
 
   return (
@@ -58,31 +120,43 @@ export default function Chat() {
       {/* Header */}
       <div style={{ padding: 10, borderBottom: "1px solid #ddd" }}>
         <Text strong>Hỗ trợ khách hàng</Text>
-        <span style={{ float: "right" }}>
-          {connected ? <Text type="success">Online</Text> : <Text type="danger">Offline</Text>}
-        </span>
       </div>
 
       {/* Messages */}
-      <div style={{ padding: 10, overflowY: "auto", flex: 1 }}>
+      <div
+        ref={containerRef}
+        style={{
+          padding: 10,
+          overflowY: "auto",
+          flex: 1,
+          scrollBehavior: "smooth",
+        }}
+      >
         <List
           dataSource={messages}
-          renderItem={(m, i) => (
-            <List.Item key={i} style={{ justifyContent: m.self ? "flex-end" : "flex-start" }}>
+          renderItem={(m) => (
+            <List.Item
+              key={m.id}
+              style={{
+                justifyContent: m.isCustomer ? "flex-end" : "flex-start",
+              }}
+            >
               <List.Item.Meta
-                avatar={<Avatar>{(m.fullName || "U")[0]}</Avatar>}
+                avatar={<Avatar>{m.fullName[0]}</Avatar>}
                 title={m.fullName}
                 description={m.messageContent}
               />
             </List.Item>
           )}
         />
+
         <div ref={bottomRef} />
       </div>
 
       {/* Input */}
       <div style={{ padding: 10, borderTop: "1px solid #ddd" }}>
-        <TextArea rows={2} value={text} onChange={(e) => setText(e.target.value)} />
+        <TextArea rows={2} value={text} onChange={(e) => setText(e.target.value)} onPressEnter={() => {}} />
+
         <Button type="primary" disabled={!text.trim()} onClick={send} style={{ marginTop: 10, float: "right" }}>
           Gửi
         </Button>
