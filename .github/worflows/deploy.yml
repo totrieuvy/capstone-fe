@@ -1,0 +1,39 @@
+name: Deploy Hamster Frontend
+
+on:
+  push:
+    branches:
+      - prod   # Tự động chạy khi có code mới được push lên nhánh prod
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest   # Môi trường chạy workflow (không liên quan Debian của bạn)
+
+    steps:
+      # 1️⃣ Checkout source code từ repository
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # 2️⃣ Deploy lên EC2 qua SSH
+      - name: Deploy to AWS EC2
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: 47.128.217.142
+          username: hoangpham
+          key: ${{ secrets.EC2_SSH_KEY }}
+          port: 22
+          script: |
+            echo "✅ Connected to EC2"
+            
+            echo "🧹 Cleaning old Docker images..."
+            docker system prune -af
+            
+            cd /home/hoangpham/hamster-frontend || exit 1
+
+            echo "🔄 Pulling latest code..."
+            git pull
+
+            echo "🚧 Building Docker container..."
+            docker compose down
+            docker compose build --no-cache
+            docker compose up -d
