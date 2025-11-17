@@ -1,59 +1,57 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useParams } from "react-router-dom";
-import { Card, Image, Spin, Typography, Row, Col, Button, Tag, InputNumber, Divider } from "antd";
-import { ShoppingCartOutlined } from "@ant-design/icons";
+import { Card, Image, Spin, Typography, Row, Col, Button, Rate, Tag, Divider, Tabs, Avatar, Progress } from "antd";
+import { ShoppingCartOutlined, HeartOutlined, UserOutlined } from "@ant-design/icons";
 import { getFormattedPrice } from "../../utils/formatPrice";
 import api from "../../config/axios";
 import { toast } from "react-toastify";
-import { useDispatch, useSelector } from "react-redux";
-import { addToCart } from "../../redux/features/cartSlice";
 import "./ProductDetail.scss";
 
 const { Title, Paragraph, Text } = Typography;
+const { TabPane } = Tabs;
 
-// --- Interfaces ---
 interface Product {
   id: string;
   name: string;
   description: string;
-  categoryId: string;
   categoryName: string;
   price: number;
   stockQuantity: number;
+  weight: number;
   imageUrl: string;
   isActive: boolean;
+}
+
+interface Feedback {
+  feedbackId: string;
+  customerName: string;
+  rating: number;
+  comment: string;
   createdAt: string;
-  createdBy: string;
-  updatedAt: string;
-  updatedBy: string;
-  weight: number; // Thêm trọng lượng sản phẩm
 }
 
-// Interface cho Redux State
-interface RootState {
-  user: { fullName: string; role: string } | null;
-}
-
-// --- Component ---
 function ProductDetail() {
   const { id } = useParams<{ id: string }>();
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
-  const [quantity, setQuantity] = useState(1);
+  const [feedbacks, setFeedbacks] = useState<Feedback[]>([]);
+  const [feedbackLoading, setFeedbackLoading] = useState(true);
 
-  // Kết nối với Redux
-  const dispatch = useDispatch();
-  const user = useSelector((state: RootState) => state.user);
+  // Tính trung bình rating
+  const averageRating = useMemo(() => {
+    if (feedbacks.length === 0) return 0;
+    const total = feedbacks.reduce((sum, fb) => sum + fb.rating, 0);
+    return (total / feedbacks.length).toFixed(1);
+  }, [feedbacks]);
 
   useEffect(() => {
-    document.title = "Chi tiết sản phẩm";
+    if (!id) return;
     const fetchProduct = async () => {
       try {
-        setLoading(true);
-        const response = await api.get(`/api/products/detail/${id}`);
-        setProduct(response.data.data);
-      } catch (error) {
-        toast.error("Lấy thông tin sản phẩm thất bại." + (error as Error).message);
+        const res = await api.get(`/api/products/detail/${id}`);
+        setProduct(res.data.data);
+      } catch {
+        toast.error("Không thể tải sản phẩm!");
       } finally {
         setLoading(false);
       }
@@ -61,127 +59,161 @@ function ProductDetail() {
     fetchProduct();
   }, [id]);
 
-  // --- Logic thêm vào giỏ hàng ---
-  const handleAddToCart = () => {
-    // 1. Kiểm tra đăng nhập
-    if (!user) {
-      toast.error("Vui lòng đăng nhập để thêm sản phẩm vào giỏ hàng!", {
-        position: "top-right",
-        autoClose: 3000,
-        theme: "colored",
-      });
-      return;
-    }
+  useEffect(() => {
+    if (!id) return;
+    const fetchFeedbacks = async () => {
+      try {
+        const res = await api.get(`/api/feedbacks/${id}`);
+        if (res.data.code === 200) setFeedbacks(res.data.data);
+      } catch {
+        toast.error("Không thể tải đánh giá!");
+      } finally {
+        setFeedbackLoading(false);
+      }
+    };
+    fetchFeedbacks();
+  }, [id]);
 
-    // 2. Kiểm tra sản phẩm và số lượng tồn kho
-    if (!product || product.stockQuantity === 0) {
-      toast.error("Sản phẩm đã hết hàng, không thể mua!", {
-        position: "top-right",
-        autoClose: 3000,
-        theme: "colored",
-      });
-      return;
-    }
-
-    // 3. Dispatch action để thêm vào giỏ
-    dispatch(
-      addToCart({
-        id: product.id,
-        name: product.name,
-        price: product.price,
-        stockQuantity: product.stockQuantity,
-        imageUrl: product.imageUrl,
-        quantity: quantity, // Lấy số lượng từ state
-        weight: product.weight,
-      })
-    );
-
-    // 4. Hiển thị thông báo thành công
-    toast.success(`Đã thêm ${quantity} sản phẩm "${product.name}" vào giỏ hàng!`, {
-      position: "top-right",
-      autoClose: 3000,
-      theme: "colored",
-    });
-  };
-
-  if (loading) {
+  if (loading)
     return (
       <div className="ProductDetail-loading">
         <Spin size="large" tip="Đang tải sản phẩm..." />
       </div>
     );
-  }
 
-  if (!product) {
+  if (!product)
     return (
       <div className="ProductDetail-loading">
         <Title level={4}>Sản phẩm không tồn tại hoặc đã bị xóa.</Title>
       </div>
     );
-  }
 
   return (
     <div className="ProductDetail">
       <Card className="product-card">
-        <Row gutter={[32, 32]}>
-          {/* --- Cột hình ảnh --- */}
-          <Col xs={24} md={12} className="product-image-col">
-            <Image src={product.imageUrl} alt={product.name} className="product-image" />
+        <Row gutter={[40, 32]}>
+          <Col xs={24} md={10}>
+            <div className="image-section">
+              <Image src={product.imageUrl} alt={product.name} className="main-image" />
+              <div className="thumbnail-row">
+                {[1, 2, 3].map((i) => (
+                  <Image key={i} src={product.imageUrl} alt={`thumb-${i}`} className="thumbnail" preview={false} />
+                ))}
+              </div>
+            </div>
           </Col>
 
-          {/* --- Cột thông tin --- */}
-          <Col xs={24} md={12} className="product-info-col">
-            <div className="product-info">
-              <Tag className="product-category-tag">{product.categoryName}</Tag>
-              <Title level={2} className="product-name">
+          <Col xs={24} md={14}>
+            <div className="info-section">
+              <Text className="category">{product.categoryName}</Text>
+              <Title level={2} className="name">
                 {product.name}
               </Title>
-              <Text className="product-created-date">
-                Ngày tạo: {new Date(product.createdAt).toLocaleDateString("vi-VN")}
-              </Text>
 
-              <Divider />
+              <div className="rating">
+                <Rate disabled allowHalf value={Number(averageRating)} />
+                <span>
+                  {averageRating} ({feedbacks.length} đánh giá)
+                </span>
+              </div>
 
-              <Paragraph className="product-description">{product.description}</Paragraph>
+              <div className="price-box">
+                <Text className="new-price">{getFormattedPrice(product.price)}</Text>
+              </div>
 
-              <div className="product-stock-wrapper">
+              <Paragraph className="desc">{product.description}</Paragraph>
+
+              <div className="stock">
                 <Text strong>Tình trạng: </Text>
-                <Tag color={product.stockQuantity > 0 ? "green" : "red"} className="product-stock-tag">
-                  {product.stockQuantity > 0 ? `Còn ${product.stockQuantity} sản phẩm` : "Hết hàng"}
+                <Tag color={product.isActive ? "green" : "red"}>
+                  {product.isActive ? "Còn hàng" : "Ngừng kinh doanh"}
                 </Tag>
               </div>
 
-              <Text className="product-price">{getFormattedPrice(product.price)}</Text>
+              <div className="quantity">
+                <Text strong>Số lượng còn: </Text>
+                <Text>{product.stockQuantity}</Text>
+              </div>
 
-              <Divider />
+              <div className="weight">
+                <Text strong>Trọng lượng: </Text>
+                <Text>{product.weight} g</Text>
+              </div>
 
-              {/* --- Khu vực hành động (Thêm vào giỏ) --- */}
-              <div className="product-actions">
-                <div className="quantity-selector">
-                  <Text strong>Số lượng:</Text>
-                  <InputNumber
-                    min={1}
-                    max={product.stockQuantity}
-                    defaultValue={1}
-                    onChange={(value) => setQuantity(value || 1)}
-                    disabled={product.stockQuantity === 0}
-                  />
-                </div>
-                <Button
-                  type="primary"
-                  icon={<ShoppingCartOutlined />}
-                  size="large"
-                  className="add-to-cart-btn"
-                  onClick={handleAddToCart}
-                  disabled={product.stockQuantity === 0}
-                >
+              <div className="actions">
+                <Button type="primary" icon={<ShoppingCartOutlined />} className="add-btn">
                   Thêm vào giỏ hàng
+                </Button>
+                <Button icon={<HeartOutlined />} className="wishlist-btn">
+                  Yêu thích
                 </Button>
               </div>
             </div>
           </Col>
         </Row>
       </Card>
+
+      <Tabs defaultActiveKey="1" className="product-tabs">
+        <TabPane tab="Đánh giá sản phẩm" key="1">
+          <div className="review-summary">
+            <div className="left">
+              <Title level={2}>{averageRating}</Title>
+              <Rate disabled allowHalf value={Number(averageRating)} />
+              <Text>({feedbacks.length} đánh giá)</Text>
+            </div>
+            <div className="right">
+              {[5, 4, 3, 2, 1].map((star) => {
+                const count = feedbacks.filter((f) => f.rating === star).length;
+                const percent = feedbacks.length ? (count / feedbacks.length) * 100 : 0;
+                return (
+                  <div className="rating-bar" key={star}>
+                    <Text>{star} sao</Text>
+                    <Progress percent={percent} showInfo={false} strokeColor="#ffb400" trailColor="#eee" />
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          <Divider />
+
+          <div className="review-list">
+            {feedbackLoading ? (
+              <Spin tip="Đang tải đánh giá..." />
+            ) : feedbacks.length === 0 ? (
+              <p className="no-feedback">Chưa có đánh giá nào cho sản phẩm này.</p>
+            ) : (
+              feedbacks.map((fb) => (
+                <Card key={fb.feedbackId} className="review-card">
+                  <Row gutter={[16, 8]} align="middle">
+                    <Col xs={24} md={3} className="review-avatar">
+                      <Avatar
+                        src={`https://ui-avatars.com/api/?background=random&name=${encodeURIComponent(
+                          fb.customerName
+                        )}`}
+                        size={64}
+                        icon={<UserOutlined />}
+                      />
+                    </Col>
+                    <Col xs={24} md={21}>
+                      <div className="review-content">
+                        <div className="review-header">
+                          <Text strong className="reviewer-name">
+                            {fb.customerName}
+                          </Text>
+                          <span className="review-time">{new Date(fb.createdAt).toLocaleString("vi-VN")}</span>
+                        </div>
+                        <Rate disabled value={fb.rating} />
+                        <Paragraph className="comment">“{fb.comment}”</Paragraph>
+                      </div>
+                    </Col>
+                  </Row>
+                </Card>
+              ))
+            )}
+          </div>
+        </TabPane>
+      </Tabs>
     </div>
   );
 }

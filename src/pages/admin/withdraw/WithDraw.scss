@@ -1,0 +1,59 @@
+.withdraw-page {
+  background-color: #fffaf5;
+  padding: 24px;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(255, 140, 0, 0.1);
+
+  h1 {
+    color: #ff7a00;
+    font-weight: 700;
+    margin-bottom: 24px;
+  }
+
+  .withdraw__filters {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+
+    .filter-buttons {
+      display: flex;
+      gap: 8px;
+
+      button {
+        border-radius: 6px;
+      }
+    }
+  }
+
+  .ant-table {
+    border-radius: 10px;
+    overflow: hidden;
+  }
+
+  .ant-btn-primary {
+    background-color: #ff7a00;
+    border-color: #ff7a00;
+
+    &:hover {
+      background-color: #ff944d;
+      border-color: #ff944d;
+    }
+  }
+
+  .ant-btn-dangerous {
+    font-weight: 500;
+  }
+
+  .ant-tag-gold {
+    color: #b87d00;
+  }
+
+  .ant-tag-green {
+    color: #0d7300;
+  }
+
+  .ant-tag-red {
+    color: #a8071a;
+  }
+}

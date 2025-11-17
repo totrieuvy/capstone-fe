@@ -1,0 +1,69 @@
+.track-grooming {
+  padding: 24px;
+
+  .grooming-header {
+    margin-bottom: 20px;
+    text-align: left;
+
+    h2 {
+      font-weight: 600;
+      color: #333;
+    }
+  }
+
+  .ant-card {
+    border-radius: 12px;
+  }
+
+  .grooming-cards-container {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .grooming-card {
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    transition: all 0.2s ease;
+
+    &:hover {
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.1);
+      transform: translateY(-2px);
+    }
+
+    .grooming-info {
+      .info-label {
+        font-size: 13px;
+        color: #888;
+      }
+
+      .info-value {
+        font-size: 15px;
+        font-weight: 500;
+        color: #333;
+      }
+    }
+  }
+
+  .grooming-loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 60vh;
+    p {
+      margin-top: 12px;
+      color: #666;
+    }
+  }
+
+  @media (max-width: 768px) {
+    padding: 12px;
+
+    .grooming-card {
+      .info-value {
+        font-size: 14px;
+      }
+    }
+  }
+}

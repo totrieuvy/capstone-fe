@@ -1,31 +1,71 @@
 .ManageTransaction {
-  padding: 24px;
-  background: #fff;
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
 
-  h1 {
+  .page-title {
     font-size: 24px;
     font-weight: 600;
-    color: #333;
-    margin-bottom: 20px;
+    margin-bottom: 16px;
+    color: #ff6f61;
   }
 
-  .manageTransaction__toolbar {
+  .filter-status {
     display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 20px;
-    gap: 12px;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 16px;
+    justify-content: center;
+    
 
-    .ant-input-search {
-      max-width: 400px;
+    .status-btn {
+      border-radius: 20px;
+      font-weight: 500;
     }
   }
 
+  .filter-bar {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 20px;
+    width: 100%;
+
+    .filter-controls {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+    }
+  }
+
+  .table-wrapper {
+    width: 100%;
+    max-width: 1200px;
+  }
+
+  .transaction__id {
+    color: #ff6f61;
+    font-weight: 500;
+  }
+
   .ant-table {
-    background-color: #fff;
-    border-radius: 8px;
-    overflow: hidden;
+    border-radius: 12px;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.06);
+  }
+
+  .ant-table-thead > tr > th {
+    background-color: #fafafa;
+    font-weight: 600;
+    text-align: center;
+  }
+
+  .ant-table-tbody > tr > td {
+    text-align: center;
+  }
+
+  .ant-table-tbody > tr:hover > td {
+    background-color: #f5f9ff;
   }
 }

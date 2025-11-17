@@ -1,0 +1,516 @@
+.booking-grooming-service {
+  padding: 20px 80px;
+
+  .policy-section {
+    margin-top: 16px;
+    background: #fffaf5;
+    padding: 16px;
+    border-radius: 10px;
+    border: 1px solid #ffd4b3;
+
+    h5 {
+      color: #ff7a45;
+      margin-bottom: 8px;
+    }
+
+    ul {
+      margin-left: 16px;
+      li {
+        margin-bottom: 6px;
+        line-height: 1.5;
+      }
+    }
+
+    .ant-checkbox-wrapper {
+      color: #333;
+      font-weight: 500;
+    }
+  }
+
+  .page-title {
+    text-align: center;
+    color: #ff6f61;
+    font-weight: 700;
+    margin-bottom: 24px;
+  }
+
+  .booking-steps {
+    margin-bottom: 28px;
+  }
+
+  .step-title {
+    color: #ff6f61;
+    font-weight: 600;
+    margin-bottom: 18px;
+  }
+
+  .staff-section {
+    margin-top: 40px;
+
+    h5 {
+      margin-bottom: 16px;
+    }
+
+    .staff-card {
+      text-align: center;
+      border: 2px solid transparent;
+      transition: 0.3s;
+      border-radius: 12px;
+      padding: 16px;
+
+      .staff-avatar {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        margin-bottom: 10px;
+        object-fit: cover;
+      }
+
+      &.selected {
+        border-color: #1890ff;
+        background: #e6f7ff;
+      }
+
+      &:hover {
+        transform: translateY(-4px);
+      }
+    }
+  }
+
+  .hamster__card-compact {
+    border: 2px solid #f0f0f0;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    overflow: hidden;
+    position: relative;
+    height: 100%;
+
+    &:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+      border-color: #ff6f61;
+    }
+
+    &.selected {
+      border: 3px solid #ff6f61;
+      box-shadow: 0 8px 20px rgba(255, 111, 97, 0.18);
+    }
+
+    > div {
+      display: flex;
+      height: 100%;
+    }
+
+    img {
+      width: 150px;
+      height: 150px;
+      object-fit: cover;
+      border-radius: 10px 0 0 10px;
+      display: block;
+    }
+
+    .hamster__name {
+      font-size: 16px;
+      font-weight: 700;
+      color: #ff6f61;
+      margin: 0 0 8px 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .hamster__info-compact {
+      font-size: 14px;
+      p {
+        margin: 4px 0;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+
+        .label {
+          color: #888;
+          font-weight: 500;
+          margin-right: 8px;
+        }
+
+        .value {
+          color: #333;
+          font-weight: 600;
+        }
+      }
+    }
+
+    .selected-checkmark {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      background: #ff6f61;
+      color: #fff;
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
+      z-index: 5;
+    }
+  }
+
+  .week-header {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    margin-bottom: 12px;
+
+    .week-title {
+      font-weight: 700;
+      color: #ff6f61;
+      text-align: center;
+      margin: 0;
+    }
+
+    button {
+      border-radius: 50%;
+      width: 36px;
+      height: 36px;
+      border: none;
+      background: #fff3f1;
+      color: #ff6f61;
+      box-shadow: 0 2px 6px rgba(255, 111, 97, 0.12);
+      transition: all 0.2s ease;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+
+      &:hover {
+        background: #ff6f61;
+        color: #fff;
+        transform: scale(1.05);
+      }
+    }
+  }
+
+  .legend {
+    display: flex;
+    justify-content: center;
+    gap: 18px;
+    margin-bottom: 12px;
+    flex-wrap: wrap;
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      color: #444;
+      font-weight: 600;
+
+      .dot {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        display: inline-block;
+      }
+
+      .available-dot {
+        background: #4caf50;
+      }
+      .selected-dot {
+        background: #ff9800;
+      }
+      .full-dot {
+        background: #f44336;
+      }
+      .past-dot {
+        background: #cccccc;
+      }
+    }
+  }
+
+  .weekly-grid {
+    display: flex;
+    overflow-x: auto;
+    border-radius: 12px;
+    background: #fff;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+    padding: 12px;
+
+    .time-column {
+      width: 120px;
+      min-width: 120px;
+      background: #fffaf9;
+      border-radius: 8px;
+      margin-right: 8px;
+
+      .time-cell-header {
+        height: 60px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        background: #ff6f61;
+        color: #fff;
+        border-radius: 8px 8px 0 0;
+        margin-bottom: 8px;
+      }
+
+      .time-cell {
+        height: 60px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 600;
+        color: #444;
+        padding: 0 8px;
+        margin-bottom: 8px;
+        background: #fff;
+        border-radius: 8px;
+      }
+    }
+
+    .day-column {
+      flex: 1 0 120px;
+      min-width: 120px;
+      margin-right: 8px;
+      display: flex;
+      flex-direction: column;
+      text-align: center;
+
+      &:last-child {
+        margin-right: 0;
+      }
+
+      .day-header {
+        height: 60px;
+        background: #fff3f1;
+        color: #ff6f61;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        font-weight: 700;
+        padding: 6px 4px;
+        border-radius: 8px;
+        margin-bottom: 8px;
+      }
+
+      &.disabled-day {
+        opacity: 0.45;
+        pointer-events: none;
+      }
+
+      .slot-cell {
+        height: 60px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 14px;
+        transition: all 0.2s ease;
+        padding: 0 8px;
+        text-align: center;
+        color: #fff;
+        cursor: pointer;
+        border-radius: 12px;
+        margin-bottom: 8px;
+
+        &:last-child {
+          margin-bottom: 0;
+        }
+
+        &.available {
+          background: linear-gradient(135deg, #4caf50, #43a047);
+          color: #fff;
+          box-shadow: 0 2px 6px rgba(76, 175, 80, 0.2);
+        }
+
+        &.available:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 4px 10px rgba(76, 175, 80, 0.3);
+        }
+
+        &.full {
+          background: linear-gradient(135deg, #f44336, #e53935);
+          color: #fff;
+          cursor: not-allowed;
+          box-shadow: 0 2px 6px rgba(244, 67, 54, 0.2);
+        }
+
+        &.selected {
+          background: linear-gradient(135deg, #ff9800, #fb8c00);
+          color: #fff;
+          transform: translateY(-2px);
+          box-shadow: 0 4px 12px rgba(255, 152, 0, 0.4);
+        }
+
+        &.past {
+          background: #f1f1f1;
+          color: #9e9e9e;
+          cursor: not-allowed;
+        }
+
+        &.empty {
+          background: #fafafa;
+          color: #bdbdbd;
+          cursor: default;
+        }
+      }
+    }
+  }
+
+  .ant-descriptions {
+    border-radius: 8px;
+    overflow: hidden;
+
+    .ant-descriptions-item-label {
+      font-weight: 600;
+      color: #444;
+      width: 160px;
+    }
+
+    .ant-descriptions-item-content {
+      font-size: 14px;
+      color: #333;
+    }
+  }
+
+  .ant-tag {
+    font-size: 14px;
+    font-weight: 600;
+  }
+
+  .ant-input-textarea {
+    border-radius: 8px;
+  }
+
+  .steps-action {
+    margin-top: 28px;
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+
+    button {
+      border-radius: 8px;
+      font-weight: 600;
+      height: 40px;
+      min-width: 120px;
+      transition: all 0.18s ease;
+    }
+
+    .ant-btn-primary {
+      background: linear-gradient(45deg, #ff6f61, #ffcc5c);
+      border: none;
+      color: #fff;
+      box-shadow: 0 4px 12px rgba(255, 111, 97, 0.14);
+    }
+  }
+
+  @media (max-width: 992px) {
+    .weekly-grid {
+      .time-column {
+        width: 100px;
+        min-width: 100px;
+      }
+      .day-column {
+        min-width: 100px;
+      }
+    }
+  }
+
+  @media (max-width: 768px) {
+    .hamster__card-compact {
+      > div {
+        flex-direction: column;
+      }
+      img {
+        width: 100%;
+        height: 160px;
+        border-radius: 12px 12px 0 0;
+      }
+      .hamster__info-compact p {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+    }
+
+    .legend {
+      gap: 10px;
+    }
+
+    .week-header {
+      gap: 8px;
+      .week-title {
+        font-size: 14px;
+      }
+    }
+  }
+}
+
+/* --- Bổ sung căn chỉnh header và Step 3 --- */
+
+.booking-grooming-service {
+  .header-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 12px;
+
+    .booking__header {
+      text-align: center;
+      margin-bottom: 40px;
+
+      .booking__title {
+        color: #ff6f61;
+        font-weight: 700;
+        font-size: 28px;
+        margin-bottom: 8px;
+        text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
+      }
+
+      .booking__subtitle {
+        color: #666;
+        font-size: 16px;
+        font-weight: 500;
+        margin: 0;
+      }
+    }
+
+    .page-title {
+      text-align: center;
+      color: #ff6f61;
+      font-weight: 700;
+      margin-bottom: 10px;
+    }
+
+    .booking-steps {
+      width: 80%;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+  }
+
+  .step-confirm {
+    .ant-descriptions-bordered {
+      border-radius: 10px;
+      overflow: hidden;
+    }
+
+    .ant-descriptions-item-label {
+      font-weight: 600;
+      color: #444;
+    }
+
+    /* hiển thị 2 cột để tránh trống */
+    .ant-descriptions-bordered.ant-descriptions-middle {
+      .ant-descriptions-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        column-gap: 20px;
+      }
+    }
+  }
+}

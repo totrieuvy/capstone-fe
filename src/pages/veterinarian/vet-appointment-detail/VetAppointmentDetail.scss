@@ -1,0 +1,703 @@
+.veterinarian-appointment-detail {
+  padding: 24px;
+  background-color: #f5f5f5;
+  min-height: 100vh;
+
+  .veterinarian-appointment-detail-container {
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    background: white;
+  }
+
+  .veterinarian-appointment-detail-loading {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 50vh;
+  }
+
+  .veterinarian-appointment-detail-error {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 50vh;
+    
+    .ant-card {
+      text-align: center;
+      min-width: 400px;
+    }
+  }
+
+  .veterinarian-detail-header {
+    margin-bottom: 0;
+    
+    .ant-typography {
+      color: #1890ff;
+      font-weight: 600;
+    }
+  }
+
+  .veterinarian-status-tag-large {
+    font-size: 14px;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    margin-left: 12px;
+    min-width: 80px;
+    text-align: center;
+    display: inline-block;
+  }
+
+  .veterinarian-info-card {
+    height: 100%;
+    border-radius: 8px;
+    border: 1px solid #e8e8e8;
+    transition: all 0.3s ease;
+
+    &:hover {
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      border-color: #1890ff;
+    }
+
+    .ant-card-head {
+      background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+      border-bottom: 2px solid #e6f4ff;
+      
+      .ant-card-head-title {
+        color: #1890ff;
+        font-weight: 600;
+        font-size: 16px;
+      }
+    }
+
+    .ant-descriptions-item-label {
+      font-weight: 600;
+      color: #595959;
+      width: 40%;
+    }
+
+    .ant-descriptions-item-content {
+      font-weight: 500;
+      color: #262626;
+    }
+  }
+
+  .veterinarian-info {
+    .vet-header {
+      padding: 16px;
+      background: linear-gradient(135deg, #f6ffed 0%, #f0f9ff 100%);
+      border-radius: 8px;
+      border: 1px solid #d9f7be;
+      margin-bottom: 16px;
+    }
+
+    .best-services {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+      margin-top: 8px;
+    }
+  }
+
+  .veterinarian-image-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 200px;
+    
+    img {
+      transition: transform 0.3s ease;
+      cursor: pointer;
+      
+      &:hover {
+        transform: scale(1.02);
+      }
+    }
+
+    &.clickable-image {
+      position: relative;
+      overflow: hidden;
+      border-radius: 8px;
+
+      &:hover {
+        img {
+          transform: scale(1.05);
+          filter: brightness(0.9);
+        }
+
+        .image-overlay {
+          opacity: 1;
+        }
+      }
+
+      .image-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.5);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+        border-radius: 8px;
+      }
+    }
+  }
+
+  .veterinarian-no-image-placeholder {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 200px;
+    background: #fafafa;
+    border: 2px dashed #d9d9d9;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    
+    &:hover {
+      background: #f0f0f0;
+      border-color: #bfbfbf;
+    }
+  }
+
+  .veterinarian-services-card {
+    .ant-card-head {
+      background: linear-gradient(135deg, #fff2e8 0%, #fff7e6 100%);
+      border-bottom: 2px solid #ffe7ba;
+      
+      .ant-card-head-title {
+        color: #fa8c16;
+        font-weight: 600;
+        font-size: 18px;
+      }
+    }
+
+    .veterinarian-service-item {
+      border: 2px solid #f0f0f0;
+      border-radius: 8px;
+      transition: all 0.3s ease;
+      height: 100%;
+
+      &:hover {
+        border-color: #52c41a;
+        box-shadow: 0 4px 8px rgba(82, 196, 26, 0.2);
+        transform: translateY(-2px);
+      }
+
+      &.clickable {
+        cursor: pointer;
+        
+        &:hover {
+          border-color: #1890ff;
+          box-shadow: 0 6px 16px rgba(24, 144, 255, 0.3);
+          transform: translateY(-3px);
+        }
+      }
+
+      .ant-card-body {
+        padding: 16px;
+        text-align: center;
+      }
+    }
+  }
+
+  .veterinarian-notes-card {
+    .ant-card-head {
+      background: linear-gradient(135deg, #f9f0ff 0%, #f6ffed 100%);
+      border-bottom: 2px solid #efdbff;
+      
+      .ant-card-head-title {
+        color: #722ed1;
+        font-weight: 600;
+        font-size: 16px;
+      }
+    }
+
+    .ant-card-body {
+      background: #fafafa;
+      border-radius: 0 0 8px 8px;
+      
+      .ant-typography {
+        font-size: 16px;
+        line-height: 1.6;
+        color: #595959;
+        font-style: italic;
+        padding: 16px;
+        background: white;
+        border-radius: 6px;
+        border-left: 4px solid #722ed1;
+      }
+    }
+  }
+
+  .veterinarian-check-in-modal {
+    .ant-modal-header {
+      background: linear-gradient(135deg, #f6ffed 0%, #f0f9ff 100%);
+      border-bottom: 2px solid #d9f7be;
+      
+      .ant-modal-title {
+        color: #52c41a;
+        font-weight: 600;
+        font-size: 18px;
+      }
+    }
+
+    .ant-upload-dragger {
+      border: 2px dashed #52c41a !important;
+      background: #f6ffed !important;
+      
+      &:hover {
+        border-color: #389e0d !important;
+        background: #f0f9ff !important;
+      }
+      
+      .ant-upload-drag-icon {
+        margin-bottom: 16px;
+      }
+      
+      .ant-upload-text {
+        color: #262626;
+        font-weight: 500;
+      }
+      
+      .ant-upload-hint {
+        font-size: 14px;
+      }
+    }
+  }
+
+  .veterinarian-medical-record-modal {
+    .ant-modal-header {
+      background: linear-gradient(135deg, #f6ffed 0%, #f0f9ff 100%);
+      border-bottom: 2px solid #d9f7be;
+      
+      .ant-modal-title {
+        color: #52c41a;
+        font-weight: 600;
+        font-size: 18px;
+      }
+    }
+
+    .ant-modal-body {
+      max-height: 70vh;
+      overflow-y: auto;
+    }
+
+    .ant-descriptions {
+      .ant-descriptions-item-label {
+        font-weight: 600;
+        color: #595959;
+        background: #fafafa;
+      }
+
+      .ant-descriptions-item-content {
+        font-weight: 500;
+        color: #262626;
+      }
+    }
+
+    .ant-card {
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+      
+      .ant-card-head {
+        border-bottom: 1px solid #e6f4ff;
+        
+        .ant-card-head-title {
+          font-weight: 600;
+          font-size: 16px;
+        }
+      }
+    }
+  }
+
+  // Responsive Design
+  @media (max-width: 768px) {
+    padding: 16px;
+
+    .veterinarian-detail-header {
+      .ant-typography {
+        font-size: 20px;
+      }
+    }
+
+    .veterinarian-status-tag-large {
+      font-size: 12px;
+      padding: 6px 12px;
+      margin-left: 0;
+      margin-top: 8px;
+      min-width: 70px;
+    }
+
+    .veterinarian-info-card {
+      margin-bottom: 16px;
+      
+      .ant-descriptions-item-label {
+        width: 100%;
+        font-size: 14px;
+      }
+      
+      .ant-descriptions-item-content {
+        font-size: 14px;
+      }
+    }
+
+    .veterinarian-info .vet-header {
+      padding: 12px;
+    }
+
+    .veterinarian-services-card {
+      .veterinarian-service-item {
+        margin-bottom: 12px;
+      }
+    }
+
+    .veterinarian-image-container {
+      min-height: 150px;
+      
+      img {
+        max-height: 200px;
+      }
+    }
+
+    .veterinarian-no-image-placeholder {
+      min-height: 150px;
+    }
+
+    .veterinarian-check-in-modal {
+      .ant-modal-body {
+        padding: 16px;
+      }
+      
+      .ant-upload-dragger {
+        padding: 16px !important;
+        
+        .ant-upload-drag-icon {
+          margin-bottom: 12px;
+        }
+        
+        .ant-upload-text {
+          font-size: 14px;
+          margin: 12px 0 6px;
+        }
+      }
+    }
+  }
+
+  @media (max-width: 576px) {
+    padding: 12px;
+    
+    .veterinarian-appointment-detail-container {
+      border-radius: 8px;
+    }
+
+    .veterinarian-detail-header {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 16px;
+      
+      .ant-typography {
+        font-size: 18px;
+      }
+    }
+
+    .veterinarian-info-card .ant-card-head .ant-card-head-title {
+      font-size: 14px;
+    }
+
+    .veterinarian-services-card .ant-card-head .ant-card-head-title {
+      font-size: 16px;
+    }
+  }
+}
+
+// Custom animations
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.veterinarian-appointment-detail .veterinarian-info-card {
+  animation: fadeInUp 0.4s ease-out;
+}
+
+.veterinarian-appointment-detail .veterinarian-services-card .veterinarian-service-item {
+  animation: fadeInUp 0.5s ease-out;
+}
+
+// Custom scrollbar for better UX
+.veterinarian-appointment-detail::-webkit-scrollbar {
+  width: 8px;
+}
+
+.veterinarian-appointment-detail::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+.veterinarian-appointment-detail::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 4px;
+  
+  &:hover {
+    background: #a8a8a8;
+  }
+}
+
+// Enhanced Collapsible Sections Styling
+.veterinarian-services-card {
+  .ant-collapse {
+    border: none;
+    background: transparent;
+    
+    .ant-collapse-item {
+      border: 1px solid #e8f5e8;
+      border-radius: 12px;
+      margin-bottom: 16px;
+      overflow: hidden;
+      box-shadow: 0 2px 8px rgba(82, 196, 26, 0.06);
+      
+      .ant-collapse-header {
+        background: linear-gradient(135deg, #f6ffed 0%, #e6f7ff 100%);
+        border-bottom: 1px solid #e8f5e8;
+        padding: 16px 20px;
+        font-weight: 600;
+        font-size: 16px;
+        color: #52c41a;
+        
+        .ant-collapse-arrow {
+          color: #52c41a;
+          font-size: 14px;
+        }
+        
+        &:hover {
+          background: linear-gradient(135deg, #f0fff0 0%, #e1f3ff 100%);
+        }
+      }
+      
+      .ant-collapse-content {
+        border: none;
+        background: white;
+        
+        .ant-collapse-content-box {
+          padding: 20px;
+        }
+      }
+      
+      &.ant-collapse-item-active {
+        .ant-collapse-header {
+          background: linear-gradient(135deg, #e6f7ff 0%, #f6ffed 100%);
+          color: #1890ff;
+        }
+      }
+    }
+  }
+}
+
+.veterinarian-prescription-card {
+  .ant-collapse {
+    border: none;
+    background: transparent;
+    
+    .ant-collapse-item {
+      border: 1px solid #efdbff;
+      border-radius: 12px;
+      margin-bottom: 16px;
+      overflow: hidden;
+      box-shadow: 0 2px 8px rgba(114, 46, 209, 0.06);
+      
+      .ant-collapse-header {
+        background: linear-gradient(135deg, #f9f0ff 0%, #fff0f6 100%);
+        border-bottom: 1px solid #efdbff;
+        padding: 16px 20px;
+        font-weight: 600;
+        font-size: 16px;
+        color: #722ed1;
+        
+        .ant-collapse-arrow {
+          color: #722ed1;
+          font-size: 14px;
+        }
+        
+        &:hover {
+          background: linear-gradient(135deg, #f4e6ff 0%, #ffe6f0 100%);
+        }
+      }
+      
+      .ant-collapse-content {
+        border: none;
+        background: white;
+        
+        .ant-collapse-content-box {
+          padding: 20px;
+        }
+      }
+      
+      &.ant-collapse-item-active {
+        .ant-collapse-header {
+          background: linear-gradient(135deg, #f0e6ff 0%, #ffe0eb 100%);
+          color: #9254de;
+        }
+      }
+    }
+  }
+  
+  // Professional Table Styling for Prescription
+  .ant-table {
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    
+    .ant-table-thead > tr > th {
+      background: linear-gradient(135deg, #722ed1 0%, #9254de 100%);
+      color: white;
+      font-weight: 600;
+      font-size: 14px;
+      border-bottom: none;
+      padding: 16px 12px;
+      
+      &:first-child {
+        border-top-left-radius: 8px;
+      }
+      
+      &:last-child {
+        border-top-right-radius: 8px;
+      }
+      
+      .anticon {
+        color: rgba(255, 255, 255, 0.9);
+        margin-right: 8px;
+      }
+    }
+    
+    .ant-table-tbody > tr {
+      &:hover > td {
+        background: #f9f0ff !important;
+      }
+      
+      > td {
+        padding: 12px;
+        border-bottom: 1px solid #f0f0f0;
+        font-size: 13px;
+        
+        &:first-child {
+          text-align: center;
+        }
+      }
+      
+      &:last-child > td {
+        border-bottom: none;
+      }
+    }
+    
+    .ant-table-cell {
+      vertical-align: middle;
+    }
+  }
+  
+  .ant-tag {
+    border-radius: 6px;
+    font-weight: 500;
+    padding: 4px 8px;
+    border: none;
+  }
+  
+  .ant-badge {
+    .ant-badge-count {
+      font-size: 12px;
+      font-weight: 600;
+      min-width: 20px;
+      height: 20px;
+      line-height: 18px;
+    }
+  }
+}
+
+// Responsive Design for Collapsible Sections
+@media (max-width: 768px) {
+  .veterinarian-services-card,
+  .veterinarian-prescription-card {
+    .ant-collapse-item {
+      .ant-collapse-header {
+        padding: 12px 16px;
+        font-size: 14px;
+        
+        .ant-collapse-arrow {
+          font-size: 12px;
+        }
+      }
+      
+      .ant-collapse-content-box {
+        padding: 16px;
+      }
+    }
+  }
+  
+  .veterinarian-prescription-card {
+    .ant-table {
+      .ant-table-thead > tr > th {
+        padding: 12px 8px;
+        font-size: 12px;
+      }
+      
+      .ant-table-tbody > tr > td {
+        padding: 8px;
+        font-size: 12px;
+      }
+    }
+  }
+}
+
+@media (max-width: 576px) {
+  .veterinarian-services-card,
+  .veterinarian-prescription-card {
+    .ant-collapse-item {
+      border-radius: 8px;
+      margin-bottom: 12px;
+      
+      .ant-collapse-header {
+        padding: 10px 12px;
+        font-size: 13px;
+      }
+      
+      .ant-collapse-content-box {
+        padding: 12px;
+      }
+    }
+  }
+  
+  .veterinarian-prescription-card {
+    .ant-table {
+      .ant-table-thead > tr > th {
+        padding: 8px 6px;
+        font-size: 11px;
+      }
+      
+      .ant-table-tbody > tr > td {
+        padding: 6px;
+        font-size: 11px;
+      }
+    }
+    
+    .ant-alert {
+      .ant-alert-message {
+        font-size: 13px;
+      }
+      
+      .ant-alert-description {
+        font-size: 12px;
+      }
+    }
+  }
+}

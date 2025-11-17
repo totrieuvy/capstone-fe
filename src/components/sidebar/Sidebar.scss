@@ -1,40 +1,171 @@
 .Sidebar {
-  display: flex;
-  flex-direction: column;
-  height: 100vh; // Đảm bảo sidebar luôn cao hết màn hình
+  height: 100vh !important;
+  background-color: #ffffff;
+  
+  .ant-layout-sider-children {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    background-color: #ffffff;
+  }
 
   &__logo {
+    flex-shrink: 0;
     padding: 16px;
     text-align: center;
-    transition: padding 0.3s ease;
+    background-color: #ffffff;
 
     img {
-      max-width: 150px; // Giới hạn kích thước logo
-      height: auto;
-      transition: max-width 0.3s ease;
+      width: 100%;
+      max-width: 150px;
+      transition: all 0.3s ease;
     }
 
-    // Khi sidebar thu gọn, thu nhỏ logo lại
-    &.collapsed {
-      padding: 16px 8px;
-      img {
-        max-width: 40px; // Kích thước logo khi thu gọn
-      }
+    &.collapsed img {
+      max-width: 50px;
+    }
+  }
+
+  &__scroll-area {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+    background-color: #ffffff;
+
+    scrollbar-width: thin;
+    scrollbar-color: #c1c1c1 transparent;
+
+    &::-webkit-scrollbar {
+      width: 6px;
+    }
+    &::-webkit-scrollbar-thumb {
+      background-color: #c1c1c1;
+      border-radius: 10px;
     }
   }
 
   &__menu {
-    flex: 1; // Giúp menu chiếm hết không gian còn lại
-    border-inline-end: 0;
+    border: none;
+    padding-bottom: 12px;
+    background-color: #ffffff;
+
+    // Menu items styling
+    .ant-menu-item {
+      color: #444;
+      font-weight: 500;
+      margin: 4px 8px;
+      border-radius: 10px;
+      transition: all 0.25s ease;
+
+      &:hover {
+        background-color: #f7f9fb !important;
+        color: #1890ff !important;
+      }
+
+      &.ant-menu-item-selected {
+        background-color: #eaf3ff !important;
+        color: #1890ff !important;
+        font-weight: 600;
+      }
+
+      .ant-menu-item-icon {
+        font-size: 20px;
+        min-width: 24px;
+      }
+    }
+
+    // Submenu styling
+    .ant-menu-submenu {
+      margin: 4px 8px;
+
+      .ant-menu-submenu-title {
+        color: #444;
+        font-weight: 500;
+        border-radius: 10px;
+        transition: all 0.25s ease;
+
+        &:hover {
+          background-color: #f7f9fb !important;
+          color: #1890ff !important;
+        }
+
+        .ant-menu-submenu-arrow {
+          transition: transform 0.3s ease;
+          color: inherit;
+        }
+      }
+
+      &.ant-menu-submenu-open {
+        .ant-menu-submenu-title {
+          background-color: #eaf3ff !important;
+          color: #1890ff !important;
+          font-weight: 600;
+        }
+      }
+
+      .ant-menu-sub {
+        background-color: #ffffff;
+
+        .ant-menu-item {
+          color: #555;
+          font-weight: 400;
+          padding-left: 48px;
+          margin: 2px 8px;
+          border-radius: 8px;
+
+          &:hover {
+            background-color: #f7f9fb !important;
+            color: #1890ff !important;
+          }
+
+          &.ant-menu-item-selected {
+            background-color: #eaf3ff !important;
+            color: #1890ff !important;
+            font-weight: 600;
+          }
+        }
+      }
+    }
   }
 
   &__logout {
+    flex-shrink: 0;
     padding: 16px;
-    margin-top: auto; // Luôn đẩy nút logout xuống dưới cùng
+    text-align: center;
+    border-top: 1px solid #e5e5e5;
+    background-color: #ffffff;
 
     .ant-btn {
-      width: 100%;
-      // Khi thu gọn, text đã được ẩn bằng React, AntD sẽ tự động căn giữa icon
+      color: #444;
+      background-color: #ffffff;
+      border: 1px solid #e5e5e5;
+      border-radius: 10px;
+      font-weight: 500;
+      transition: all 0.25s ease;
+
+      &:hover {
+        background-color: #f7f9fb !important;
+        color: #1890ff !important;
+        border-color: #1890ff !important;
+      }
+
+      &:active,
+      &:focus {
+        background-color: #eaf3ff !important;
+        color: #1890ff !important;
+        border-color: #1890ff !important;
+      }
+    }
+  }
+
+  .ant-menu-submenu-popup {
+    z-index: 1000;
+    
+    .ant-menu-sub {
+      background-color: #ffffff;
+      border-radius: 10px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
     }
   }
 }

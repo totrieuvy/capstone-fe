@@ -1,51 +1,209 @@
 .ManageOrderDetail {
-  padding: 24px;
+  padding: 20px;
 
-  .manage-order-detail__loading {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 70vh;
+  .status-timeline {
+    margin-top: 20px;
+
+    h3 {
+      margin-bottom: 10px;
+      font-weight: 600;
+    }
   }
 
-  .manage-order-detail__header {
+  .payment-logo {
+    height: 50px;
+    width: auto;
+    object-fit: contain;
+    vertical-align: middle;
+  }
+
+  .status-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .status-history {
+    margin-top: 15px;
+    .history-item {
+      display: flex;
+      justify-content: space-between;
+      font-size: 14px;
+      color: #555;
+    }
+  }
+
+  .main-title {
+    font-size: 24px;
+    font-weight: 600;
+    margin-bottom: 16px;
+  }
+
+  .header-row {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 24px;
+    position: static !important;
+    margin-bottom: 20px;
 
     .back-btn {
-      background: #f5f5f5;
-      border-color: #d9d9d9;
-      &:hover {
-        background: #e8e8e8;
+      border-radius: 8px;
+      font-weight: 500;
+    }
+  }
+
+  .top-section {
+    display: flex;
+    gap: 20px;
+    align-items: flex-start;
+
+    .left-info {
+      flex: 2;
+
+      .order-card {
+        border-radius: 12px;
+        box-shadow: 0 3px 10px rgba(0, 0, 0, 0.06);
       }
     }
 
-    .action-buttons {
-      display: flex;
-      gap: 12px;
+    .right-status {
+      flex: 1;
+      min-width: 300px;
 
-      button {
-        min-width: 120px;
-        font-weight: 500;
-        border-radius: 8px;
-      }
+      .status-card {
+        border-radius: 12px;
+        box-shadow: 0 3px 10px rgba(0, 0, 0, 0.06);
 
-      .ant-btn-dangerous {
-        background-color: #ff7875;
-        border-color: #ff7875;
-        &:hover {
-          background-color: #ff4d4f;
-          border-color: #ff4d4f;
+        .status-title {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+        }
+
+        .status-actions {
+          display: flex;
+          flex-direction: row;
+          gap: 10px;
+          justify-content: center;
+
+          button {
+            border-radius: 8px;
+            font-weight: 500;
+            flex: 1;
+          }
+        }
+
+        .status-history {
+          margin-top: 20px;
+
+          h4 {
+            font-size: 15px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            border-top: 1px solid #f0f0f0;
+            padding-top: 16px;
+          }
+
+          .history-item {
+            display: flex;
+            justify-content: space-between;
+            font-size: 14px;
+            color: #555;
+            margin-bottom: 4px;
+
+            span:first-child {
+              color: #333;
+              font-weight: 500;
+            }
+
+            span:last-child {
+              color: #888;
+            }
+          }
         }
       }
     }
   }
 
-  .manage-order-detail__card {
-    margin-bottom: 24px;
-    border-radius: 10px;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+  .bottom-section {
+    margin-top: 20px;
+
+    .order-card {
+      border-radius: 12px;
+      box-shadow: 0 3px 10px rgba(0, 0, 0, 0.06);
+
+      .ant-table-thead > tr > th {
+        background-color: #fafafa;
+        font-weight: 600;
+      }
+
+      .ant-table-wrapper {
+        margin-bottom: 0;
+      }
+
+      .ant-spin-container {
+        min-height: 0;
+      }
+
+      .order-summary {
+        margin-top: 0px;
+        padding-top: 16px;
+        border-top: 1px solid #f0f0f0;
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        gap: 8px;
+
+        .summary-row {
+          display: flex;
+          justify-content: space-between;
+          width: 300px;
+
+          .summary-label {
+            font-size: 14px;
+            color: #555;
+          }
+
+          .summary-value {
+            font-size: 14px;
+            font-weight: 500;
+            color: #333;
+          }
+
+          &.total {
+            .summary-label {
+              font-size: 16px;
+              font-weight: 600;
+              color: #000;
+            }
+
+            .summary-value {
+              font-size: 18px;
+              font-weight: 600;
+              color: #d9534f;
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+.manage-order-detail__loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 80vh;
+}
+
+@media (max-width: 992px) {
+  .ManageOrderDetail {
+    .top-section {
+      flex-direction: column;
+
+      .right-status {
+        width: 100%;
+      }
+    }
   }
 }

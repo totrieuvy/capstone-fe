@@ -10,6 +10,8 @@ import api from "../../config/axios";
 import { toast } from "react-toastify";
 import { useDispatch } from "react-redux";
 import { login } from "../../redux/features/userSlice";
+import { messaging } from "../../config/firebase";
+import { getToken } from "firebase/messaging";
 
 interface LoginValues {
   email: string;
@@ -29,6 +31,38 @@ const LoginForm = () => {
   useEffect(() => {
     document.title = "Login";
   }, []);
+
+  const getFcmToken = async () => {
+    try {
+      if (!("Notification" in window)) {
+        console.warn("⚠️ Trình duyệt không hỗ trợ Notification API");
+        return null;
+      }
+
+      const permission = await Notification.requestPermission();
+      console.log("🔔 Notification permission:", permission);
+
+      if (permission !== "granted") {
+        console.warn("🚫 Người dùng chưa cấp quyền thông báo");
+        return null;
+      }
+
+      const token = await getToken(messaging, {
+        vapidKey: "BOYKZ4MFMfEBL8WJTLid1bmd-m0Hbq8Aru3jlJTbylPWiHpdxyiKlhU97BtPw3K44Uyn4BLqzzVmsptNvwatdRI",
+      });
+
+      if (token) {
+        console.log("🎯 FCM Token:", token);
+        return token;
+      } else {
+        console.warn("⚠️ Không lấy được token (có thể thiếu service worker)");
+        return null;
+      }
+    } catch (err) {
+      console.error("💥 Lỗi khi lấy FCM token:", err);
+      return null;
+    }
+  };
 
   const handleLogin = async (values: LoginValues) => {
     setLoading(true);
@@ -50,6 +84,9 @@ const LoginForm = () => {
         const userData = { ...user, token };
         dispatch(login(userData));
 
+        const fcmToken = await getFcmToken();
+        console.log("Thiết bị này có FCM token:", fcmToken);
+
         switch (role) {
           case "ADMIN":
             navigate("/ADMIN", { replace: true });
@@ -57,8 +94,8 @@ const LoginForm = () => {
           case "STAFF":
             navigate("/STAFF", { replace: true });
             break;
-          case "VETERINARIAN":
-            navigate("/VETERINARIAN", { replace: true });
+          case "VET":
+            navigate("/VET", { replace: true });
             break;
           case "SHIPPER":
             navigate("/SHIPPER", { replace: true });
@@ -102,8 +139,8 @@ const LoginForm = () => {
         case "STAFF":
           navigate("/STAFF", { replace: true });
           break;
-        case "VETERINARIAN":
-          navigate("/VETERINARIAN", { replace: true });
+        case "VET":
+          navigate("/VET", { replace: true });
           break;
         case "SHIPPER":
           navigate("/SHIPPER", { replace: true });

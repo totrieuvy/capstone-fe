@@ -1,10 +1,20 @@
 import { useEffect, useState, type ReactNode } from "react";
-import { Row, Col, Card, Button, Spin } from "antd";
+import { Row, Col, Card, Button, Spin, Tabs } from "antd";
+import { useNavigate } from "react-router-dom";
+import { useDispatch } from "react-redux";
+import { selectGroomingItem } from "../../../../redux/features/SelectedGroomingItem";
 import api from "../../../../config/axios";
 import AOS from "aos";
 import "aos/dist/aos.css";
 import "./GroomingPage.scss";
-import { DollarOutlined, ClockCircleOutlined, ScissorOutlined } from "@ant-design/icons";
+import {
+  DollarOutlined,
+  ClockCircleOutlined,
+  ScissorOutlined,
+  AppstoreOutlined,
+  GiftOutlined,
+  CheckOutlined,
+} from "@ant-design/icons";
 
 interface Service {
   id: string;
@@ -12,36 +22,193 @@ interface Service {
   serviceName: string;
   description: string;
   durationMinutes: number;
-  displayPrice: string; // 🔹 Đổi từ number → string
+  displayPrice: string;
   isActive: boolean;
 }
 
+interface Combo {
+  id: string;
+  comboName: string;
+  description: string;
+  serviceCount: number;
+  displayPrice: string;
+  isActive: boolean;
+}
+
+type ActiveView = "services" | "combos";
+
 function GroomingPage() {
   const [services, setServices] = useState<Service[]>([]);
+  const [combos, setCombos] = useState<Combo[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
+  const [, setActiveView] = useState<ActiveView>("services");
+  const [selectedServices, setSelectedServices] = useState<Service[]>([]); // Nhiều dịch vụ lẻ
+  const [selectedCombo, setSelectedCombo] = useState<Combo | null>(null); // 1 combo
+
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
 
   useEffect(() => {
     document.title = "Dịch vụ Grooming - The Hamster";
     AOS.init({ duration: 800, once: true, offset: 80 });
 
-    const fetchGroomingServices = async () => {
+    const fetchData = async () => {
+      setLoading(true);
       try {
-        setLoading(true);
-        const response = await api.get("/api/services/type/GROOMING");
-        if (response.data && response.data.code === 200) {
-          setServices(response.data.data);
+        const [serviceResponse, comboResponse] = await Promise.all([
+          api.get("/api/services/type/GROOMING"),
+          api.get("/api/combo"),
+        ]);
+
+        if (serviceResponse.data?.code === 200) {
+          setServices(serviceResponse.data.data.filter((s: Service) => s.isActive));
+        }
+        if (comboResponse.data?.code === 200) {
+          setCombos(comboResponse.data.data.filter((c: Combo) => c.isActive));
         }
       } catch (error) {
-        console.error("Lỗi khi tải dữ liệu dịch vụ grooming:", error);
+        console.error("Lỗi khi tải dữ liệu dịch vụ hoặc combo:", error);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchGroomingServices();
+    fetchData();
   }, []);
 
   const serviceIcon: ReactNode = <ScissorOutlined />;
+  const comboIcon: ReactNode = <GiftOutlined />;
+
+  /** ✅ Chọn hoặc bỏ chọn dịch vụ lẻ */
+  const toggleServiceSelect = (service: Service) => {
+    setSelectedServices((prev) => {
+      const isSelected = prev.some((s) => s.id === service.id);
+      if (isSelected) {
+        return prev.filter((s) => s.id !== service.id);
+      }
+      return [...prev, service];
+    });
+  };
+
+  /** ✅ Chọn combo (chỉ 1, chọn là đi luôn) */
+  const handleComboSelect = (combo: Combo) => {
+    setSelectedCombo(combo);
+    dispatch(
+      selectGroomingItem({
+        id: combo.id,
+        name: combo.comboName,
+        type: "combo",
+        description: combo.description,
+        displayPrice: combo.displayPrice,
+      })
+    );
+    navigate("/dich-vu-lam-dep/dat-dich-vu");
+  };
+
+  /** ✅ Bấm đặt lịch với nhiều dịch vụ lẻ */
+  const handleBookSelectedServices = () => {
+    if (!selectedServices.length) return;
+    // Tạo payload gộp (nhiều service)
+    dispatch(
+      selectGroomingItem({
+        id: selectedServices.map((s) => s.id).join(","), // gộp id
+        name: selectedServices.map((s) => s.serviceName).join(", "),
+        type: "service",
+        description: selectedServices.map((s) => s.description).join(" | "),
+        displayPrice: selectedServices.map((s) => s.displayPrice).join(", "),
+        durationMinutes: selectedServices.reduce((sum, s) => sum + s.durationMinutes, 0),
+      })
+    );
+    navigate("/dich-vu-lam-dep/dat-dich-vu");
+  };
+
+  const renderServices = () => (
+    <>
+      <Row gutter={[24, 24]} justify="center">
+        {services.map((service) => {
+          const isSelected = selectedServices.some((s) => s.id === service.id);
+          return (
+            <Col xs={24} sm={12} lg={8} key={service.id} data-aos="zoom-in-up">
+              <Card
+                hoverable
+                className={`service-card ${isSelected ? "selected" : ""}`}
+                onClick={() => toggleServiceSelect(service)}
+              >
+                <div className="service-icon-container">{serviceIcon}</div>
+                <div className="service-info">
+                  <div>
+                    <h3 className="service-name">{service.serviceName}</h3>
+                    <p className="service-description">{service.description}</p>
+                    <div className="service-details">
+                      <span className="service-price">
+                        <DollarOutlined /> {service.displayPrice.replace(".00", "")}
+                      </span>
+                      <span className="service-duration">
+                        <ClockCircleOutlined /> {service.durationMinutes} phút
+                      </span>
+                    </div>
+                  </div>
+                  {isSelected && (
+                    <div className="selected-check">
+                      <CheckOutlined />
+                    </div>
+                  )}
+                </div>
+              </Card>
+            </Col>
+          );
+        })}
+      </Row>
+
+      {selectedServices.length > 0 && (
+        <div className="book-now-container">
+          <Button type="primary" className="book-now-btn" onClick={handleBookSelectedServices}>
+            Đặt lịch ngay ({selectedServices.length})
+          </Button>
+        </div>
+      )}
+    </>
+  );
+
+  const renderCombos = () => (
+    <Row gutter={[24, 24]} justify="center">
+      {combos.map((combo) => (
+        <Col xs={24} sm={12} lg={8} key={combo.id} data-aos="zoom-in-up" data-aos-delay="100">
+          <Card
+            hoverable
+            className={`combo-card ${selectedCombo?.id === combo.id ? "selected" : ""}`}
+            onClick={() => handleComboSelect(combo)}
+          >
+            <div className="combo-icon-container">{comboIcon}</div>
+            <div className="combo-info">
+              <div>
+                <h3 className="combo-name">{combo.comboName}</h3>
+                <p className="combo-description">{combo.description}</p>
+                <div className="combo-details">
+                  <span className="combo-price">
+                    <DollarOutlined /> {combo.displayPrice.replace(".00", "")}
+                  </span>
+                  <span className="combo-count">
+                    <AppstoreOutlined /> {combo.serviceCount} dịch vụ
+                  </span>
+                </div>
+              </div>
+              {selectedCombo?.id === combo.id && (
+                <div className="selected-check">
+                  <CheckOutlined />
+                </div>
+              )}
+            </div>
+          </Card>
+        </Col>
+      ))}
+    </Row>
+  );
+
+  const tabItems = [
+    { key: "services", label: "Dịch vụ đơn lẻ", children: renderServices() },
+    { key: "combos", label: "Gói Combo Tiết Kiệm", children: renderCombos() },
+  ];
 
   return (
     <div className="GroomingPage">
@@ -55,39 +222,19 @@ function GroomingPage() {
       </div>
 
       <div className="grooming-content">
-        <h2 className="section-title" data-aos="fade-up">
-          Bảng giá dịch vụ
-        </h2>
         {loading ? (
           <div className="loading-container">
             <Spin size="large" />
             <p>Đang tải dịch vụ...</p>
           </div>
         ) : (
-          <Row gutter={[24, 24]} justify="center">
-            {services.map((service) => (
-              <Col xs={24} sm={12} lg={8} key={service.id} data-aos="zoom-in-up">
-                <Card hoverable className="service-card">
-                  <div className="service-icon-container">{serviceIcon}</div>
-                  <div className="service-info">
-                    <h3 className="service-name">{service.serviceName}</h3>
-                    <p className="service-description">{service.description}</p>
-                    <div className="service-details">
-                      <span className="service-price">
-                        <DollarOutlined /> {service.displayPrice}
-                      </span>
-                      <span className="service-duration">
-                        <ClockCircleOutlined /> {service.durationMinutes} phút
-                      </span>
-                    </div>
-                    <Button type="primary" className="book-button">
-                      Đặt lịch ngay
-                    </Button>
-                  </div>
-                </Card>
-              </Col>
-            ))}
-          </Row>
+          <Tabs
+            defaultActiveKey="services"
+            centered
+            items={tabItems}
+            onChange={(key) => setActiveView(key as ActiveView)}
+            className="view-switcher"
+          />
         )}
       </div>
     </div>

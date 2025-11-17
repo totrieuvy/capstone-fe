@@ -29,7 +29,7 @@ export const cageService = {
   getCagesByTypeAndDate: async (request: GetCagesByTypeAndDateRequest): Promise<GetCagesByTypeAndDateResponse> => {
     try {
       const response = await api.get<ApiResponse<Cage[]>>(
-        `/api/cage/${request.cageTypeId}`,
+        `/api/cage/type/${request.cageTypeId}`,
         {
           params: {
             date: request.date

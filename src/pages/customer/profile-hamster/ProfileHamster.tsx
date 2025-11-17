@@ -22,6 +22,10 @@ import api from "../../../config/axios";
 import "./ProfileHamster.scss";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { storage } from "../../../config/firebase";
+import { toast } from "react-toastify";
+import { useNavigate } from "react-router-dom"; // ⬅️ thêm import này
+import { EyeOutlined } from "@ant-design/icons"; // ⬅️ thêm icon xem lịch sử
+import type { UploadChangeParam } from "antd/es/upload";
 
 const { Option } = Select;
 
@@ -55,6 +59,16 @@ interface FormValues {
   healthNote: string;
 }
 
+type UpdatePayload = {
+  name: string;
+  color: string;
+  dob: string;
+  gender: "Male" | "Female";
+  weight: number;
+  healthNote: string;
+  profilePicture?: string;
+};
+
 function ProfileHamster() {
   const [profiles, setProfiles] = useState<HamsterProfile[]>([]);
   const [species, setSpecies] = useState<Species[]>([]);
@@ -65,6 +79,7 @@ function ProfileHamster() {
   const [fetchLoading, setFetchLoading] = useState(true);
   const [createForm] = Form.useForm<FormValues>();
   const [updateForm] = Form.useForm<FormValues>();
+  const navigate = useNavigate();
 
   const fetchProfiles = async () => {
     setFetchLoading(true);
@@ -145,15 +160,15 @@ function ProfileHamster() {
 
       const { data } = await api.post("/api/hamster", payload);
       if (data.code === 200) {
-        message.success("Tạo hồ sơ hamster thành công");
+        toast.success("Tạo hồ sơ hamster thành công");
         setCreateModalVisible(false);
         createForm.resetFields();
         fetchProfiles();
       } else {
-        message.error(data.message || "Không thể tạo hồ sơ hamster");
+        toast.error(data.message || "Không thể tạo hồ sơ hamster");
       }
     } catch (error) {
-      message.error("Lỗi khi tạo hồ sơ hamster" + (error as Error).message);
+      toast.error("Lỗi khi tạo hồ sơ hamster" + (error as Error).message);
     } finally {
       setLoading(false);
     }
@@ -165,7 +180,7 @@ function ProfileHamster() {
 
     try {
       // 1. Tạo payload cơ bản không chứa ảnh
-      const payload: any = {
+      const payload: UpdatePayload = {
         name: values.name,
         color: values.color,
         dob: dayjs(values.dob).format("DD-MM-YYYY"),
@@ -195,21 +210,21 @@ function ProfileHamster() {
       // 4. Gửi request PUT
       const { data } = await api.put(`/api/hamster/${editingProfile.id}`, payload);
       if (data.code === 200) {
-        message.success("Cập nhật hồ sơ thành công");
+        toast.success("Cập nhật hồ sơ thành công");
         setUpdateModalVisible(false);
         setEditingProfile(null);
         fetchProfiles();
       } else {
-        message.error(data.message || "Không thể cập nhật hồ sơ");
+        toast.error(data.message || "Không thể cập nhật hồ sơ");
       }
-    } catch (error) {
-      message.error("Lỗi khi cập nhật hồ sơ hamster");
+    } catch {
+      toast.error("Lỗi khi cập nhật hồ sơ hamster");
     } finally {
       setLoading(false);
     }
   };
 
-  const normFile = (e: any) => {
+  const normFile = (e: UploadChangeParam<UploadFile>) => {
     if (Array.isArray(e)) return e;
     return e?.fileList;
   };
@@ -257,7 +272,14 @@ function ProfileHamster() {
                     className="hamster__card"
                     cover={<img src={hamster.profilePicture} alt={hamster.name} className="hamster__card-img" />}
                     style={{ animation: "fadeIn 0.5s ease-in-out" }}
-                    actions={[<EditOutlined key="edit" onClick={() => showUpdateModal(hamster)} />]}
+                    actions={[
+                      <EditOutlined key="edit" onClick={() => showUpdateModal(hamster)} style={{ color: "#ff6f61" }} />,
+                      <EyeOutlined
+                        key="view"
+                        onClick={() => navigate(`/profile/your-hamster/medical/${hamster.id}`)}
+                        style={{ color: "#ffcc5c" }}
+                      />,
+                    ]}
                   >
                     <div className="hamster__card-name">{hamster.name}</div>
                     <div className="hamster__info">

@@ -4,6 +4,7 @@ import { Card, Input, Button, Select, message, Row, Col, Radio, Spin, Form } fro
 import { clearCart } from "../../../redux/features/cartSlice";
 import api from "../../../config/axios";
 import "./Checkout.scss";
+import type { AxiosError } from "axios";
 
 // --- Interface Definitions ---
 interface District {
@@ -86,7 +87,7 @@ const Checkout = () => {
   const [discountPercent, setDiscountPercent] = useState<number>(0);
   const [loading, setLoading] = useState(false);
   const [shipLoading, setShipLoading] = useState(false);
-  const [paymentMethod, setPaymentMethod] = useState<"VNPAY" | "PAYOS">("VNPAY");
+  const [paymentMethod, setPaymentMethod] = useState<"VNPAY" | "PAYOS" | "WALLET">("VNPAY");
 
   const totalWeight = cartItems.reduce((sum, item) => sum + item.weight * item.quantity, 0);
   const totalValue = cartItems.reduce((sum, item) => sum + (item.price || 0) * item.quantity, 0);
@@ -226,14 +227,51 @@ const Checkout = () => {
     setLoading(true);
     try {
       const { data }: { data: OrderResponse } = await api.post("/api/order", payload);
-      if (data.code === 200 && data.data?.paymentUrl) {
+      if (data.code === 200 || data.code === 201) {
         dispatch(clearCart());
-        window.location.href = data.data.paymentUrl;
+
+        if (paymentMethod === "WALLET") {
+          window.location.href = "/payment-success";
+        } else if (data.data?.paymentUrl) {
+          window.location.href = data.data.paymentUrl;
+        } else {
+          message.error("Không tìm thấy URL thanh toán.");
+        }
+
+        return;
       } else {
         message.error(data.message || "Thanh toán thất bại, vui lòng thử lại.");
+        return;
       }
-    } catch {
-      message.error("Đã có lỗi xảy ra trong quá trình thanh toán.");
+    } catch (err) {
+      let errMsg = "Đã có lỗi xảy ra.";
+
+      const error = err as AxiosError; // ✔ Không còn báo any vì AxiosError là type cụ thể
+
+      const rawData = error.response?.data;
+
+      // Nếu backend trả về JSON string → parse
+      if (typeof rawData === "string") {
+        try {
+          const parsed = JSON.parse(rawData);
+          if (parsed?.message) errMsg = parsed.message;
+        } catch {
+          // ignore
+        }
+      }
+
+      // Nếu backend trả object JSON
+      else if (typeof rawData === "object" && rawData !== null && "message" in rawData) {
+        errMsg = (rawData as { message: string }).message;
+      }
+
+      // Nếu axios có lỗi khác
+      else if (error.message) {
+        errMsg = error.message;
+      }
+
+      message.error(errMsg);
+      return;
     } finally {
       setLoading(false);
     }
@@ -310,8 +348,34 @@ const Checkout = () => {
                 onChange={(e) => setPaymentMethod(e.target.value)}
                 className="payment-method-group"
               >
-                <Radio.Button value="VNPAY">VNPAY</Radio.Button>
-                <Radio.Button value="PAYOS">PAYOS</Radio.Button>
+                {/* WALLET */}
+                <Radio.Button value="WALLET">
+                  <div className="payment-option">
+                    <img
+                      src="https://i.pinimg.com/1200x/b4/9f/f9/b49ff9a83a19ebc745cb4ed40970b6e6.jpg"
+                      alt="Wallet"
+                      className="payment-logo"
+                    />
+                  </div>
+                </Radio.Button>
+
+                {/* VNPAY */}
+                <Radio.Button value="VNPAY">
+                  <div className="payment-option">
+                    <img
+                      src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT1UNDYnwxWITZaRHBqYOeo_7h5vZoJ1qIzbA&s"
+                      alt="VNPAY"
+                      className="payment-logo"
+                    />
+                  </div>
+                </Radio.Button>
+
+                {/* PAYOS */}
+                <Radio.Button value="PAYOS">
+                  <div className="payment-option">
+                    <img src="https://payos.ai/og-payos-mastercard.png" alt="PAYOS" className="payment-logo" />
+                  </div>
+                </Radio.Button>
               </Radio.Group>
             </Card>
           </Col>

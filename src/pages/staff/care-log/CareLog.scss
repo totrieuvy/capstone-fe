@@ -1,0 +1,275 @@
+// CareLog.scss
+.care-log {
+  padding: 24px;
+  min-height: 100vh;
+  background-color: #f5f5f5;
+
+  .care-log-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 24px;
+    padding: 16px 0;
+    border-bottom: 1px solid #e8e8e8;
+    background-color: white;
+    border-radius: 8px;
+    padding-left: 16px;
+    padding-right: 16px;
+
+    .back-button {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: #1890ff;
+      font-weight: 500;
+
+      &:hover {
+        color: #40a9ff;
+        background-color: #f0f8ff;
+      }
+    }
+  }
+
+  .create-care-log-card {
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+
+    .ant-card-head {
+      background: linear-gradient(135deg, #1890ff 0%, #69c0ff 100%);
+      border-radius: 12px 12px 0 0;
+      border-bottom: none;
+
+      .ant-card-head-title {
+        color: white;
+        font-weight: 600;
+      }
+    }
+
+    .care-log-form {
+      .ant-form-item-label > label {
+        font-weight: 500;
+        color: #262626;
+      }
+
+      .ant-input,
+      .ant-input:focus,
+      .ant-input-focused {
+        border-radius: 8px;
+      }
+
+      .care-log-uploader {
+        .ant-upload.ant-upload-select-picture-card {
+          width: 200px;
+          height: 150px;
+          border-radius: 8px;
+          border: 2px dashed #d9d9d9;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background-color: #fafafa;
+          
+          &:hover {
+            border-color: #1890ff;
+            background-color: #f0f8ff;
+          }
+
+          .ant-upload {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            height: 100%;
+          }
+        }
+
+        .ant-upload-list-picture-card .ant-upload-list-item {
+          border-radius: 8px;
+        }
+
+        .image-preview-container {
+          text-align: center;
+          
+          img {
+            display: block;
+            margin: 0 auto;
+          }
+        }
+
+        .upload-dragger {
+          .ant-upload.ant-upload-select-picture-card {
+            width: 100%;
+            min-height: 150px;
+            
+            > div {
+              display: flex;
+              flex-direction: column;
+              align-items: center;
+              justify-content: center;
+              padding: 20px;
+              
+              .anticon {
+                font-size: 24px;
+                color: #1890ff;
+                margin-bottom: 8px;
+              }
+              
+              div {
+                color: #666;
+                font-size: 14px;
+                font-weight: 500;
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  .care-log-history-card {
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+
+    .ant-card-head {
+      background: linear-gradient(135deg, #52c41a 0%, #95de64 100%);
+      border-radius: 12px 12px 0 0;
+      border-bottom: none;
+
+      .ant-card-head-title {
+        color: white;
+        font-weight: 600;
+      }
+    }
+
+    .daily-timeline {
+      .timeline-item {
+        padding-bottom: 24px;
+
+        .ant-timeline-item-content {
+          margin-left: 20px;
+        }
+
+        .report-date {
+          display: flex;
+          align-items: center;
+          margin-bottom: 12px;
+          font-weight: 600;
+          color: #1890ff;
+        }
+
+        .report-content {
+          margin-bottom: 16px;
+          line-height: 1.6;
+        }
+
+        .report-image {
+          .ant-image {
+            border-radius: 8px;
+            overflow: hidden;
+          }
+        }
+      }
+
+      .ant-timeline-item-tail {
+        border-left: 2px solid #e8e8e8;
+      }
+
+      .ant-timeline-item-head {
+        background-color: white;
+        border: 2px solid #1890ff;
+      }
+    }
+  }
+
+  // Responsive design
+  @media (max-width: 768px) {
+    padding: 16px;
+
+    .care-log-header {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 12px;
+
+      h2 {
+        font-size: 20px;
+        margin: 0;
+      }
+    }
+
+    .create-care-log-card,
+    .care-log-history-card {
+      margin-bottom: 16px;
+
+      .care-log-form {
+        .care-log-uploader {
+          .ant-upload.ant-upload-select-picture-card {
+            width: 100%;
+            height: 120px;
+            min-height: 120px;
+          }
+
+          .upload-dragger {
+            .ant-upload.ant-upload-select-picture-card {
+              width: 100%;
+              min-height: 120px;
+            }
+          }
+
+          .image-preview-container {
+            img {
+              max-width: 100%;
+              max-height: 200px;
+            }
+          }
+        }
+      }
+    }
+
+    .daily-timeline {
+      .timeline-item {
+        .report-image {
+          .ant-image {
+            width: 100%;
+            max-width: 250px;
+          }
+        }
+      }
+    }
+  }
+}
+
+// Loading states
+.ant-spin-container {
+  min-height: 200px;
+}
+
+// Button hover effects
+.ant-btn-primary {
+  transition: all 0.3s ease;
+
+  &:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(24, 144, 255, 0.3);
+  }
+}
+
+// Upload component styling
+.ant-upload-list-picture-card .ant-upload-list-item-info::before {
+  background-color: rgba(0, 0, 0, 0.5);
+}
+
+// Timeline dot animation
+.ant-timeline-item-head.ant-timeline-item-head-custom {
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(24, 144, 255, 0.7);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(24, 144, 255, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(24, 144, 255, 0);
+  }
+}

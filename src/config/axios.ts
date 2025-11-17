@@ -1,7 +1,7 @@
 import axios from "axios";
 import type { InternalAxiosRequestConfig, AxiosError } from "axios";
 
-const baseURL = "http://47.128.217.142:9090";
+const baseURL = "http://47.128.223.28:9090";
 
 //
 const config = {
