@@ -160,7 +160,7 @@ function ProfileHamster() {
 
       const { data } = await api.post("/api/hamster", payload);
       if (data.code === 200) {
-        toast.success("Tạo hồ sơ hamster thành công");
+        toast.success("Tạo hồ sơ thành công");
         setCreateModalVisible(false);
         createForm.resetFields();
         fetchProfiles();
