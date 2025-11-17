@@ -196,7 +196,7 @@ const StaffCheckOut: React.FC = () => {
                 Thanh toán {formatPrice(checkOutData.additionalPayment)}
               </Button>
               <p className="payment-note">
-                Bạn sẽ được chuyển đến trang thanh toán VNPay để hoàn tất giao dịch.
+                Bạn sẽ được chuyển đến trang thanh toán để hoàn tất giao dịch.
               </p>
             </div>
           )}

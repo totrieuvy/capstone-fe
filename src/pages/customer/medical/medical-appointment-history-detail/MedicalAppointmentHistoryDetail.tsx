@@ -108,6 +108,8 @@ const ManageAppointmentDetail: React.FC = () => {
         return "red";
       case "COMPLETED":
         return "green";
+        case "FAILED":
+        return "red";
       default:
         return "default";
     }
@@ -131,6 +133,8 @@ const ManageAppointmentDetail: React.FC = () => {
         return "Đã hủy";
       case "COMPLETED":
         return "Hoàn thành";
+        case "FAILED":
+        return "Thanh toán thất bại";
       default:
         return status.replace("_", " ");
     }
@@ -276,7 +280,7 @@ const ManageAppointmentDetail: React.FC = () => {
             >
               <Descriptions column={1} size="middle">
                 <Descriptions.Item label="Ngày hẹn">
-                  <Text strong>{dayjs(appointment.appointmentTime).tz("Asia/Ho_Chi_Minh").format("DD/MM/YYYY")}</Text>
+                  <Text strong>{dayjs(appointment.appointmentTime, "DD-MM-YYYY").tz("Asia/Ho_Chi_Minh").format("DD/MM/YYYY")}</Text>
                 </Descriptions.Item>
                 <Descriptions.Item label="Giờ hẹn">
                   <Text strong>

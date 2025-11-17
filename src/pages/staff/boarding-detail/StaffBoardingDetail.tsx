@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Card, Spin, Alert, Button, Tag, Descriptions, Avatar, Modal, Upload, message, List, Radio } from 'antd';
+import { Card, Spin, Alert, Button, Tag, Descriptions, Avatar, Modal, Upload, message, List, Radio, Row, Col } from 'antd';
 import { ArrowLeftOutlined, UserOutlined, CalendarOutlined, ShoppingOutlined, UploadOutlined, CameraOutlined, HomeOutlined, EditOutlined, LogoutOutlined } from '@ant-design/icons';
 import { boardingService, type BookingDetail } from '../../../services/BoardingService';
 import { cageService, type Cage } from '../../../services/CageService';
@@ -31,6 +31,7 @@ const BoardingDetail: React.FC = () => {
   const [checkOutLoading, setCheckOutLoading] = useState<boolean>(false);
   const [checkOutImageFile, setCheckOutImageFile] = useState<File | null>(null);
   const [checkOutImagePreview, setCheckOutImagePreview] = useState<string>('');
+  const [checkOutPaymentMethod, setCheckOutPaymentMethod] = useState<'WALLET' | 'VNPAY' | 'PAYOS'>('VNPAY');
 
   useEffect(() => {
     if (bookingId) {
@@ -270,7 +271,7 @@ const BoardingDetail: React.FC = () => {
       const checkOutResponse = await boardingService.checkOutBooking({
         bookingId: bookingId,
         checkOutImage: imageUrl,
-        paymentMethod: 'VNPAY'
+        paymentMethod: checkOutPaymentMethod
       });
 
       // Show success message
@@ -305,6 +306,7 @@ const BoardingDetail: React.FC = () => {
     setCheckOutModalVisible(true);
     setCheckOutImageFile(null);
     setCheckOutImagePreview('');
+    setCheckOutPaymentMethod('VNPAY');
   };
 
   // Reset check-out modal state when closing
@@ -312,6 +314,7 @@ const BoardingDetail: React.FC = () => {
     setCheckOutModalVisible(false);
     setCheckOutImageFile(null);
     setCheckOutImagePreview('');
+    setCheckOutPaymentMethod('VNPAY');
   };
 
   if (loading) {
@@ -894,7 +897,7 @@ const BoardingDetail: React.FC = () => {
           <div className="check-out-form">
             <div style={{ marginBottom: 24 }}>
               <h4 style={{ marginBottom: 16, color: '#262626', fontWeight: 600 }}>
-                Tải lên hình ảnh check-out
+                1. Tải lên hình ảnh check-out
               </h4>
               <p style={{ marginBottom: 16, color: '#666' }}>
                 Vui lòng tải lên hình ảnh check-out để xác nhận hamster đã được trả về cho khách hàng.
@@ -944,6 +947,195 @@ const BoardingDetail: React.FC = () => {
                   )}
                 </div>
               </Upload>
+            </div>
+
+            {/* Payment Method Selection */}
+            <div style={{ marginBottom: 24 }}>
+              <h4 style={{ marginBottom: 16, color: '#262626', fontWeight: 600 }}>
+                2. Chọn phương thức thanh toán
+              </h4>
+              <p style={{ marginBottom: 16, color: '#666' }}>
+                Chọn phương thức thanh toán cho khách hàng (nếu có phụ thu).
+              </p>
+              
+              <Card style={{ backgroundColor: '#fafafa' }}>
+                <Row gutter={[12, 12]}>
+                  <Col xs={24} sm={8}>
+                    <Card
+                      hoverable
+                      className={`payment-method-card ${checkOutPaymentMethod === 'WALLET' ? 'selected' : ''}`}
+                      onClick={() => setCheckOutPaymentMethod('WALLET')}
+                      style={{
+                        borderRadius: 12,
+                        border: checkOutPaymentMethod === 'WALLET'
+                          ? "2px solid #1890ff"
+                          : "1px solid #f0f0f0",
+                        cursor: "pointer",
+                        textAlign: "center",
+                        height: 100,
+                        display: "flex",
+                        flexDirection: "column",
+                        justifyContent: "center",
+                        alignItems: "center",
+                        position: "relative",
+                      }}
+                      bodyStyle={{ padding: 12 }}
+                    >
+                      <div style={{
+                        width: 40,
+                        height: 40,
+                        background: "#f0f0f0",
+                        borderRadius: 8,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        marginBottom: 8,
+                        fontSize: 20
+                      }}>
+                        👛
+                      </div>
+                      <p style={{ margin: 0, fontSize: 14, fontWeight: 600, color: "#333" }}>
+                        Ví ảo
+                      </p>
+                      {checkOutPaymentMethod === 'WALLET' && (
+                        <div style={{
+                          position: "absolute",
+                          top: 8,
+                          right: 8,
+                          background: "#1890ff",
+                          color: "white",
+                          borderRadius: "50%",
+                          width: 20,
+                          height: 20,
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          fontSize: 12,
+                          fontWeight: "bold"
+                        }}>
+                          ✓
+                        </div>
+                      )}
+                    </Card>
+                  </Col>
+                  <Col xs={24} sm={8}>
+                    <Card
+                      hoverable
+                      className={`payment-method-card ${checkOutPaymentMethod === 'VNPAY' ? 'selected' : ''}`}
+                      onClick={() => setCheckOutPaymentMethod('VNPAY')}
+                      style={{
+                        borderRadius: 12,
+                        border: checkOutPaymentMethod === 'VNPAY'
+                          ? "2px solid #1890ff"
+                          : "1px solid #f0f0f0",
+                        cursor: "pointer",
+                        textAlign: "center",
+                        height: 100,
+                        display: "flex",
+                        flexDirection: "column",
+                        justifyContent: "center",
+                        alignItems: "center",
+                        position: "relative",
+                      }}
+                      bodyStyle={{ padding: 12 }}
+                    >
+                      <div style={{
+                        width: 40,
+                        height: 40,
+                        background: "#f0f0f0",
+                        borderRadius: 8,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        marginBottom: 8,
+                        fontSize: 20
+                      }}>
+                        🏦
+                      </div>
+                      <p style={{ margin: 0, fontSize: 14, fontWeight: 600, color: "#333" }}>
+                        VNPay
+                      </p>
+                      {checkOutPaymentMethod === 'VNPAY' && (
+                        <div style={{
+                          position: "absolute",
+                          top: 8,
+                          right: 8,
+                          background: "#1890ff",
+                          color: "white",
+                          borderRadius: "50%",
+                          width: 20,
+                          height: 20,
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          fontSize: 12,
+                          fontWeight: "bold"
+                        }}>
+                          ✓
+                        </div>
+                      )}
+                    </Card>
+                  </Col>
+                  <Col xs={24} sm={8}>
+                    <Card
+                      hoverable
+                      className={`payment-method-card ${checkOutPaymentMethod === 'PAYOS' ? 'selected' : ''}`}
+                      onClick={() => setCheckOutPaymentMethod('PAYOS')}
+                      style={{
+                        borderRadius: 12,
+                        border: checkOutPaymentMethod === 'PAYOS'
+                          ? "2px solid #1890ff"
+                          : "1px solid #f0f0f0",
+                        cursor: "pointer",
+                        textAlign: "center",
+                        height: 100,
+                        display: "flex",
+                        flexDirection: "column",
+                        justifyContent: "center",
+                        alignItems: "center",
+                        position: "relative",
+                      }}
+                      bodyStyle={{ padding: 12 }}
+                    >
+                      <div style={{
+                        width: 40,
+                        height: 40,
+                        background: "#f0f0f0",
+                        borderRadius: 8,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        marginBottom: 8,
+                        fontSize: 20
+                      }}>
+                        💳
+                      </div>
+                      <p style={{ margin: 0, fontSize: 14, fontWeight: 600, color: "#333" }}>
+                        PayOS
+                      </p>
+                      {checkOutPaymentMethod === 'PAYOS' && (
+                        <div style={{
+                          position: "absolute",
+                          top: 8,
+                          right: 8,
+                          background: "#1890ff",
+                          color: "white",
+                          borderRadius: "50%",
+                          width: 20,
+                          height: 20,
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          fontSize: 12,
+                          fontWeight: "bold"
+                        }}>
+                          ✓
+                        </div>
+                      )}
+                    </Card>
+                  </Col>
+                </Row>
+              </Card>
             </div>
           </div>
         </Modal>

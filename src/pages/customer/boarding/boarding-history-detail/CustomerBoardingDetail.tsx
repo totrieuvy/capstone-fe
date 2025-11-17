@@ -202,9 +202,9 @@ const BoardingDetail: React.FC = () => {
   const getStatusColor = (status: string) => {
     const statusColors = {
       BOOKED: "cyan",
-      PENDING: "warning",
-      CANCELLED: "error",
-      FAILED: "error",
+      PENDING: "orange",
+      CANCELLED: "red",
+      FAILED: "red",
       COMPLETED: "blue",
       IN_PROGRESS: "processing",
       CHECK_OUT: "green",
@@ -217,7 +217,7 @@ const BoardingDetail: React.FC = () => {
       BOOKED: "Đã đặt",
       PENDING: "Đang chờ",
       CANCELLED: "Đã hủy",
-      FAILED: "Thất bại",
+      FAILED: "Thanh toán thất bại",
       COMPLETED: "Hoàn thành",
       IN_PROGRESS: "Đang thực hiện",
       CHECK_OUT: "Hoàn tất",
@@ -675,9 +675,25 @@ const BoardingDetail: React.FC = () => {
             <div className="camera-container">
               <div className="camera-placeholder">
                 <VideoCameraOutlined style={{ fontSize: 48, color: "#d9d9d9" }} />
-                <Text type="secondary">Nhấn để xem camera trực tiếp</Text>
+                <Text type="secondary">
+                  {booking?.status === "IN_PROGRESS" 
+                    ? "Nhấn để xem camera trực tiếp" 
+                    : "Camera chỉ khả dụng khi booking đang thực hiện"}
+                </Text>
               </div>
-              <Button type="primary" icon={<PlayCircleOutlined />} className="camera-button" onClick={handleOpenCamera}>
+              <Button 
+                type="primary" 
+                icon={<PlayCircleOutlined />} 
+                className="camera-button"
+                disabled={booking?.status !== "IN_PROGRESS"}
+                style={{
+                  backgroundColor: booking?.status !== "IN_PROGRESS" ? "#d9d9d9" : undefined,
+                  borderColor: booking?.status !== "IN_PROGRESS" ? "#d9d9d9" : undefined,
+                  color: booking?.status !== "IN_PROGRESS" ? "#ffffff" : undefined,
+                  cursor: booking?.status !== "IN_PROGRESS" ? "not-allowed" : undefined
+                }}
+                onClick={booking?.status === "IN_PROGRESS" ? handleOpenCamera : undefined}
+              >
                 Bật camera
               </Button>
             </div>

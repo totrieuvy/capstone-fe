@@ -82,13 +82,16 @@ const SideBar: React.FC = () => {
         ]),
         getItem("Quản lí feedback", "quan-li-feedback", <VscFeedback />),
 
-        getItem("Quản lí tài khoản", "quan-li-tai-khoan", <UserOutlined />),
+        getItem("Quản lí tài khoản", "tai-khoan", <UserOutlined />, [
+          getItem("Nhân viên", "quan-li-nhan-vien"),
+          getItem("Khách hàng", "quan-li-khach-hang"),
+        ]),
       ];
     } else if (user?.role === "STAFF") {
       items = [
         getItem("Dịch vụ y tế", "medical-checkup", <BiPlusMedical />, [getItem("Lịch đặt khám", "lich-dat-kham")]),
         getItem("Grooming", "grooming", <SkinOutlined />, [getItem("Lịch đặt grooming", "lich-dat-grooming")]),
-        getItem("Chat", "chat", <IoChatboxEllipsesOutline  />, [getItem("Quản lí chat", "quan-li-chat")]),
+        getItem("Chat", "chat", <IoChatboxEllipsesOutline />, [getItem("Quản lí chat", "quan-li-chat")]),
 
         getItem("Boarding", "boarding", <HomeOutlined />, [
           getItem("Lịch đặt boarding", "lich-dat-boarding"),
@@ -98,7 +101,7 @@ const SideBar: React.FC = () => {
     } else if (user?.role === "VET") {
       items = [
         getItem("Lịch khám hôm nay", "lich-kham-hom-nay", <ScheduleOutlined />),
-        getItem("Quản lí kê thuốc", "quan-li-ke-thuoc", <AiOutlineMedicineBox  />),
+        getItem("Quản lí kê thuốc", "quan-li-ke-thuoc", <AiOutlineMedicineBox />),
       ];
     }
     setMenuItems(items);
