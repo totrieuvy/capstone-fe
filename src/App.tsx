@@ -77,6 +77,7 @@ import HistoryMedicalHamster from "./pages/customer/profile-hamster/HistoryMedic
 import ManageFeedback from "./pages/admin/feedback/ManageFeedback";
 import Chat from "./pages/customer/chat/Chat";
 import ManageChat from "./pages/staff/chat/ManageChat";
+import ManageCustomer from "./pages/admin/account/ManageCustomer";
 
 interface User {
   id: number;
@@ -282,7 +283,8 @@ const App = () => {
           children: [
             { path: "quan-li-feedback", element: <ManageFeedback /> },
             { path: "don-rut-tien", element: <WithDraw /> },
-            { path: "quan-li-tai-khoan", element: <ManageAccount /> },
+            { path: "quan-li-nhan-vien", element: <ManageAccount /> },
+            { path: "quan-li-khach-hang", element: <ManageCustomer /> },
             { path: "thong-ke", element: <Dashboard /> },
             { path: "quan-li-loai-hamster", element: <Species /> },
             { path: "quan-li-danh-muc-san-pham", element: <Category /> },
