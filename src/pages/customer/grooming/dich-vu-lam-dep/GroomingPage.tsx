@@ -163,7 +163,7 @@ function GroomingPage() {
       {selectedServices.length > 0 && (
         <div className="book-now-container">
           <Button type="primary" className="book-now-btn" onClick={handleBookSelectedServices}>
-            Đặt lịch ngay ({selectedServices.length})
+            Đặt lịch ngay
           </Button>
         </div>
       )}
