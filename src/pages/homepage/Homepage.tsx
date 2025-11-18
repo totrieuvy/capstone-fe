@@ -6,7 +6,7 @@ import Banner from "../../components/banner/Banner";
 import "./Homepage.scss";
 import AOS from "aos";
 import "aos/dist/aos.css";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { addToCart } from "../../redux/features/cartSlice";
 import { toast } from "react-toastify";
@@ -69,6 +69,7 @@ function Homepage() {
   const [showPopup, setShowPopup] = useState(false);
   const dispatch = useDispatch();
   const user = useSelector((state: RootState) => state.user);
+  const navigate = useNavigate();
 
   const fetchProducts = useCallback(async () => {
     try {
@@ -123,12 +124,16 @@ function Homepage() {
   };
 
   const handleAddToCart = (product: Product) => {
+    // if (!user) {
+    //   toast.error("Vui lòng đăng nhập để thêm sản phẩm vào giỏ hàng!", {
+    //     position: "top-right",
+    //     autoClose: 3000,
+    //     theme: "colored",
+    //   });
+    //   return;
+    // }
     if (!user) {
-      toast.error("Vui lòng đăng nhập để thêm sản phẩm vào giỏ hàng!", {
-        position: "top-right",
-        autoClose: 3000,
-        theme: "colored",
-      });
+      navigate("/login");
       return;
     }
 
