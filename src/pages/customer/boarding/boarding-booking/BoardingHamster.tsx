@@ -286,8 +286,8 @@ function BoardingHamster() {
 
   // Function to disable unavailable dates in the DatePicker
   const getDisabledDate = (current: Dayjs) => {
-    // Disable past dates
-    if (current && current < dayjs().startOf("day")) {
+    // Disable past dates and today - users must book at least 1 day in advance
+    if (current && current <= dayjs().startOf("day")) {
       return true;
     }
     
