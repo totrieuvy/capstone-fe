@@ -1558,10 +1558,20 @@ function BoardingHamster() {
               type="primary"
               onClick={handleNext}
               style={{
-                background: "linear-gradient(45deg, #ff6f61, #ffcc5c)",
+                background: (currentStep === 0 && !selectedHamsterId) || 
+                          (currentStep === 1 && (!dateRange[0] || !dateRange[1] || !selectedCageId))
+                  ? "#d9d9d9" 
+                  : "linear-gradient(45deg, #ff6f61, #ffcc5c)",
                 border: "none",
                 borderRadius: 8,
-                boxShadow: "0 4px 12px rgba(0, 0, 0, 0.2)",
+                boxShadow: (currentStep === 0 && !selectedHamsterId) || 
+                          (currentStep === 1 && (!dateRange[0] || !dateRange[1] || !selectedCageId))
+                  ? "none" 
+                  : "0 4px 12px rgba(0, 0, 0, 0.2)",
+                color: (currentStep === 0 && !selectedHamsterId) || 
+                      (currentStep === 1 && (!dateRange[0] || !dateRange[1] || !selectedCageId))
+                  ? "#999" 
+                  : "white",
               }}
             >
               Tiếp theo
