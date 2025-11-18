@@ -14,6 +14,7 @@ import {
   Divider,
   Typography,
   Card,
+  Switch,
 } from "antd";
 import { PlusOutlined } from "@ant-design/icons";
 import type { TableColumnsType } from "antd";
@@ -350,6 +351,10 @@ function ManageGroomingService() {
                 </>
               )
             )}
+
+            <Form.Item name="isActive" label="Trạng thái" valuePropName="checked" initialValue={true}>
+              <Switch checkedChildren="Hoạt động" unCheckedChildren="Không hoạt động" />
+            </Form.Item>
 
             <Form.Item>
               <Button type="primary" htmlType="submit" block>
