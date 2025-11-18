@@ -16,6 +16,8 @@ import {
   Card,
   Row,
   Col,
+  Switch,
+  Space,
 } from "antd";
 import { PlusOutlined } from "@ant-design/icons";
 import type { UploadFile } from "antd/es/upload/interface";
@@ -27,6 +29,7 @@ import type { ProductType } from "../../../types/product";
 import "./ManageProduct.scss";
 import { storage } from "../../../config/firebase";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { FiEdit, FiTrash2 } from "react-icons/fi";
 
 const { Search } = Input;
 const { Option } = Select;
@@ -215,36 +218,40 @@ function ManageProduct() {
       key: "action",
       render: (_, record) => (
         <>
-          <Button
-            type="primary"
-            style={{ marginRight: 8 }}
-            onClick={() => {
-              setIsUpdate(true);
-              setIsModalVisible(true);
-              form.setFieldsValue({
-                ...record,
-                imageUrl: record.imageUrl
-                  ? [
-                      {
-                        uid: "-1",
-                        name: "image.png",
-                        status: "done",
-                        url: record.imageUrl,
-                      },
-                    ]
-                  : [],
-              });
-            }}
-          >
-            Cập nhật
-          </Button>
-          <Popconfirm
-            title="Xóa sản phẩm?"
-            description="Bạn có chắc muốn xóa sản phẩm này?"
-            onConfirm={() => handleDelete(record.id)}
-          >
-            <Button danger>Xóa</Button>
-          </Popconfirm>
+          <Space>
+            <Button
+              icon={<FiEdit />}
+              size="small"
+              className="action-btn-edit"
+              onClick={() => {
+                setIsUpdate(true);
+                setIsModalVisible(true);
+                form.setFieldsValue({
+                  ...record,
+                  imageUrl: record.imageUrl
+                    ? [
+                        {
+                          uid: "-1",
+                          name: "image.png",
+                          status: "done",
+                          url: record.imageUrl,
+                        },
+                      ]
+                    : [],
+                });
+              }}
+            />
+
+            <Popconfirm
+              title="Xóa sản phẩm?"
+              okText="Xóa"
+              cancelText="Hủy"
+              okType="danger"
+              onConfirm={() => handleDelete(record.id)}
+            >
+              <Button icon={<FiTrash2 />} size="small" className="action-btn-delete" />
+            </Popconfirm>
+          </Space>
         </>
       ),
     },
@@ -263,6 +270,7 @@ function ManageProduct() {
         >
           Tất cả
         </Button>
+
         {categories.map((cat) => (
           <Button
             key={cat.id}
@@ -276,13 +284,15 @@ function ManageProduct() {
         ))}
       </div>
 
+      {/* SEARCH + ADD BUTTON Ở DƯỚI */}
       <div className="manageProduct__toolbar">
         <Search
           placeholder="Tìm kiếm sản phẩm..."
           allowClear
           onChange={(e) => handleSearch(e.target.value)}
-          style={{ width: 300 }}
+          style={{ width: 340 }}
         />
+
         <Button type="primary" icon={<PlusOutlined />} onClick={handleOpenAdd}>
           Thêm sản phẩm
         </Button>
@@ -365,6 +375,10 @@ function ManageProduct() {
               <Upload listType="picture-card" beforeUpload={() => false} maxCount={1} accept="image/*">
                 <div>Chọn ảnh</div>
               </Upload>
+            </Form.Item>
+
+            <Form.Item label="Trạng thái" name="isActive" valuePropName="checked">
+              <Switch checkedChildren="Hoạt động" unCheckedChildren="Khoá" />
             </Form.Item>
 
             <Form.Item>

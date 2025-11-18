@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Table, Button, Modal, Form, Input, Select, Space, message, Spin, Tag } from "antd";
+import { Table, Button, Modal, Form, Input, Select, Space, message, Spin, Tag, Switch } from "antd";
 import { PlusOutlined, SearchOutlined } from "@ant-design/icons";
 import { FiEdit, FiTrash2 } from "react-icons/fi";
 import type { ColumnsType } from "antd/es/table";
@@ -188,15 +188,7 @@ const Policy: React.FC = () => {
       <h1>Quản lí chính sách</h1>
 
       <div className="policy__filters">
-        <Space style={{ width: "100%", marginBottom: 16 }}>
-          <Input
-            placeholder="Tìm kiếm chính sách..."
-            prefix={<SearchOutlined />}
-            value={searchText}
-            onChange={(e) => setSearchText(e.target.value)}
-            style={{ width: 280 }}
-          />
-
+        <div className="policy__filter-top">
           <div className="filter-buttons">
             <Button type={!serviceFilter ? "primary" : "default"} onClick={() => setServiceFilter(null)}>
               Tất cả
@@ -220,11 +212,22 @@ const Policy: React.FC = () => {
               BOARDING
             </Button>
           </div>
+        </div>
 
-          <Button type="primary" icon={<PlusOutlined />} onClick={handleOpenAdd} style={{ marginLeft: "auto" }}>
+        {/* SEARCH + BUTTON Ở DƯỚI */}
+        <div className="policy__filter-bottom">
+          <Input
+            placeholder="Tìm kiếm chính sách..."
+            prefix={<SearchOutlined />}
+            value={searchText}
+            onChange={(e) => setSearchText(e.target.value)}
+            style={{ width: 280 }}
+          />
+
+          <Button type="primary" icon={<PlusOutlined />} onClick={handleOpenAdd}>
             Thêm chính sách
           </Button>
-        </Space>
+        </div>
       </div>
 
       <Table
@@ -271,6 +274,10 @@ const Policy: React.FC = () => {
                 <Select.Option value="MEDICAL">MEDICAL</Select.Option>
                 <Select.Option value="BOARDING">BOARDING</Select.Option>
               </Select>
+            </Form.Item>
+
+            <Form.Item name="isActive" label="Trạng thái" valuePropName="checked" initialValue={true}>
+              <Switch checkedChildren="Hoạt động" unCheckedChildren="Không hoạt động" />
             </Form.Item>
 
             <Form.Item>

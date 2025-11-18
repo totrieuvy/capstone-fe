@@ -6,42 +6,81 @@
     font-weight: 700;
   }
 
+  .action-btn-edit {
+    background: #1890ff !important; /* xanh AntD */
+    border-color: #1890ff !important;
+    color: white !important;
+
+    &:hover {
+      opacity: 0.9;
+    }
+  }
+
+  .action-btn-delete {
+    background: #ff4d4f !important; /* đỏ AntD */
+    border-color: #ff4d4f !important;
+    color: white !important;
+
+    &:hover {
+      opacity: 0.9;
+    }
+  }
+
   .filter-category {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    justify-content: center;
     margin-bottom: 20px;
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    flex-wrap: wrap;
 
     .category-btn {
       border-radius: 20px;
-      transition: all 0.2s ease;
-
-      &:hover {
-        color: #fff;
-        background-color: #ff6f61;
-        border-color: #ff6f61;
-      }
+      padding: 6px 18px;
+      font-weight: 500;
+      transition: 0.2s;
+      border: 1px solid #ff8b3d;
+      color: #ff8b3d;
 
       &.ant-btn-primary {
-        background-color: #ff6f61;
-        border-color: #ff6f61;
+        background: #ff8b3d !important;
+        border-color: #ff8b3d !important;
+        color: white !important;
+      }
 
-        &:hover {
-          background-color: #ff8a78;
-          border-color: #ff8a78;
-        }
+      &:hover {
+        opacity: 0.85;
       }
     }
   }
 
+  /* --- SEARCH + BUTTON Ở DƯỚI --- */
   .manageProduct__toolbar {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
     margin-bottom: 20px;
-    flex-wrap: wrap;
-    gap: 10px;
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+
+    button.ant-btn-primary {
+      background: #ff8b3d !important;
+      border-color: #ff8b3d !important;
+      color: white !important;
+
+      &:hover {
+        opacity: 0.85;
+      }
+    }
+  }
+
+  /* BUTTON MÀU CAM */
+  .manageProduct__toolbar button.ant-btn-primary {
+    background: #ff8b3d !important;
+    border-color: #ff8b3d !important;
+    color: #fff !important;
+    font-weight: 500;
+
+    &:hover {
+      opacity: 0.85;
+    }
   }
 
   .product-detail {
