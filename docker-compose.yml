@@ -1,0 +1,17 @@
+version: "3.8"
+
+services:
+  hamster_frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: hamster_frontend
+    ports:
+      - "5173:80"
+    restart: always
+    networks:
+      - hamster_network
+
+networks:
+  hamster_network:
+    external: true
