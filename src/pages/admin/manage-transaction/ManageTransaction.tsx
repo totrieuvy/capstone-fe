@@ -18,7 +18,7 @@ const { Option } = Select;
 
 interface TransactionType {
   id: string;
-  status: "PENDING" | "PAID" | "CHECK_IN" | "CHECK_OUT" | "CONFIRMED" | "REFUNDED";
+  status: string;
   amount: number;
   serviceName: string;
   documentNo: string;
@@ -82,16 +82,26 @@ function ManageTransaction() {
     return matchStatus && matchService && matchSearch && matchDate;
   });
 
-  const renderStatusTag = (status: TransactionType["status"]) => {
-    const colorMap: Record<TransactionType["status"], string> = {
-      PENDING: "orange",
-      PAID: "green",
-      CHECK_IN: "blue",
-      CHECK_OUT: "cyan",
-      CONFIRMED: "purple",
-      REFUNDED: "red",
+  const renderStatusTag = (status: string) => {
+    const map: Record<string, { color: string; label: string }> = {
+      PENDING: { color: "orange", label: "Đang chờ" },
+      BOOKED: { color: "blue", label: "Đã đặt" },
+      CHECK_IN: { color: "geekblue", label: "Đã nhận thú" },
+      CHECK_OUT: { color: "cyan", label: "Đã trả thú" },
+      CANCELLED: { color: "red", label: "Đã hủy" },
+      REFUNDED: { color: "green", label: "Đã hoàn tiền" },
+
+      // Từ API thật của bạn:
+      PAID: { color: "green", label: "Đã thanh toán" },
+      IN_PROGRESS: { color: "purple", label: "Đang thực hiện" },
+      FAILED: { color: "red", label: "Thất bại" },
+      COMPLETED: { color: "green", label: "Hoàn tất" },
+      REJECTED: { color: "volcano", label: "Bị từ chối" },
     };
-    return <Tag color={colorMap[status]}>{status}</Tag>;
+
+    const item = map[status];
+
+    return <Tag color={item?.color || "default"}>{item?.label || status}</Tag>;
   };
 
   const columns: TableColumnsType<TransactionType> = [
@@ -114,10 +124,13 @@ function ManageTransaction() {
       key: "serviceName",
       align: "center" as const,
       render: (text: string) => {
-        if (text === "ORDER") return <Tag color="cyan">Đơn hàng</Tag>;
-        if (text === "BOOKING") return <Tag color="geekblue">Đặt lịch giữ hộ</Tag>;
-        if (text === "GROOMING") return <Tag color="magenta">Đặt làm đẹp</Tag>;
-        return <Tag color="default">{text}</Tag>;
+        const map: Record<string, { color: string; label: string }> = {
+          ORDER: { color: "cyan", label: "Đơn hàng" },
+          BOOKING: { color: "geekblue", label: "Đặt lịch giữ hộ" },
+          GROOMING: { color: "magenta", label: "Đặt làm đẹp" },
+        };
+
+        return <Tag color={map[text]?.color}>{map[text]?.label || text}</Tag>;
       },
     },
     {
@@ -147,12 +160,17 @@ function ManageTransaction() {
 
   const statuses = [
     { key: "ALL", label: "Tất cả" },
-    { key: "PENDING", label: "PENDING" },
-    { key: "PAID", label: "PAID" },
-    { key: "CHECK_IN", label: "CHECK_IN" },
-    { key: "CHECK_OUT", label: "CHECK_OUT" },
-    { key: "CONFIRMED", label: "CONFIRMED" },
-    { key: "REFUNDED", label: "REFUNDED" },
+    { key: "PENDING", label: "Đang chờ" },
+    { key: "BOOKED", label: "Đã đặt" },
+    { key: "IN_PROGRESS", label: "Đang thực hiện" },
+    { key: "CHECK_IN", label: "Đã nhận thú" },
+    { key: "CHECK_OUT", label: "Đã trả thú" },
+    { key: "PAID", label: "Đã thanh toán" },
+    { key: "COMPLETED", label: "Hoàn tất" },
+    { key: "FAILED", label: "Thất bại" },
+    { key: "REJECTED", label: "Từ chối" },
+    { key: "CANCELLED", label: "Đã hủy" },
+    { key: "REFUNDED", label: "Đã hoàn tiền" },
   ];
 
   const serviceTypes = [
