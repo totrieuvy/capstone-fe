@@ -145,131 +145,115 @@ const App = () => {
     return () => clearInterval(intervalId);
   }, [dispatch]);
 
+  const PrivateCustomerRoute: React.FC = () => {
+    const user = useSelector((state: RootState) => state.user);
+    const isAuthenticated = !!user?.token;
+
+    if (!isAuthenticated) {
+      return <Navigate to="/login" replace />;
+    }
+
+    return <Outlet />;
+  };
+
   const router = createBrowserRouter([
     {
       path: "/",
       element: <Layout />,
       children: [
-        { path: "/chat", element: <Chat /> },
+        // ❌ Không cần token
         { path: "/", element: <Homepage /> },
         { path: "/product/:id", element: <ProductDetail /> },
-        { path: "*", element: <NotFoundPage /> },
         { path: "/login", element: <Login /> },
         { path: "/register", element: <Register /> },
         { path: "/forgot-password", element: <ForgotPassword /> },
+
+        // ❗ Mấy cái này cũng không cần token (tự do)
         { path: "/verify-otp", element: <VerifyOtp /> },
         { path: "/reset-password", element: <ResetPassword /> },
-        { path: "/checkout", element: <Checkout /> },
-        { path: "/payment-success", element: <PaymentSuccess /> },
-        { path: "/payment-failure", element: <PaymentFail /> },
-        { path: "/dich-vu-lam-dep", element: <GroomingPage /> },
+        { path: "*", element: <NotFoundPage /> },
+
+        // ✅ Từ đây trở xuống: TẤT CẢ cần token
         {
-          path: "/booking-success",
-          element: <BookingSuccess />,
-        },
-        { path: "/dich-vu-lam-dep/dat-dich-vu", element: <BookingGroomingService /> },
-        {
-          path: "/profile",
-          element: <Panel />,
+          element: <PrivateCustomerRoute />,
           children: [
+            { path: "/chat", element: <Chat /> },
+            { path: "/checkout", element: <Checkout /> },
+            { path: "/payment-success", element: <PaymentSuccess /> },
+            { path: "/payment-failure", element: <PaymentFail /> },
+            { path: "/dich-vu-lam-dep", element: <GroomingPage /> },
+            { path: "/booking-success", element: <BookingSuccess /> },
+            { path: "/dich-vu-lam-dep/dat-dich-vu", element: <BookingGroomingService /> },
+
             {
-              path: "",
-              element: <ViewProfile />,
+              path: "/profile",
+              element: <Panel />,
+              children: [{ path: "", element: <ViewProfile /> }],
             },
+
+            {
+              path: "/your-orders",
+              element: <Panel />,
+              children: [
+                { path: "", element: <TrackOrder /> },
+                { path: ":orderId", element: <TrackOrderDetail /> },
+              ],
+            },
+
+            { path: "/dat-lich-giu-ho", element: <BoardingHamster /> },
+
+            {
+              path: "/profile/wallet",
+              element: <Panel />,
+              children: [{ path: "", element: <WalletCustomer /> }],
+            },
+
+            {
+              path: "/profile/your-hamster",
+              element: <Panel />,
+              children: [
+                { path: "", element: <ProfileHamster /> },
+                { path: "medical/:hamsterId", element: <HistoryMedicalHamster /> },
+              ],
+            },
+
+            {
+              path: "/grooming-history",
+              element: <Panel />,
+              children: [
+                { path: "", element: <TrackGrooming /> },
+                { path: ":id", element: <TrackGroomingDetail /> },
+              ],
+            },
+
+            {
+              path: "/boarding-schedule",
+              element: <Panel />,
+              children: [
+                { path: "", element: <BoardingHistory /> },
+                { path: ":bookingId", element: <BoardingDetail /> },
+              ],
+            },
+
+            {
+              path: "/lich-su-kham",
+              element: <Panel />,
+              children: [{ path: "", element: <MedicalAppointmentHistory /> }],
+            },
+
+            {
+              path: "/lich-su-kham",
+              element: <Panel />,
+              children: [
+                { path: "", element: <MedicalAppointmentHistory /> },
+                { path: ":appointmentId", element: <MedicalAppointmentHistoryDetail /> },
+              ],
+            },
+
+            { path: "/dich-vu-y-te", element: <MedicalList /> },
+
+            { path: "/dich-vu-y-te/dat-dich-vu", element: <MedicalBooking /> },
           ],
-        },
-        {
-          path: "/your-orders",
-          element: <Panel />,
-          children: [
-            { path: "", element: <TrackOrder /> },
-            { path: ":orderId", element: <TrackOrderDetail /> },
-          ],
-        },
-        { path: "/dat-lich-giu-ho", element: <BoardingHamster /> },
-        {
-          path: "/profile/wallet",
-          element: <Panel />,
-          children: [
-            {
-              path: "",
-              element: <WalletCustomer />,
-            },
-          ],
-        },
-        {
-          path: "/profile/your-hamster",
-          element: <Panel />,
-          children: [
-            {
-              path: "",
-              element: <ProfileHamster />,
-            },
-            {
-              path: "medical/:hamsterId",
-              element: <HistoryMedicalHamster />,
-            },
-          ],
-        },
-        {
-          path: "/grooming-history",
-          element: <Panel />,
-          children: [
-            {
-              path: "",
-              element: <TrackGrooming />,
-            },
-            {
-              path: ":id",
-              element: <TrackGroomingDetail />,
-            },
-          ],
-        },
-        {
-          path: "/boarding-schedule",
-          element: <Panel />,
-          children: [
-            {
-              path: "",
-              element: <BoardingHistory />,
-            },
-            {
-              path: ":bookingId",
-              element: <BoardingDetail />,
-            },
-          ],
-        },
-        {
-          path: "/lich-su-kham",
-          element: <Panel />,
-          children: [
-            {
-              path: "",
-              element: <MedicalAppointmentHistory />,
-            },
-          ],
-        },
-        {
-          path: "/lich-su-kham",
-          element: <Panel />,
-          children: [
-            {
-              path: "",
-              element: <MedicalAppointmentHistory />,
-            },
-            {
-              path: ":appointmentId",
-              element: <MedicalAppointmentHistoryDetail />,
-            },
-          ],
-        },
-        {
-          path: "/dich-vu-y-te",
-          element: <MedicalList />,
-        },
-        {
-          path: "/dich-vu-y-te/dat-dich-vu",
-          element: <MedicalBooking />,
         },
       ],
     },
