@@ -14,6 +14,7 @@ import {
   Checkbox,
   Divider,
   Image,
+  Modal,
 } from "antd";
 import {
   UserOutlined,
@@ -113,6 +114,22 @@ function BoardingHamster() {
 
   // Payment method state
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<'WALLET' | 'VNPAY' | 'PAYOS'>('VNPAY');
+
+  // Change date modal state
+  const [changeDateModalVisible, setChangeDateModalVisible] = useState(false);
+  const [tempDateRange, setTempDateRange] = useState<[Dayjs | null, Dayjs | null]>([null, null]);
+  const [modalAvailability, setModalAvailability] = useState<CageTypeAvailability[]>([]);
+  const [loadingModalAvailability, setLoadingModalAvailability] = useState(false);
+
+  // Change cage modal state
+  const [changeCageModalVisible, setChangeCageModalVisible] = useState(false);
+  const [tempSelectedCageId, setTempSelectedCageId] = useState<string | null>(null);
+  const [cageModalAvailability, setCageModalAvailability] = useState<CageTypeAvailability[]>([]);
+  const [loadingCageModalAvailability, setLoadingCageModalAvailability] = useState(false);
+
+  // Change hamster modal state
+  const [changeHamsterModalVisible, setChangeHamsterModalVisible] = useState(false);
+  const [tempSelectedHamsterId, setTempSelectedHamsterId] = useState<string | null>(null);
 
   useEffect(() => {
     document.title = "Đặt Phòng Hamster";
@@ -286,8 +303,8 @@ function BoardingHamster() {
 
   // Function to disable unavailable dates in the DatePicker
   const getDisabledDate = (current: Dayjs) => {
-    // Disable past dates
-    if (current && current < dayjs().startOf("day")) {
+    // Disable past dates and today - users must book at least 1 day in advance
+    if (current && current <= dayjs().startOf("day")) {
       return true;
     }
     
@@ -508,6 +525,379 @@ function BoardingHamster() {
     setCurrentStep(currentStep - 1);
   };
 
+  // Function to handle opening the change date modal
+  const handleOpenChangeDateModal = () => {
+    setTempDateRange(dateRange);
+    setChangeDateModalVisible(true);
+  };
+
+  // Function to handle date change in the modal
+  const handleModalDateChange = async (dates: [Dayjs | null, Dayjs | null] | null) => {
+    if (dates && dates[0] && dates[1]) {
+      // Check if the date range exceeds 1 month
+      const daysDifference = dates[1].diff(dates[0], "day");
+      if (daysDifference > 30) {
+        message.warning("Khoảng thời gian gửi hamster không được quá 30 ngày. Vui lòng chọn lại.");
+        return;
+      }
+      setTempDateRange(dates);
+      // Check availability for the currently selected cage type
+      await checkModalAvailability(dates[0], dates[1]);
+    } else {
+      setTempDateRange([null, null]);
+      setModalAvailability([]);
+    }
+  };
+
+  // Function to check availability in modal for the selected cage type
+  const checkModalAvailability = async (startDate: Dayjs, endDate: Dayjs) => {
+    if (!selectedCageId) return;
+    
+    setLoadingModalAvailability(true);
+    try {
+      const response = await boardingService.checkAvailability({
+        startDate: startDate.format("YYYY-MM-DD"),
+        endDate: endDate.format("YYYY-MM-DD"),
+      });
+      setModalAvailability(response);
+    } catch (error) {
+      console.error("Error checking availability:", error);
+      message.error("Không thể kiểm tra tình trạng chuồng. Vui lòng thử lại.");
+      setModalAvailability([]);
+    } finally {
+      setLoadingModalAvailability(false);
+    }
+  };
+
+  // Function to disable dates in the modal based on cage availability
+  const getModalDisabledDate = (current: Dayjs) => {
+    // Disable past dates and today - users must book at least 1 day in advance
+    if (current && current <= dayjs().startOf("day")) {
+      return true;
+    }
+    
+    // Disable dates beyond 1 month from today
+    if (current && current > dayjs().add(1, 'month')) {
+      return true;
+    }
+    
+    // If we have availability data and a date range is being selected
+    if (modalAvailability.length > 0 && selectedCageId && tempDateRange[0]) {
+      const selectedCageAvailability = modalAvailability.find(ca => ca.cageTypeId === selectedCageId);
+      if (selectedCageAvailability) {
+        const currentDateStr = current.format("YYYY-MM-DD");
+        const dayAvailability = selectedCageAvailability.dailyAvailability.find(da => da.date === currentDateStr);
+        // Disable dates where the selected cage type is not available
+        if (dayAvailability && !dayAvailability.isAvailable) {
+          return true;
+        }
+      }
+    }
+    
+    return false;
+  };
+
+  // Function to confirm the date change
+  const handleConfirmDateChange = async () => {
+    if (!tempDateRange[0] || !tempDateRange[1]) {
+      message.warning("Vui lòng chọn ngày gửi và nhận hamster");
+      return;
+    }
+
+    // Check if the selected cage type is available for the new date range
+    if (modalAvailability.length > 0 && selectedCageId) {
+      const selectedCageAvailability = modalAvailability.find(ca => ca.cageTypeId === selectedCageId);
+      if (selectedCageAvailability) {
+        const isFullyAvailable = selectedCageAvailability.dailyAvailability.every(day => day.isAvailable);
+        if (!isFullyAvailable) {
+          message.error("Loại chuồng đã chọn không có sẵn trong khoảng thời gian mới. Vui lòng chọn ngày khác.");
+          return;
+        }
+      }
+    }
+
+    // Update the main date range
+    setDateRange(tempDateRange);
+    
+    // Recalculate booking cost with new dates directly (avoid state timing issues)
+    if (selectedHamsterId && selectedCageId && membershipDetails) {
+      await calculateBookingCostWithDates(tempDateRange[0]!, tempDateRange[1]!);
+    }
+    
+    // Close the modal
+    setChangeDateModalVisible(false);
+    message.success("Đã cập nhật ngày đặt phòng thành công!");
+  };
+
+  // Function to calculate booking cost with specific dates (for modal date change)
+  const calculateBookingCostWithDates = async (startDate: Dayjs, endDate: Dayjs) => {
+    if (!selectedHamsterId || !selectedCageId || !membershipDetails) {
+      return;
+    }
+
+    setLoadingCostCalculation(true);
+    try {
+      const selectedCage = cageTypes.find(cage => cage.id === selectedCageId);
+      
+      if (!selectedCage) {
+        throw new Error("Selected cage type not found");
+      }
+
+      const dailyBreakdowns: DailyBreakdown[] = [];
+      let totalCageAmount = 0;
+      let totalServicesAmount = 0;
+      let totalHolidaySurcharge = 0;
+
+      // Calculate for each day in the date range (inclusive of both start and end date)
+      for (let current = startDate.clone(); current.isBefore(endDate) || current.isSame(endDate); current = current.add(1, 'day')) {
+        const dailyCagePrice = selectedCage.pricePerDay;
+        
+        // Calculate services price for this day
+        const dailyServicesPrice = selectedServiceIds.reduce((total, serviceId) => {
+          const service = additionalServices.find(s => s.id === serviceId);
+          // Remove commas from displayPrice before parsing
+          return total + (service ? parseFloat(service.displayPrice.replace(/,/g, "")) : 0);
+        }, 0);
+
+        // Check if it's a holiday (simplified - you may need to implement actual holiday checking)
+        const isHoliday = false; // You can implement holiday checking logic here
+        const holidayName = null;
+        const holidaySurcharge = isHoliday ? (dailyCagePrice + dailyServicesPrice) * 0.2 : 0;
+
+        // Calculate membership discount for this day
+        const dailySubtotal = dailyCagePrice + dailyServicesPrice + holidaySurcharge;
+        const membershipDiscount = dailySubtotal * (membershipDetails.discountPercent / 100);
+        const dailyTotal = dailySubtotal - membershipDiscount;
+
+        dailyBreakdowns.push({
+          date: current.format("YYYY-MM-DD"),
+          cagePrice: dailyCagePrice,
+          servicesPrice: dailyServicesPrice,
+          holidaySurcharge,
+          membershipDiscount,
+          dailyTotal,
+          isHoliday,
+          holidayName
+        });
+
+        totalCageAmount += dailyCagePrice;
+        totalServicesAmount += dailyServicesPrice;
+        totalHolidaySurcharge += holidaySurcharge;
+      }
+
+      const subtotal = totalCageAmount + totalServicesAmount + totalHolidaySurcharge;
+      const totalMembershipDiscount = subtotal * (membershipDetails.discountPercent / 100);
+      const totalAmount = subtotal - totalMembershipDiscount;
+
+      const calculatedCost: CalculatedBookingCost = {
+        totalCageAmount,
+        totalServicesAmount,
+        totalHolidaySurcharge,
+        totalMembershipDiscount,
+        membershipDiscountPercent: membershipDetails.discountPercent,
+        totalAmount,
+        dailyBreakdowns
+      };
+
+      setBookingCostData(calculatedCost);
+    } catch (error) {
+      console.error("Error calculating booking cost:", error);
+      message.error("Không thể tính toán chi phí đặt phòng. Vui lòng thử lại.");
+    } finally {
+      setLoadingCostCalculation(false);
+    }
+  };
+
+  // Function to cancel the date change
+  const handleCancelDateChange = () => {
+    setTempDateRange([null, null]);
+    setModalAvailability([]);
+    setChangeDateModalVisible(false);
+  };
+
+  // Function to handle opening the change cage modal
+  const handleOpenChangeCageModal = () => {
+    setTempSelectedCageId(selectedCageId);
+    setChangeCageModalVisible(true);
+    // Check availability for all cage types with current date range
+    if (dateRange[0] && dateRange[1]) {
+      checkCageModalAvailability(dateRange[0], dateRange[1]);
+    }
+  };
+
+  // Function to check availability for all cage types in cage modal
+  const checkCageModalAvailability = async (startDate: Dayjs, endDate: Dayjs) => {
+    setLoadingCageModalAvailability(true);
+    try {
+      const response = await boardingService.checkAvailability({
+        startDate: startDate.format("YYYY-MM-DD"),
+        endDate: endDate.format("YYYY-MM-DD"),
+      });
+      setCageModalAvailability(response);
+    } catch (error) {
+      console.error("Error checking availability:", error);
+      message.error("Không thể kiểm tra tình trạng chuồng. Vui lòng thử lại.");
+      setCageModalAvailability([]);
+    } finally {
+      setLoadingCageModalAvailability(false);
+    }
+  };
+
+  // Function to handle cage selection in modal
+  const handleSelectCageInModal = (cageId: string) => {
+    setTempSelectedCageId(cageId);
+  };
+
+  // Function to confirm cage change
+  const handleConfirmCageChange = async () => {
+    if (!tempSelectedCageId) {
+      message.warning("Vui lòng chọn loại chuồng");
+      return;
+    }
+
+    // Check if the selected cage type is available for current date range
+    if (cageModalAvailability.length > 0) {
+      const selectedCageAvailability = cageModalAvailability.find(ca => ca.cageTypeId === tempSelectedCageId);
+      if (selectedCageAvailability) {
+        const isFullyAvailable = selectedCageAvailability.dailyAvailability.every(day => day.isAvailable);
+        if (!isFullyAvailable) {
+          message.error("Loại chuồng đã chọn không có sẵn trong khoảng thời gian hiện tại. Vui lòng chọn loại chuồng khác.");
+          return;
+        }
+      }
+    }
+
+    // Update the selected cage
+    setSelectedCageId(tempSelectedCageId);
+    
+    // Recalculate booking cost with new cage type
+    if (selectedHamsterId && dateRange[0] && dateRange[1] && membershipDetails) {
+      await calculateBookingCostWithCage(tempSelectedCageId);
+    }
+    
+    // Close the modal
+    setChangeCageModalVisible(false);
+    message.success("Đã cập nhật loại chuồng thành công!");
+  };
+
+  // Function to calculate booking cost with specific cage type (for modal cage change)
+  const calculateBookingCostWithCage = async (cageId: string) => {
+    if (!selectedHamsterId || !dateRange[0] || !dateRange[1] || !membershipDetails) {
+      return;
+    }
+
+    setLoadingCostCalculation(true);
+    try {
+      const selectedCage = cageTypes.find(cage => cage.id === cageId);
+      
+      if (!selectedCage) {
+        throw new Error("Selected cage type not found");
+      }
+
+      const dailyBreakdowns: DailyBreakdown[] = [];
+      let totalCageAmount = 0;
+      let totalServicesAmount = 0;
+      let totalHolidaySurcharge = 0;
+
+      // Calculate for each day in the date range (inclusive of both start and end date)
+      for (let current = dateRange[0].clone(); current.isBefore(dateRange[1]) || current.isSame(dateRange[1]); current = current.add(1, 'day')) {
+        const dailyCagePrice = selectedCage.pricePerDay;
+        
+        // Calculate services price for this day
+        const dailyServicesPrice = selectedServiceIds.reduce((total, serviceId) => {
+          const service = additionalServices.find(s => s.id === serviceId);
+          // Remove commas from displayPrice before parsing
+          return total + (service ? parseFloat(service.displayPrice.replace(/,/g, "")) : 0);
+        }, 0);
+
+        // Check if it's a holiday (simplified - you may need to implement actual holiday checking)
+        const isHoliday = false; // You can implement holiday checking logic here
+        const holidayName = null;
+        const holidaySurcharge = isHoliday ? (dailyCagePrice + dailyServicesPrice) * 0.2 : 0;
+
+        // Calculate membership discount for this day
+        const dailySubtotal = dailyCagePrice + dailyServicesPrice + holidaySurcharge;
+        const membershipDiscount = dailySubtotal * (membershipDetails.discountPercent / 100);
+        const dailyTotal = dailySubtotal - membershipDiscount;
+
+        dailyBreakdowns.push({
+          date: current.format("YYYY-MM-DD"),
+          cagePrice: dailyCagePrice,
+          servicesPrice: dailyServicesPrice,
+          holidaySurcharge,
+          membershipDiscount,
+          dailyTotal,
+          isHoliday,
+          holidayName
+        });
+
+        totalCageAmount += dailyCagePrice;
+        totalServicesAmount += dailyServicesPrice;
+        totalHolidaySurcharge += holidaySurcharge;
+      }
+
+      const subtotal = totalCageAmount + totalServicesAmount + totalHolidaySurcharge;
+      const totalMembershipDiscount = subtotal * (membershipDetails.discountPercent / 100);
+      const totalAmount = subtotal - totalMembershipDiscount;
+
+      const calculatedCost: CalculatedBookingCost = {
+        totalCageAmount,
+        totalServicesAmount,
+        totalHolidaySurcharge,
+        totalMembershipDiscount,
+        membershipDiscountPercent: membershipDetails.discountPercent,
+        totalAmount,
+        dailyBreakdowns
+      };
+
+      setBookingCostData(calculatedCost);
+    } catch (error) {
+      console.error("Error calculating booking cost:", error);
+      message.error("Không thể tính toán chi phí đặt phòng. Vui lòng thử lại.");
+    } finally {
+      setLoadingCostCalculation(false);
+    }
+  };
+
+  // Function to cancel cage change
+  const handleCancelCageChange = () => {
+    setTempSelectedCageId(null);
+    setCageModalAvailability([]);
+    setChangeCageModalVisible(false);
+  };
+
+  // Function to handle opening the change hamster modal
+  const handleOpenChangeHamsterModal = () => {
+    setTempSelectedHamsterId(selectedHamsterId);
+    setChangeHamsterModalVisible(true);
+  };
+
+  // Function to handle hamster selection in modal
+  const handleSelectHamsterInModal = (hamsterId: string) => {
+    setTempSelectedHamsterId(hamsterId);
+  };
+
+  // Function to confirm hamster change
+  const handleConfirmHamsterChange = () => {
+    if (!tempSelectedHamsterId) {
+      message.warning("Vui lòng chọn hamster");
+      return;
+    }
+
+    // Update the selected hamster
+    setSelectedHamsterId(tempSelectedHamsterId);
+    
+    // Close the modal
+    setChangeHamsterModalVisible(false);
+    message.success("Đã cập nhật hamster thành công!");
+  };
+
+  // Function to cancel hamster change
+  const handleCancelHamsterChange = () => {
+    setTempSelectedHamsterId(null);
+    setChangeHamsterModalVisible(false);
+  };
+
   const steps = [
     {
       title: "Chọn Hamster",
@@ -709,7 +1099,7 @@ function BoardingHamster() {
               <Card style={{ marginBottom: 32, borderRadius: 12 }}>
                 
                 <Alert
-                  message="Bạn chỉ có thể đặt phòng trong vòng 1 tháng tới và thời gian gửi hamster tối đa là 30 ngày."
+                  message="Bạn chỉ có thể đặt trong vòng 1 tháng tới và thời gian gửi hamster tối đa là 30 ngày."
                   type="info"
                   showIcon
                   style={{ marginBottom: 16 }}
@@ -1081,9 +1471,23 @@ function BoardingHamster() {
                   {selectedHamster && (
                     <Card
                       title={
-                        <span style={{ color: "#ff6f61", fontSize: 18, fontWeight: 600 }}>
-                          🐹 Thông Tin Hamster
-                        </span>
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                          <span style={{ color: "#ff6f61", fontSize: 18, fontWeight: 600 }}>
+                            🐹 Thông Tin Hamster
+                          </span>
+                          <Button
+                            type="link"
+                            onClick={handleOpenChangeHamsterModal}
+                            style={{ 
+                              color: "#ff6f61", 
+                              fontWeight: 600,
+                              padding: "4px 8px",
+                              height: "auto"
+                            }}
+                          >
+                            Thay đổi
+                          </Button>
+                        </div>
                       }
                       style={{ marginBottom: 24, borderRadius: 12 }}
                     >
@@ -1416,7 +1820,21 @@ function BoardingHamster() {
                     <div className="service-details">
                       {/* Booking Dates */}
                       <div style={{ marginBottom: 20 }}>
-                        <h4 style={{ color: "#ff6f61", marginBottom: 12 }}>📅 Thời gian:</h4>
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+                          <h4 style={{ color: "#ff6f61", margin: 0 }}>📅 Thời gian:</h4>
+                          <Button
+                            type="link"
+                            onClick={handleOpenChangeDateModal}
+                            style={{ 
+                              color: "#ff6f61", 
+                              fontWeight: 600,
+                              padding: "4px 8px",
+                              height: "auto"
+                            }}
+                          >
+                            Thay đổi
+                          </Button>
+                        </div>
                         <p style={{ marginBottom: 4 }}>
                           <strong>Ngày gửi:</strong> {dateRange[0]?.format("DD-MM-YYYY")}
                         </p>
@@ -1433,7 +1851,21 @@ function BoardingHamster() {
                       {/* Cage Type with Image */}
                       {selectedCage && (
                         <div style={{ marginBottom: 20 }}>
-                          <h4 style={{ color: "#ff6f61", marginBottom: 12 }}>🏠 Loại chuồng:</h4>
+                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+                            <h4 style={{ color: "#ff6f61", margin: 0 }}>🏠 Loại chuồng:</h4>
+                            <Button
+                              type="link"
+                              onClick={handleOpenChangeCageModal}
+                              style={{ 
+                                color: "#ff6f61", 
+                                fontWeight: 600,
+                                padding: "4px 8px",
+                                height: "auto"
+                              }}
+                            >
+                              Thay đổi
+                            </Button>
+                          </div>
                           <div style={{ display: "flex", gap: 12, alignItems: "flex-start" }}>
                             <Image
                               src={selectedCage.image}
@@ -1644,6 +2076,416 @@ function BoardingHamster() {
           </div>
         )}
       </Drawer>
+
+      {/* Change Date Modal */}
+      <Modal
+        title={
+          <span style={{ color: "#ff6f61", fontSize: 18, fontWeight: 600 }}>
+            📅 Thay đổi ngày đặt phòng
+          </span>
+        }
+        open={changeDateModalVisible}
+        onCancel={handleCancelDateChange}
+        footer={[
+          <Button key="cancel" onClick={handleCancelDateChange}>
+            Hủy
+          </Button>,
+          <Button
+            key="confirm"
+            type="primary"
+            onClick={handleConfirmDateChange}
+            disabled={!tempDateRange[0] || !tempDateRange[1] || loadingModalAvailability}
+            style={{
+              background: "linear-gradient(45deg, #ff6f61, #ffcc5c)",
+              border: "none",
+            }}
+          >
+            Xác nhận
+          </Button>,
+        ]}
+        width={600}
+      >
+        <div style={{ padding: "16px 0" }}>
+          {/* <Alert
+            message="Chỉ có thể chọn ngày có sẵn cho loại chuồng đã chọn"
+            description={selectedCage ? `Loại chuồng: ${selectedCage.typeName}` : ""}
+            type="info"
+            showIcon
+            style={{ marginBottom: 24 }}
+          /> */}
+          
+          <div style={{ marginBottom: 16 }}>
+            <label style={{ display: "block", marginBottom: 8, fontWeight: 600, color: "#333" }}>
+              Chọn ngày gửi và nhận mới:
+            </label>
+            <RangePicker
+              style={{ width: "100%", borderRadius: 8 }}
+              format="DD-MM-YYYY"
+              placeholder={["Ngày gửi", "Ngày nhận"]}
+              onChange={handleModalDateChange}
+              disabledDate={getModalDisabledDate}
+              value={tempDateRange}
+              size="large"
+            />
+          </div>
+
+          {tempDateRange[0] && tempDateRange[1] && (
+            <div style={{ 
+              background: "#f6ffed",
+              border: "1px solid #b7eb8f",
+              borderRadius: 8,
+              padding: 16,
+              marginTop: 16
+            }}>
+              <h4 style={{ color: "#52c41a", margin: "0 0 8px 0" }}>📊 Thông tin mới:</h4>
+              <p style={{ margin: "4px 0" }}>
+                <strong>Ngày gửi:</strong> {tempDateRange[0].format("DD-MM-YYYY")}
+              </p>
+              <p style={{ margin: "4px 0" }}>
+                <strong>Ngày nhận:</strong> {tempDateRange[1].format("DD-MM-YYYY")}
+              </p>
+              <p style={{ margin: "4px 0" }}>
+                <strong>Tổng số ngày:</strong> {tempDateRange[1].diff(tempDateRange[0], "day") + 1} ngày
+              </p>
+              
+              {loadingModalAvailability && (
+                <div style={{ textAlign: "center", marginTop: 12 }}>
+                  <Spin size="small" /> <span style={{ marginLeft: 8, color: "#666" }}>Đang kiểm tra tình trạng...</span>
+                </div>
+              )}
+              
+              {modalAvailability.length > 0 && selectedCageId && (
+                <div style={{ marginTop: 12 }}>
+                  {(() => {
+                    const selectedCageAvailability = modalAvailability.find(ca => ca.cageTypeId === selectedCageId);
+                    if (selectedCageAvailability) {
+                      const isFullyAvailable = selectedCageAvailability.dailyAvailability.every(day => day.isAvailable);
+                      return (
+                        <p style={{ 
+                          margin: "4px 0", 
+                          color: isFullyAvailable ? "#52c41a" : "#ff4d4f",
+                          fontWeight: 600
+                        }}>
+                          <strong>Tình trạng:</strong> {isFullyAvailable ? "✅ Có sẵn" : "❌ Không có sẵn"}
+                        </p>
+                      );
+                    }
+                    return null;
+                  })()} 
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      </Modal>
+
+      {/* Change Cage Modal */}
+      <Modal
+        title={
+          <span style={{ color: "#ff6f61", fontSize: 18, fontWeight: 600 }}>
+            🏠 Thay đổi loại chuồng
+          </span>
+        }
+        open={changeCageModalVisible}
+        onCancel={handleCancelCageChange}
+        footer={[
+          <Button key="cancel" onClick={handleCancelCageChange}>
+            Hủy
+          </Button>,
+          <Button
+            key="confirm"
+            type="primary"
+            onClick={handleConfirmCageChange}
+            disabled={!tempSelectedCageId || loadingCageModalAvailability}
+            style={{
+              background: "linear-gradient(45deg, #ff6f61, #ffcc5c)",
+              border: "none",
+            }}
+          >
+            Xác nhận
+          </Button>,
+        ]}
+        width={1000}
+      >
+        <div style={{ padding: "16px 0" }}>
+          <Alert
+            message={ dateRange[0] && dateRange[1] ? `Hiển thị các loại chường có sẵn từ ${dateRange[0].format("DD/MM/YYYY")} đến ${dateRange[1].format("DD/MM/YYYY")}` : ""}
+            type="info"
+            showIcon
+            style={{ marginBottom: 24 }}
+          />
+          
+          <Spin spinning={loadingCageModalAvailability} tip="Đang kiểm tra tình trạng chuồng...">
+            {cageModalAvailability.length > 0 ? (
+              <Row gutter={[16, 16]}>
+                {cageModalAvailability.map((cageAvailability) => {
+                  const cageType = cageTypes.find(c => c.id === cageAvailability.cageTypeId);
+                  if (!cageType) return null;
+
+                  // Check if this cage type is available for all selected dates
+                  const isFullyAvailable = cageAvailability.dailyAvailability.every(day => day.isAvailable);
+                  
+                  // Don't show unavailable cages in the modal
+                  if (!isFullyAvailable) return null;
+
+                  return (
+                    <Col xs={24} sm={12} key={cageAvailability.cageTypeId}>
+                      <Card
+                        className={`cage__card ${tempSelectedCageId === cageAvailability.cageTypeId ? "selected" : ""}`}
+                        style={{
+                          marginBottom: 16,
+                          borderRadius: 12,
+                          border: tempSelectedCageId === cageAvailability.cageTypeId
+                            ? "3px solid #ff6f61"
+                            : "1px solid #f0f0f0",
+                          cursor: "pointer",
+                          position: "relative",
+                          height: "100%"
+                        }}
+                        hoverable
+                        onClick={() => handleSelectCageInModal(cageAvailability.cageTypeId)}
+                      >
+                        <Row gutter={[12, 12]} align="middle">
+                          {/* Cage Image */}
+                          <Col xs={24} sm={10}>
+                            <div style={{ textAlign: "center" }}>
+                              {cageType.image ? (
+                                <img
+                                  src={cageType.image}
+                                  alt={cageAvailability.typeName}
+                                  style={{
+                                    width: "100%",
+                                    maxWidth: 100,
+                                    height: 80,
+                                    objectFit: "cover",
+                                    borderRadius: 8,
+                                    border: "1px solid #f0f0f0"
+                                  }}
+                                />
+                              ) : (
+                                <div style={{
+                                  width: "100%",
+                                  maxWidth: 100,
+                                  height: 80,
+                                  display: "flex",
+                                  alignItems: "center",
+                                  justifyContent: "center",
+                                  background: "#f5f5f5",
+                                  borderRadius: 8,
+                                  border: "1px solid #f0f0f0"
+                                }}>
+                                  <HomeOutlined style={{ fontSize: 24, color: "#ccc" }} />
+                                </div>
+                              )}
+                            </div>
+                          </Col>
+
+                          {/* Cage Info */}
+                          <Col xs={24} sm={14}>
+                            <div>
+                              <h4 style={{ 
+                                fontSize: 16, 
+                                fontWeight: 700, 
+                                color: "#ff6f61", 
+                                marginBottom: 6 
+                              }}>
+                                {cageAvailability.typeName}
+                              </h4>
+                              <p style={{ fontSize: 12, color: "#666", marginBottom: 4 }}>
+                                {cageType.description}
+                              </p>
+                              <p style={{ fontSize: 12, color: "#666", marginBottom: 4 }}>
+                                <strong>Kích thước:</strong> {cageType.size}
+                              </p>
+                              <p style={{ fontSize: 14, fontWeight: 600, color: "#333", margin: "4px 0" }}>
+                                {cageType.pricePerDay.toLocaleString("vi-VN")} đ/ngày
+                              </p>
+                              
+                              {/* Availability status */}
+                              <div style={{ 
+                                marginTop: 6,
+                                padding: "2px 6px",
+                                background: "#f6ffed",
+                                border: "1px solid #b7eb8f",
+                                borderRadius: 4,
+                                display: "inline-block"
+                              }}>
+                                <span style={{ 
+                                  fontSize: 11, 
+                                  color: "#52c41a", 
+                                  fontWeight: 600 
+                                }}>
+                                  ✅ Có sẵn
+                                </span>
+                              </div>
+                            </div>
+                          </Col>
+                        </Row>
+
+                        {tempSelectedCageId === cageAvailability.cageTypeId && (
+                          <div style={{
+                            position: "absolute",
+                            top: 8,
+                            right: 8,
+                            background: "#ff6f61",
+                            color: "white",
+                            borderRadius: "50%",
+                            width: 20,
+                            height: 20,
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            fontSize: 10,
+                            fontWeight: "bold",
+                            boxShadow: "0 2px 4px rgba(255, 111, 97, 0.4)",
+                          }}>
+                            ✓
+                          </div>
+                        )}
+                      </Card>
+                    </Col>
+                  );
+                })}
+              </Row>
+            ) : (
+              <div style={{ textAlign: "center", padding: "40px 0", color: "#999" }}>
+                <HomeOutlined style={{ fontSize: 48, marginBottom: 16 }} />
+                <p style={{ fontSize: 16 }}>Đang tải danh sách loại chuồng...</p>
+              </div>
+            )}
+          </Spin>
+        </div>
+      </Modal>
+
+      {/* Change Hamster Modal */}
+      <Modal
+        title={
+          <span style={{ color: "#ff6f61", fontSize: 18, fontWeight: 600 }}>
+            🐹 Thay đổi hamster
+          </span>
+        }
+        open={changeHamsterModalVisible}
+        onCancel={handleCancelHamsterChange}
+        footer={[
+          <Button key="cancel" onClick={handleCancelHamsterChange}>
+            Hủy
+          </Button>,
+          <Button
+            key="confirm"
+            type="primary"
+            onClick={handleConfirmHamsterChange}
+            disabled={!tempSelectedHamsterId}
+            style={{
+              background: "linear-gradient(45deg, #ff6f61, #ffcc5c)",
+              border: "none",
+            }}
+          >
+            Xác nhận
+          </Button>,
+        ]}
+        width={1100}
+      >
+        <div style={{ padding: "16px 0" }}>    
+          <Row gutter={[16, 16]}>
+            {profiles.map((hamster) => (
+              <Col xs={24} sm={12} md={8} key={hamster.id}>
+                <Card
+                  hoverable
+                  className={`hamster__card-compact ${
+                    tempSelectedHamsterId === hamster.id ? "selected" : ""
+                  }`}
+                  onClick={() => handleSelectHamsterInModal(hamster.id)}
+                  style={{
+                    border:
+                      tempSelectedHamsterId === hamster.id
+                        ? "3px solid #ff6f61"
+                        : "2px solid #f0f0f0",
+                    cursor: "pointer",
+                    position: "relative",
+                    borderRadius: 12,
+                  }}
+                  bodyStyle={{ padding: 0 }}
+                >
+                  <div style={{ display: "flex", height: "100%" }}>
+                    {/* Left Column - Image */}
+                    <div style={{ width: 120, flexShrink: 0 }}>
+                      <img
+                        src={hamster.profilePicture}
+                        alt={hamster.name}
+                        style={{
+                          width: "100%",
+                          height: "100%",
+                          objectFit: "cover",
+                          borderRadius: "10px 0 0 10px",
+                        }}
+                      />
+                    </div>
+
+                    {/* Right Column - Information */}
+                    <div style={{ flex: 1, padding: 12, minWidth: 0 }}>
+                      <h4
+                        style={{
+                          fontSize: 14,
+                          fontWeight: 700,
+                          color: "#ff6f61",
+                          margin: "0 0 6px 0",
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                          whiteSpace: "nowrap",
+                        }}
+                      >
+                        {hamster.name}
+                      </h4>
+                      <div className="hamster__info-compact">
+                        <p style={{ fontSize: 12, margin: "2px 0" }}>
+                          <span className="label">Loài:</span>
+                          <span className="value">{hamster.species}</span>
+                        </p>
+                        <p style={{ fontSize: 12, margin: "2px 0" }}>
+                          <span className="label">Màu:</span>
+                          <span className="value">{hamster.color}</span>
+                        </p>
+                        <p style={{ fontSize: 12, margin: "2px 0" }}>
+                          <span className="label">Giới tính:</span>
+                          <span className="value">{hamster.gender === "Male" ? "Đực" : "Cái"}</span>
+                        </p>
+                        <p style={{ fontSize: 12, margin: "2px 0" }}>
+                          <span className="label">Cân nặng:</span>
+                          <span className="value">{hamster.weight}g</span>
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Selection indicator */}
+                    {tempSelectedHamsterId === hamster.id && (
+                      <div
+                        style={{
+                          position: "absolute",
+                          top: 8,
+                          right: 8,
+                          background: "#ff6f61",
+                          color: "white",
+                          borderRadius: "50%",
+                          width: 24,
+                          height: 24,
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          fontSize: 12,
+                          fontWeight: "bold",
+                          boxShadow: "0 2px 4px rgba(0,0,0,0.2)",
+                        }}
+                      >
+                        ✓
+                      </div>
+                    )}
+                  </div>
+                </Card>
+              </Col>
+            ))}
+          </Row>
+        </div>
+      </Modal>
     </div>
   );
 }
