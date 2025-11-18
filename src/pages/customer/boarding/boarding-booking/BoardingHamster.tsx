@@ -127,6 +127,10 @@ function BoardingHamster() {
   const [cageModalAvailability, setCageModalAvailability] = useState<CageTypeAvailability[]>([]);
   const [loadingCageModalAvailability, setLoadingCageModalAvailability] = useState(false);
 
+  // Change hamster modal state
+  const [changeHamsterModalVisible, setChangeHamsterModalVisible] = useState(false);
+  const [tempSelectedHamsterId, setTempSelectedHamsterId] = useState<string | null>(null);
+
   useEffect(() => {
     document.title = "Đặt Phòng Hamster";
     fetchProfiles();
@@ -862,6 +866,38 @@ function BoardingHamster() {
     setChangeCageModalVisible(false);
   };
 
+  // Function to handle opening the change hamster modal
+  const handleOpenChangeHamsterModal = () => {
+    setTempSelectedHamsterId(selectedHamsterId);
+    setChangeHamsterModalVisible(true);
+  };
+
+  // Function to handle hamster selection in modal
+  const handleSelectHamsterInModal = (hamsterId: string) => {
+    setTempSelectedHamsterId(hamsterId);
+  };
+
+  // Function to confirm hamster change
+  const handleConfirmHamsterChange = () => {
+    if (!tempSelectedHamsterId) {
+      message.warning("Vui lòng chọn hamster");
+      return;
+    }
+
+    // Update the selected hamster
+    setSelectedHamsterId(tempSelectedHamsterId);
+    
+    // Close the modal
+    setChangeHamsterModalVisible(false);
+    message.success("Đã cập nhật hamster thành công!");
+  };
+
+  // Function to cancel hamster change
+  const handleCancelHamsterChange = () => {
+    setTempSelectedHamsterId(null);
+    setChangeHamsterModalVisible(false);
+  };
+
   const steps = [
     {
       title: "Chọn Hamster",
@@ -1063,7 +1099,7 @@ function BoardingHamster() {
               <Card style={{ marginBottom: 32, borderRadius: 12 }}>
                 
                 <Alert
-                  message="Bạn chỉ có thể đặt phòng trong vòng 1 tháng tới và thời gian gửi hamster tối đa là 30 ngày."
+                  message="Bạn chỉ có thể đặt trong vòng 1 tháng tới và thời gian gửi hamster tối đa là 30 ngày."
                   type="info"
                   showIcon
                   style={{ marginBottom: 16 }}
@@ -1435,9 +1471,23 @@ function BoardingHamster() {
                   {selectedHamster && (
                     <Card
                       title={
-                        <span style={{ color: "#ff6f61", fontSize: 18, fontWeight: 600 }}>
-                          🐹 Thông Tin Hamster
-                        </span>
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                          <span style={{ color: "#ff6f61", fontSize: 18, fontWeight: 600 }}>
+                            🐹 Thông Tin Hamster
+                          </span>
+                          <Button
+                            type="link"
+                            onClick={handleOpenChangeHamsterModal}
+                            style={{ 
+                              color: "#ff6f61", 
+                              fontWeight: 600,
+                              padding: "4px 8px",
+                              height: "auto"
+                            }}
+                          >
+                            Thay đổi
+                          </Button>
+                        </div>
                       }
                       style={{ marginBottom: 24, borderRadius: 12 }}
                     >
@@ -2056,13 +2106,13 @@ function BoardingHamster() {
         width={600}
       >
         <div style={{ padding: "16px 0" }}>
-          <Alert
+          {/* <Alert
             message="Chỉ có thể chọn ngày có sẵn cho loại chuồng đã chọn"
             description={selectedCage ? `Loại chuồng: ${selectedCage.typeName}` : ""}
             type="info"
             showIcon
             style={{ marginBottom: 24 }}
-          />
+          /> */}
           
           <div style={{ marginBottom: 16 }}>
             <label style={{ display: "block", marginBottom: 8, fontWeight: 600, color: "#333" }}>
@@ -2155,12 +2205,11 @@ function BoardingHamster() {
             Xác nhận
           </Button>,
         ]}
-        width={800}
+        width={1000}
       >
         <div style={{ padding: "16px 0" }}>
           <Alert
-            message="Chỉ hiển thị các loại chuồng có sẵn cho khoảng thời gian đã chọn"
-            description={dateRange[0] && dateRange[1] ? `Từ ${dateRange[0].format("DD/MM/YYYY")} đến ${dateRange[1].format("DD/MM/YYYY")}` : ""}
+            message={ dateRange[0] && dateRange[1] ? `Hiển thị các loại chường có sẵn từ ${dateRange[0].format("DD/MM/YYYY")} đến ${dateRange[1].format("DD/MM/YYYY")}` : ""}
             type="info"
             showIcon
             style={{ marginBottom: 24 }}
@@ -2168,7 +2217,7 @@ function BoardingHamster() {
           
           <Spin spinning={loadingCageModalAvailability} tip="Đang kiểm tra tình trạng chuồng...">
             {cageModalAvailability.length > 0 ? (
-              <div>
+              <Row gutter={[16, 16]}>
                 {cageModalAvailability.map((cageAvailability) => {
                   const cageType = cageTypes.find(c => c.id === cageAvailability.cageTypeId);
                   if (!cageType) return null;
@@ -2180,103 +2229,240 @@ function BoardingHamster() {
                   if (!isFullyAvailable) return null;
 
                   return (
-                    <Card
-                      key={cageAvailability.cageTypeId}
-                      className={`cage__card ${tempSelectedCageId === cageAvailability.cageTypeId ? "selected" : ""}`}
-                      style={{
-                        marginBottom: 16,
-                        borderRadius: 12,
-                        border: tempSelectedCageId === cageAvailability.cageTypeId
-                          ? "3px solid #ff6f61"
-                          : "1px solid #f0f0f0",
-                        cursor: "pointer",
-                        position: "relative"
-                      }}
-                      hoverable
-                      onClick={() => handleSelectCageInModal(cageAvailability.cageTypeId)}
-                    >
-                      <Row gutter={[16, 16]} align="middle">
-                        {/* Cage Image */}
-                        <Col xs={24} sm={8} md={6}>
-                          <div style={{ textAlign: "center" }}>
-                            {cageType.image ? (
-                              <img
-                                src={cageType.image}
-                                alt={cageAvailability.typeName}
-                                style={{
+                    <Col xs={24} sm={12} key={cageAvailability.cageTypeId}>
+                      <Card
+                        className={`cage__card ${tempSelectedCageId === cageAvailability.cageTypeId ? "selected" : ""}`}
+                        style={{
+                          marginBottom: 16,
+                          borderRadius: 12,
+                          border: tempSelectedCageId === cageAvailability.cageTypeId
+                            ? "3px solid #ff6f61"
+                            : "1px solid #f0f0f0",
+                          cursor: "pointer",
+                          position: "relative",
+                          height: "100%"
+                        }}
+                        hoverable
+                        onClick={() => handleSelectCageInModal(cageAvailability.cageTypeId)}
+                      >
+                        <Row gutter={[12, 12]} align="middle">
+                          {/* Cage Image */}
+                          <Col xs={24} sm={10}>
+                            <div style={{ textAlign: "center" }}>
+                              {cageType.image ? (
+                                <img
+                                  src={cageType.image}
+                                  alt={cageAvailability.typeName}
+                                  style={{
+                                    width: "100%",
+                                    maxWidth: 100,
+                                    height: 80,
+                                    objectFit: "cover",
+                                    borderRadius: 8,
+                                    border: "1px solid #f0f0f0"
+                                  }}
+                                />
+                              ) : (
+                                <div style={{
                                   width: "100%",
-                                  maxWidth: 120,
-                                  height: 100,
-                                  objectFit: "cover",
+                                  maxWidth: 100,
+                                  height: 80,
+                                  display: "flex",
+                                  alignItems: "center",
+                                  justifyContent: "center",
+                                  background: "#f5f5f5",
                                   borderRadius: 8,
                                   border: "1px solid #f0f0f0"
-                                }}
-                              />
-                            ) : (
-                              <div style={{
-                                width: "100%",
-                                maxWidth: 120,
-                                height: 100,
-                                display: "flex",
-                                alignItems: "center",
-                                justifyContent: "center",
-                                background: "#f5f5f5",
-                                borderRadius: 8,
-                                border: "1px solid #f0f0f0"
-                              }}>
-                                <HomeOutlined style={{ fontSize: 32, color: "#ccc" }} />
-                              </div>
-                            )}
-                          </div>
-                        </Col>
-
-                        {/* Cage Info */}
-                        <Col xs={24} sm={16} md={18}>
-                          <div>
-                            <h4 style={{ 
-                              fontSize: 18, 
-                              fontWeight: 700, 
-                              color: "#ff6f61", 
-                              marginBottom: 8 
-                            }}>
-                              {cageAvailability.typeName}
-                            </h4>
-                            <p style={{ fontSize: 13, color: "#666", marginBottom: 6 }}>
-                              {cageType.description}
-                            </p>
-                            <p style={{ fontSize: 13, color: "#666", marginBottom: 6 }}>
-                              <strong>Kích thước:</strong> {cageType.size}
-                            </p>
-                            <p style={{ fontSize: 16, fontWeight: 600, color: "#333", margin: 0 }}>
-                              {cageType.pricePerDay.toLocaleString("vi-VN")} đ/ngày
-                            </p>
-                            
-                            {/* Availability status */}
-                            <div style={{ 
-                              marginTop: 8,
-                              padding: "4px 8px",
-                              background: "#f6ffed",
-                              border: "1px solid #b7eb8f",
-                              borderRadius: 4,
-                              display: "inline-block"
-                            }}>
-                              <span style={{ 
-                                fontSize: 12, 
-                                color: "#52c41a", 
-                                fontWeight: 600 
-                              }}>
-                                ✅ Có sẵn
-                              </span>
+                                }}>
+                                  <HomeOutlined style={{ fontSize: 24, color: "#ccc" }} />
+                                </div>
+                              )}
                             </div>
-                          </div>
-                        </Col>
-                      </Row>
+                          </Col>
 
-                      {tempSelectedCageId === cageAvailability.cageTypeId && (
-                        <div style={{
+                          {/* Cage Info */}
+                          <Col xs={24} sm={14}>
+                            <div>
+                              <h4 style={{ 
+                                fontSize: 16, 
+                                fontWeight: 700, 
+                                color: "#ff6f61", 
+                                marginBottom: 6 
+                              }}>
+                                {cageAvailability.typeName}
+                              </h4>
+                              <p style={{ fontSize: 12, color: "#666", marginBottom: 4 }}>
+                                {cageType.description}
+                              </p>
+                              <p style={{ fontSize: 12, color: "#666", marginBottom: 4 }}>
+                                <strong>Kích thước:</strong> {cageType.size}
+                              </p>
+                              <p style={{ fontSize: 14, fontWeight: 600, color: "#333", margin: "4px 0" }}>
+                                {cageType.pricePerDay.toLocaleString("vi-VN")} đ/ngày
+                              </p>
+                              
+                              {/* Availability status */}
+                              <div style={{ 
+                                marginTop: 6,
+                                padding: "2px 6px",
+                                background: "#f6ffed",
+                                border: "1px solid #b7eb8f",
+                                borderRadius: 4,
+                                display: "inline-block"
+                              }}>
+                                <span style={{ 
+                                  fontSize: 11, 
+                                  color: "#52c41a", 
+                                  fontWeight: 600 
+                                }}>
+                                  ✅ Có sẵn
+                                </span>
+                              </div>
+                            </div>
+                          </Col>
+                        </Row>
+
+                        {tempSelectedCageId === cageAvailability.cageTypeId && (
+                          <div style={{
+                            position: "absolute",
+                            top: 8,
+                            right: 8,
+                            background: "#ff6f61",
+                            color: "white",
+                            borderRadius: "50%",
+                            width: 20,
+                            height: 20,
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            fontSize: 10,
+                            fontWeight: "bold",
+                            boxShadow: "0 2px 4px rgba(255, 111, 97, 0.4)",
+                          }}>
+                            ✓
+                          </div>
+                        )}
+                      </Card>
+                    </Col>
+                  );
+                })}
+              </Row>
+            ) : (
+              <div style={{ textAlign: "center", padding: "40px 0", color: "#999" }}>
+                <HomeOutlined style={{ fontSize: 48, marginBottom: 16 }} />
+                <p style={{ fontSize: 16 }}>Đang tải danh sách loại chuồng...</p>
+              </div>
+            )}
+          </Spin>
+        </div>
+      </Modal>
+
+      {/* Change Hamster Modal */}
+      <Modal
+        title={
+          <span style={{ color: "#ff6f61", fontSize: 18, fontWeight: 600 }}>
+            🐹 Thay đổi hamster
+          </span>
+        }
+        open={changeHamsterModalVisible}
+        onCancel={handleCancelHamsterChange}
+        footer={[
+          <Button key="cancel" onClick={handleCancelHamsterChange}>
+            Hủy
+          </Button>,
+          <Button
+            key="confirm"
+            type="primary"
+            onClick={handleConfirmHamsterChange}
+            disabled={!tempSelectedHamsterId}
+            style={{
+              background: "linear-gradient(45deg, #ff6f61, #ffcc5c)",
+              border: "none",
+            }}
+          >
+            Xác nhận
+          </Button>,
+        ]}
+        width={1100}
+      >
+        <div style={{ padding: "16px 0" }}>    
+          <Row gutter={[16, 16]}>
+            {profiles.map((hamster) => (
+              <Col xs={24} sm={12} md={8} key={hamster.id}>
+                <Card
+                  hoverable
+                  className={`hamster__card-compact ${
+                    tempSelectedHamsterId === hamster.id ? "selected" : ""
+                  }`}
+                  onClick={() => handleSelectHamsterInModal(hamster.id)}
+                  style={{
+                    border:
+                      tempSelectedHamsterId === hamster.id
+                        ? "3px solid #ff6f61"
+                        : "2px solid #f0f0f0",
+                    cursor: "pointer",
+                    position: "relative",
+                    borderRadius: 12,
+                  }}
+                  bodyStyle={{ padding: 0 }}
+                >
+                  <div style={{ display: "flex", height: "100%" }}>
+                    {/* Left Column - Image */}
+                    <div style={{ width: 120, flexShrink: 0 }}>
+                      <img
+                        src={hamster.profilePicture}
+                        alt={hamster.name}
+                        style={{
+                          width: "100%",
+                          height: "100%",
+                          objectFit: "cover",
+                          borderRadius: "10px 0 0 10px",
+                        }}
+                      />
+                    </div>
+
+                    {/* Right Column - Information */}
+                    <div style={{ flex: 1, padding: 12, minWidth: 0 }}>
+                      <h4
+                        style={{
+                          fontSize: 14,
+                          fontWeight: 700,
+                          color: "#ff6f61",
+                          margin: "0 0 6px 0",
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                          whiteSpace: "nowrap",
+                        }}
+                      >
+                        {hamster.name}
+                      </h4>
+                      <div className="hamster__info-compact">
+                        <p style={{ fontSize: 12, margin: "2px 0" }}>
+                          <span className="label">Loài:</span>
+                          <span className="value">{hamster.species}</span>
+                        </p>
+                        <p style={{ fontSize: 12, margin: "2px 0" }}>
+                          <span className="label">Màu:</span>
+                          <span className="value">{hamster.color}</span>
+                        </p>
+                        <p style={{ fontSize: 12, margin: "2px 0" }}>
+                          <span className="label">Giới tính:</span>
+                          <span className="value">{hamster.gender === "Male" ? "Đực" : "Cái"}</span>
+                        </p>
+                        <p style={{ fontSize: 12, margin: "2px 0" }}>
+                          <span className="label">Cân nặng:</span>
+                          <span className="value">{hamster.weight}g</span>
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Selection indicator */}
+                    {tempSelectedHamsterId === hamster.id && (
+                      <div
+                        style={{
                           position: "absolute",
-                          top: 12,
-                          right: 12,
+                          top: 8,
+                          right: 8,
                           background: "#ff6f61",
                           color: "white",
                           borderRadius: "50%",
@@ -2287,22 +2473,17 @@ function BoardingHamster() {
                           justifyContent: "center",
                           fontSize: 12,
                           fontWeight: "bold",
-                          boxShadow: "0 2px 4px rgba(255, 111, 97, 0.4)",
-                        }}>
-                          ✓
-                        </div>
-                      )}
-                    </Card>
-                  );
-                })}
-              </div>
-            ) : (
-              <div style={{ textAlign: "center", padding: "40px 0", color: "#999" }}>
-                <HomeOutlined style={{ fontSize: 48, marginBottom: 16 }} />
-                <p style={{ fontSize: 16 }}>Đang tải danh sách loại chuồng...</p>
-              </div>
-            )}
-          </Spin>
+                          boxShadow: "0 2px 4px rgba(0,0,0,0.2)",
+                        }}
+                      >
+                        ✓
+                      </div>
+                    )}
+                  </div>
+                </Card>
+              </Col>
+            ))}
+          </Row>
         </div>
       </Modal>
     </div>
