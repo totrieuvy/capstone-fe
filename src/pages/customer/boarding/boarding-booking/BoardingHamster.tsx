@@ -14,6 +14,7 @@ import {
   Checkbox,
   Divider,
   Image,
+  Modal,
 } from "antd";
 import {
   UserOutlined,
@@ -113,6 +114,12 @@ function BoardingHamster() {
 
   // Payment method state
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<'WALLET' | 'VNPAY' | 'PAYOS'>('VNPAY');
+
+  // Change date modal state
+  const [changeDateModalVisible, setChangeDateModalVisible] = useState(false);
+  const [tempDateRange, setTempDateRange] = useState<[Dayjs | null, Dayjs | null]>([null, null]);
+  const [modalAvailability, setModalAvailability] = useState<CageTypeAvailability[]>([]);
+  const [loadingModalAvailability, setLoadingModalAvailability] = useState(false);
 
   useEffect(() => {
     document.title = "Đặt Phòng Hamster";
@@ -506,6 +513,196 @@ function BoardingHamster() {
       setAvailability([]);
     }
     setCurrentStep(currentStep - 1);
+  };
+
+  // Function to handle opening the change date modal
+  const handleOpenChangeDateModal = () => {
+    setTempDateRange(dateRange);
+    setChangeDateModalVisible(true);
+  };
+
+  // Function to handle date change in the modal
+  const handleModalDateChange = async (dates: [Dayjs | null, Dayjs | null] | null) => {
+    if (dates && dates[0] && dates[1]) {
+      // Check if the date range exceeds 1 month
+      const daysDifference = dates[1].diff(dates[0], "day");
+      if (daysDifference > 30) {
+        message.warning("Khoảng thời gian gửi hamster không được quá 30 ngày. Vui lòng chọn lại.");
+        return;
+      }
+      setTempDateRange(dates);
+      // Check availability for the currently selected cage type
+      await checkModalAvailability(dates[0], dates[1]);
+    } else {
+      setTempDateRange([null, null]);
+      setModalAvailability([]);
+    }
+  };
+
+  // Function to check availability in modal for the selected cage type
+  const checkModalAvailability = async (startDate: Dayjs, endDate: Dayjs) => {
+    if (!selectedCageId) return;
+    
+    setLoadingModalAvailability(true);
+    try {
+      const response = await boardingService.checkAvailability({
+        startDate: startDate.format("YYYY-MM-DD"),
+        endDate: endDate.format("YYYY-MM-DD"),
+      });
+      setModalAvailability(response);
+    } catch (error) {
+      console.error("Error checking availability:", error);
+      message.error("Không thể kiểm tra tình trạng chuồng. Vui lòng thử lại.");
+      setModalAvailability([]);
+    } finally {
+      setLoadingModalAvailability(false);
+    }
+  };
+
+  // Function to disable dates in the modal based on cage availability
+  const getModalDisabledDate = (current: Dayjs) => {
+    // Disable past dates and today - users must book at least 1 day in advance
+    if (current && current <= dayjs().startOf("day")) {
+      return true;
+    }
+    
+    // Disable dates beyond 1 month from today
+    if (current && current > dayjs().add(1, 'month')) {
+      return true;
+    }
+    
+    // If we have availability data and a date range is being selected
+    if (modalAvailability.length > 0 && selectedCageId && tempDateRange[0]) {
+      const selectedCageAvailability = modalAvailability.find(ca => ca.cageTypeId === selectedCageId);
+      if (selectedCageAvailability) {
+        const currentDateStr = current.format("YYYY-MM-DD");
+        const dayAvailability = selectedCageAvailability.dailyAvailability.find(da => da.date === currentDateStr);
+        // Disable dates where the selected cage type is not available
+        if (dayAvailability && !dayAvailability.isAvailable) {
+          return true;
+        }
+      }
+    }
+    
+    return false;
+  };
+
+  // Function to confirm the date change
+  const handleConfirmDateChange = async () => {
+    if (!tempDateRange[0] || !tempDateRange[1]) {
+      message.warning("Vui lòng chọn ngày gửi và nhận hamster");
+      return;
+    }
+
+    // Check if the selected cage type is available for the new date range
+    if (modalAvailability.length > 0 && selectedCageId) {
+      const selectedCageAvailability = modalAvailability.find(ca => ca.cageTypeId === selectedCageId);
+      if (selectedCageAvailability) {
+        const isFullyAvailable = selectedCageAvailability.dailyAvailability.every(day => day.isAvailable);
+        if (!isFullyAvailable) {
+          message.error("Loại chuồng đã chọn không có sẵn trong khoảng thời gian mới. Vui lòng chọn ngày khác.");
+          return;
+        }
+      }
+    }
+
+    // Update the main date range
+    setDateRange(tempDateRange);
+    
+    // Recalculate booking cost with new dates directly (avoid state timing issues)
+    if (selectedHamsterId && selectedCageId && membershipDetails) {
+      await calculateBookingCostWithDates(tempDateRange[0]!, tempDateRange[1]!);
+    }
+    
+    // Close the modal
+    setChangeDateModalVisible(false);
+    message.success("Đã cập nhật ngày đặt phòng thành công!");
+  };
+
+  // Function to calculate booking cost with specific dates (for modal date change)
+  const calculateBookingCostWithDates = async (startDate: Dayjs, endDate: Dayjs) => {
+    if (!selectedHamsterId || !selectedCageId || !membershipDetails) {
+      return;
+    }
+
+    setLoadingCostCalculation(true);
+    try {
+      const selectedCage = cageTypes.find(cage => cage.id === selectedCageId);
+      
+      if (!selectedCage) {
+        throw new Error("Selected cage type not found");
+      }
+
+      const dailyBreakdowns: DailyBreakdown[] = [];
+      let totalCageAmount = 0;
+      let totalServicesAmount = 0;
+      let totalHolidaySurcharge = 0;
+
+      // Calculate for each day in the date range (inclusive of both start and end date)
+      for (let current = startDate.clone(); current.isBefore(endDate) || current.isSame(endDate); current = current.add(1, 'day')) {
+        const dailyCagePrice = selectedCage.pricePerDay;
+        
+        // Calculate services price for this day
+        const dailyServicesPrice = selectedServiceIds.reduce((total, serviceId) => {
+          const service = additionalServices.find(s => s.id === serviceId);
+          // Remove commas from displayPrice before parsing
+          return total + (service ? parseFloat(service.displayPrice.replace(/,/g, "")) : 0);
+        }, 0);
+
+        // Check if it's a holiday (simplified - you may need to implement actual holiday checking)
+        const isHoliday = false; // You can implement holiday checking logic here
+        const holidayName = null;
+        const holidaySurcharge = isHoliday ? (dailyCagePrice + dailyServicesPrice) * 0.2 : 0;
+
+        // Calculate membership discount for this day
+        const dailySubtotal = dailyCagePrice + dailyServicesPrice + holidaySurcharge;
+        const membershipDiscount = dailySubtotal * (membershipDetails.discountPercent / 100);
+        const dailyTotal = dailySubtotal - membershipDiscount;
+
+        dailyBreakdowns.push({
+          date: current.format("YYYY-MM-DD"),
+          cagePrice: dailyCagePrice,
+          servicesPrice: dailyServicesPrice,
+          holidaySurcharge,
+          membershipDiscount,
+          dailyTotal,
+          isHoliday,
+          holidayName
+        });
+
+        totalCageAmount += dailyCagePrice;
+        totalServicesAmount += dailyServicesPrice;
+        totalHolidaySurcharge += holidaySurcharge;
+      }
+
+      const subtotal = totalCageAmount + totalServicesAmount + totalHolidaySurcharge;
+      const totalMembershipDiscount = subtotal * (membershipDetails.discountPercent / 100);
+      const totalAmount = subtotal - totalMembershipDiscount;
+
+      const calculatedCost: CalculatedBookingCost = {
+        totalCageAmount,
+        totalServicesAmount,
+        totalHolidaySurcharge,
+        totalMembershipDiscount,
+        membershipDiscountPercent: membershipDetails.discountPercent,
+        totalAmount,
+        dailyBreakdowns
+      };
+
+      setBookingCostData(calculatedCost);
+    } catch (error) {
+      console.error("Error calculating booking cost:", error);
+      message.error("Không thể tính toán chi phí đặt phòng. Vui lòng thử lại.");
+    } finally {
+      setLoadingCostCalculation(false);
+    }
+  };
+
+  // Function to cancel the date change
+  const handleCancelDateChange = () => {
+    setTempDateRange([null, null]);
+    setModalAvailability([]);
+    setChangeDateModalVisible(false);
   };
 
   const steps = [
@@ -1416,7 +1613,21 @@ function BoardingHamster() {
                     <div className="service-details">
                       {/* Booking Dates */}
                       <div style={{ marginBottom: 20 }}>
-                        <h4 style={{ color: "#ff6f61", marginBottom: 12 }}>📅 Thời gian:</h4>
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+                          <h4 style={{ color: "#ff6f61", margin: 0 }}>📅 Thời gian:</h4>
+                          <Button
+                            type="link"
+                            onClick={handleOpenChangeDateModal}
+                            style={{ 
+                              color: "#ff6f61", 
+                              fontWeight: 600,
+                              padding: "4px 8px",
+                              height: "auto"
+                            }}
+                          >
+                            Thay đổi
+                          </Button>
+                        </div>
                         <p style={{ marginBottom: 4 }}>
                           <strong>Ngày gửi:</strong> {dateRange[0]?.format("DD-MM-YYYY")}
                         </p>
@@ -1644,6 +1855,108 @@ function BoardingHamster() {
           </div>
         )}
       </Drawer>
+
+      {/* Change Date Modal */}
+      <Modal
+        title={
+          <span style={{ color: "#ff6f61", fontSize: 18, fontWeight: 600 }}>
+            📅 Thay đổi ngày đặt phòng
+          </span>
+        }
+        open={changeDateModalVisible}
+        onCancel={handleCancelDateChange}
+        footer={[
+          <Button key="cancel" onClick={handleCancelDateChange}>
+            Hủy
+          </Button>,
+          <Button
+            key="confirm"
+            type="primary"
+            onClick={handleConfirmDateChange}
+            disabled={!tempDateRange[0] || !tempDateRange[1] || loadingModalAvailability}
+            style={{
+              background: "linear-gradient(45deg, #ff6f61, #ffcc5c)",
+              border: "none",
+            }}
+          >
+            Xác nhận
+          </Button>,
+        ]}
+        width={600}
+      >
+        <div style={{ padding: "16px 0" }}>
+          <Alert
+            message="Chỉ có thể chọn ngày có sẵn cho loại chuồng đã chọn"
+            description={selectedCage ? `Loại chuồng: ${selectedCage.typeName}` : ""}
+            type="info"
+            showIcon
+            style={{ marginBottom: 24 }}
+          />
+          
+          <div style={{ marginBottom: 16 }}>
+            <label style={{ display: "block", marginBottom: 8, fontWeight: 600, color: "#333" }}>
+              Chọn ngày gửi và nhận mới:
+            </label>
+            <RangePicker
+              style={{ width: "100%", borderRadius: 8 }}
+              format="DD-MM-YYYY"
+              placeholder={["Ngày gửi", "Ngày nhận"]}
+              onChange={handleModalDateChange}
+              disabledDate={getModalDisabledDate}
+              value={tempDateRange}
+              size="large"
+            />
+          </div>
+
+          {tempDateRange[0] && tempDateRange[1] && (
+            <div style={{ 
+              background: "#f6ffed",
+              border: "1px solid #b7eb8f",
+              borderRadius: 8,
+              padding: 16,
+              marginTop: 16
+            }}>
+              <h4 style={{ color: "#52c41a", margin: "0 0 8px 0" }}>📊 Thông tin mới:</h4>
+              <p style={{ margin: "4px 0" }}>
+                <strong>Ngày gửi:</strong> {tempDateRange[0].format("DD-MM-YYYY")}
+              </p>
+              <p style={{ margin: "4px 0" }}>
+                <strong>Ngày nhận:</strong> {tempDateRange[1].format("DD-MM-YYYY")}
+              </p>
+              <p style={{ margin: "4px 0" }}>
+                <strong>Tổng số ngày:</strong> {tempDateRange[1].diff(tempDateRange[0], "day") + 1} ngày
+              </p>
+              
+              {loadingModalAvailability && (
+                <div style={{ textAlign: "center", marginTop: 12 }}>
+                  <Spin size="small" /> <span style={{ marginLeft: 8, color: "#666" }}>Đang kiểm tra tình trạng...</span>
+                </div>
+              )}
+              
+              {modalAvailability.length > 0 && selectedCageId && (
+                <div style={{ marginTop: 12 }}>
+                  {(() => {
+                    const selectedCageAvailability = modalAvailability.find(ca => ca.cageTypeId === selectedCageId);
+                    if (selectedCageAvailability) {
+                      const isFullyAvailable = selectedCageAvailability.dailyAvailability.every(day => day.isAvailable);
+                      return (
+                        <p style={{ 
+                          margin: "4px 0", 
+                          color: isFullyAvailable ? "#52c41a" : "#ff4d4f",
+                          fontWeight: 600
+                        }}>
+                          <strong>Tình trạng:</strong> {isFullyAvailable ? "✅ Có sẵn" : "❌ Không có sẵn"}
+                        </p>
+                      );
+                    }
+                    return null;
+                  })()} 
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      </Modal>
     </div>
   );
 }
