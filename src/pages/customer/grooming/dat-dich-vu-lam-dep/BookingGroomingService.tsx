@@ -833,10 +833,44 @@ function BookingGroomingService() {
         <div className="steps-action">
           {currentStep > 0 && <Button onClick={() => setCurrentStep((s) => s - 1)}>Quay lại</Button>}
           {currentStep < 2 && (
-            <Button type="primary" onClick={() => setCurrentStep((s) => s + 1)}>
+            <Button
+              type="primary"
+              onClick={() => {
+                if (currentStep === 0) {
+                  if (!selectedHamster) {
+                    return message.error("Vui lòng chọn hamster trước.");
+                  }
+                }
+
+                if (currentStep === 1) {
+                  // Mode 1: chọn lịch trước
+                  if (selectMode === "scheduleFirst") {
+                    if (!selectedSlot) {
+                      return message.error("Vui lòng chọn slot trước.");
+                    }
+                    if (!selectedStaff) {
+                      return message.error("Vui lòng chọn nhân viên cho slot.");
+                    }
+                  }
+
+                  // Mode 2: chọn nhân viên trước
+                  if (selectMode === "staffFirst") {
+                    if (!selectedStaff) {
+                      return message.error("Vui lòng chọn nhân viên trước.");
+                    }
+                    if (!selectedSlot) {
+                      return message.error("Vui lòng chọn slot trống từ lịch của nhân viên.");
+                    }
+                  }
+                }
+
+                setCurrentStep((s) => s + 1);
+              }}
+            >
               Tiếp theo
             </Button>
           )}
+
           {currentStep === 2 && (
             <Button type="primary" onClick={handleConfirmBooking} disabled={!agreePolicy}>
               Xác nhận đặt lịch

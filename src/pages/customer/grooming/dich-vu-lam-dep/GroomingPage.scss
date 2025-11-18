@@ -2,6 +2,42 @@
   background-color: #fffaf7;
   min-height: 100vh;
 
+  .book-now-container {
+    display: flex;
+    justify-content: center;
+    margin-top: 20px;
+    margin-bottom: 25px; // tránh dính sát
+  }
+
+  .book-now-btn {
+    background: linear-gradient(90deg, #ff7a59, #ffcc5f) !important;
+    border: none !important;
+    color: white !important;
+    padding: 10px 26px !important;
+    font-size: 16px !important;
+    font-weight: 600 !important;
+    border-radius: 12px !important;
+    height: auto !important;
+    box-shadow: 0 4px 12px rgba(255, 122, 89, 0.4);
+    transition: 0.25s ease;
+
+    &:hover {
+      filter: brightness(1.07);
+      transform: translateY(-2px);
+    }
+
+    &:active {
+      filter: brightness(0.95);
+      transform: translateY(0);
+    }
+
+    &:disabled {
+      background: #d9d9d9 !important;
+      color: #888 !important;
+      box-shadow: none !important;
+    }
+  }
+
   .grooming-banner {
     text-align: center;
     background: linear-gradient(135deg, #ffa07a, #ff7f50);
