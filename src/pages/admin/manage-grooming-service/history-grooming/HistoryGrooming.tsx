@@ -44,7 +44,7 @@ const HistoryGrooming = () => {
         setAllAppointments(content);
         setAppointments(content);
       } else {
-        message.error(res.data.message || "Không thể tải lịch sử grooming!");
+        message.error(res.data.message || "Không thể tải lịch đặt grooming!");
       }
     } catch (error) {
       message.error("Lỗi khi tải dữ liệu lịch hẹn grooming!" + error);
@@ -54,7 +54,7 @@ const HistoryGrooming = () => {
   };
 
   useEffect(() => {
-    document.title = "Lịch sử Grooming";
+    document.title = "Lịch đặt Grooming";
     fetchAppointments();
   }, []);
 
@@ -149,7 +149,7 @@ const HistoryGrooming = () => {
   return (
     <div className="history-grooming-page">
       <div className="container">
-        <h1 className="page-title">Lịch sử Grooming</h1>
+        <h1 className="page-title">Lịch đặt Grooming</h1>
 
         <Card className="filter-card">
           <Row gutter={[16, 16]}>

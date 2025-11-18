@@ -13,30 +13,50 @@
   }
 
   .filter-status {
+    margin-bottom: 20px;
     display: flex;
-    flex-wrap: wrap;
     gap: 10px;
-    margin-bottom: 16px;
     justify-content: center;
-    
+    flex-wrap: wrap;
 
     .status-btn {
       border-radius: 20px;
+      padding: 6px 18px;
       font-weight: 500;
+      border: 1px solid #ff8b3d;
+      color: #ff8b3d;
+      transition: 0.2s;
+
+      /* ACTIVE BUTTON */
+      &.ant-btn-primary {
+        background: #ff8b3d !important;
+        border-color: #ff8b3d !important;
+        color: white !important;
+      }
+
+      &:hover {
+        opacity: 0.85;
+        border-color: #ff8b3d;
+        color: #ff8b3d;
+      }
     }
   }
 
+  /* FILTER BAR (search + date + service) */
   .filter-bar {
+    margin-bottom: 20px;
     display: flex;
     justify-content: center;
-    align-items: center;
-    margin-bottom: 20px;
-    width: 100%;
 
     .filter-controls {
       display: flex;
-      gap: 10px;
-      justify-content: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    /* Select alignment fix */
+    .ant-select-selector {
+      border-radius: 8px !important;
     }
   }
 
