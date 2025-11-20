@@ -13,6 +13,7 @@ const statusTextVI: Record<string, string> = {
   PAID: "Đã thanh toán",
   PENDING: "Chờ thanh toán",
   REFUNDED: "Đã hoàn tiền",
+  NOT_RECEIVED: "Khách không nhận hàng",
 };
 
 interface OrderItem {
@@ -36,7 +37,7 @@ interface CustomerProfile {
   citizenId: string;
 }
 
-type OrderStatus = "PENDING" | "PAID" | "PENDING_DELIVERY" | "DELIVERED" | "REFUNDED" | "PREPARING";
+type OrderStatus = "PENDING" | "PAID" | "PREPARING" | "PENDING_DELIVERY" | "DELIVERED" | "REFUNDED" | "NOT_RECEIVED";
 
 interface OrderDetail {
   id: string;
@@ -131,6 +132,7 @@ function ManageOrderDetail() {
     DELIVERED: { color: "green", text: "Đã giao" },
     REFUNDED: { color: "purple", text: "Đã hoàn tiền" },
     PREPARING: { color: "gold", text: "Đang chuẩn bị" },
+    NOT_RECEIVED: { color: "red", text: "Khách không nhận" },
   };
 
   const renderStatusTag = (status: OrderStatus) => <Tag color={statusMap[status].color}>{statusMap[status].text}</Tag>;
@@ -224,9 +226,15 @@ function ManageOrderDetail() {
               )}
 
               {order.status === "PENDING_DELIVERY" && (
-                <Button type="primary" loading={updating} onClick={() => handleUpdateStatus("DELIVERED")} block>
-                  Đã giao
-                </Button>
+                <>
+                  <Button type="primary" loading={updating} onClick={() => handleUpdateStatus("DELIVERED")} block>
+                    Đã giao
+                  </Button>
+
+                  <Button danger loading={updating} onClick={() => handleUpdateStatus("NOT_RECEIVED")} block>
+                    Khách không nhận
+                  </Button>
+                </>
               )}
             </div>
 

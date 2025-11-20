@@ -1,144 +1,135 @@
 .track-order-detail-page {
-  background-color: #fff7f0;
-  min-height: 100vh;
-  padding: 32px 16px;
-  font-family: "Inter", sans-serif;
+  background: #fafafa;
+  padding: 20px 0;
 
-  .feedback-btn {
-    align-self: flex-start;
-    background: #1890ff;
-    border-radius: 8px;
-    height: 36px;
-    padding: 0 16px;
-    font-weight: 500;
-    transition: all 0.2s;
+  .payment-method {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 8px 0;
 
-    &:hover {
-      background: #40a9ff;
-      transform: translateY(-1px);
+    .label {
+      font-weight: 600;
+      color: #c2410c;
+      min-width: 110px; // giữ căn thẳng hàng
     }
-  }
 
-  .feedback-tag {
-    font-size: 13px;
-    align-self: flex-start;
-  }
+    .method-box {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
 
-  .feedback-display {
-    background: #f5f7fa;
-    padding: 10px 14px;
-    border-radius: 10px;
-    border-left: 3px solid #1890ff;
+    .payment-logo {
+      height: 50px;
+      width: auto;
+    }
 
-    .feedback-card {
-      margin-bottom: 10px;
-
-      .feedback-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        strong {
-          color: #333;
-          font-size: 15px;
-        }
-      }
-
-      .comment {
-        font-style: italic;
-        color: #555;
-        margin: 4px 0;
-      }
-
-      .date {
-        font-size: 12px;
-        color: #999;
-      }
+    .method-text {
+      font-size: 16px;
+      color: #c2410c;
+      font-weight: 600;
     }
   }
 
   .container {
     max-width: 900px;
-    margin: 0 auto;
-    background: #fff;
-    border-radius: 16px;
-    box-shadow: 0 4px 12px rgba(255, 145, 90, 0.15);
-    overflow: hidden;
+    margin: auto;
+    background: white;
+    padding: 25px;
+    border-radius: 12px;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
   }
 
-  /* ===============================
-     HEADER (gradient cam pastel)
-  =============================== */
+  /* HEADER */
   .order-header {
-    background: linear-gradient(90deg, #ffb07c 0%, #ff915a 100%);
-    color: #fff;
-    padding: 28px 32px;
     display: flex;
     justify-content: space-between;
-    align-items: flex-start;
-    flex-wrap: wrap;
+    align-items: center;
+    margin-bottom: 25px;
+    padding-bottom: 15px;
+    border-bottom: 2px solid #f5f5f5;
 
     h2 {
+      margin: 0;
       font-size: 22px;
       font-weight: 700;
-      margin-bottom: 6px;
-      color: #fff;
+      color: #333;
     }
 
     .order-id,
     .order-date {
+      margin: 5px 0;
+      color: #777;
       font-size: 14px;
-      color: rgba(255, 255, 255, 0.95);
-      margin-bottom: 2px;
     }
 
-    .ant-tag {
-      font-size: 13px;
-      font-weight: 600;
-      border-radius: 14px;
-      padding: 3px 10px;
-      background-color: rgba(255, 255, 255, 0.25);
-      color: #fff;
-      border: none;
-      text-transform: none;
+    .big-status {
+      font-size: 14px;
+      padding: 6px 14px;
+      border-radius: 20px;
+      border: 1px solid #f59e0b !important;
+      color: #c2410c !important;
+      background: #fef3c7 !important;
     }
   }
 
-  /* ===============================
-     DANH SÁCH SẢN PHẨM
-  =============================== */
-  .order-items {
-    padding: 22px 32px;
-    border-bottom: 1px solid #ffe0cc;
+  /* TIMELINE */
+  .status-timeline {
+    margin-bottom: 30px;
 
     h3 {
-      font-size: 17px;
+      font-size: 18px;
       font-weight: 600;
-      margin-bottom: 10px;
-      color: #333;
+      margin-bottom: 15px;
+    }
+
+    .timeline-item {
+      font-size: 14px;
+
+      b {
+        color: #c2410c;
+      }
+
+      i {
+        color: #666;
+      }
+    }
+
+    .ant-timeline-item-head {
+      background-color: #f97316 !important;
+    }
+  }
+
+  /* ITEMS */
+  .order-items {
+    margin-bottom: 30px;
+
+    h3 {
+      margin-bottom: 15px;
+      font-size: 18px;
+      font-weight: 600;
     }
 
     .item {
       display: flex;
       justify-content: space-between;
-      align-items: flex-start;
-      padding: 14px 0;
-      border-bottom: 1px solid #fce4d6;
-
-      &:last-child {
-        border-bottom: none;
-      }
+      align-items: center;
+      background: #fff7ed;
+      border: 1px solid #f59e0b33;
+      padding: 12px 15px;
+      border-radius: 10px;
+      margin-bottom: 12px;
 
       .item-info {
         .name {
+          font-size: 16px;
           font-weight: 600;
-          font-size: 15px;
-          color: #222;
-          margin-bottom: 4px;
         }
 
         .quantity {
-          font-size: 13px;
-          color: #888;
+          font-size: 14px;
+          color: #666;
         }
       }
 
@@ -147,206 +138,99 @@
 
         .unit-price {
           font-size: 14px;
-          color: #666;
+          color: #555;
         }
 
         .total {
-          font-weight: 600;
-          color: #111;
-          font-size: 15px;
+          font-size: 16px;
+          font-weight: 700;
+          color: #c2410c;
         }
       }
-    }
-  }
 
-  /* ===============================
-     GIAO HÀNG & THANH TOÁN
-  =============================== */
-  .shipping-info {
-    background: #fffaf6;
-    padding: 22px 32px;
-    border-bottom: 1px solid #ffe0cc;
+      .feedback-btn {
+        background: #f97316;
+        border: none;
 
-    h3 {
-      font-size: 17px;
-      font-weight: 600;
-      margin-bottom: 10px;
-      color: #333;
-    }
+        &:hover {
+          background: #ea580c !important;
+        }
+      }
 
-    p {
-      font-size: 14px;
-      margin-bottom: 6px;
-      color: #444;
-
-      strong {
-        color: #222;
+      .feedback-tag {
+        font-size: 13px;
+        padding: 4px 10px;
       }
     }
   }
 
-  /* ===============================
-     TỔNG THANH TOÁN
-  =============================== */
-  .payment-summary {
-    padding: 24px 32px;
-    background: #fff;
+  /* SHIPPING + PAYMENT */
+  .shipping-info {
+    background: #fff7ed;
+    border-left: 4px solid #f97316;
+    padding: 15px 20px;
+    border-radius: 8px;
+    margin-bottom: 30px;
 
     h3 {
-      font-size: 17px;
+      font-weight: 600;
+      font-size: 18px;
+      margin-bottom: 10px;
+    }
+
+    strong {
+      color: #c2410c;
+    }
+  }
+
+  /* PAYMENT SUMMARY */
+  .payment-summary {
+    margin-bottom: 30px;
+    padding: 20px;
+    background: #fef3c7;
+    border-radius: 8px;
+
+    h3 {
       font-weight: 600;
       margin-bottom: 12px;
-      color: #333;
     }
 
     .summary-line {
       display: flex;
       justify-content: space-between;
-      margin-bottom: 8px;
-      font-size: 15px;
-      color: #555;
-
-      &.discount {
-        color: #ff6f3d;
-        font-weight: 600;
-      }
+      padding: 8px 0;
+      font-size: 14px;
 
       &.total {
         font-size: 18px;
-        font-weight: 700;
-        color: #ff7a00;
-        margin-top: 12px;
+        font-weight: bold;
+        color: #b45309;
       }
     }
   }
 
-  .payment-method {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-
-    .payment-logo {
-      height: 80px;
-      width: auto;
-      object-fit: contain;
-    }
-  }
-
-  /* ===============================
-     NÚT & HÀNH ĐỘNG
-  =============================== */
+  /* ACTIONS */
   .order-actions {
-    padding: 22px 32px;
     display: flex;
-    justify-content: space-between;
-    align-items: center;
-    flex-wrap: wrap;
+    flex-direction: column;
     gap: 10px;
-    background: #fffaf6;
-    border-top: 1px solid #ffe0cc;
-    border-bottom-left-radius: 16px;
-    border-bottom-right-radius: 16px;
 
     .back-btn {
-      background: #fff;
-      border: 1px solid #ffc299;
-      color: #ff7a00;
-      font-weight: 600;
-      border-radius: 8px;
-      padding: 8px 16px;
-      transition: all 0.2s;
-
-      &:hover {
-        background: #fff1e6;
-        border-color: #ffa366;
-      }
-    }
-
-    .ant-btn-dangerous {
-      font-weight: 600;
-      border-radius: 8px;
-      padding: 8px 16px;
-      background: #ff4d4f;
-      color: #fff;
+      width: 100%;
+      background: #f97316;
+      color: white;
       border: none;
-      transition: all 0.2s;
 
       &:hover {
-        background: #d9363e;
-      }
-
-      &:disabled {
-        background: #ccc;
-        cursor: not-allowed;
+        background: #ea580c !important;
       }
     }
 
     .countdown-timer {
+      font-weight: 600;
+      color: #c2410c;
       font-size: 14px;
-      color: #ff7a00;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      margin-left: auto;
-
-      svg {
-        color: #ffb07c;
-      }
-    }
-  }
-
-  /* ===============================
-     LOADING
-  =============================== */
-  .loading-spinner {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    height: 70vh;
-  }
-
-  /* ===============================
-     RESPONSIVE
-  =============================== */
-  @media (max-width: 768px) {
-    .order-header {
-      flex-direction: column;
-      align-items: flex-start;
-      gap: 8px;
-      padding: 22px;
-
-      h2 {
-        font-size: 20px;
-      }
-
-      .ant-tag {
-        margin-top: 8px;
-      }
-    }
-
-    .order-items .item {
-      flex-direction: column;
-      align-items: flex-start;
-      gap: 8px;
-
-      .item-price {
-        align-self: flex-end;
-      }
-    }
-
-    .order-actions {
-      flex-direction: column;
-      align-items: stretch;
-
-      .back-btn,
-      .ant-btn-dangerous {
-        width: 100%;
-      }
-
-      .countdown-timer {
-        justify-content: center;
-        margin-left: 0;
-      }
+      text-align: center;
     }
   }
 }
