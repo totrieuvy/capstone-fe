@@ -1,237 +1,131 @@
-// src/pages/customer/track-order/track-order-overall/TrackOrder.scss
 .track-order-page {
-  padding: 40px 20px;
-  background: linear-gradient(135deg, #fff5e6, #ffe6cc);
-  min-height: calc(100vh - 64px);
-
-  .ant-select {
-    position: relative; // đảm bảo mũi tên định vị trong khung Select
-
-    .ant-select-arrow {
-      top: 0 !important;
-      bottom: 0 !important;
-      margin: auto 0 !important; // ✅ canh giữa theo chiều dọc chính xác
-      transform: none !important; // bỏ translate tránh lệch
-    }
-  }
+  background: #fafafa;
+  padding: 20px 0;
 
   .container {
     max-width: 1100px;
-    margin: 0 auto;
+    margin: auto;
   }
 
   .page-title {
-    text-align: center;
-    font-size: 32px;
+    font-size: 26px;
     font-weight: 700;
-    color: #ff6f61; // Main theme color
-    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.15);
-    margin-bottom: 30px;
+    margin-bottom: 20px;
+    text-align: center;
+    color: #c2410c;
   }
 
-  // --- Filter Card ---
   .filter-card {
+    padding: 16px;
+    background: #fff7ed;
     border-radius: 12px;
-    background: #ffffff;
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06); // Softer shadow
-    margin-bottom: 24px; // Space below filters
-    padding: 20px 24px; // Internal padding
+    border: 1px solid #f59e0b33;
+  }
 
-    .ant-select-selector,
-    .ant-picker,
-    .ant-btn {
-      border-radius: 8px !important; // Consistent border radius
-      height: 40px !important; // Consistent height
-    }
+  /* Dropdown trạng thái */
+  .status-select .ant-select-selector {
+    border-radius: 8px !important;
+    border: 1px solid #f97316 !important;
+    box-shadow: none !important;
+    transition: 0.25s;
 
-    .ant-select,
-    .ant-picker {
-      line-height: 40px; // Ensure text aligns vertically
+    &:hover {
+      border-color: #ea580c !important;
     }
-    .ant-picker-input > input {
-      // Fix date picker input height
-      height: 38px !important;
-    }
+  }
 
-    .ant-btn {
-      display: inline-flex; // Align icon and text
-      align-items: center;
-      justify-content: center;
+  .status-select .ant-select-selection-item {
+    font-weight: 600;
+    color: #c2410c;
+  }
+
+  /* Nút reset */
+  .reset-btn {
+    background: #fff;
+    border: 1px solid #f97316;
+    color: #c2410c;
+    font-weight: 500;
+
+    &:hover {
+      background: #f97316 !important;
+      border-color: #f97316 !important;
+      color: white !important;
+    }
+  }
+
+  .status-filter {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+
+    .status-btn {
+      background: #fff;
+      border: 1px solid #f59e0b;
+      color: #c2410c;
       font-weight: 500;
-    }
-    .ant-col {
-      // Ensure columns have bottom margin on smaller screens
-      margin-bottom: 0; // Reset default antd margin
-      @media (max-width: 767px) {
-        &:not(:last-child) {
-          margin-bottom: 16px;
-        }
+      border-radius: 25px;
+      padding: 6px 18px;
+
+      &.active {
+        background: #f97316;
+        border-color: #f97316;
+        color: white;
+      }
+
+      &:hover {
+        background: #f59e0b;
+        color: white;
       }
     }
   }
-  // --- End Filter Card ---
 
+  .reset-btn {
+    background: #fff;
+    border: 1px solid #f97316;
+    color: #c2410c;
+    &:hover {
+      background: #f97316 !important;
+      color: white !important;
+    }
+  }
+
+  /* PAYMENT LOGO */
+  .payment-logo {
+    width: 80px;
+    height: auto;
+    border-radius: 6px;
+  }
+
+  /* TABLE */
   .order-list-card {
     border-radius: 12px;
-    background: #ffffff;
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
-    // Removed padding here, let Table handle its padding
+    padding: 10px;
+  }
 
-    .order-table {
-      border-radius: 12px; // Apply radius to table container if needed
-      overflow: hidden; // Hide overflowing parts
+  .order-id {
+    font-weight: 600;
+    color: #c2410c;
+  }
 
-      .ant-table-thead > tr > th {
-        background-color: #fffaf0; // Lighter header background
-        color: #d46b08; // Darker orange text
-        font-weight: 600;
-        border-bottom: 1px solid #ffe7ba; // Separator line
-      }
+  .action-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
 
-      .ant-table-tbody > tr > td {
-        padding: 14px 16px; // Adjust cell padding
-        vertical-align: middle; // Vertically center content
-      }
-
-      .ant-table-tbody > tr:hover > td {
-        background-color: #fff9f2; // Lighter hover
-      }
-
-      .order-id {
-        font-weight: 500; // Slightly less bold ID
-        color: #1890ff; // Make ID blue like a link
-        font-family: monospace;
-      }
-
-      .view-detail-button {
-        // Keep gradient, adjust shadow
-        background: linear-gradient(45deg, #ff8c42, #ffac70);
-        border: none;
-        color: white;
-        border-radius: 6px;
-        font-weight: 500;
-        box-shadow: 0 2px 5px rgba(255, 140, 66, 0.3); // Softer shadow
-        transition: all 0.2s ease;
-        &:hover {
-          opacity: 0.9;
-          box-shadow: 0 4px 8px rgba(255, 140, 66, 0.4);
-          transform: translateY(-1px);
-        }
-      }
-
-      // Consistent Tag styling
-      .ant-tag {
-        font-weight: 600 !important;
-        font-size: 11px !important; // Slightly smaller tag text
-        padding: 3px 10px !important;
-        border-radius: 12px !important;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-        margin: 0 !important; // Remove default tag margin
-        // Colors are applied via 'color' prop in TSX
-      }
-    }
-
-    .pagination {
+    .countdown {
       text-align: center;
-      margin-top: 24px; // More space above pagination
-      padding: 0 16px 16px; // Padding for pagination area
-
-      .ant-pagination-item-active {
-        background-color: #ff6f61;
-        border-color: #ff6f61;
-        a {
-          color: white;
-        }
-      }
-      .ant-pagination-item {
-        border-radius: 50%; // Circular page numbers
-        &:hover {
-          border-color: #ff8c42;
-          a {
-            color: #ff8c42;
-          }
-        }
-      }
-      .ant-pagination-prev,
-      .ant-pagination-next {
-        button {
-          border-radius: 50%;
-        }
-        &:hover button {
-          border-color: #ff8c42;
-          color: #ff8c42;
-        }
-      }
+      font-weight: 600;
+      color: #c2410c;
     }
+  }
+
+  .pagination {
+    text-align: center;
+    margin-top: 20px;
   }
 
   .loading-spinner {
-    display: flex;
-    flex-direction: column; // Stack spinner and text
-    gap: 12px; // Add gap
-    justify-content: center;
-    align-items: center;
-    min-height: 40vh; // Reduced height
-    padding: 40px; // Add padding
+    padding: 40px 0;
+    text-align: center;
   }
-
-  // Consistent countdown timer style with TrackOrderDetail
-  .countdown-timer {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    font-size: 13px;
-    font-weight: 500;
-    color: #856404; // Match text color
-    background: #fff3cd; // Match background
-    border: 1px solid #ffeeba; // Match border
-    padding: 4px 8px;
-    border-radius: 8px;
-    width: fit-content;
-    margin: 4px auto 0; // Center below buttons if wrapped
-    animation: pulse 1.5s infinite;
-  }
-
-  @keyframes pulse {
-    0% {
-      opacity: 1;
-    }
-    50% {
-      opacity: 0.7;
-    }
-    100% {
-      opacity: 1;
-    }
-  }
-
-  // --- Responsive Adjustments ---
-  @media (max-width: 767px) {
-    .filter-card .ant-col:not(:last-child) {
-      margin-bottom: 16px;
-    }
-    .order-list-card .order-table {
-      // Consider removing fixed width for action column on mobile
-      .ant-table-cell[data-key="action"] {
-        width: auto !important; // Allow action column to resize
-      }
-    }
-  }
-
-  @media (max-width: 575px) {
-    .order-list-card .order-table .ant-table-thead > tr > th,
-    .order-list-card .order-table .ant-table-tbody > tr > td {
-      font-size: 13px; // Smaller text on very small screens
-      padding: 10px 8px; // Reduce padding
-    }
-    .order-list-card .order-table .view-detail-button {
-      padding: 0 10px; // Reduce button padding
-      height: 30px;
-      font-size: 12px;
-    }
-    .order-list-card .order-table .ant-tag {
-      font-size: 10px !important;
-      padding: 2px 8px !important;
-    }
-  }
-} // End .track-order-page
+}

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { message, Spin, Button, Popconfirm, Tag } from "antd";
+import { message, Spin, Button, Popconfirm, Tag, Timeline } from "antd";
 import { StopOutlined, ClockCircleOutlined, ArrowLeftOutlined, CommentOutlined } from "@ant-design/icons";
 import { Modal, Input, Rate } from "antd";
 
@@ -25,10 +25,24 @@ interface OrderItem {
   unitPrice: number;
 }
 
+interface StatusHistory {
+  status: string;
+  changedAt: string;
+  note: string | null;
+}
+
 interface OrderDetail {
   id: string;
   orderDate: string;
-  status: "PENDING" | "PAID" | "PENDING_DELIVERY" | "DELIVERED" | "CANCELLED" | "REFUNDED";
+  status:
+    | "PENDING"
+    | "PAID"
+    | "PREPARING"
+    | "PENDING_DELIVERY"
+    | "DELIVERED"
+    | "CANCELLED"
+    | "REFUNDED"
+    | "NOT_RECEIVED";
   totalAmount: number;
   discountPercent: number;
   shippingFee: number;
@@ -37,6 +51,7 @@ interface OrderDetail {
   deliveryAddress?: string;
   paymentMethod?: string;
   deliveredAt: string | null;
+  statusHistory?: StatusHistory[];
 }
 
 interface Feedback {
@@ -52,14 +67,39 @@ const TrackOrderDetail = () => {
   const navigate = useNavigate();
   const [order, setOrder] = useState<OrderDetail | null>(null);
   const [loading, setLoading] = useState(true);
+
   const [countdown, setCountdown] = useState<string>("");
   const [cancelDisabled, setCancelDisabled] = useState(false);
   const [isCancelling, setIsCancelling] = useState(false);
+
   const [isFeedbackModalOpen, setIsFeedbackModalOpen] = useState(false);
   const [selectedProductId, setSelectedProductId] = useState<string | null>(null);
   const [rating, setRating] = useState<number>(5);
   const [comment, setComment] = useState<string>("");
+
   const [feedbacks, setFeedbacks] = useState<Record<string, Feedback[]>>({});
+
+  const statusTextMap: Record<string, string> = {
+    PENDING: "Chờ thanh toán",
+    PAID: "Đã thanh toán",
+    PREPARING: "Đang chuẩn bị",
+    PENDING_DELIVERY: "Đang giao hàng",
+    DELIVERED: "Đã giao",
+    CANCELLED: "Đã hủy",
+    REFUNDED: "Đã hoàn tiền",
+    NOT_RECEIVED: "Khách không nhận",
+  };
+
+  const statusColorMap: Record<string, string> = {
+    PENDING: "orange",
+    PAID: "blue",
+    PREPARING: "orange",
+    PENDING_DELIVERY: "cyan",
+    DELIVERED: "green",
+    CANCELLED: "red",
+    REFUNDED: "purple",
+    NOT_RECEIVED: "orange",
+  };
 
   useEffect(() => {
     document.title = `Chi tiết đơn hàng #${orderId}`;
@@ -75,7 +115,6 @@ const TrackOrderDetail = () => {
   useEffect(() => {
     let interval: NodeJS.Timeout | null = null;
     if (order && order.status === "PAID") {
-      // ✅ Convert đúng sang giờ Việt Nam
       const orderTime = dayjs.utc(order.orderDate, "DD-MM-YYYY HH:mm:ss").tz("Asia/Ho_Chi_Minh");
 
       const updateCountdown = () => {
@@ -96,6 +135,7 @@ const TrackOrderDetail = () => {
           if (interval) clearInterval(interval);
         }
       };
+
       updateCountdown();
       interval = setInterval(updateCountdown, 1000);
     }
@@ -110,23 +150,21 @@ const TrackOrderDetail = () => {
       if (data.code === 200) {
         setFeedbacks((prev) => ({ ...prev, [productId]: data.data }));
       }
-    } catch {
-      console.warn("Không thể tải feedbacks cho sản phẩm:", productId);
-    }
+    } catch {}
   };
 
   const fetchOrderDetail = async (id: string) => {
     setLoading(true);
     try {
       const res = await api.get<{ code: number; data: OrderDetail }>(`/api/order/${id}`);
-      if (res.data.code === 200 && res.data.data) {
+      if (res.data.code === 200) {
         setOrder(res.data.data);
       } else {
         message.error("Không thể tải chi tiết đơn hàng!");
         setOrder(null);
       }
     } catch {
-      message.error("Lỗi kết nối hoặc đơn hàng không tồn tại!");
+      message.error("Lỗi tải dữ liệu!");
       setOrder(null);
     } finally {
       setLoading(false);
@@ -139,7 +177,7 @@ const TrackOrderDetail = () => {
     try {
       const { data } = await api.patch(`/api/order/cancel/${order.id}`);
       if (data.code === 200) {
-        message.success("Đã hủy đơn hàng. 75% giá trị sẽ được hoàn vào ví của bạn.");
+        message.success("Đã hủy đơn hàng.");
         fetchOrderDetail(order.id);
       } else {
         message.error(data.message || "Không thể hủy đơn hàng.");
@@ -151,26 +189,6 @@ const TrackOrderDetail = () => {
     }
   };
 
-  const getStatusTag = (status: string) => {
-    const colorMap: Record<string, string> = {
-      PENDING: "gold",
-      PAID: "blue",
-      PENDING_DELIVERY: "cyan",
-      DELIVERED: "green",
-      CANCELLED: "red",
-      REFUNDED: "purple",
-    };
-    const textMap: Record<string, string> = {
-      PENDING: "Chờ thanh toán",
-      PAID: "Đã thanh toán",
-      PENDING_DELIVERY: "Đang giao hàng",
-      DELIVERED: "Đã giao",
-      CANCELLED: "Đã hủy",
-      REFUNDED: "Đã hoàn tiền",
-    };
-    return <Tag color={colorMap[status]}>{textMap[status]}</Tag>;
-  };
-
   const handleSubmitFeedback = async () => {
     if (!selectedProductId) return;
     try {
@@ -180,18 +198,14 @@ const TrackOrderDetail = () => {
         comment,
       });
       if (data.code === 200) {
-        message.success("Cảm ơn bạn đã đánh giá sản phẩm!");
+        message.success("Đã gửi đánh giá!");
         setIsFeedbackModalOpen(false);
         fetchFeedbacks(selectedProductId);
-      } else {
-        message.error(data.message || "Không thể gửi đánh giá.");
       }
     } catch {
-      message.error("Lỗi khi gửi đánh giá.");
+      message.error("Lỗi gửi đánh giá.");
     }
   };
-
-  const discountValue = order ? (order.totalAmount * order.discountPercent) / 100 : 0;
 
   if (loading)
     return (
@@ -213,9 +227,12 @@ const TrackOrderDetail = () => {
       </div>
     );
 
+  const discountValue = (order.totalAmount * order.discountPercent) / 100;
+
   return (
     <div className="track-order-detail-page">
       <div className="container">
+        {/* HEADER */}
         <div className="order-header">
           <div>
             <h2>Chi tiết đơn hàng</h2>
@@ -225,10 +242,37 @@ const TrackOrderDetail = () => {
               {dayjs.utc(order.orderDate, "DD-MM-YYYY HH:mm:ss").tz("Asia/Ho_Chi_Minh").format("HH:mm DD/MM/YYYY")}
             </p>
           </div>
-          {getStatusTag(order.status)}
+          <Tag color={statusColorMap[order.status]} className="big-status">
+            {statusTextMap[order.status]}
+          </Tag>
         </div>
 
-        {/* Items */}
+        {/* TIMELINE STATUS */}
+        {order.statusHistory && (
+          <div className="status-timeline">
+            <h3>Tiến trình đơn hàng</h3>
+
+            <Timeline
+              items={order.statusHistory.map((item) => ({
+                color: "orange",
+                children: (
+                  <div className="timeline-item">
+                    <b>{statusTextMap[item.status]}</b>
+                    <div>
+                      {dayjs
+                        .utc(item.changedAt, "DD-MM-YYYY HH:mm:ss")
+                        .tz("Asia/Ho_Chi_Minh")
+                        .format("HH:mm DD/MM/YYYY")}
+                    </div>
+                    {item.note && <i>Ghi chú: {item.note}</i>}
+                  </div>
+                ),
+              }))}
+            />
+          </div>
+        )}
+
+        {/* ITEMS */}
         <div className="order-items">
           <h3>Sản phẩm ({order.items.length})</h3>
           {order.items.map((item) => {
@@ -263,97 +307,78 @@ const TrackOrderDetail = () => {
                       Gửi đánh giá
                     </Button>
                   ))}
-
-                {/* {hasFeedback && (
-                  <div className="feedback-display">
-                    {fb.map((f) => (
-                      <div key={f.feedbackId} className="feedback-card">
-                        <div className="feedback-header">
-                          <strong>{f.customerName}</strong>
-                          <Rate disabled value={f.rating} />
-                        </div>
-                        <p className="comment">“{f.comment}”</p>
-                        <span className="date">
-                          {dayjs(f.createdAt).tz("Asia/Ho_Chi_Minh").format("HH:mm DD/MM/YYYY")}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                )} */}
               </div>
             );
           })}
         </div>
 
-        {/* Shipping & Payment */}
+        {/* SHIPPING + PAYMENT */}
         <div className="shipping-info">
           <h3>Thông tin giao hàng & Thanh toán</h3>
           <p>
             <strong>Địa chỉ:</strong> {order.deliveryAddress || "Chưa cập nhật"}
           </p>
-          <p className="payment-method">
-            <strong>Phương thức:</strong>{" "}
-            {order.paymentMethod === "VNPAY" ? (
-              <>
-                <img
-                  src="https://itviec.com/rails/active_storage/representations/proxy/eyJfcmFpbHMiOnsiZGF0YSI6NDAzODMzMCwicHVyIjoiYmxvYl9pZCJ9fQ==--d01b1b407f49d33d4ea19b9218e10da4dc7f231d/eyJfcmFpbHMiOnsiZGF0YSI6eyJmb3JtYXQiOiJwbmciLCJyZXNpemVfdG9fbGltaXQiOlszMDAsMzAwXX0sInB1ciI6InZhcmlhdGlvbiJ9fQ==--e1d036817a0840c585f202e70291f5cdd058753d/logo%20d%E1%BB%8Dc.png"
-                  alt="VNPAY"
-                  className="payment-logo"
-                />
-              </>
-            ) : order.paymentMethod === "PAYOS" ? (
-              <>
-                <img
-                  src="https://media.zenfs.com/en/globenewswire.com/d572fcc587598e58786c3856ba2bc978"
-                  alt="PAYOS"
-                  className="payment-logo"
-                />
-              </>
-            ) : order.paymentMethod === "WALLET" ? (
-              <>
-                <img
-                  src="https://i.pinimg.com/1200x/b4/9f/f9/b49ff9a83a19ebc745cb4ed40970b6e6.jpg"
-                  alt="WALLET"
-                  className="payment-logo"
-                />
-              </>
-            ) : (
-              order.paymentMethod || "Chưa cập nhật"
-            )}
-          </p>
+          <div className="payment-method">
+            <span className="label">Phương thức:</span>
 
-          {order.deliveredAt && (
-            <p>
-              <strong>Ngày giao:</strong>{" "}
-              {dayjs.utc(order.deliveredAt, "DD-MM-YYYY HH:mm:ss").tz("Asia/Ho_Chi_Minh").format("HH:mm DD/MM/YYYY")}
-            </p>
-          )}
+            <div className="method-box">
+              {order.paymentMethod === "VNPAY" && (
+                <>
+                  <img
+                    src="https://itviec.com/rails/active_storage/representations/proxy/eyJfcmFpbHMiOnsiZGF0YSI6NDAzODMzMCwicHVyIjoiYmxvYl9pZCJ9fQ==--d01b1b407f49d33d4ea19b9218e10da4dc7f231d/eyJfcmFpbHMiOnsiZGF0YSI6eyJmb3JtYXQiOiJwbmciLCJyZXNpemVfdG9fbGltaXQiOlszMDAsMzAwXX0sInB1ciI6InZhcmlhdGlvbiJ9fQ==--e1d036817a0840c585f202e70291f5cdd058753d/logo%20d%E1%BB%8Dc.png"
+                    alt="VNPAY"
+                    className="payment-logo"
+                  />
+                </>
+              )}
+
+              {order.paymentMethod === "PAYOS" && (
+                <>
+                  <img
+                    src="https://media.zenfs.com/en/globenewswire.com/d572fcc587598e58786c3856ba2bc978"
+                    alt="PAYOS"
+                    className="payment-logo"
+                  />
+                </>
+              )}
+
+              {order.paymentMethod === "WALLET" && (
+                <>
+                  <img src="https://i.pinimg.com/...jpg" alt="WALLET" className="payment-logo" />
+                </>
+              )}
+            </div>
+          </div>
         </div>
 
-        {/* Payment Summary */}
+        {/* PAYMENT SUMMARY */}
         <div className="payment-summary">
           <h3>Tổng thanh toán</h3>
+
           <div className="summary-line">
             <span>Tạm tính</span>
             <span>{order.totalAmount.toLocaleString()}đ</span>
           </div>
+
           <div className="summary-line">
             <span>Phí vận chuyển</span>
             <span>{order.shippingFee.toLocaleString()}đ</span>
           </div>
+
           {order.discountPercent > 0 && (
             <div className="summary-line discount">
               <span>Giảm giá ({order.discountPercent}%)</span>
               <span>- {discountValue.toLocaleString()}đ</span>
             </div>
           )}
+
           <div className="summary-line total">
             <span>Tổng cộng</span>
             <span>{order.finalAmount.toLocaleString()}đ</span>
           </div>
         </div>
 
-        {/* Actions */}
+        {/* ACTIONS */}
         <div className="order-actions">
           <Button className="back-btn" onClick={() => navigate("/your-orders")} icon={<ArrowLeftOutlined />}>
             Quay lại danh sách
@@ -384,6 +409,7 @@ const TrackOrderDetail = () => {
         </div>
       </div>
 
+      {/* MODAL FEEDBACK */}
       <Modal
         title="Đánh giá sản phẩm"
         open={isFeedbackModalOpen}
@@ -394,6 +420,7 @@ const TrackOrderDetail = () => {
       >
         <p>Chấm sao:</p>
         <Rate value={rating} onChange={(v) => setRating(v)} />
+
         <p>Bình luận:</p>
         <Input.TextArea
           rows={4}
