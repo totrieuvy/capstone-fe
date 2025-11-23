@@ -458,6 +458,7 @@ export interface AppointmentDetail {
   prescription: Prescription | null;
   discountPercent: number;
   items: AppointmentItemDetail[];
+  healthNote: string;
 }
 
 export interface AppointmentDetailResponse {
@@ -482,6 +483,7 @@ export interface CheckInAppointmentRequest {
   checkInImage: string;
   veterinarianId: string;
   staffId?: string | null;
+  healthNote: string;
 }
 
 export interface CheckInAppointmentResponse {

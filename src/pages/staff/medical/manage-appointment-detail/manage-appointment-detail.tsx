@@ -20,6 +20,7 @@ import {
   Tooltip,
   Badge,
   Collapse,
+  Input,
 } from "antd";
 import {
   ArrowLeftOutlined,
@@ -74,6 +75,7 @@ const ManageAppointmentDetail: React.FC = () => {
   const [checkInModalVisible, setCheckInModalVisible] = useState<boolean>(false);
   const [checkInLoading, setCheckInLoading] = useState<boolean>(false);
   const [uploadedImage, setUploadedImage] = useState<string | null>(null);
+  const [healthNote, setHealthNote] = useState<string>("");
 
   // Image preview modal states
   const [imagePreviewVisible, setImagePreviewVisible] = useState<boolean>(false);
@@ -274,6 +276,7 @@ const ManageAppointmentDetail: React.FC = () => {
         checkInImage: uploadedImage,
         veterinarianId: appointment.veterinarian.id,
         staffId: null, // Default to null as requested
+        healthNote: healthNote,
       });
 
       message.success("Check-in thành công!");
@@ -284,6 +287,7 @@ const ManageAppointmentDetail: React.FC = () => {
 
       // Reset form
       setUploadedImage(null);
+      setHealthNote("");
     } catch (error) {
       message.error("Check-in thất bại! Vui lòng thử lại.");
       console.error("Error checking in appointment:", error);
@@ -1180,6 +1184,7 @@ const ManageAppointmentDetail: React.FC = () => {
           onCancel={() => {
             setCheckInModalVisible(false);
             setUploadedImage(null);
+            setHealthNote("");
           }}
           footer={[
             <Button
@@ -1187,6 +1192,7 @@ const ManageAppointmentDetail: React.FC = () => {
               onClick={() => {
                 setCheckInModalVisible(false);
                 setUploadedImage(null);
+                setHealthNote("");
               }}
             >
               Hủy
@@ -1258,6 +1264,21 @@ const ManageAppointmentDetail: React.FC = () => {
                   </Text>
                 </div>
               )}
+
+              <div>
+                <Text strong style={{ fontSize: "16px", marginBottom: "8px", display: "block" }}>
+                  Ghi chú sức khỏe:
+                </Text>
+                <Input.TextArea
+                  value={healthNote}
+                  onChange={(e) => setHealthNote(e.target.value)}
+                  placeholder="Nhập ghi chú về tình trạng sức khỏe của hamster..."
+                  rows={4}
+                  style={{ marginTop: "8px" }}
+                  showCount
+                  maxLength={500}
+                />
+              </div>
             </Space>
           </div>
         </Modal>
