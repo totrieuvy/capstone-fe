@@ -650,7 +650,7 @@ const BoardingDetail: React.FC = () => {
           <Card title="Chi tiết thanh toán" className="payment-card">
             <div className="payment-item">
               <Text>Ngày tạo</Text>
-              <Text>{new Date(booking.createdAt).toLocaleDateString("vi-VN")}</Text>
+              <Text>{booking.createdAt ? new Date(booking.createdAt).toLocaleDateString("vi-VN") : "N/A"}</Text>
             </div>
             <Divider />
             <div className="payment-item total">

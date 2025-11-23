@@ -1,6 +1,6 @@
 import { AspectRatio } from "@/components/ui/aspect-ratio";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
+// import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+// import { Button } from "@/components/ui/button";
 
 interface Testimonial {
   quote: string;
@@ -33,32 +33,32 @@ const Hero151 = ({
   heading = "Chăm sóc hamster cho mọi nhà",
   // chagne description to include medical, grooming hamster service
   description = "Dịch vụ chăm sóc sức khỏe, làm đẹp và giữ hộ hamster tận tâm và chuyên nghiệp cho thú cưng của bạn. Chung tôi cam kết mang đến môi trường an toàn và thoải mái nhất cho những người bạn nhỏ của bạn.",
-  button = {
-    text: "Explore Now",
-    url: "/properties",
-  },
-  testimonial = {
-    quote: "Found my dream vacation home within minutes. The photos were exactly as advertised!",
-    author: "Sarah Chen",
-    role: "Verified Guests",
-    company: "5★ Rating",
-    avatars: [
-      { image: "/images/HomePage/Avatars/Sarah-Chen.jpg", fallback: "AB" },
-      { image: "/images/HomePage/Avatars/BillGates.webp", fallback: "CD" },
-      { image: "/images/HomePage/Avatars/Jeff-Bezos.jpg", fallback: "EF" },
-      { image: "/images/HomePage/Avatars/Woman-1.jpg", fallback: "GH" },
-      { image: "/images/HomePage/Avatars/Woman-2.jpg", fallback: "GH" },
-      { image: "/images/HomePage/Avatars/Man-1.jpg", fallback: "GH" },
-      { image: "/images/HomePage/Avatars/Man-2.jpg", fallback: "GH" },
-      { image: "", fallback: "+254" },
+//   button = {
+//     text: "Explore Now",
+//     url: "/properties",
+//   },
+    //   testimonial = {
+    //     quote: "Found my dream vacation home within minutes. The photos were exactly as advertised!",
+    //     author: "Sarah Chen",
+    //     role: "Verified Guests",
+    //     company: "5★ Rating",
+    //     avatars: [
+    //       { image: "/images/HomePage/Avatars/Sarah-Chen.jpg", fallback: "AB" },
+    //       { image: "/images/HomePage/Avatars/BillGates.webp", fallback: "CD" },
+    //       { image: "/images/HomePage/Avatars/Jeff-Bezos.jpg", fallback: "EF" },
+    //       { image: "/images/HomePage/Avatars/Woman-1.jpg", fallback: "GH" },
+    //       { image: "/images/HomePage/Avatars/Woman-2.jpg", fallback: "GH" },
+    //       { image: "/images/HomePage/Avatars/Man-1.jpg", fallback: "GH" },
+    //       { image: "/images/HomePage/Avatars/Man-2.jpg", fallback: "GH" },
+    //       { image: "", fallback: "+254" },
 
-    ],
-  },
+    //     ],
+    //   },
   images = {
-    first: "/images/properties/luxury-living.jpg",
-    second: "/images/properties/modern-kitchen.jpg",
-    third: "/images/properties/pool-view.jpg",
-    fourth: "/images/properties/bedroom-suite.jpg",
+    first: "/images/Home/Hamster1.jpg",
+    second: "/images/Home/Cage1.jpg",
+    third: "/images/Home/Grooming1.jpg",
+    fourth: "/images/Home/Healthcare1.jpg",
   },
 }: Hero151Props) => {
   return (
