@@ -1,5 +1,5 @@
 import { Link, useLocation } from "react-router-dom";
-import { FaUserCircle, FaUser, FaSignOutAlt, FaShoppingCart, FaTrash } from "react-icons/fa";
+import { FaUserCircle, FaUser, FaSignOutAlt, FaShoppingCart, FaTrash, FaChevronDown } from "react-icons/fa";
 import { useDispatch, useSelector } from "react-redux";
 import "./header.scss";
 import logo from "../../assets/logo.png";
@@ -82,13 +82,33 @@ function Header() {
 
       <div className="header__middle">
         {Navigation.map((item) => (
-          <Link 
-            key={item.id} 
-            to={item.path} 
-            className={`nav-link ${location.pathname === item.path ? 'active' : ''}`}
-          >
-            {item.name}
-          </Link>
+          <div key={item.id} className="nav-item">
+            {item.subItems ? (
+              <div className="nav-dropdown">
+                <span className="nav-link dropdown-trigger">
+                  {item.name} <FaChevronDown />
+                </span>
+                <div className="nav-dropdown-menu">
+                  {item.subItems.map((subItem) => (
+                    <Link
+                      key={subItem.id}
+                      to={subItem.path}
+                      className={`nav-dropdown-item ${location.pathname === subItem.path ? 'active' : ''}`}
+                    >
+                      {subItem.name}
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <Link 
+                to={item.path!} 
+                className={`nav-link ${location.pathname === item.path ? 'active' : ''}`}
+              >
+                {item.name}
+              </Link>
+            )}
+          </div>
         ))}
       </div>
 
