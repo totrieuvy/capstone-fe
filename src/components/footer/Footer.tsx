@@ -18,7 +18,7 @@ const Footer = () => {
           <ul>
             {Navigation.map((item) => (
               <li key={item.id}>
-                <Link to={item.path}>{item.name}</Link>
+                <Link to={item.path ?? "/"}>{item.name}</Link>
               </li>
             ))}
           </ul>
