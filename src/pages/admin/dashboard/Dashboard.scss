@@ -68,6 +68,22 @@
   font-size: 28px;
   font-weight: 700;
   margin-bottom: 20px;
+  text-align: center;
+  color: #fa8c16;
+}
+
+.stat-box {
+  text-align: center;
+  background: #ffffff;
+  border-radius: 10px;
+  box-shadow: rgba(0, 0, 0, 0.08) 0px 4px 12px;
+
+  h2 {
+    margin-top: 10px;
+    font-size: 22px;
+    font-weight: 700;
+    color: #1890ff;
+  }
 }
 
 /* Center Pickers */
