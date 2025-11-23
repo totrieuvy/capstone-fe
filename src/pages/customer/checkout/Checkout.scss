@@ -1,3 +1,50 @@
+// --- Policy Section ---
+.policy-section {
+  background: #f6faff;
+  border: 1px solid #b3d8fd;
+  border-radius: 10px;
+  padding: 18px 18px 10px 18px;
+  margin: 18px 0 0 0;
+  box-shadow: 0 2px 8px rgba(22, 119, 255, 0.06);
+  .ant-alert {
+    background: transparent;
+    border: none;
+    padding: 0;
+    .ant-alert-message {
+      font-weight: 600;
+      color: #1677ff;
+      font-size: 16px;
+      margin-bottom: 6px;
+    }
+    .ant-alert-description {
+      color: #333;
+      font-size: 14px;
+      padding-top: 2px;
+      ul {
+        margin: 0;
+        padding-left: 18px;
+      }
+      li {
+        margin-bottom: 6px;
+      }
+    }
+  }
+  .ant-checkbox-wrapper {
+    margin-top: 10px;
+    font-size: 15px;
+    color: #1677ff;
+    font-weight: 500;
+    user-select: none;
+    .ant-checkbox-inner {
+      border-radius: 4px;
+      border-color: #1677ff;
+    }
+    .ant-checkbox-checked .ant-checkbox-inner {
+      background-color: #1677ff;
+      border-color: #1677ff;
+    }
+  }
+}
 // --- Variables ---
 $primary-color: #1677ff;
 $text-color: #333;
@@ -47,12 +94,51 @@ $box-shadow-base: 0 4px 12px rgba(0, 0, 0, 0.08);
     color: $text-color;
   }
 
+  /* ================= POLICY STYLING ================ */
   .checkout-card {
-    background: $card-background;
-    border-radius: $border-radius-base;
-    padding: 28px;
-    box-shadow: $box-shadow-base;
-    margin-bottom: 24px;
+    .policy-section {
+      margin-top: 20px;
+      padding: 16px;
+      background: #ffffff;
+      border-radius: 12px;
+      border: 1px solid #f0f0f0;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+
+      .policy-title {
+        font-size: 16px;
+        font-weight: 600;
+        margin-bottom: 12px;
+        color: #ff7a45;
+      }
+
+      ul {
+        margin: 0;
+        padding-left: 20px;
+
+        li {
+          margin-bottom: 10px;
+          font-size: 14px;
+          line-height: 1.45;
+          color: #444;
+
+          strong {
+            color: #222;
+          }
+        }
+      }
+
+      .ant-checkbox-wrapper {
+        margin-top: 12px;
+        font-size: 14px;
+        display: flex;
+        align-items: center;
+
+        .ant-checkbox {
+          transform: scale(1.1);
+          margin-right: 8px;
+        }
+      }
+    }
   }
 
   .card-title {
@@ -119,53 +205,58 @@ $box-shadow-base: 0 4px 12px rgba(0, 0, 0, 0.08);
     margin-top: 32px;
   }
 
+  /* ================= PAYMENT METHOD FIX ================= */
   .payment-method-group {
     display: flex;
-    justify-content: center;
-    gap: 25px;
+    gap: 16px;
+    width: 100%;
+    justify-content: space-between;
 
-    /* Xóa toàn bộ style radio mặc định */
     .ant-radio-button-wrapper {
-      border: none !important;
-      background: transparent !important;
       padding: 0 !important;
-      box-shadow: none !important;
-      position: relative;
-
-      &:before {
-        display: none !important;
-      }
-    }
-
-    /* Khung (ô) chứa logo */
-    .payment-option {
-      width: 150px;
+      border-radius: 12px !important;
+      overflow: hidden;
+      border: 1px solid #d9d9d9;
+      background: #fff;
+      transition: all 0.2s ease;
       height: 80px;
-
+      width: 140px;
       display: flex;
       align-items: center;
       justify-content: center;
 
-      border: 2px solid #d9d9d9;
-      border-radius: 12px;
+      /* Tắt border default của AntD */
+      &::before {
+        display: none !important;
+      }
 
-      background: #fff;
+      /* ACTIVE */
+      &.ant-radio-button-wrapper-checked {
+        border-color: #1677ff !important;
+        box-shadow: 0 0 0 3px rgba(22, 119, 255, 0.35);
+      }
 
-      transition: all 0.2s ease;
+      /* HOVER */
+      &:hover {
+        border-color: #4096ff;
+      }
     }
 
-    /* Khi được chọn */
-    .ant-radio-button-wrapper-checked .payment-option {
-      border-color: #1677ff !important;
-      box-shadow: 0 0 0 4px rgba(22, 119, 255, 0.25) !important;
-    }
+    /* Logo bên trong */
+    .payment-option {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      height: 100%;
 
-    /* Logo */
-    .payment-logo {
-      max-width: 70%;
-      max-height: 65%;
-      object-fit: contain;
-      pointer-events: none;
+      img {
+        max-width: 70px;
+        max-height: 70px;
+        object-fit: contain;
+        display: block;
+        margin: auto;
+      }
     }
   }
 

@@ -11,10 +11,12 @@
     text-align: center;
   }
 
+  /* ================= FILTER ================= */
   .policy__filter-top {
     margin-bottom: 15px;
     display: flex;
     justify-content: center;
+    gap: 20px;
 
     .filter-buttons {
       display: flex;
@@ -54,6 +56,7 @@
     }
   }
 
+  /* ================= FILTER (LAYOUT) ================= */
   .policy__filters {
     display: flex;
     flex-direction: column;
@@ -88,6 +91,7 @@
     }
   }
 
+  /* ================= TABLE ================= */
   .ant-table {
     background: #fff;
     border-radius: 10px;
@@ -114,6 +118,7 @@
     }
   }
 
+  /* ================= BUTTON PRIMARY ================= */
   .ant-btn-primary {
     background-color: #ff7a45;
     border-color: #ff7a45;
@@ -124,6 +129,7 @@
     }
   }
 
+  /* ================= MODAL ================= */
   .ant-modal-content {
     border-radius: 10px;
   }
@@ -139,6 +145,7 @@
     }
   }
 
+  /* ================= TAG ================= */
   .ant-tag {
     border-radius: 6px;
     text-transform: uppercase;
@@ -146,5 +153,56 @@
     color: #ff7a45;
     border: 1px solid #ff7a45;
     font-weight: 500;
+  }
+
+  /* ================= SPECIES REFUND DETAIL ================= */
+  .species-row {
+    display: flex;
+    align-items: flex-end;
+    gap: 16px;
+    margin-bottom: 16px;
+    padding: 12px;
+    border: 1px solid #ffe0cc;
+    border-radius: 10px;
+    background: #fff7f3;
+
+    .ant-form-item {
+      flex: 1;
+    }
+
+    button {
+      border-radius: 8px;
+      background: #ff7a45 !important;
+      border-color: #ff7a45 !important;
+      color: #fff;
+
+      &:hover {
+        background-color: #e56a3b !important;
+      }
+    }
+  }
+
+  /* ================= RESPONSIVE ================= */
+  @media (max-width: 768px) {
+    .policy__filter-bottom {
+      flex-direction: column;
+
+      input {
+        width: 100% !important;
+      }
+
+      button {
+        width: 100%;
+      }
+    }
+
+    .species-row {
+      flex-direction: column;
+
+      button {
+        width: 100%;
+        height: 38px;
+      }
+    }
   }
 }
