@@ -252,6 +252,33 @@ function Dashboard() {
     <div className="Dashboard">
       <h1 className="dashboard-title">Thống kê tổng quan</h1>
 
+      {/* 4 Ô VUÔNG TỔNG DOANH THU THEO NĂM */}
+      <Row gutter={[16, 16]} style={{ marginBottom: 20 }}>
+        <Col xs={24} md={6}>
+          <Card className="stat-box" title="Khám bệnh">
+            <h2>{revenue.medicalRevenue.toLocaleString()} VND</h2>
+          </Card>
+        </Col>
+
+        <Col xs={24} md={6}>
+          <Card className="stat-box" title="Grooming">
+            <h2>{revenue.groomingRevenue.toLocaleString()} VND</h2>
+          </Card>
+        </Col>
+
+        <Col xs={24} md={6}>
+          <Card className="stat-box" title="Boarding">
+            <h2>{revenue.boardingRevenue.toLocaleString()} VND</h2>
+          </Card>
+        </Col>
+
+        <Col xs={24} md={6}>
+          <Card className="stat-box" title="Đơn hàng">
+            <h2>{revenue.orderRevenue.toLocaleString()} VND</h2>
+          </Card>
+        </Col>
+      </Row>
+
       {/* YEAR PICKER */}
       <div className="dashboard-center-picker">
         <span>Chọn năm:</span>
