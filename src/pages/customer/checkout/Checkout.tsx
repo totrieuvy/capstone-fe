@@ -6,6 +6,12 @@ import api from "../../../config/axios";
 import "./Checkout.scss";
 import type { AxiosError } from "axios";
 
+import { useDispatch } from "react-redux";
+import { removeFromCart } from "../../../redux/features/cartSlice";
+import { toast } from "react-toastify";
+
+import { useNavigate } from "react-router-dom";
+
 // --- Interface Definitions ---
 interface District {
   id: number;
@@ -92,6 +98,16 @@ const Checkout = () => {
   const totalWeight = cartItems.reduce((sum, item) => sum + item.weight * item.quantity, 0);
   const totalValue = cartItems.reduce((sum, item) => sum + (item.price || 0) * item.quantity, 0);
 
+  const dispatch = useDispatch();
+
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (cartItems.length === 0) {
+      navigate("/mua-hang");
+    }
+  }, [cartItems, navigate]);
+
   // --- Data Fetching ---
   useEffect(() => {
     document.title = "Thanh toán";
@@ -156,8 +172,18 @@ const Checkout = () => {
   };
 
   const handleCalculateFee = async () => {
+    if (!addressDetail.trim()) {
+      toast.warning("Vui lòng nhập địa chỉ cụ thể trước khi tính phí.");
+      return;
+    }
+
     if (!selectedDistrict || !selectedWard) {
-      message.warning("Vui lòng chọn đầy đủ quận/huyện và phường/xã.");
+      toast.warning("Vui lòng chọn đầy đủ quận/huyện và phường/xã.");
+      return;
+    }
+
+    if (!selectedDistrict || !selectedWard) {
+      toast.warning("Vui lòng chọn đầy đủ quận/huyện và phường/xã.");
       return;
     }
 
@@ -391,11 +417,18 @@ const Checkout = () => {
                       <img src={item.imageUrl} alt={item.name} />
                       <span className="summary-item-quantity">{item.quantity}</span>
                     </div>
+
                     <div className="summary-info">
                       <p className="summary-item-name">{item.name}</p>
                       <p className="summary-item-price">{(item.price || 0).toLocaleString()}đ</p>
                     </div>
+
                     <p className="summary-item-total">{((item.price || 0) * item.quantity).toLocaleString()}đ</p>
+
+                    {/* 🔥 NÚT XÓA */}
+                    <button className="summary-item-remove" onClick={() => dispatch(removeFromCart(item.id))}>
+                      ✕
+                    </button>
                   </div>
                 ))}
               </div>

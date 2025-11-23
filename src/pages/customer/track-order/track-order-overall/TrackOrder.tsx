@@ -15,6 +15,9 @@ dayjs.extend(timezone);
 
 const { RangePicker } = DatePicker;
 
+/* ===============================
+   INTERFACES
+================================= */
 interface Order {
   id: string;
   orderDate: string;
@@ -34,41 +37,71 @@ interface OrderApiResponse {
   pageSize: number;
 }
 
+interface OrderQueryParams {
+  page: number;
+  size: number;
+  sortBy: string;
+  sortDir: string;
+  status?: string;
+  startDate?: string;
+  endDate?: string;
+}
+
+/* ===============================
+   COMPONENT
+================================= */
 const TrackOrder = () => {
   const navigate = useNavigate();
 
-  const [allOrders, setAllOrders] = useState<Order[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState<boolean>(true);
   const [countdowns, setCountdowns] = useState<Record<string, string>>({});
-  const [pagination, setPagination] = useState({
-    currentPage: 1,
-    pageSize: 10,
-  });
 
   const [statusFilter, setStatusFilter] = useState<string>("ALL");
   const [dateRangeFilter, setDateRangeFilter] = useState<[Dayjs | null, Dayjs | null] | null>(null);
 
-  // Fetch all orders once
-  const fetchAllOrders = async () => {
+  const [pagination, setPagination] = useState({
+    currentPage: 1,
+    pageSize: 10,
+    total: 0,
+  });
+
+  /* ===============================
+     FETCH ORDERS (BACKEND PAGINATION)
+  ================================== */
+  const fetchOrders = async (
+    page = 1,
+    size = 10,
+    status = "ALL",
+    dates: [Dayjs | null, Dayjs | null] | null = null
+  ) => {
     setLoading(true);
+
     try {
-      let all: Order[] = [];
-      let page = 0;
-      let totalPages = 1;
+      const params: OrderQueryParams = {
+        page: page - 1,
+        size,
+        sortBy: "createdAt",
+        sortDir: "desc",
+      };
 
-      do {
-        const res = await api.get<{ data: OrderApiResponse }>(
-          `/api/order?page=${page}&size=10&sortBy=createdAt&sortDir=desc`
-        );
-        const { data } = res.data;
-        all = [...all, ...data.content];
-        totalPages = data.totalPages;
-        page++;
-      } while (page < totalPages);
+      if (status !== "ALL") params.status = status;
 
-      setAllOrders(all);
-      setOrders(all);
+      if (dates && dates[0] && dates[1]) {
+        params.startDate = dates[0].startOf("day").format("YYYY-MM-DD");
+        params.endDate = dates[1].endOf("day").format("YYYY-MM-DD");
+      }
+
+      const res = await api.get<{ data: OrderApiResponse }>("/api/order", { params });
+
+      const data = res.data.data;
+
+      setOrders(data.content);
+      setPagination({
+        currentPage: data.pageNumber + 1,
+        pageSize: data.pageSize,
+        total: data.totalElements,
+      });
     } catch {
       message.error("Không thể tải danh sách đơn hàng!");
     } finally {
@@ -76,12 +109,17 @@ const TrackOrder = () => {
     }
   };
 
+  /* ===============================
+     FIRST LOAD
+  ================================== */
   useEffect(() => {
     document.title = "Lịch sử đơn hàng";
-    fetchAllOrders();
+    fetchOrders(1, 10, "ALL", null);
   }, []);
 
-  /* COUNTDOWN FOR CANCEL */
+  /* ===============================
+     COUNTDOWN FOR CANCEL (PAID)
+  ================================== */
   useEffect(() => {
     const interval = setInterval(() => {
       const newCountdowns: Record<string, string> = {};
@@ -109,35 +147,9 @@ const TrackOrder = () => {
     return () => clearInterval(interval);
   }, [orders]);
 
-  /* FILTER */
-  const applyFilters = (status: string, dates: [Dayjs | null, Dayjs | null] | null) => {
-    let filtered = [...allOrders];
-
-    if (status !== "ALL") {
-      filtered = filtered.filter((o) => o.status === status);
-    }
-
-    if (dates && dates[0] && dates[1]) {
-      const start = dates[0].startOf("day");
-      const end = dates[1].endOf("day");
-
-      filtered = filtered.filter((o) => {
-        const date = dayjs.utc(o.orderDate, "DD-MM-YYYY HH:mm:ss").tz("Asia/Ho_Chi_Minh");
-        return date.isAfter(start) && date.isBefore(end);
-      });
-    }
-
-    setOrders(filtered);
-    setPagination({ ...pagination, currentPage: 1 });
-  };
-
-  const resetFilters = () => {
-    setStatusFilter("ALL");
-    setDateRangeFilter(null);
-    setOrders(allOrders);
-  };
-
-  /* STATUS COLORS / TEXT */
+  /* ===============================
+     STATUS COLORS + TEXT
+  ================================== */
   const statusColors: Record<string, string> = {
     PENDING: "orange",
     PAID: "blue",
@@ -162,7 +174,9 @@ const TrackOrder = () => {
 
   const getStatusTag = (status: string) => <Tag color={statusColors[status]}>{statusTexts[status]}</Tag>;
 
-  /* PAYMENT METHOD RENDER */
+  /* ===============================
+     PAYMENT METHOD LOGO
+  ================================== */
   const renderPayment = (method: string) => {
     if (method === "VNPAY")
       return (
@@ -172,6 +186,7 @@ const TrackOrder = () => {
           className="payment-logo"
         />
       );
+
     if (method === "PAYOS")
       return (
         <img
@@ -180,6 +195,7 @@ const TrackOrder = () => {
           className="payment-logo"
         />
       );
+
     if (method === "WALLET")
       return (
         <img
@@ -192,7 +208,9 @@ const TrackOrder = () => {
     return method;
   };
 
-  /* TABLE COLUMNS */
+  /* ===============================
+     TABLE COLUMNS
+  ================================== */
   const columns: ColumnsType<Order> = [
     {
       title: "Mã đơn",
@@ -250,29 +268,27 @@ const TrackOrder = () => {
     },
   ];
 
-  /* PAGINATION */
-  const startIndex = (pagination.currentPage - 1) * pagination.pageSize;
-  const paginatedOrders = orders.slice(startIndex, startIndex + pagination.pageSize);
-
+  /* ===============================
+     UI RENDER
+  ================================== */
   return (
     <div className="track-order-page">
       <div className="container">
         <h1 className="page-title">Lịch sử đơn hàng</h1>
 
-        {/* Bộ lọc */}
+        {/* FILTER CARD */}
         <Card className="filter-card">
           <Row gutter={[16, 16]}>
-            {/* Dropdown chọn trạng thái */}
+            {/* Status Filter */}
             <Col xs={24} sm={12} md={8}>
               <Select
                 value={statusFilter}
                 onChange={(value) => {
                   setStatusFilter(value);
-                  applyFilters(value, dateRangeFilter);
+                  fetchOrders(1, pagination.pageSize, value, dateRangeFilter);
                 }}
                 style={{ width: "100%" }}
                 className="status-select"
-                placeholder="Chọn trạng thái"
               >
                 <Select.Option value="ALL">Tất cả trạng thái</Select.Option>
                 <Select.Option value="PENDING">Chờ thanh toán</Select.Option>
@@ -286,29 +302,38 @@ const TrackOrder = () => {
               </Select>
             </Col>
 
-            {/* Lọc theo ngày */}
+            {/* Date Filter */}
             <Col xs={24} sm={12} md={10}>
               <RangePicker
                 value={dateRangeFilter}
                 onChange={(v) => {
                   setDateRangeFilter(v);
-                  applyFilters(statusFilter, v);
+                  fetchOrders(1, pagination.pageSize, statusFilter, v);
                 }}
                 format="DD/MM/YYYY"
                 style={{ width: "100%" }}
               />
             </Col>
 
-            {/* Nút reset */}
+            {/* Reset Filter */}
             <Col xs={24} md={6}>
-              <Button icon={<ReloadOutlined />} onClick={resetFilters} block className="reset-btn">
+              <Button
+                icon={<ReloadOutlined />}
+                onClick={() => {
+                  setStatusFilter("ALL");
+                  setDateRangeFilter(null);
+                  fetchOrders(1, pagination.pageSize, "ALL", null);
+                }}
+                block
+                className="reset-btn"
+              >
                 Đặt lại bộ lọc
               </Button>
             </Col>
           </Row>
         </Card>
 
-        {/* TABLE */}
+        {/* ORDER LIST */}
         <Card className="order-list-card">
           {loading ? (
             <div className="loading-spinner">
@@ -316,13 +341,13 @@ const TrackOrder = () => {
             </div>
           ) : (
             <>
-              <Table columns={columns} dataSource={paginatedOrders} pagination={false} />
+              <Table columns={columns} dataSource={orders} pagination={false} />
 
               <Pagination
                 current={pagination.currentPage}
-                total={orders.length}
+                total={pagination.total}
                 pageSize={pagination.pageSize}
-                onChange={(p) => setPagination({ ...pagination, currentPage: p })}
+                onChange={(p) => fetchOrders(p, pagination.pageSize, statusFilter, dateRangeFilter)}
                 className="pagination"
                 showTotal={(t) => `Tổng ${t} đơn`}
               />
