@@ -110,6 +110,8 @@ const BoardingHistory: React.FC = () => {
         return 'red';
         case 'FAILED':
         return 'red';
+        case 'INCIDENT':
+        return 'red';
       default:
         return 'default';
     }
@@ -131,6 +133,8 @@ const BoardingHistory: React.FC = () => {
         return 'Đã hủy';
         case 'FAILED':
         return 'Thanh toán thất bại';
+        case 'INCIDENT':
+        return 'Có sự cố';
       default:
         return status.replace('_', ' ');
     }

@@ -115,7 +115,10 @@ export interface BookingByDateRange {
   status: string;
   cageTypeId: string;
   cageTypeName: string;
-  cageName: string;
+  newCageName: string | null;
+  cageName: string | null;
+  newCageTypeName: string | null;
+  newCageTypeId: string | null;
   customerName: string;
   hamsterName: string;
 }
@@ -145,7 +148,10 @@ export interface BookingDetail {
   customerMail: string;
   cageTypeId: string;
   cageName: string;
+  newCageName: string | null;
   cageTypeName: string;
+  newCageTypeName: string | null;
+  newCageTypeId: string | null;
   startDate: string; // Format: YYYY-MM-DD
   endDate: string; // Format: YYYY-MM-DD
   newEndDate: string | null; // Format: YYYY-MM-DD or null
@@ -155,8 +161,10 @@ export interface BookingDetail {
   status: string;
   notes: string;
   createdAt: string | null; // ISO string format or null
-  services: BookingDetailService[];
   cameraId: string | null;
+  services: BookingDetailService[];
+  additionalServiceIds?: string[]; // Additional service IDs for services beyond the main services array
+  healthNote: string | null;
 }
 
 // Type definitions for file upload

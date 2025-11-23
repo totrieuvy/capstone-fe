@@ -110,6 +110,10 @@ const MedicalAppointmentHistory: React.FC = () => {
                 return 'green';
                 case 'FAILED':
                 return 'red';
+                case 'INCIDENT':
+                return 'red';
+                case 'NO_SHOW':
+                return 'red';
             default:
                 return 'default';
         }
@@ -139,6 +143,10 @@ const MedicalAppointmentHistory: React.FC = () => {
                 return 'Hoàn thành';
                 case 'FAILED':
                 return 'Thanh toán thất bại';
+                case 'INCIDENT':
+                return 'Có sự cố';
+                case 'NO_SHOW':
+                return 'Không đến';
             default:
                 return status.replace('_', ' ');
         }

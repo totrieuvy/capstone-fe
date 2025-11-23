@@ -379,6 +379,39 @@
           padding-bottom: 8px;
         }
       }
+
+      // Cage transfer section mobile styles
+      > div:nth-of-type(2) {
+        margin-top: 12px;
+        padding: 10px;
+
+        h5 {
+          font-size: 13px;
+          margin-bottom: 8px;
+        }
+
+        > div {
+          gap: 6px;
+
+          > div {
+            font-size: 12px;
+            flex-wrap: wrap;
+
+            span {
+              white-space: nowrap;
+            }
+          }
+        }
+
+        > div:last-child {
+          margin-top: 6px;
+          padding: 4px 6px;
+
+          p {
+            font-size: 11px;
+          }
+        }
+      }
     }
   }
 
@@ -543,6 +576,126 @@
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+// Cage Transfer Visual Indicators
+.cage-transfer-indicator {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  
+  .transfer-arrow {
+    color: #8c8c8c;
+    font-size: 14px;
+    margin: 0 4px;
+  }
+  
+  .original-value {
+    font-weight: 600;
+    color: #262626;
+  }
+  
+  .new-value {
+    font-weight: 600;
+    
+    &.cage-type {
+      color: #1890ff;
+    }
+    
+    &.cage-name {
+      color: #52c41a;
+    }
+  }
+  
+  .transfer-tag {
+    font-size: 12px;
+    padding: 0 6px;
+    margin-left: 4px;
+  }
+}
+
+// Cage Transfer History Section
+.cage-transfer-history {
+  background-color: #e6f7ff;
+  border: 1px solid #91d5ff;
+  border-radius: 6px;
+  padding: 12px;
+  margin-top: 16px;
+  
+  .transfer-title {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin: 0 0 12px 0;
+    font-size: 14px;
+    font-weight: 600;
+    color: #1890ff;
+  }
+  
+  .transfer-details {
+    display: grid;
+    gap: 8px;
+    
+    .transfer-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      
+      .transfer-label {
+        color: #595959;
+        font-weight: 500;
+        min-width: 80px;
+      }
+      
+      .transfer-from {
+        font-weight: 600;
+        color: #262626;
+      }
+      
+      .transfer-to {
+        font-weight: 600;
+        
+        &.type-change {
+          color: #1890ff;
+        }
+        
+        &.name-change {
+          color: #52c41a;
+        }
+      }
+    }
+  }
+  
+  .transfer-warning {
+    margin-top: 8px;
+    padding: 6px 8px;
+    background-color: #fff2e8;
+    border: 1px solid #ffbb96;
+    border-radius: 4px;
+    
+    p {
+      margin: 0;
+      font-size: 12px;
+      color: #d46b08;
+      font-weight: 500;
+    }
+  }
+}
+
+// Health Note Styles
+.health-note {
+  padding: 12px;
+  background-color: #fff7e6;
+  border-left: 4px solid #fa8c16;
+  border-radius: 4px;
+  color: #d46b08;
+  font-style: italic;
+  
+  &:hover {
+    background-color: #fff1dc;
   }
 }
 
