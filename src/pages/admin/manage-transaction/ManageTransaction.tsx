@@ -16,6 +16,9 @@ const { RangePicker } = DatePicker;
 const { Search } = Input;
 const { Option } = Select;
 
+/* ==============================
+   INTERFACES
+================================= */
 interface TransactionType {
   id: string;
   status: string;
@@ -25,34 +28,69 @@ interface TransactionType {
   transactionTime: string;
 }
 
+interface TransactionQueryParams {
+  page: number;
+  size: number;
+  status?: string;
+  serviceName?: string;
+  startDate?: string;
+  endDate?: string;
+  search?: string;
+}
+
 function ManageTransaction() {
   const [transactions, setTransactions] = useState<TransactionType[]>([]);
   const [loading, setLoading] = useState(false);
+
   const [statusFilter, setStatusFilter] = useState<string>("ALL");
   const [serviceFilter, setServiceFilter] = useState<string>("ALL");
   const [dateRange, setDateRange] = useState<[Dayjs | null, Dayjs | null] | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
-  const [pagination, setPagination] = useState<TablePaginationConfig>({
+
+  const [pagination, setPagination] = useState({
     current: 1,
     pageSize: 10,
     total: 0,
   });
 
-  const fetchTransactions = async (page = 1, size = 10): Promise<void> => {
+  /* ======================================
+     FETCH TRANSACTIONS (BACKEND PAGINATION)
+  ====================================== */
+  const fetchTransactions = async (
+    page = 1,
+    size = 10,
+    status = statusFilter,
+    service = serviceFilter,
+    search = searchTerm,
+    dates = dateRange
+  ) => {
     setLoading(true);
+
     try {
-      const res = await api.get(`/api/transaction`, {
-        params: { page: page - 1, size, sortBy: "transactionTime", sortDir: "desc" },
+      const params: TransactionQueryParams = {
+        page: page - 1,
+        size,
+      };
+
+      if (status !== "ALL") params.status = status;
+      if (service !== "ALL") params.serviceName = service;
+      if (search.trim() !== "") params.search = search.trim();
+
+      if (dates && dates[0] && dates[1]) {
+        params.startDate = dates[0].startOf("day").format("YYYY-MM-DD");
+        params.endDate = dates[1].endOf("day").format("YYYY-MM-DD");
+      }
+
+      const res = await api.get(`/api/transaction`, { params });
+      const data = res.data.data;
+
+      setTransactions(data.content);
+
+      setPagination({
+        current: data.pageNumber + 1,
+        pageSize: data.pageSize,
+        total: data.totalElements,
       });
-      if (res.data.code === 200) {
-        const data = res.data.data;
-        setTransactions(data.content);
-        setPagination({
-          current: data.pageNumber + 1,
-          pageSize: data.pageSize,
-          total: data.totalElements,
-        });
-      } else toast.error(res.data.message);
     } catch (error) {
       toast.error("Không thể tải giao dịch: " + (error as Error).message);
     } finally {
@@ -60,28 +98,32 @@ function ManageTransaction() {
     }
   };
 
+  /* ================================
+     FIRST LOAD
+  ================================== */
   useEffect(() => {
     document.title = "Quản lí giao dịch";
-    void fetchTransactions(pagination.current, pagination.pageSize);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pagination.current, pagination.pageSize]);
+    fetchTransactions(1, 10);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
-  const handleTableChange = (newPagination: TablePaginationConfig): void => {
-    setPagination((prev) => ({ ...prev, ...newPagination }));
+  /* ================================
+     PAGINATION CHANGE
+  ================================== */
+  const handleTableChange = (newPagination: TablePaginationConfig) => {
+    fetchTransactions(
+      newPagination.current!,
+      newPagination.pageSize!,
+      statusFilter,
+      serviceFilter,
+      searchTerm,
+      dateRange
+    );
   };
 
-  const filteredTransactions = transactions.filter((t) => {
-    const matchStatus = statusFilter === "ALL" ? true : t.status === statusFilter;
-    const matchService = serviceFilter === "ALL" ? true : t.serviceName === serviceFilter;
-    const matchSearch = t.documentNo.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchDate =
-      dateRange && dateRange[0] && dateRange[1]
-        ? dayjs(t.transactionTime, "DD-MM-YYYY HH:mm:ss").add(7, "hour").isAfter(dateRange[0]) &&
-          dayjs(t.transactionTime, "DD-MM-YYYY HH:mm:ss").add(7, "hour").isBefore(dateRange[1])
-        : true;
-    return matchStatus && matchService && matchSearch && matchDate;
-  });
-
+  /* ================================
+     STATUS COLORS
+  ================================== */
   const renderStatusTag = (status: string) => {
     const map: Record<string, { color: string; label: string }> = {
       PENDING: { color: "orange", label: "Đang chờ" },
@@ -91,73 +133,72 @@ function ManageTransaction() {
       CANCELLED: { color: "red", label: "Đã hủy" },
       REFUNDED: { color: "green", label: "Đã hoàn tiền" },
 
-      // Từ API thật của bạn:
       PAID: { color: "green", label: "Đã thanh toán" },
       IN_PROGRESS: { color: "purple", label: "Đang thực hiện" },
       FAILED: { color: "red", label: "Thất bại" },
       COMPLETED: { color: "green", label: "Hoàn tất" },
-      REJECTED: { color: "volcano", label: "Bị từ chối" },
+      REJECTED: { color: "volcano", label: "Từ chối" },
     };
 
     const item = map[status];
-
     return <Tag color={item?.color || "default"}>{item?.label || status}</Tag>;
   };
 
+  /* ================================
+     TABLE COLUMNS
+  ================================== */
   const columns: TableColumnsType<TransactionType> = [
     {
       title: "Mã GD",
       dataIndex: "id",
-      key: "id",
-      render: (text: string) => <span className="transaction__id">{text.substring(0, 8)}...</span>,
-      align: "center" as const,
+      align: "center",
+      render: (text) => <span className="transaction__id">{text.substring(0, 8)}...</span>,
     },
     {
       title: "Mã chứng từ",
       dataIndex: "documentNo",
-      key: "documentNo",
-      align: "center" as const,
+      align: "center",
     },
     {
       title: "Dịch vụ",
       dataIndex: "serviceName",
-      key: "serviceName",
-      align: "center" as const,
-      render: (text: string) => {
-        const map: Record<string, { color: string; label: string }> = {
-          ORDER: { color: "cyan", label: "Đơn hàng" },
-          BOOKING: { color: "geekblue", label: "Đặt lịch giữ hộ" },
-          GROOMING: { color: "magenta", label: "Đặt làm đẹp" },
+      align: "center",
+      render: (text) => {
+        const map: Record<string, { label: string; color: string }> = {
+          ORDER: { label: "Đơn hàng", color: "cyan" },
+          BOOKING: { label: "Đặt lịch giữ hộ", color: "geekblue" },
+          GROOMING: { label: "Đặt làm đẹp", color: "magenta" },
+          MEDICAL: { label: "Y tế", color: "purple" }, // 🔥 thêm MEDICAL
         };
 
-        return <Tag color={map[text]?.color}>{map[text]?.label || text}</Tag>;
+        const item = map[text];
+        return <Tag color={item?.color}>{item?.label || text}</Tag>;
       },
     },
     {
       title: "Số tiền",
       dataIndex: "amount",
-      key: "amount",
-      align: "right" as const,
-      sorter: (a: TransactionType, b: TransactionType) => a.amount - b.amount,
-      sortDirections: ["ascend", "descend"],
-      render: (price: number) => getFormattedPrice(price),
+      align: "right",
+      sorter: (a, b) => a.amount - b.amount,
+      render: (price) => getFormattedPrice(price),
     },
     {
       title: "Trạng thái",
       dataIndex: "status",
-      key: "status",
-      align: "center" as const,
+      align: "center",
       render: renderStatusTag,
     },
     {
-      title: "Thời gian GD",
+      title: "Thời gian",
       dataIndex: "transactionTime",
-      key: "transactionTime",
-      align: "center" as const,
-      render: (time: string) => dayjs(time, "DD-MM-YYYY HH:mm:ss").add(7, "hour").format("DD/MM/YYYY HH:mm"),
+      align: "center",
+      render: (time) => dayjs(time, "DD-MM-YYYY HH:mm:ss").add(7, "hour").format("DD/MM/YYYY HH:mm"),
     },
   ];
 
+  /* ================================
+     STATUS + SERVICE OPTIONS
+  ================================== */
   const statuses = [
     { key: "ALL", label: "Tất cả" },
     { key: "PENDING", label: "Đang chờ" },
@@ -178,36 +219,64 @@ function ManageTransaction() {
     { key: "BOOKING", label: "Đặt lịch giữ hộ" },
     { key: "GROOMING", label: "Đặt làm đẹp" },
     { key: "ORDER", label: "Đơn hàng" },
+    { key: "MEDICAL", label: "Y tế" },
   ];
 
+  /* ================================
+     RENDER UI
+  ================================== */
   return (
     <div className="ManageTransaction">
       <h1 className="page-title">Quản lí giao dịch</h1>
 
+      {/* FILTER TRẠNG THÁI */}
       <div className="filter-status">
         {statuses.map((s) => (
           <Button
             key={s.key}
             type={statusFilter === s.key ? "primary" : "default"}
             shape="round"
+            onClick={() => {
+              setStatusFilter(s.key);
+              fetchTransactions(1, pagination.pageSize, s.key);
+            }}
             className="status-btn"
-            onClick={() => setStatusFilter(s.key)}
           >
             {s.label}
           </Button>
         ))}
       </div>
 
+      {/* FILTER BAR */}
       <div className="filter-bar">
         <Space className="filter-controls">
           <Search
             placeholder="Tìm theo mã chứng từ..."
             allowClear
-            onChange={(e) => setSearchTerm(e.target.value)}
+            onChange={(e) => {
+              setSearchTerm(e.target.value);
+              fetchTransactions(1, pagination.pageSize, statusFilter, serviceFilter, e.target.value);
+            }}
             style={{ width: 260 }}
           />
-          <RangePicker format="DD/MM/YYYY" onChange={(v) => setDateRange(v)} style={{ width: 260 }} />
-          <Select defaultValue="ALL" onChange={(value) => setServiceFilter(value)} style={{ width: 220 }}>
+
+          <RangePicker
+            format="DD/MM/YYYY"
+            onChange={(v) => {
+              setDateRange(v);
+              fetchTransactions(1, pagination.pageSize, statusFilter, serviceFilter, searchTerm, v);
+            }}
+            style={{ width: 260 }}
+          />
+
+          <Select
+            value={serviceFilter}
+            onChange={(value) => {
+              setServiceFilter(value);
+              fetchTransactions(1, pagination.pageSize, statusFilter, value);
+            }}
+            style={{ width: 220 }}
+          >
             {serviceTypes.map((s) => (
               <Option key={s.key} value={s.key}>
                 {s.label}
@@ -217,21 +286,23 @@ function ManageTransaction() {
         </Space>
       </div>
 
+      {/* TABLE */}
       <div className="table-wrapper">
         <Table
-          dataSource={filteredTransactions}
+          dataSource={transactions}
           columns={columns}
           rowKey="id"
+          loading={loading}
+          bordered
           pagination={{
             current: pagination.current,
             pageSize: pagination.pageSize,
             total: pagination.total,
             showSizeChanger: true,
-            showTotal: (total) => `Tổng ${total} giao dịch`,
+            pageSizeOptions: ["5", "10", "20", "50"],
+            showTotal: (t) => `Tổng ${t} giao dịch`,
           }}
-          loading={loading}
           onChange={handleTableChange}
-          bordered
         />
       </div>
     </div>

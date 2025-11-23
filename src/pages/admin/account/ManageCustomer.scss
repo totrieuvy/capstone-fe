@@ -78,4 +78,43 @@
     transform: scale(1.15);
     color: #ff6f61 !important;
   }
+
+  .btn-block,
+  .btn-unblock {
+    padding: 8px 14px;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+    font-weight: 600;
+    color: white;
+  }
+
+  .btn-block {
+    background: #ff4d4f;
+  }
+
+  .btn-unblock {
+    background: #52c41a;
+  }
+}
+
+.customer-detail {
+  .btn-block,
+  .btn-unblock {
+    padding: 8px 14px;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+    font-weight: 600;
+    color: white !important;
+    display: inline-block;
+  }
+
+  .btn-block {
+    background: #ff4d4f !important;
+  }
+
+  .btn-unblock {
+    background: #52c41a !important;
+  }
 }

@@ -47,6 +47,19 @@ const ManageCustomer: React.FC = () => {
     return `${dd}-${mm}-${yyyy} ${HH}:${MM}:${SS}`;
   };
 
+  const updateStatus = async (id: string, action: "BLOCK" | "UNBLOCK") => {
+    try {
+      await api.patch(`/api/admin/account/${id}/status?action=${action}`);
+
+      message.success(action === "BLOCK" ? "Đã khóa tài khoản!" : "Đã mở khóa tài khoản!");
+
+      fetchCustomers(currentPage, pageSize);
+      setIsDetailModalVisible(false);
+    } catch {
+      message.error("Thao tác thất bại!");
+    }
+  };
+
   const fetchCustomers = async (page = 1, size = 10) => {
     setLoading(true);
     try {
@@ -189,6 +202,17 @@ const ManageCustomer: React.FC = () => {
             <p>
               <strong>Ngày tạo:</strong> {convertUTCToVN(selectedCustomer.createdAt)}
             </p>
+
+            {/* 🔥 BUTTON BLOCK / UNBLOCK */}
+            <div style={{ marginTop: 20, display: "flex", gap: 10 }}>
+              <button className="btn-block" onClick={() => updateStatus(selectedCustomer.id, "BLOCK")}>
+                Khóa tài khoản
+              </button>
+
+              <button className="btn-unblock" onClick={() => updateStatus(selectedCustomer.id, "UNBLOCK")}>
+                Mở khóa tài khoản
+              </button>
+            </div>
           </div>
         )}
       </Modal>
