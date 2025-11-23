@@ -1,9 +1,12 @@
 .ManageGroomingService {
   h1 {
+    font-size: 24px;
+    font-weight: bold;
     margin-bottom: 20px;
-    font-weight: 600;
+    color: #ff6f61;
+    text-transform: uppercase;
+    letter-spacing: 1px;
     text-align: center;
-    color: #ff8b3d;
   }
 
   /* Thanh tìm kiếm + nút thêm */
@@ -19,13 +22,15 @@
     }
 
     .ant-btn-primary {
-      background: #ff8b3d !important;
-      border-color: #ff8b3d !important;
+      background: #ff6f61 !important; /* Đã đồng bộ màu nút */
+      border-color: #ff6f61 !important;
       color: #fff !important;
       font-weight: 500;
 
       &:hover {
-        opacity: 0.85;
+        background: #ff9447 !important;
+        border-color: #ff9447 !important;
+        opacity: 1;
       }
     }
   }
@@ -36,12 +41,15 @@
     align-items: center;
   }
 
-  .action-buttons .ant-btn-primary {
-    background: #1890ff !important;
-    border-color: #1890ff !important;
+  /* Cập nhật màu nút sửa trong bảng */
+  .action-buttons .ant-btn-primary:not(.ant-btn-dangerous) {
+    background: #ff6f61 !important; /* Đồng bộ màu nút sửa */
+    border-color: #ff6f61 !important;
 
     &:hover {
-      opacity: 0.9;
+      background: #ff9447 !important;
+      border-color: #ff9447 !important;
+      opacity: 1;
     }
   }
 
@@ -54,11 +62,41 @@
     }
   }
 
-  /* Khi thêm dịch vụ (form nhập giá) */
+  /* Thêm Modal Style */
+  .ant-modal {
+    .ant-modal-header {
+      background: linear-gradient(135deg, #ff6f61 0%, #ff9447 100%); /* Đồng bộ gradient */
+      border-radius: 12px 12px 0 0;
+
+      .ant-modal-title {
+        color: #fff;
+        font-weight: 600;
+        font-size: 18px;
+      }
+    }
+
+    .ant-modal-close-x {
+      color: #fff;
+    }
+
+    // Đồng bộ nút submit trong modal
+    .ant-btn[type="primary"]:not(.ant-btn-dangerous) {
+      background: #ff6f61;
+      border-color: #ff6f61;
+
+      &:hover {
+        background: #ff9447;
+        border-color: #ff9447;
+      }
+    }
+  }
+
+  /* Khi thêm/sửa dịch vụ (form nhập giá) */
   .price-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 16px;
     padding: 12px 0;
     border-bottom: 1px solid #e0e0e0;
 
@@ -66,22 +104,29 @@
       border-bottom: none;
     }
 
-    .ant-input-number {
-      width: 200px;
+    span.ant-typography {
+      min-width: 150px;
+      font-weight: 600;
+      display: inline-block;
     }
 
-    strong {
-      min-width: 150px;
+    .ant-form-item {
+      margin-bottom: 0 !important;
+      display: inline-block !important;
+    }
+
+    .ant-input-number {
+      width: 200px !important;
     }
   }
 
-  /* Khi update dịch vụ (hiển thị giá đọc được) */
+  /* Khi update dịch vụ (hiển thị giá đọc được) - Giữ lại style này, dù form đã dùng InputNumber */
   .price-list {
-    background: #f5f5f5;
+    background: #f9f9f9; /* Đồng bộ màu nền với Card */
     border-radius: 8px;
     padding: 16px 20px;
     margin-top: 8px;
-    box-shadow: inset 0 0 2px rgba(0, 0, 0, 0.05);
+    box-shadow: none;
 
     .price-display-row {
       display: flex;
@@ -105,7 +150,7 @@
       }
 
       .price-value {
-        color: #1890ff;
+        color: #ff6f61; /* Đồng bộ màu giá trị */
         font-size: 16px;
         font-weight: bold;
       }
@@ -117,6 +162,11 @@
     font-weight: 500;
     height: 38px;
     border-radius: 6px;
+  }
+
+  /* Switch Active */
+  .ant-switch-checked {
+    background-color: #52c41a;
   }
 
   /* Responsive */
@@ -135,12 +185,18 @@
     }
 
     .price-row {
-      flex-direction: column;
-      align-items: flex-start;
-      gap: 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 0;
+      border-bottom: 1px solid #e0e0e0;
 
-      .ant-input-number {
-        width: 100%;
+      &:last-child {
+        border-bottom: none;
+      }
+
+      .ant-form-item {
+        margin-bottom: 0;
       }
     }
 
@@ -154,4 +210,46 @@
       }
     }
   }
+}
+
+/* PRICE ROW PHẢI ĐỂ GLOBAL VÌ ANT DESIGN MODAL RENDER RA NGOÀI */
+.price-row {
+  display: flex !important;
+  align-items: center !important;
+  gap: 16px !important;
+  padding: 10px 0;
+  border-bottom: 1px solid #e0e0e0;
+  justify-content: space-between;
+
+  &:last-child {
+    border-bottom: none;
+  }
+
+  span.ant-typography {
+    min-width: 150px;
+    font-weight: 600;
+    display: inline-block;
+  }
+
+  .ant-form-item {
+    margin-bottom: 0 !important;
+    display: inline-block !important;
+  }
+
+  .ant-input-number {
+    width: 200px !important;
+  }
+}
+
+/* Toolbar inside grooming page */
+.ManageGroomingService .toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.ManageGroomingService .action-buttons {
+  display: flex;
+  gap: 8px;
 }

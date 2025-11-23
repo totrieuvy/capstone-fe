@@ -72,6 +72,7 @@ interface ServiceFormValues {
   description: string;
   durationMinutes: number;
   prices: Price[];
+  isActive?: boolean; // Thêm isActive vào FormValues
 }
 
 function ManageGroomingService() {
@@ -101,18 +102,27 @@ function ManageGroomingService() {
       const data = response.data.data;
       setServiceDetail(data);
 
-      const prices = data.prices.map((p) => ({
-        priceId: p.priceId,
-        speciesId: p.speciesId,
-        price: p.price,
-      }));
+      // Tạo map giá hiện tại
+      const currentPricesMap = new Map(data.prices.map((p) => [p.speciesId, p]));
+
+      // Tạo array prices cho form bằng cách lặp qua species và gán giá hiện tại (nếu có)
+      const formPrices = species.map((sp) => {
+        const existingPrice = currentPricesMap.get(sp.id);
+        return {
+          // Nếu có giá cũ, dùng priceId, nếu không thì để undefined (khi người dùng thêm loài mới)
+          priceId: existingPrice?.priceId,
+          speciesId: sp.id,
+          price: existingPrice?.price || 0, // Giá trị mặc định là 0
+        };
+      });
 
       form.setFieldsValue({
         id: data.id,
         serviceName: data.serviceName,
         description: data.description,
         durationMinutes: data.durationMinutes,
-        prices,
+        prices: formPrices,
+        isActive: data.isActive, // Load trạng thái hoạt động
       });
 
       setIsUpdate(true);
@@ -148,12 +158,13 @@ function ManageGroomingService() {
     setLoading(true);
     try {
       const payload = {
-        serviceType: "GROOMING",
         serviceName: values.serviceName,
         description: values.description,
         durationMinutes: values.durationMinutes,
-        prices: values.prices,
-        isActive: true,
+        // Chỉ gửi những giá trị có price > 0
+        prices: values.prices.filter((p) => p.price > 0),
+        // Lấy isActive từ form values (mặc định true cho Create)
+        isActive: values.isActive === undefined ? true : values.isActive,
       };
 
       if (isUpdate && values.id) {
@@ -166,8 +177,9 @@ function ManageGroomingService() {
 
       fetchServices();
       handleCancel();
-    } catch {
+    } catch (error) {
       message.error("Thao tác thất bại!");
+      console.error("Submit error:", error);
     } finally {
       setLoading(false);
     }
@@ -196,24 +208,28 @@ function ManageGroomingService() {
       dataIndex: "serviceName",
       key: "serviceName",
       sorter: (a, b) => a.serviceName.localeCompare(b.serviceName),
+      width: 250,
     },
     {
       title: "Mô tả",
       dataIndex: "description",
       key: "description",
       ellipsis: true,
+      width: 350,
     },
     {
       title: "Thời lượng (phút)",
       dataIndex: "durationMinutes",
       key: "durationMinutes",
       align: "center",
+      width: 150,
     },
     {
       title: "Trạng thái",
       dataIndex: "isActive",
       key: "isActive",
       align: "center",
+      width: 120,
       render: (isActive: boolean) => (
         <Tag color={isActive ? "green" : "red"}>{isActive ? "Hoạt động" : "Không hoạt động"}</Tag>
       ),
@@ -222,13 +238,17 @@ function ManageGroomingService() {
       title: "Hành động",
       key: "actions",
       align: "center",
+      width: 150,
       render: (_, record) => (
         <Space className="action-buttons">
           <Button type="primary" icon={<FiEdit />} size="small" onClick={() => fetchServiceDetail(record.id)} />
           <Popconfirm
             title="Xóa dịch vụ?"
-            description="Bạn có chắc muốn xóa dịch vụ này?"
+            description={`Bạn có chắc muốn xóa dịch vụ "${record.serviceName}"?`}
             onConfirm={() => handleDelete(record.id)}
+            okText="Xóa"
+            cancelText="Hủy"
+            okType="danger"
           >
             <Button type="primary" danger icon={<FiTrash2 />} size="small" />
           </Popconfirm>
@@ -255,13 +275,28 @@ function ManageGroomingService() {
             setIsUpdate(false);
             setIsModalVisible(true);
             form.resetFields();
+            // Thiết lập giá trị mặc định cho Create
+            form.setFieldsValue({
+              prices: species.map((sp) => ({ speciesId: sp.id, price: 0 })),
+              isActive: true,
+            });
           }}
         >
           Thêm dịch vụ
         </Button>
       </div>
 
-      <Table dataSource={filteredServices} columns={columns} rowKey="id" pagination={{ pageSize: 5 }} />
+      <Table
+        dataSource={filteredServices}
+        columns={columns}
+        rowKey="id"
+        pagination={{
+          pageSize: 10,
+          showSizeChanger: true,
+          showTotal: (total) => `Total ${total} items`,
+        }}
+        scroll={{ x: 1000 }}
+      />
 
       <Modal
         open={isModalVisible}
@@ -271,7 +306,7 @@ function ManageGroomingService() {
         width={800}
       >
         <Spin spinning={loading}>
-          <Form form={form} layout="vertical" onFinish={handleSubmit}>
+          <Form form={form} layout="vertical" onFinish={handleSubmit} initialValues={{ isActive: true }}>
             <Form.Item name="id" hidden>
               <Input />
             </Form.Item>
@@ -296,63 +331,59 @@ function ManageGroomingService() {
               <InputNumber min={1} style={{ width: "100%" }} addonAfter="phút" />
             </Form.Item>
 
-            {!isUpdate ? (
-              <>
-                <Divider />
-                <Title level={5}>Giá dịch vụ theo loài hamster</Title>
-                <Card size="small" style={{ background: "#f9f9f9" }}>
-                  {species.map((sp, index) => (
-                    <div key={sp.id} className="price-row">
-                      <Text strong>{sp.speciesName}</Text>
-                      <Form.Item
-                        name={["prices", index, "price"]}
-                        rules={[{ required: true, message: "Nhập giá!" }]}
-                        style={{ marginBottom: 0 }}
-                      >
-                        <InputNumber
-                          placeholder="Giá"
-                          min={0}
-                          step={1000}
-                          style={{ width: 200 }}
-                          addonAfter="VND"
-                          formatter={(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",")}
-                        />
-                      </Form.Item>
-                      <Form.Item name={["prices", index, "speciesId"]} initialValue={sp.id} hidden>
-                        <Input />
-                      </Form.Item>
-                    </div>
-                  ))}
-                </Card>
-                <Divider />
-              </>
-            ) : (
-              serviceDetail && (
-                <>
-                  <Divider />
-                  <Title level={5}>Giá dịch vụ theo loài hamster</Title>
-                  <div className="price-list">
-                    {serviceDetail.prices.map((p) => (
-                      <div key={p.priceId} className="price-display-row">
-                        <Text strong>{p.speciesName}</Text>
-                        <Text className="price-value">
-                          {new Intl.NumberFormat("vi-VN", {
-                            style: "currency",
-                            currency: "VND",
-                          }).format(p.price)}
-                        </Text>
-                      </div>
-                    ))}
-                  </div>
-                  <Text type="secondary" style={{ fontSize: "12px", marginTop: "8px", display: "block" }}>
-                    Giá hiển thị: {new Intl.NumberFormat("vi-VN").format(serviceDetail.displayPrice || 0)} VND
-                  </Text>
-                  <Divider />
-                </>
-              )
-            )}
+            <Divider />
+            <Title level={5}>Giá dịch vụ theo loài hamster</Title>
 
-            <Form.Item name="isActive" label="Trạng thái" valuePropName="checked" initialValue={true}>
+            <Card size="small" style={{ background: "#f9f9f9" }}>
+              {species.map((spec, index) => (
+                <div key={spec.id} className="combo-price-row">
+                  {/* Hidden speciesId: nằm ngoài flex */}
+                  <Form.Item name={["prices", index, "speciesId"]} hidden initialValue={spec.id}>
+                    <Input />
+                  </Form.Item>
+
+                  {/* Tên loài */}
+                  <Text strong className="combo-species-name">
+                    {spec.speciesName}
+                  </Text>
+
+                  {/* Input giá sau giảm (không dùng label để không phá layout) */}
+                  <Form.Item
+                    name={["prices", index, "priceAfter"]}
+                    rules={[
+                      { required: true, message: `Vui lòng nhập giá sau giảm cho ${spec.speciesName}!` },
+                      { type: "number", min: 0, message: "Giá không thể âm!" },
+                    ]}
+                    style={{ marginBottom: 0 }}
+                  >
+                    <InputNumber
+                      step={1000}
+                      style={{ width: 200 }}
+                      placeholder="Nhập giá"
+                      addonAfter="VND"
+                      formatter={(value: string | undefined) =>
+                        value ? value.replace(/\B(?=(\d{3})+(?!\d))/g, ",") : "0"
+                      }
+                      parser={(value: string | undefined) => (value ? value.replace(/,/g, "") : "")}
+                    />
+                  </Form.Item>
+                </div>
+              ))}
+            </Card>
+
+            {/* Hiển thị giá hiển thị chung (chỉ trong chế độ Update) */}
+            {isUpdate && serviceDetail && (
+              <Text
+                type="secondary"
+                style={{ fontSize: "12px", marginTop: "8px", display: "block", textAlign: "right" }}
+              >
+                Giá hiển thị trung bình: {new Intl.NumberFormat("vi-VN").format(serviceDetail.displayPrice || 0)} VND
+              </Text>
+            )}
+            <Divider />
+
+            {/* Active status field - Show in both Create and Update */}
+            <Form.Item name="isActive" label="Trạng thái hoạt động" valuePropName="checked">
               <Switch checkedChildren="Hoạt động" unCheckedChildren="Không hoạt động" />
             </Form.Item>
 
