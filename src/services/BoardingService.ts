@@ -115,7 +115,10 @@ export interface BookingByDateRange {
   status: string;
   cageTypeId: string;
   cageTypeName: string;
-  cageName: string;
+  newCageName: string | null;
+  cageName: string | null;
+  newCageTypeName: string | null;
+  newCageTypeId: string | null;
   customerName: string;
   hamsterName: string;
 }
@@ -149,6 +152,9 @@ export interface BookingDetail {
   startDate: string; // Format: YYYY-MM-DD
   endDate: string; // Format: YYYY-MM-DD
   newEndDate: string | null; // Format: YYYY-MM-DD or null
+  newCageName: string | null;
+  newCageTypeName: string | null;
+  newCageTypeId: string | null;
   checkInImage: string;
   totalAmount: number;
   totalAmountAfter: number;
@@ -156,6 +162,7 @@ export interface BookingDetail {
   notes: string;
   createdAt: string | null; // ISO string format or null
   services: BookingDetailService[];
+  additionalServiceIds?: string[]; // Additional service IDs for services beyond the main services array
   cameraId: string | null;
 }
 

@@ -211,20 +211,25 @@
     background-color: #f97316;
   }
   
-  &.booking-bar-extended {
-    background: linear-gradient(135deg, #22c55e 0%, #16a34a 50%, #15803d 100%);
-    border: 2px solid #15803d;
-    font-weight: 700;
+  &.booking-bar-red {
+    background-color: #ef4444;
   }
   
-  &.booking-bar-chevron {
-    background: linear-gradient(135deg, #f59e0b 0%, #d97706 50%, #b45309 100%);
-    border: 2px solid #b45309;
+  &.booking-bar-cyan {
+    background-color: #06b6d4;
+  }
+  
+  &.booking-bar-extended {
+    background-color: #06b6d4;
+  }
+  
+  &.booking-bar-transfer-original {
+    background-color: #06b6d4;
     font-weight: 700;
     position: relative;
     
-    // Create chevron shape using pseudo-elements
-    &::before {
+    // Create chevron shape pointing right (transfer out)
+    &::after {
       content: '';
       position: absolute;
       top: 50%;
@@ -232,7 +237,42 @@
       transform: translateY(-50%);
       width: 0;
       height: 0;
-      border-left: 8px solid #d97706;
+      border-left: 8px solid #0891b2;
+      border-top: 12px solid transparent;
+      border-bottom: 12px solid transparent;
+      z-index: 1;
+    }
+    
+    &::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      right: -6px;
+      transform: translateY(-50%);
+      width: 0;
+      height: 0;
+      border-left: 6px solid #06b6d4;
+      border-top: 10px solid transparent;
+      border-bottom: 10px solid transparent;
+      z-index: 2;
+    }
+  }
+  
+  &.booking-bar-transfer-extended {
+    background-color: #06b6d4;
+    font-weight: 700;
+    position: relative;
+    
+    // Create chevron shape pointing left (transfer in)
+    &::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: -8px;
+      transform: translateY(-50%);
+      width: 0;
+      height: 0;
+      border-right: 8px solid #0891b2;
       border-top: 12px solid transparent;
       border-bottom: 12px solid transparent;
       z-index: 1;
@@ -242,48 +282,26 @@
       content: '';
       position: absolute;
       top: 50%;
-      right: -6px;
+      left: -6px;
       transform: translateY(-50%);
       width: 0;
       height: 0;
-      border-left: 6px solid #f59e0b;
+      border-right: 6px solid #06b6d4;
       border-top: 10px solid transparent;
       border-bottom: 10px solid transparent;
       z-index: 2;
     }
-    
-    // Ensure chevron is visible on hover
-    &:hover {
-      filter: brightness(0.9);
-      
-      &::before {
-        border-left-color: #b45309;
-      }
-      
-      &::after {
-        border-left-color: #d97706;
-      }
-    }
-    
-    // Special styling for split bookings with chevron
-    &.booking-bar-split {
-      padding: 0 2px; // Reduced padding to accommodate chevron
-      
-      &::before {
-        right: -6px;
-        border-left-width: 6px;
-        border-top-width: 8px;
-        border-bottom-width: 8px;
-      }
-      
-      &::after {
-        right: -4px;
-        border-left-width: 4px;
-        border-top-width: 6px;
-        border-bottom-width: 6px;
-      }
-    }
   }
+  
+  // Special hover effect for transfer bookings
+  &.transfer-booking-hovered {
+    filter: brightness(1.1) !important;
+    transform: scale(1.05) !important;
+    box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.15) !important;
+    border: 2px solid rgba(255, 255, 255, 0.8) !important;
+  }
+  
+
   
   &.booking-bar-split {
     // Adjust padding and positioning for split bookings
