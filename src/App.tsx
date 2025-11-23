@@ -162,37 +162,53 @@ const App = () => {
       path: "/",
       element: <Layout />,
       children: [
-        // ❌ Không cần token
-        {path: "/", element: <Home />},
+        // ⭐ KHÔNG CẦN LOGIN
+        { path: "/", element: <Home /> },
         { path: "/mua-hang", element: <Homepage /> },
         { path: "/product/:id", element: <ProductDetail /> },
+
         { path: "/login", element: <Login /> },
         { path: "/register", element: <Register /> },
         { path: "/forgot-password", element: <ForgotPassword /> },
-
-        // ❗ Mấy cái này cũng không cần token (tự do)
         { path: "/verify-otp", element: <VerifyOtp /> },
         { path: "/reset-password", element: <ResetPassword /> },
+
+        // ⭐ DỊCH VỤ CHO KHÁCH XEM TỰ DO
+        { path: "/dich-vu-lam-dep", element: <GroomingPage /> },
+        { path: "/dich-vu-y-te", element: <MedicalList /> },
+
+        // 404 user
         { path: "*", element: <NotFoundPage /> },
 
-        // ✅ Từ đây trở xuống: TẤT CẢ cần token
+        // =====================================================================
+        // ⭐⭐ PHẦN NÀY TRỞ XUỐNG: BẮT BUỘC LOGIN — PrivateCustomerRoute ⭐⭐
+        // =====================================================================
         {
           element: <PrivateCustomerRoute />,
           children: [
             { path: "/chat", element: <Chat /> },
+
+            // Thanh toán
             { path: "/checkout", element: <Checkout /> },
             { path: "/payment-success", element: <PaymentSuccess /> },
             { path: "/payment-failure", element: <PaymentFail /> },
-            { path: "/dich-vu-lam-dep", element: <GroomingPage /> },
-            { path: "/booking-success", element: <BookingSuccess /> },
+
+            // ⭐ Đặt dịch vụ làm đẹp — CHỈ LOGIN MỚI ĐƯỢC
             { path: "/dich-vu-lam-dep/dat-dich-vu", element: <BookingGroomingService /> },
 
+            // ⭐ Đặt dịch vụ y tế — CHỈ LOGIN MỚI ĐƯỢC
+            { path: "/dich-vu-y-te/dat-dich-vu", element: <MedicalBooking /> },
+
+            { path: "/booking-success", element: <BookingSuccess /> },
+
+            // Hồ sơ
             {
               path: "/profile",
               element: <Panel />,
               children: [{ path: "", element: <ViewProfile /> }],
             },
 
+            // Đơn hàng
             {
               path: "/your-orders",
               element: <Panel />,
@@ -202,14 +218,17 @@ const App = () => {
               ],
             },
 
+            // Boarding booking
             { path: "/dat-lich-giu-ho", element: <BoardingHamster /> },
 
+            // Ví khách hàng
             {
               path: "/profile/wallet",
               element: <Panel />,
               children: [{ path: "", element: <WalletCustomer /> }],
             },
 
+            // Hồ sơ hamster
             {
               path: "/profile/your-hamster",
               element: <Panel />,
@@ -219,6 +238,7 @@ const App = () => {
               ],
             },
 
+            // Grooming history
             {
               path: "/grooming-history",
               element: <Panel />,
@@ -228,6 +248,7 @@ const App = () => {
               ],
             },
 
+            // Boarding lịch sử
             {
               path: "/boarding-schedule",
               element: <Panel />,
@@ -237,12 +258,12 @@ const App = () => {
               ],
             },
 
+            // Y tế – lịch sử khám
             {
               path: "/lich-su-kham",
               element: <Panel />,
               children: [{ path: "", element: <MedicalAppointmentHistory /> }],
             },
-
             {
               path: "/lich-su-kham",
               element: <Panel />,
@@ -251,10 +272,6 @@ const App = () => {
                 { path: ":appointmentId", element: <MedicalAppointmentHistoryDetail /> },
               ],
             },
-
-            { path: "/dich-vu-y-te", element: <MedicalList /> },
-
-            { path: "/dich-vu-y-te/dat-dich-vu", element: <MedicalBooking /> },
           ],
         },
       ],
