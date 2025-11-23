@@ -78,6 +78,7 @@ import ManageFeedback from "./pages/admin/feedback/ManageFeedback";
 import Chat from "./pages/customer/chat/Chat";
 import ManageChat from "./pages/staff/chat/ManageChat";
 import ManageCustomer from "./pages/admin/account/ManageCustomer";
+import Home from "./pages/customer/home/Home";
 
 interface User {
   id: number;
@@ -162,7 +163,8 @@ const App = () => {
       element: <Layout />,
       children: [
         // ❌ Không cần token
-        { path: "/", element: <Homepage /> },
+        {path: "/", element: <Home />},
+        { path: "/mua-hang", element: <Homepage /> },
         { path: "/product/:id", element: <ProductDetail /> },
         { path: "/login", element: <Login /> },
         { path: "/register", element: <Register /> },
