@@ -33,6 +33,9 @@ const BoardingDetail: React.FC = () => {
   const [checkOutImagePreview, setCheckOutImagePreview] = useState<string>('');
   const [checkOutPaymentMethod, setCheckOutPaymentMethod] = useState<'WALLET' | 'VNPAY' | 'PAYOS'>('VNPAY');
 
+  // Exception handling states
+  const [exceptionLoading, setExceptionLoading] = useState<boolean>(false);
+
   useEffect(() => {
     if (bookingId) {
       fetchBookingDetail(bookingId);
@@ -53,6 +56,41 @@ const BoardingDetail: React.FC = () => {
     }
   };
 
+  // Handle booking exception
+  const handleBookingException = async () => {
+    if (!bookingId) return;
+
+    try {
+      setExceptionLoading(true);
+      await boardingService.handleBookingException(bookingId);
+      
+      // Show success toast
+      toast.success('Đã bồi thường', {
+        position: 'top-right',
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      });
+
+      // Re-fetch booking details to update the UI
+      await fetchBookingDetail(bookingId);
+    } catch (err) {
+      console.error('Error handling booking exception:', err);
+      toast.error('Có lỗi xảy ra khi báo cáo sự cố. Vui lòng thử lại.', {
+        position: 'top-right',
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      });
+    } finally {
+      setExceptionLoading(false);
+    }
+  };
+
   const getStatusColor = (status: string) => {
     const statusColors: Record<string, string> = {
       'BOOKED': 'cyan',
@@ -60,6 +98,7 @@ const BoardingDetail: React.FC = () => {
       'CHECK_OUT': 'green',
       'CANCELLED': 'red',
       'NO-SHOW': 'red',
+      'INCIDENT': 'red',
      
     };
     return statusColors[status] || 'default';
@@ -72,6 +111,7 @@ const BoardingDetail: React.FC = () => {
       'CHECK_OUT': 'Đã check-out', 
       'CANCELLED': 'Đã hủy',
       'NO-SHOW': 'Không xuất hiện',
+      'INCIDENT': 'Có sự cố',
     };
     return statusTexts[status] || status;
   };
@@ -354,7 +394,7 @@ const BoardingDetail: React.FC = () => {
     <div className="boarding-detail">
       <div className="boarding-detail-container">
         {/* Header */}
-        <div className="detail-header">
+        <div className="detail-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <Button 
             type="text" 
             icon={<ArrowLeftOutlined />} 
@@ -366,6 +406,19 @@ const BoardingDetail: React.FC = () => {
           <div className="header-content">
             <h1 className="page-title">Chi tiết Booking</h1>
             <p className="booking-id">ID: {bookingDetail.bookingId}</p>
+          </div>
+          <div className="header-actions">
+            {bookingDetail.status === 'IN_PROGRESS' && (
+              <Button
+                type="primary"
+                danger
+                size="small"
+                loading={exceptionLoading}
+                onClick={handleBookingException}
+              >
+                Báo cáo sự cố
+              </Button>
+            )}
           </div>
         </div>
 

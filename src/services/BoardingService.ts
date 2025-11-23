@@ -323,6 +323,12 @@ export interface CancelBookingResponse {
   daysBeforeCheckIn: number;
 }
 
+// Type definitions for booking exception handling
+export interface HandleBookingExceptionResponse {
+  code: number;
+  message: string;
+}
+
 // Type definitions for cage floor plan
 export interface CageFloorPlanItem {
   cageId: string;
@@ -512,6 +518,17 @@ export const boardingService = {
       return response.data.data;
     } catch (error) {
       console.error("Error cancelling booking:", error);
+      throw error;
+    }
+  },
+
+  // Handle booking exception case
+  handleBookingException: async (bookingId: string): Promise<HandleBookingExceptionResponse> => {
+    try {
+      const response = await api.patch<HandleBookingExceptionResponse>(`/api/booking/${bookingId}/exception`);
+      return response.data;
+    } catch (error) {
+      console.error("Error handling booking exception:", error);
       throw error;
     }
   },

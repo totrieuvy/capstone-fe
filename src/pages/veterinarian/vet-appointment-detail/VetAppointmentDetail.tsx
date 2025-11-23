@@ -760,33 +760,49 @@ const VetAppointmentDetail: React.FC = () => {
           )}
 
           {/* Action Buttons */}
-          {appointment.status !== 'COMPLETED' && (
-            <Col span={24}>
-              <div style={{ textAlign: 'center', marginTop: '24px' }}>
-                <Space size="large">
-                  {/* Tiến hành Button - Show for CHECK_IN, CHECKED_IN and IN_PROGRESS status */}
-                  {(appointment.status === 'CHECK_IN' || appointment.status === 'CHECKED_IN' || appointment.status === 'IN_PROGRESS') && (
-                    <Button
-                      type="primary"
-                      size="large"
-                      icon={<PlayCircleOutlined />}
-                      loading={progressLoading}
-                      onClick={handleProgress}
-                      style={{
-                        backgroundColor: '#1890ff',
-                        borderColor: '#1890ff',
-                        fontSize: '16px',
-                        height: '48px',
-                        padding: '0 32px',
-                      }}
-                    >
-                      Tiến hành
-                    </Button>
-                  )}
-                </Space>
-              </div>
-            </Col>
-          )}
+          <Col span={24}>
+            <div style={{ textAlign: 'center', marginTop: '24px' }}>
+              <Space size="large">
+                {/* Tiến sử khám Button - Show for all statuses */}
+                <Button
+                  type="default"
+                  size="large"
+                  icon={<FileTextOutlined />}
+                  onClick={() => {
+                    // Navigate to medical history page with hamster ID
+                    navigate(`/VET/hamster-medical-history/${appointment.hamsterId}`);
+                  }}
+                  style={{
+                    fontSize: '16px',
+                    height: '48px',
+                    padding: '0 32px',
+                  }}
+                >
+                  Tiền sử khám
+                </Button>
+
+                {/* Tiến hành Button - Show for CHECK_IN, CHECKED_IN and IN_PROGRESS status */}
+                {appointment.status !== 'COMPLETED' && (appointment.status === 'CHECK_IN' || appointment.status === 'CHECKED_IN' || appointment.status === 'IN_PROGRESS') && (
+                  <Button
+                    type="primary"
+                    size="large"
+                    icon={<PlayCircleOutlined />}
+                    loading={progressLoading}
+                    onClick={handleProgress}
+                    style={{
+                      backgroundColor: '#1890ff',
+                      borderColor: '#1890ff',
+                      fontSize: '16px',
+                      height: '48px',
+                      padding: '0 32px',
+                    }}
+                  >
+                    Tiến hành
+                  </Button>
+                )}
+              </Space>
+            </div>
+          </Col>
         </Row>
 
 
