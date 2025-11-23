@@ -47,6 +47,16 @@ interface OrderQueryParams {
   endDate?: string;
 }
 
+interface Policy {
+  id: string;
+  policyName: string;
+  description?: string;
+  applicableServices: string;
+  status?: string;
+  refundPercentage?: number;
+  timesBeforeCheckin?: number;
+}
+
 /* ===============================
    COMPONENT
 ================================= */
@@ -65,6 +75,10 @@ const TrackOrder = () => {
     pageSize: 10,
     total: 0,
   });
+
+  // cancel policy state (defaults kept safe)
+  const [cancelTimeLimit, setCancelTimeLimit] = useState<number>(12); // hours
+  const [refundPercent, setRefundPercent] = useState<number>(75);
 
   /* ===============================
      FETCH ORDERS (BACKEND PAGINATION)
@@ -110,11 +124,35 @@ const TrackOrder = () => {
   };
 
   /* ===============================
+     FETCH POLICY (ORDER)
+  ================================== */
+  const fetchCancelPolicy = async () => {
+    try {
+      const res = await api.get<{ code: number; data: Policy[] }>("/api/policy");
+      if (res.data?.code === 200 && Array.isArray(res.data.data)) {
+        const orderPolicy = res.data.data.find((p) => p.applicableServices === "ORDER");
+        if (orderPolicy) {
+          if (typeof orderPolicy.timesBeforeCheckin === "number") {
+            setCancelTimeLimit(orderPolicy.timesBeforeCheckin);
+          }
+          if (typeof orderPolicy.refundPercentage === "number") {
+            setRefundPercent(orderPolicy.refundPercentage);
+          }
+        }
+      }
+    } catch {
+      // keep defaults if fetch fails
+      // console.warn("Không lấy được policy, dùng mặc định");
+    }
+  };
+
+  /* ===============================
      FIRST LOAD
   ================================== */
   useEffect(() => {
     document.title = "Lịch sử đơn hàng";
     fetchOrders(1, 10, "ALL", null);
+    fetchCancelPolicy();
   }, []);
 
   /* ===============================
@@ -127,7 +165,7 @@ const TrackOrder = () => {
       orders.forEach((order) => {
         if (order.status === "PAID") {
           const orderTime = dayjs.utc(order.orderDate, "DD-MM-YYYY HH:mm:ss").tz("Asia/Ho_Chi_Minh");
-          const diff = orderTime.add(12, "hour").diff(dayjs().tz("Asia/Ho_Chi_Minh"));
+          const diff = orderTime.add(cancelTimeLimit, "hour").diff(dayjs().tz("Asia/Ho_Chi_Minh"));
 
           if (diff > 0) {
             const dur = dayjs.duration(diff);
@@ -145,7 +183,7 @@ const TrackOrder = () => {
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [orders]);
+  }, [orders, cancelTimeLimit]);
 
   /* ===============================
      STATUS COLORS + TEXT
@@ -251,7 +289,24 @@ const TrackOrder = () => {
 
             {canCancel && (
               <>
-                <Popconfirm title="Hủy đơn?" onConfirm={() => message.info("Chưa kết nối API demo")}>
+                <Popconfirm
+                  title="Hủy đơn?"
+                  description={`Bạn sẽ được hoàn ${refundPercent}% giá trị đơn hàng vào ví.`}
+                  onConfirm={async () => {
+                    try {
+                      const res = await api.patch<{ code: number; message?: string }>(`/api/order/cancel/${record.id}`);
+
+                      if (res.data.code === 200) {
+                        message.success("Đã hủy đơn hàng.");
+                        fetchOrders(pagination.currentPage, pagination.pageSize, statusFilter, dateRangeFilter);
+                      } else {
+                        message.error(res.data.message || "Không thể hủy đơn hàng.");
+                      }
+                    } catch {
+                      message.error("Lỗi khi hủy đơn hàng.");
+                    }
+                  }}
+                >
                   <Button danger icon={<StopOutlined />}>
                     Hủy
                   </Button>
