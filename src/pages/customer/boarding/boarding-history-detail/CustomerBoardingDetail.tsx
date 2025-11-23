@@ -205,8 +205,8 @@ const BoardingDetail: React.FC = () => {
       PENDING: "orange",
       CANCELLED: "red",
       FAILED: "red",
-      COMPLETED: "blue",
-      IN_PROGRESS: "processing",
+      COMPLETED: "green",
+      IN_PROGRESS: "blue",
       CHECK_OUT: "green",
     };
     return statusColors[status as keyof typeof statusColors] || "default";

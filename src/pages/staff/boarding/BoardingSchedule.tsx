@@ -36,26 +36,106 @@ const BoardingSchedule = () => {
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
   const [newEndDate, setNewEndDate] = useState<Dayjs | null>(null);
   const [extendLoading, setExtendLoading] = useState<boolean>(false);
+  
+  // State for cage selection
+  const [allCageTypes, setAllCageTypes] = useState<any[]>([]);
+  const [selectedCageTypeId, setSelectedCageTypeId] = useState<string | null>(null);
+  const [availableCages, setAvailableCages] = useState<any[]>([]);
+  const [selectedCageId, setSelectedCageId] = useState<string | null>(null);
+  const [originalCageId, setOriginalCageId] = useState<string | null>(null);
+  const [loadingCages, setLoadingCages] = useState<boolean>(false);
 
   // Context menu handlers
   const handleViewDetails = (booking: Booking) => {
     navigate(`/STAFF/booking-detail/${booking.id}`);
   };
 
-  const handleExtend = (booking: Booking) => {
+  const handleExtend = async (booking: Booking) => {
     setSelectedBooking(booking);
     setNewEndDate(null);
+    setSelectedCageId(null);
+    setOriginalCageId(null);
+    
+    try {
+      // Get current booking data
+      const currentBookingData = bookings.find(b => b.bookingId === booking.id);
+      if (currentBookingData) {
+        setOriginalCageId(currentBookingData.cageName);
+      }
+      
+      // Load all cage types first
+      await loadAllCageTypes();
+      
+      // Set current cage type as default
+      if (currentBookingData) {
+        const currentCageTypeId = currentBookingData.cageTypeId;
+        setSelectedCageTypeId(currentCageTypeId);
+        
+        // Load cages for current cage type
+        await loadCagesForType(currentBookingData.cageTypeName);
+      }
+    } catch (error) {
+      console.error('Error initializing extend modal:', error);
+    }
+    
     setExtendModalVisible(true);
+  };
+
+  // Function to load all cage types for dropdown
+  const loadAllCageTypes = async () => {
+    try {
+      // Use a date range to get all available cage types
+      const today = dayjs();
+      const futureDate = today.add(30, 'days');
+      
+      const availabilityData = await boardingService.checkAvailability({
+        startDate: today.format('YYYY-MM-DD'),
+        endDate: futureDate.format('YYYY-MM-DD')
+      });
+      
+      setAllCageTypes(availabilityData);
+    } catch (error) {
+      console.error('Error loading cage types:', error);
+    }
+  };
+  // Function to load cages for selected cage type
+  const loadCagesForType = async (cageTypeName: string) => {
+    try {
+      setLoadingCages(true);
+      const floorPlan = await boardingService.getCageFloorPlan();
+      const availableCagesForType = floorPlan.filter(cage => 
+        cage.cageTypeName === cageTypeName && 
+        (cage.status === 'AVAILABLE' || cage.bookingStatus === null)
+      );
+      setAvailableCages(availableCagesForType);
+    } catch (error) {
+      console.error('Error loading cages for type:', error);
+      message.error('Không thể tải danh sách chuồng.');
+    } finally {
+      setLoadingCages(false);
+    }
+  };
+
+  // Handle cage type selection
+  const handleCageTypeSelect = async (cageTypeId: string) => {
+    setSelectedCageTypeId(cageTypeId);
+    setSelectedCageId(null); // Reset cage selection
+    
+    // Find the selected cage type and load its cages
+    const selectedType = allCageTypes.find(type => type.cageTypeId === cageTypeId);
+    if (selectedType) {
+      await loadCagesForType(selectedType.typeName);
+    }
   };
 
   // Handle extend booking submission
   const handleExtendBooking = async () => {
-    if (!selectedBooking || !newEndDate) {
-      message.error('Vui lòng chọn ngày kết thúc mới');
+    if (!selectedBooking || !newEndDate || !selectedCageTypeId || !selectedCageId) {
+      message.error('Vui lòng chọn đầy đủ thông tin: ngày kết thúc, loại chuồng và chuồng cụ thể');
       return;
     }
 
-    // Get the current effective end date (prioritize newEndDate if exists)
+    // Get the current effective end date
     const currentBookingData = bookings.find(b => b.bookingId === selectedBooking.id);
     const currentEffectiveEndDate = currentBookingData?.newEndDate && currentBookingData.newEndDate !== null && currentBookingData.newEndDate !== ''
       ? dayjs(currentBookingData.newEndDate)
@@ -69,10 +149,38 @@ const BoardingSchedule = () => {
     try {
       setExtendLoading(true);
 
-      const extendResponse = await boardingService.extendBooking({
+      // Prepare extend request
+      const extendRequest: any = {
         bookingId: selectedBooking.id,
         newEndDate: newEndDate.format('YYYY-MM-DD')
-      });
+      };
+
+      // Determine scenario based on current vs selected cage info
+      const currentCageName = currentBookingData?.cageName;
+      const currentCageTypeId = currentBookingData?.cageTypeId;
+      const selectedCage = availableCages.find(cage => cage.cageId === selectedCageId);
+
+      // Scenario 1: Keep same cage (both cage type and cage ID same as current)
+      if (selectedCageTypeId === currentCageTypeId && selectedCage?.cageName === currentCageName) {
+        // No additional parameters needed - just extend in same cage
+      }
+      // Scenario 2: Same cage type, different cage
+      else if (selectedCageTypeId === currentCageTypeId && selectedCage?.cageName !== currentCageName) {
+        extendRequest.CageId = selectedCageId;
+      }
+      // Scenario 3: Different cage type
+      else if (selectedCageTypeId !== currentCageTypeId) {
+        extendRequest.CageTypeId = selectedCageTypeId;
+        extendRequest.CageId = selectedCageId;
+      }
+
+      const extendResponse = await boardingService.extendBooking(extendRequest);
+
+      // Track if this was a cage change extension for visual indicators
+      const isCageChange = selectedCageTypeId !== currentCageTypeId || selectedCage?.cageName !== currentCageName;
+      if (isCageChange) {
+        localStorage.setItem(`cageChange_${selectedBooking.id}`, 'true');
+      }
 
       // Update local state with the new end date from API response
       setBookings(prevBookings =>
@@ -84,9 +192,7 @@ const BoardingSchedule = () => {
       );
 
       toast.success('Gia hạn thành công');
-      setExtendModalVisible(false);
-      setSelectedBooking(null);
-      setNewEndDate(null);
+      handleExtendModalCancel();
 
     } catch (error) {
       console.error('Error extending booking:', error);
@@ -101,9 +207,14 @@ const BoardingSchedule = () => {
     setExtendModalVisible(false);
     setSelectedBooking(null);
     setNewEndDate(null);
+    setAllCageTypes([]);
+    setSelectedCageTypeId(null);
+    setAvailableCages([]);
+    setSelectedCageId(null);
+    setOriginalCageId(null);
   };
 
-  // Create context menu items
+  // Fetch bookings for the current month
   const getContextMenuItems = (booking: Booking): MenuProps['items'] => {
     const items: MenuProps['items'] = [
       {
@@ -276,6 +387,22 @@ const BoardingSchedule = () => {
     return booking?.newEndDate !== null && booking?.newEndDate !== undefined && booking?.newEndDate !== '';
   };
 
+  // Helper function to check if an extended booking involved a cage change
+  const isBookingExtendedWithCageChange = (bookingId: string): boolean => {
+    if (!isBookingExtended(bookingId)) {
+      return false;
+    }
+
+    // This function needs to be enhanced based on how the API tracks cage changes
+    // For now, we'll need additional logic to detect cage changes
+    // This could involve checking if there are multiple cage entries for the same booking
+    // or if there's additional metadata from the extend booking API response
+    
+    // Check if cage change information was stored during the extend operation
+    const cageChangeInfo = localStorage.getItem(`cageChange_${bookingId}`);
+    return cageChangeInfo === 'true';
+  };
+
   const renderCheckedInGrid = () => {
     return (
       <Card
@@ -398,13 +525,15 @@ const BoardingSchedule = () => {
                               >
                                 <div
                                   className={`booking-bar ${
-                                    isBookingExtended(booking.id) 
-                                      ? 'booking-bar-extended' 
-                                      : booking.status === 'IN_PROGRESS'
-                                        ? 'booking-bar-blue'
-                                        : booking.status === 'CHECK_OUT'
-                                          ? 'booking-bar-green'
-                                          : 'booking-bar-green'
+                                    isBookingExtendedWithCageChange(booking.id)
+                                      ? 'booking-bar-chevron'
+                                      : isBookingExtended(booking.id) 
+                                        ? 'booking-bar-extended' 
+                                        : booking.status === 'IN_PROGRESS'
+                                          ? 'booking-bar-blue'
+                                          : booking.status === 'CHECK_OUT'
+                                            ? 'booking-bar-green'
+                                            : 'booking-bar-green'
                                   } ${continuesFromPrevious ? 'continues-from-previous' : ''} ${continuesIntoNext ? 'continues-into-next' : ''}`}
                                   style={{
                                     left: `${leftPosition + 4}px`,
@@ -418,7 +547,8 @@ const BoardingSchedule = () => {
                                   <div className="booking-text">
                                     {continuesFromPrevious && <span className="continuation-indicator">◀ </span>}
                                     {booking.customerName} - {booking.hamsterName}
-                                    {isBookingExtended(booking.id) && <span className="extended-indicator"> (Đã gia hạn)</span>}
+                                    {isBookingExtendedWithCageChange(booking.id) && <span className="extended-indicator"> (Đã chuyển chuồng)</span>}
+                                    {isBookingExtended(booking.id) && !isBookingExtendedWithCageChange(booking.id) && <span className="extended-indicator"> (Đã gia hạn)</span>}
                                     {continuesIntoNext && <span className="continuation-indicator"> ▶</span>}
                                   </div>
                                 </div>
@@ -499,11 +629,13 @@ const BoardingSchedule = () => {
                             ? 'booking-bar-red'
                             : booking.status === 'CANCELLED'
                               ? 'booking-bar-red'
-                              : booking.status === 'IN_PROGRESS'
-                                ? 'booking-bar-blue'
-                                : booking.status === 'CHECK_OUT'
-                                  ? 'booking-bar-green'
-                                  : (isBookingExtended(booking.id) ? 'booking-bar-extended' : 'booking-bar-orange')
+                              : isBookingExtendedWithCageChange(booking.id)
+                                ? 'booking-bar-chevron'
+                                : booking.status === 'IN_PROGRESS'
+                                  ? 'booking-bar-blue'
+                                  : booking.status === 'CHECK_OUT'
+                                    ? 'booking-bar-green'
+                                    : (isBookingExtended(booking.id) ? 'booking-bar-extended' : 'booking-bar-orange')
                           } ${continuesFromPrevious ? 'continues-from-previous' : ''} ${continuesIntoNext ? 'continues-into-next' : ''}`}
                         style={{
                           left: `${leftPosition + 4}px`,
@@ -513,7 +645,8 @@ const BoardingSchedule = () => {
                         <div className="booking-text">
                           {continuesFromPrevious && <span className="continuation-indicator">◀ </span>}
                           {booking.customerName} - {booking.hamsterName}
-                          {isBookingExtended(booking.id) && <span className="extended-indicator"> (Đã gia hạn)</span>}
+                          {isBookingExtendedWithCageChange(booking.id) && <span className="extended-indicator"> (Đã chuyển chuồng)</span>}
+                          {isBookingExtended(booking.id) && !isBookingExtendedWithCageChange(booking.id) && <span className="extended-indicator"> (Đã gia hạn)</span>}
                           {continuesIntoNext && <span className="continuation-indicator"> ▶</span>}
                         </div>
                       </div>
@@ -609,54 +742,207 @@ const BoardingSchedule = () => {
         confirmLoading={extendLoading}
         okText="Gia hạn"
         cancelText="Hủy"
-        width={500}
+        width={800}
+        okButtonProps={{ 
+          disabled: !newEndDate || !selectedCageTypeId || !selectedCageId 
+        }}
       >
         {selectedBooking && (
-          <div style={{ marginBottom: '20px' }}>
-            <p><strong>Khách hàng:</strong> {selectedBooking.customerName}</p>
-            <p><strong>Hamster:</strong> {selectedBooking.hamsterName}</p>
-            <p><strong>Loại lồng:</strong> {selectedBooking.cageType}</p>
-            <p><strong>Ngày kết thúc hiện tại:</strong> {(() => {
-              // Get the current booking data to check for newEndDate
-              const currentBookingData = bookings.find(b => b.bookingId === selectedBooking.id);
-              const effectiveEndDate = currentBookingData?.newEndDate && currentBookingData.newEndDate !== null && currentBookingData.newEndDate !== ''
-                ? dayjs(currentBookingData.newEndDate)
-                : dayjs().year(currentMonth.year()).month(currentMonth.month()).date(selectedBooking.endDate);
-              return effectiveEndDate.format('DD/MM/YYYY');
-            })()}</p>
+          <div style={{ marginBottom: '24px' }}>
+            {/* Booking Info Summary */}
+            <div style={{ 
+              backgroundColor: '#f5f5f5', 
+              padding: '16px', 
+              borderRadius: '8px',
+              marginBottom: '20px'
+            }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                <div>
+                  <strong>Khách hàng:</strong> {selectedBooking.customerName}
+                </div>
+                <div>
+                  <strong>Hamster:</strong> {selectedBooking.hamsterName}
+                </div>
+                <div>
+                  <strong>Chuồng hiện tại:</strong> {(() => {
+                    const currentBookingData = bookings.find(b => b.bookingId === selectedBooking.id);
+                    return currentBookingData?.cageName || '';
+                  })()} ({(() => {
+                    const currentBookingData = bookings.find(b => b.bookingId === selectedBooking.id);
+                    return currentBookingData?.cageTypeName || '';
+                  })()})
+                </div>
+                <div>
+                  <strong>Ngày kết thúc hiện tại:</strong> {(() => {
+                    const currentBookingData = bookings.find(b => b.bookingId === selectedBooking.id);
+                    const currentEffectiveEndDate = currentBookingData?.newEndDate && currentBookingData.newEndDate !== null && currentBookingData.newEndDate !== ''
+                      ? currentBookingData.newEndDate
+                      : currentBookingData?.endDate;
+                    return dayjs(currentEffectiveEndDate).format('DD/MM/YYYY');
+                  })()} 
+                </div>
+              </div>
+            </div>
+
+            {/* Date Selection */}
+            <div style={{ marginBottom: '20px' }}>
+              <label style={{ 
+                display: 'block', 
+                marginBottom: '8px', 
+                fontWeight: 'bold',
+                fontSize: '16px'
+              }}>
+                Chọn ngày kết thúc mới:
+              </label>
+              <DatePicker
+                value={newEndDate}
+                onChange={setNewEndDate}
+                format="DD/MM/YYYY"
+                placeholder="Chọn ngày kết thúc mới"
+                style={{ width: '100%', height: '40px' }}
+                disabledDate={(current) => {
+                  if (!selectedBooking) return true;
+                  const currentBookingData = bookings.find(b => b.bookingId === selectedBooking.id);
+                  const currentEffectiveEndDate = currentBookingData?.newEndDate && currentBookingData.newEndDate !== null && currentBookingData.newEndDate !== ''
+                    ? dayjs(currentBookingData.newEndDate)
+                    : dayjs(currentBookingData?.endDate);
+                  return current && (current.isBefore(dayjs(), 'day') || current.isSame(currentEffectiveEndDate, 'day') || current.isBefore(currentEffectiveEndDate, 'day'));
+                }}
+              />
+            </div>
+
+            {/* Cage Type Selection */}
+            <div style={{ marginBottom: '20px' }}>
+              <label style={{ 
+                display: 'block', 
+                marginBottom: '8px', 
+                fontWeight: 'bold',
+                fontSize: '16px'
+              }}>
+                Loại chuồng:
+              </label>
+              <select
+                value={selectedCageTypeId || ''}
+                onChange={(e) => handleCageTypeSelect(e.target.value)}
+                style={{
+                  width: '100%',
+                  height: '40px',
+                  padding: '0 12px',
+                  border: '1px solid #d9d9d9',
+                  borderRadius: '6px',
+                  fontSize: '14px',
+                  backgroundColor: 'white'
+                }}
+              >
+                <option value="">Chọn loại chuồng</option>
+                {allCageTypes.map(cageType => (
+                  <option key={cageType.cageTypeId} value={cageType.cageTypeId}>
+                    {cageType.typeName}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Available Cages */}
+            {selectedCageTypeId && (
+              <div>
+                <label style={{ 
+                  display: 'block', 
+                  marginBottom: '12px', 
+                  fontWeight: 'bold',
+                  fontSize: '16px'
+                }}>
+                  Chọn chuồng cụ thể:
+                </label>
+                
+                {loadingCages ? (
+                  <div style={{ textAlign: 'center', padding: '20px' }}>
+                    <Spin /> Đang tải danh sách chuồng...
+                  </div>
+                ) : availableCages.length > 0 ? (
+                  <div style={{ 
+                    display: 'grid', 
+                    gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))', 
+                    gap: '12px',
+                    maxHeight: '200px',
+                    overflowY: 'auto',
+                    padding: '4px'
+                  }}>
+                    {availableCages.map(cage => {
+                      const isOriginalCage = cage.cageName === originalCageId;
+                      return (
+                        <div
+                          key={cage.cageId}
+                          onClick={() => setSelectedCageId(cage.cageId)}
+                          style={{
+                            padding: '12px 8px',
+                            border: selectedCageId === cage.cageId 
+                              ? '2px solid #1890ff' 
+                              : isOriginalCage 
+                                ? '2px solid #52c41a'
+                                : '1px solid #d9d9d9',
+                            borderRadius: '8px',
+                            cursor: 'pointer',
+                            textAlign: 'center',
+                            backgroundColor: selectedCageId === cage.cageId 
+                              ? '#e6f7ff' 
+                              : isOriginalCage
+                                ? '#f6ffed'
+                                : 'white',
+                            transition: 'all 0.2s',
+                            position: 'relative'
+                          }}
+                        >
+                          <div style={{ fontWeight: 'bold', marginBottom: '4px' }}>
+                            {cage.cageName}
+                          </div>
+                          <div style={{ fontSize: '12px', color: isOriginalCage ? '#666' : '#52c41a' }}>
+                            {isOriginalCage ? 'Chuồng hiện tại' : 'Có sẵn'}
+                          </div>
+                          {isOriginalCage && (
+                            <div style={{
+                              position: 'absolute',
+                              top: '-6px',
+                              right: '-6px',
+                              backgroundColor: '#52c41a',
+                              color: 'white',
+                              borderRadius: '50%',
+                              width: '16px',
+                              height: '16px',
+                              fontSize: '10px',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center'
+                            }}>
+                              ✓
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <Alert
+                    message="Không có chuồng khả dụng"
+                    description="Không có chuồng nào của loại này khả dụng."
+                    type="warning"
+                    showIcon
+                  />
+                )}
+              </div>
+            )}
+            
+            {newEndDate && !selectedCageTypeId && (
+              <Alert
+                message="Lưu ý"
+                description="Vui lòng chọn loại chuồng để tiếp tục."
+                type="info"
+                showIcon
+                style={{ marginTop: '16px' }}
+              />
+            )}
           </div>
         )}
-
-        <div style={{ marginBottom: '16px' }}>
-          <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>
-            Chọn ngày kết thúc mới:
-          </label>
-          <DatePicker
-            value={newEndDate}
-            onChange={setNewEndDate}
-            format="DD/MM/YYYY"
-            placeholder="Chọn ngày kết thúc mới"
-            style={{ width: '100%' }}
-            disabledDate={(current) => {
-              if (!selectedBooking) return true;
-              // Get the current booking data to check for newEndDate
-              const currentBookingData = bookings.find(b => b.bookingId === selectedBooking.id);
-              const effectiveEndDate = currentBookingData?.newEndDate && currentBookingData.newEndDate !== null && currentBookingData.newEndDate !== ''
-                ? dayjs(currentBookingData.newEndDate)
-                : dayjs().year(currentMonth.year()).month(currentMonth.month()).date(selectedBooking.endDate);
-              // Disable dates that are on or before the current end date
-              return current && (current.isBefore(effectiveEndDate, 'day') || current.isSame(effectiveEndDate, 'day'));
-            }}
-          />
-        </div>
-
-        <Alert
-          message="Lưu ý"
-          description="Ngày kết thúc mới phải sau ngày kết thúc hiện tại. Phí gia hạn sẽ được tính theo số ngày gia hạn."
-          type="info"
-          showIcon
-          style={{ marginTop: '16px' }}
-        />
       </Modal>
     </div>
   );

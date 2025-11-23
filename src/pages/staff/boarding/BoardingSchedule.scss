@@ -217,6 +217,74 @@
     font-weight: 700;
   }
   
+  &.booking-bar-chevron {
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 50%, #b45309 100%);
+    border: 2px solid #b45309;
+    font-weight: 700;
+    position: relative;
+    
+    // Create chevron shape using pseudo-elements
+    &::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      right: -8px;
+      transform: translateY(-50%);
+      width: 0;
+      height: 0;
+      border-left: 8px solid #d97706;
+      border-top: 12px solid transparent;
+      border-bottom: 12px solid transparent;
+      z-index: 1;
+    }
+    
+    &::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      right: -6px;
+      transform: translateY(-50%);
+      width: 0;
+      height: 0;
+      border-left: 6px solid #f59e0b;
+      border-top: 10px solid transparent;
+      border-bottom: 10px solid transparent;
+      z-index: 2;
+    }
+    
+    // Ensure chevron is visible on hover
+    &:hover {
+      filter: brightness(0.9);
+      
+      &::before {
+        border-left-color: #b45309;
+      }
+      
+      &::after {
+        border-left-color: #d97706;
+      }
+    }
+    
+    // Special styling for split bookings with chevron
+    &.booking-bar-split {
+      padding: 0 2px; // Reduced padding to accommodate chevron
+      
+      &::before {
+        right: -6px;
+        border-left-width: 6px;
+        border-top-width: 8px;
+        border-bottom-width: 8px;
+      }
+      
+      &::after {
+        right: -4px;
+        border-left-width: 4px;
+        border-top-width: 6px;
+        border-bottom-width: 6px;
+      }
+    }
+  }
+  
   &.booking-bar-split {
     // Adjust padding and positioning for split bookings
     padding: 0 4px;
