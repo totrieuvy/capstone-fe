@@ -13,8 +13,12 @@ import {
   message,
   Space,
   Tooltip,
+  Divider,
+  Typography, // Thêm Typography và Card cho giao diện giá
+  Card,
 } from "antd";
-import { PlusOutlined, DeleteOutlined, EditOutlined } from "@ant-design/icons";
+import { PlusOutlined } from "@ant-design/icons";
+import { FiEdit, FiTrash2 } from "react-icons/fi"; // Thêm import icon mới
 import type { TableColumnsType } from "antd";
 import api from "../../../../config/axios"; // Import axios instance
 import { toast } from "react-toastify";
@@ -102,7 +106,7 @@ interface ComboFormValues {
 }
 
 const { Search } = Input;
-const { Option } = Select;
+const { Text, Title } = Typography; // Khai báo Typography
 
 function ManageComboGrooming() {
   const [combos, setCombos] = useState<ComboListItem[]>([]); // Use simplified interface for list
@@ -221,8 +225,15 @@ function ManageComboGrooming() {
     setIsUpdate(false);
     setEditingRecord(null);
     form.resetFields();
+
+    // Tạo giá trị prices mặc định cho TẤT CẢ loài
+    const defaultPrices = species.map((spec) => ({
+      speciesId: spec.id,
+      priceAfter: 0, // Giá mặc định 0 VND
+    }));
+
     form.setFieldsValue({
-      prices: [{ speciesId: "", priceAfter: undefined }],
+      prices: defaultPrices, // Thay bằng giá trị cho tất cả các loài
       isActive: true, // Default to active for new combos
     });
     setIsModalVisible(true);
@@ -234,16 +245,21 @@ function ManageComboGrooming() {
     if (detailedData) {
       setIsUpdate(true);
       setEditingRecord(detailedData); // Store detailed data
-      const formPrices = detailedData.prices.map((p) => ({
-        speciesId: p.speciesId,
-        priceAfter: p.priceAfter,
+
+      // Khởi tạo form prices dựa trên species list, mapping giá đã có
+      const existingPricesMap = new Map(detailedData.prices.map((p) => [p.speciesId, p.priceAfter]));
+      const formPrices = species.map((spec) => ({
+        speciesId: spec.id,
+        // Lấy giá đã có, nếu chưa có thì mặc định là 0
+        priceAfter: existingPricesMap.get(spec.id) ?? 0,
       }));
+
       form.setFieldsValue({
         id: detailedData.id,
         comboName: detailedData.comboName,
         description: detailedData.description,
         serviceIds: detailedData.services.map((s) => s.id), // Extract service IDs
-        prices: formPrices.length > 0 ? formPrices : [{ speciesId: "", priceAfter: undefined }],
+        prices: formPrices, // Sử dụng danh sách giá cho TẤT CẢ loài
         isActive: detailedData.isActive,
       });
       setIsModalVisible(true);
@@ -258,8 +274,8 @@ function ManageComboGrooming() {
 
   const handleSubmit = async (values: ComboFormValues): Promise<void> => {
     // Basic validation remains the same
-    if (!values.prices || values.prices.length === 0 || values.prices.some((p) => !p.speciesId)) {
-      message.error("Vui lòng chọn loài và nhập giá sau giảm cho tất cả các mục giá.");
+    if (!values.prices || values.prices.length === 0) {
+      message.error("Vui lòng nhập giá sau giảm cho tất cả các loài.");
       return;
     }
     if (!values.serviceIds || values.serviceIds.length === 0) {
@@ -283,8 +299,10 @@ function ManageComboGrooming() {
         }
       }
 
-      // Step 2: Calculate base prices and validate (remains the same)
-      const calculatedPricesPromises = values.prices.map(async (priceEntry) => {
+      // Step 2: Calculate base prices and validate
+      const pricesToSubmit = values.prices.filter((p) => p.priceAfter !== undefined && p.priceAfter !== null);
+
+      const calculatedPricesPromises = pricesToSubmit.map(async (priceEntry) => {
         const currentSpeciesId = priceEntry.speciesId;
         let calculatedBasePrice = 0;
         fetchedServiceDetails.forEach((serviceDetail) => {
@@ -365,7 +383,6 @@ function ManageComboGrooming() {
   };
 
   // --- Table Columns ---
-  // Adjusted columns based on the new ComboListItem interface
   const columns: TableColumnsType<ComboListItem> = [
     {
       title: "ID",
@@ -423,22 +440,33 @@ function ManageComboGrooming() {
       key: "action",
       width: 180,
       fixed: "right",
+      align: "center",
       render: (_, record) => (
         <Space size="middle">
-          {/* Pass the ComboListItem record to handleOpenEdit */}
-          <Button icon={<EditOutlined />} type="primary" onClick={() => handleOpenEdit(record)}>
-            Sửa
-          </Button>
+          {/* Nút Sửa (dùng FiEdit) */}
+          <Button
+            type="primary"
+            icon={<FiEdit />}
+            onClick={() => handleOpenEdit(record)}
+            size="small"
+            style={{ display: "flex", alignItems: "center" }}
+          />
           <Popconfirm
             title="Xóa combo?"
             description="Bạn có chắc muốn xóa combo này?"
             onConfirm={() => handleDelete(record.id)}
             okText="Xóa"
             cancelText="Hủy"
+            okType="danger"
           >
-            <Button icon={<DeleteOutlined />} danger>
-              Xóa
-            </Button>
+            {/* Nút Xóa (dùng FiTrash2) */}
+            <Button
+              type="primary"
+              danger
+              icon={<FiTrash2 />}
+              size="small"
+              style={{ display: "flex", alignItems: "center" }}
+            />
           </Popconfirm>
         </Space>
       ),
@@ -451,7 +479,7 @@ function ManageComboGrooming() {
 
       <div className="toolbar">
         <Search
-          placeholder="Tìm theo tên, mô tả..." // Updated placeholder
+          placeholder="Tìm theo tên, mô tả..."
           allowClear
           value={searchText}
           onChange={(e) => setSearchText(e.target.value)}
@@ -472,7 +500,7 @@ function ManageComboGrooming() {
         />
       </Spin>
 
-      {/* --- Modal remains largely the same, but fetch data on open for edit --- */}
+      {/* --- Modal --- */}
       <Modal
         open={isModalVisible}
         title={isUpdate ? "Cập nhật Combo" : "Thêm Combo Mới"}
@@ -481,15 +509,14 @@ function ManageComboGrooming() {
         width={800}
         destroyOnClose
       >
-        {/* Wrap Form in Spin based on submitLoading OR when loading details for edit */}
         <Spin spinning={submitLoading}>
           <Form
             form={form}
             layout="vertical"
             onFinish={handleSubmit}
-            initialValues={{ prices: [{ speciesId: "", priceAfter: undefined }], isActive: true }}
+            // Khởi tạo giá trị ban đầu cho prices
+            initialValues={{ prices: species.map((spec) => ({ speciesId: spec.id, priceAfter: 0 })), isActive: true }}
           >
-            {/* Form Items remain the same as previous version */}
             <Form.Item name="id" hidden>
               <Input />
             </Form.Item>
@@ -520,78 +547,66 @@ function ManageComboGrooming() {
               />
             </Form.Item>
 
-            <h3 style={{ marginBottom: "16px", marginTop: "20px", color: "#ff6f61" }}>
-              Giá Combo Theo Loài (Sau Giảm Giá)
-            </h3>
-            <Form.List name="prices">
-              {(fields, { add, remove }) => (
-                <>
-                  {fields.map(({ key, name, ...restField }, index) => (
-                    <div key={key} className="species-price-row">
-                      <Form.Item
-                        {...restField}
-                        name={[name, "speciesId"]}
-                        label={`Loài ${index + 1}`}
-                        rules={[{ required: true, message: "Chọn loài!" }]}
-                        style={{ flex: 2 }}
-                      >
-                        <Select placeholder="Chọn loài hamster" showSearch optionFilterProp="label">
-                          {species.map((sp) => (
-                            <Option key={sp.id} value={sp.id} label={sp.speciesName}>
-                              {sp.speciesName}
-                            </Option>
-                          ))}
-                        </Select>
+            <Divider />
+            <div style={{ marginBottom: 16 }}>
+              <Title level={5} style={{ color: "#ff6f61" }}>
+                Giá Combo Theo Loài (Sau Giảm Giá)
+              </Title>
+              <Spin spinning={loading}>
+                <Card size="small" style={{ background: "#f9f9f9" }}>
+                  {/* Lặp qua danh sách species cố định */}
+                  {species.map((spec, index) => (
+                    <div
+                      key={spec.id}
+                      style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                        padding: "12px 0",
+                        borderBottom: index < species.length - 1 ? "1px solid #e0e0e0" : "none",
+                      }}
+                    >
+                      {/* Form.Item ẩn để lưu speciesId */}
+                      <Form.Item name={["prices", index, "speciesId"]} hidden initialValue={spec.id}>
+                        <Input />
                       </Form.Item>
+
+                      <Text strong style={{ minWidth: "120px" }}>
+                        {spec.speciesName}
+                      </Text>
+
+                      {/* Form.Item nhập giá sau giảm */}
                       <Form.Item
-                        {...restField}
-                        name={[name, "priceAfter"]}
-                        label="Giá sau giảm (VND)"
+                        name={["prices", index, "priceAfter"]}
+                        label="Giá sau giảm (VND)" // Thêm label để hiện dấu *
                         rules={[
-                          { required: true, message: "Nhập giá sau giảm!" },
-                          {
-                            validator: async (_, value) => {
-                              if (value !== undefined && value < 0) {
-                                return Promise.reject(new Error("Giá không thể âm!"));
-                              }
-                              return Promise.resolve();
-                            },
-                          },
+                          { required: true, message: `Vui lòng nhập giá sau giảm cho ${spec.speciesName}!` },
+                          { type: "number", min: 0, message: "Giá không thể âm!" },
                         ]}
-                        style={{ flex: 1 }}
+                        // Custom style để ẩn label hiển thị và dùng style cũ cho input
+                        style={{ flex: 1, marginBottom: 0 }}
                       >
                         <InputNumber
-                          placeholder="Giá đã giảm"
                           min={0}
-                          style={{ width: "100%" }}
-                          formatter={(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",")}
-                          parser={(value: string | undefined): string | number => {
-                            return value ? value.replace(/\$\s?|(,*)/g, "") : "";
+                          step={1000}
+                          style={{ width: "200px" }}
+                          placeholder="Nhập giá"
+                          addonAfter="VND"
+                          formatter={(value: string | number | undefined) => {
+                            const v = value?.toString() || "";
+                            return v.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+                          }}
+                          parser={(value: string | undefined) => {
+                            return value ? value.replace(/,/g, "") : "";
                           }}
                         />
                       </Form.Item>
-                      {fields.length > 1 && (
-                        <Button
-                          danger
-                          onClick={() => remove(name)}
-                          icon={<DeleteOutlined />}
-                          className="remove-price-btn"
-                        />
-                      )}
                     </div>
                   ))}
-                  <Button
-                    type="dashed"
-                    onClick={() => add({ speciesId: "", priceAfter: undefined })}
-                    block
-                    icon={<PlusOutlined />}
-                    className="add-price-btn"
-                  >
-                    Thêm giá theo loài
-                  </Button>
-                </>
-              )}
-            </Form.List>
+                </Card>
+              </Spin>
+            </div>
+            <Divider />
 
             {/* Add IsActive Toggle/Switch if needed */}
             {/* <Form.Item name="isActive" label="Trạng thái" valuePropName="checked">
