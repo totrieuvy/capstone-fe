@@ -7,12 +7,12 @@
 
   h1 {
     font-size: 24px;
-    font-weight: 600;
-    margin-bottom: 24px;
-    color: #2c3e50; // Dark blue-gray
-    text-align: center;
+    font-weight: bold;
+    margin-bottom: 20px;
+    color: #ff6f61;
     text-transform: uppercase;
     letter-spacing: 1px;
+    text-align: center;
   }
 
   .toolbar {
@@ -69,10 +69,10 @@
     }
   }
 
-  // Modal Specific Styles
+  // Modal Specific Styles (Đã đồng bộ)
   .ant-modal {
     .ant-modal-header {
-      background: linear-gradient(135deg, #ff6f61 0%, #ff9447 100%);
+      background: linear-gradient(135deg, #ff6f61 0%, #ff9447 100%); // Đồng bộ gradient
       border-radius: 12px 12px 0 0;
 
       .ant-modal-title {
@@ -90,39 +90,80 @@
       font-weight: 500;
       color: #444;
     }
+
+    // Style cho nút Submit trong Modal
+    .ant-btn-primary {
+      background-color: #ff6f61;
+      border-color: #ff6f61;
+
+      &:hover {
+        background-color: #ff9447;
+        border-color: #ff9447;
+      }
+    }
+
+    // Ẩn label trong Form.Item giá để đồng bộ giao diện
+    .ant-form-item-label {
+      // Chỉ ẩn label cho Form.Item nằm trong Card giá (khi lặp)
+      // Đây là cách đơn giản nhất để làm cho giao diện nhập giá combo giống medical
+      & > label {
+        display: none !important;
+      }
+    }
   }
 
-  // Form List for Prices
+  // Style cho các nút hành động nhỏ trong bảng (Đã đồng bộ)
+  .ant-btn-primary.ant-btn-sm:not(.ant-btn-dangerous) {
+    background-color: #ff6f61;
+    border-color: #ff6f61;
+
+    &:hover {
+      background-color: #ff9447;
+      border-color: #ff9447;
+    }
+  }
+
+  .ant-btn-primary.ant-btn-dangerous.ant-btn-sm {
+    background-color: #ff4d4f;
+    border-color: #ff4d4f;
+
+    &:hover {
+      background-color: #ff7875;
+      border-color: #ff7875;
+    }
+  }
+
+  // Loại bỏ các style Form List cũ
   .species-price-row {
-    display: flex;
-    align-items: flex-start; // Align items top for better spacing with validation messages
-    gap: 12px;
-    margin-bottom: 12px; // Space between rows
-    padding: 12px;
-    border: 1px solid #e8e8e8;
-    border-radius: 8px;
-    background-color: #fafafa;
+    display: none !important;
+  }
+  .remove-price-btn,
+  .add-price-btn {
+    display: none !important;
+  }
+}
 
-    .ant-form-item {
-      margin-bottom: 0; // Remove default margin
-      flex: 1; // Allow items to grow
-    }
+.combo-price-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 0;
+  border-bottom: 1px solid #e0e0e0;
 
-    .ant-select,
-    .ant-input-number {
-      border-radius: 8px;
-    }
-
-    .remove-price-btn {
-      flex-shrink: 0; // Prevent button from shrinking
-      margin-top: 5px; // Align button slightly lower if needed
-      border-radius: 8px;
-      height: 36px;
-    }
+  &:last-child {
+    border-bottom: none;
   }
 
-  .add-price-btn {
-    margin-top: 10px;
-    border-radius: 8px;
+  .combo-species-name {
+    min-width: 150px;
+    font-weight: 600;
+  }
+
+  .ant-form-item {
+    margin-bottom: 0 !important;
+  }
+
+  .ant-input-number {
+    width: 200px !important;
   }
 }
