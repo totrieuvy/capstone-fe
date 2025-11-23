@@ -472,12 +472,13 @@ const BoardingSchedule = () => {
   }, [currentMonth]);
 
   // Separate bookings by status
-  // First table: Bookings that are checked in or in progress (CHECK_IN, IN_PROGRESS, CHECK_OUT)
+  // First table: Bookings that are checked in or in progress (CHECK_IN, IN_PROGRESS, CHECK_OUT, INCIDENT)
   const checkedInBookings = convertToDisplayBookings(
     bookings.filter(booking =>
       booking.status === 'CHECK_IN' ||
       booking.status === 'IN_PROGRESS' ||
-      booking.status === 'CHECK_OUT'
+      booking.status === 'CHECK_OUT' ||
+      booking.status === 'INCIDENT'
     )
   );
 
@@ -654,13 +655,15 @@ const BoardingSchedule = () => {
                                       ? 'booking-bar-transfer-extended'
                                       : booking.hasTransfer && booking.isOriginalSegment
                                         ? 'booking-bar-transfer-original'
-                                        : booking.status === 'CHECK_OUT'
-                                          ? 'booking-bar-green'
-                                          : booking.isExtended
-                                            ? 'booking-bar-cyan'
-                                            : booking.status === 'IN_PROGRESS'
-                                              ? 'booking-bar-blue'
-                                              : 'booking-bar-green'
+                                        : booking.status === 'INCIDENT'
+                                          ? 'booking-bar-red'
+                                          : booking.status === 'CHECK_OUT'
+                                            ? 'booking-bar-green'
+                                            : booking.isExtended
+                                              ? 'booking-bar-cyan'
+                                              : booking.status === 'IN_PROGRESS'
+                                                ? 'booking-bar-blue'
+                                                : 'booking-bar-green'
                                   } ${
                                     booking.hasTransfer && hoveredTransferBooking === booking.originalBookingId 
                                       ? 'transfer-booking-hovered' 
@@ -917,6 +920,15 @@ const BoardingSchedule = () => {
                   borderRadius: '4px' 
                 }}></div>
                 <span>Đã gia hạn</span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <div style={{ 
+                  width: '20px', 
+                  height: '16px', 
+                  backgroundColor: '#ef4444', 
+                  borderRadius: '4px' 
+                }}></div>
+                <span>Sự cố</span>
               </div>
             </div>
           </div>
