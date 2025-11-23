@@ -63,10 +63,115 @@ function WalletCustomer() {
   const [isWithdrawOpen, setIsWithdrawOpen] = useState(false);
   const [depositing, setDepositing] = useState(false);
   const [withdrawing, setWithdrawing] = useState(false);
-  const [banks, setBanks] = useState<Bank[]>([]);
+  // const [banks, setBanks] = useState<Bank[]>([]);
 
   const [form] = Form.useForm();
   const [withdrawForm] = Form.useForm();
+
+  const topBanks: Bank[] = [
+    {
+      id: 1,
+      name: "Ngân hàng TMCP Ngoại Thương Việt Nam",
+      shortName: "Vietcombank",
+      code: "VCB",
+      bin: "",
+      logo: "",
+      transferSupported: 1,
+      lookupSupported: 1,
+    },
+    {
+      id: 2,
+      name: "Ngân hàng TMCP Công Thương Việt Nam",
+      shortName: "VietinBank",
+      code: "CTG",
+      bin: "",
+      logo: "",
+      transferSupported: 1,
+      lookupSupported: 1,
+    },
+    {
+      id: 3,
+      name: "Ngân hàng TMCP Đầu tư và Phát triển Việt Nam",
+      shortName: "BIDV",
+      code: "BIDV",
+      bin: "",
+      logo: "",
+      transferSupported: 1,
+      lookupSupported: 1,
+    },
+    {
+      id: 4,
+      name: "Ngân hàng Nông nghiệp và Phát triển Nông thôn Việt Nam",
+      shortName: "Agribank",
+      code: "AGRI",
+      bin: "",
+      logo: "",
+      transferSupported: 1,
+      lookupSupported: 1,
+    },
+    {
+      id: 5,
+      name: "Ngân hàng TMCP Kỹ thương Việt Nam",
+      shortName: "Techcombank",
+      code: "TCB",
+      bin: "",
+      logo: "",
+      transferSupported: 1,
+      lookupSupported: 1,
+    },
+    {
+      id: 6,
+      name: "Ngân hàng Quân đội",
+      shortName: "MB Bank",
+      code: "MBB",
+      bin: "",
+      logo: "",
+      transferSupported: 1,
+      lookupSupported: 1,
+    },
+    {
+      id: 7,
+      name: "Ngân hàng Á Châu",
+      shortName: "ACB",
+      code: "ACB",
+      bin: "",
+      logo: "",
+      transferSupported: 1,
+      lookupSupported: 1,
+    },
+    {
+      id: 8,
+      name: "Ngân hàng Sài Gòn Thương Tín",
+      shortName: "Sacombank",
+      code: "STB",
+      bin: "",
+      logo: "",
+      transferSupported: 1,
+      lookupSupported: 1,
+    },
+    {
+      id: 9,
+      name: "Ngân hàng Việt Nam Thịnh Vượng",
+      shortName: "VPBank",
+      code: "VPB",
+      bin: "",
+      logo: "",
+      transferSupported: 1,
+      lookupSupported: 1,
+    },
+    {
+      id: 10,
+      name: "Ngân hàng Tiên Phong",
+      shortName: "TPBank",
+      code: "TPB",
+      bin: "",
+      logo: "",
+      transferSupported: 1,
+      lookupSupported: 1,
+    },
+  ];
+
+  const [banks] = useState<Bank[]>(topBanks);
 
   // ======================== Fetch APIs ========================
   const fetchWallet = async () => {
@@ -85,20 +190,19 @@ function WalletCustomer() {
     }
   };
 
-  const fetchBanks = async () => {
-    try {
-      const res = await fetch("https://api.vietqr.io/v2/banks");
-      const data = await res.json();
-      if (data.code === "00") setBanks(data.data);
-    } catch {
-      toast.error("Không thể tải danh sách ngân hàng");
-    }
-  };
+  // const fetchBanks = async () => {
+  //   try {
+  //     const res = await axios.get("https://api.vietqr.io/v2/banks");
+  //     if (res.data.code === "00") setBanks(res.data.data);
+  //   } catch {
+  //     toast.error("Không thể tải danh sách ngân hàng");
+  //   }
+  // };
 
   useEffect(() => {
     document.title = "Ví của bạn";
     fetchWallet();
-    fetchBanks();
+    // fetchBanks();
   }, []);
 
   // ======================== Deposit ========================
