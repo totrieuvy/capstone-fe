@@ -62,6 +62,16 @@ interface Feedback {
   createdAt: string;
 }
 
+interface Policy {
+  id: string;
+  policyName: string;
+  description?: string;
+  applicableServices: string;
+  status?: string;
+  refundPercentage?: number;
+  timesBeforeCheckin?: number;
+}
+
 const TrackOrderDetail = () => {
   const { orderId } = useParams<{ orderId: string }>();
   const navigate = useNavigate();
@@ -78,6 +88,10 @@ const TrackOrderDetail = () => {
   const [comment, setComment] = useState<string>("");
 
   const [feedbacks, setFeedbacks] = useState<Record<string, Feedback[]>>({});
+
+  // cancel policy state (defaults)
+  const [cancelTimeLimit, setCancelTimeLimit] = useState<number>(12); // hours
+  const [refundPercent, setRefundPercent] = useState<number>(75);
 
   const statusTextMap: Record<string, string> = {
     PENDING: "Chờ thanh toán",
@@ -103,7 +117,10 @@ const TrackOrderDetail = () => {
 
   useEffect(() => {
     document.title = `Chi tiết đơn hàng #${orderId}`;
-    if (orderId) fetchOrderDetail(orderId);
+    if (orderId) {
+      fetchOrderDetail(orderId);
+    }
+    fetchCancelPolicy();
   }, [orderId]);
 
   useEffect(() => {
@@ -118,7 +135,7 @@ const TrackOrderDetail = () => {
       const orderTime = dayjs.utc(order.orderDate, "DD-MM-YYYY HH:mm:ss").tz("Asia/Ho_Chi_Minh");
 
       const updateCountdown = () => {
-        const deadline = orderTime.add(12, "hour");
+        const deadline = orderTime.add(cancelTimeLimit, "hour");
         const diff = deadline.diff(dayjs().tz("Asia/Ho_Chi_Minh"));
         if (diff > 0) {
           const dur = dayjs.duration(diff);
@@ -142,14 +159,15 @@ const TrackOrderDetail = () => {
     return () => {
       if (interval) clearInterval(interval);
     };
-  }, [order]);
+  }, [order, cancelTimeLimit]);
 
   const fetchFeedbacks = async (productId: string) => {
     try {
-      const { data } = await api.get(`/api/feedbacks/${productId}`);
+      const { data } = await api.get<{ code: number; data: Feedback[] }>(`/api/feedbacks/${productId}`);
       if (data.code === 200) {
         setFeedbacks((prev) => ({ ...prev, [productId]: data.data }));
       }
+      // eslint-disable-next-line no-empty
     } catch {}
   };
 
@@ -171,11 +189,30 @@ const TrackOrderDetail = () => {
     }
   };
 
+  const fetchCancelPolicy = async () => {
+    try {
+      const res = await api.get<{ code: number; data: Policy[] }>("/api/policy");
+      if (res.data?.code === 200 && Array.isArray(res.data.data)) {
+        const orderPolicy = res.data.data.find((p) => p.applicableServices === "ORDER");
+        if (orderPolicy) {
+          if (typeof orderPolicy.timesBeforeCheckin === "number") {
+            setCancelTimeLimit(orderPolicy.timesBeforeCheckin);
+          }
+          if (typeof orderPolicy.refundPercentage === "number") {
+            setRefundPercent(orderPolicy.refundPercentage);
+          }
+        }
+      }
+    } catch {
+      // keep defaults
+    }
+  };
+
   const handleCancelOrder = async () => {
     if (!order) return;
     setIsCancelling(true);
     try {
-      const { data } = await api.patch(`/api/order/cancel/${order.id}`);
+      const { data } = await api.patch<{ code: number; message?: string }>(`/api/order/cancel/${order.id}`);
       if (data.code === 200) {
         message.success("Đã hủy đơn hàng.");
         fetchOrderDetail(order.id);
@@ -192,7 +229,7 @@ const TrackOrderDetail = () => {
   const handleSubmitFeedback = async () => {
     if (!selectedProductId) return;
     try {
-      const { data } = await api.post("/api/feedbacks", {
+      const { data } = await api.post<{ code: number }>("/api/feedbacks", {
         productId: selectedProductId,
         rating,
         comment,
@@ -388,7 +425,7 @@ const TrackOrderDetail = () => {
             <>
               <Popconfirm
                 title="Xác nhận hủy đơn?"
-                description="Bạn sẽ được hoàn 75% giá trị đơn hàng vào ví."
+                description={`Bạn sẽ được hoàn ${refundPercent}% giá trị đơn hàng vào ví.`}
                 onConfirm={handleCancelOrder}
                 okText="Xác nhận hủy"
                 cancelText="Không"
