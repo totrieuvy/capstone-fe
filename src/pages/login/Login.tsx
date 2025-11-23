@@ -89,13 +89,13 @@ const LoginForm = () => {
 
         switch (role) {
           case "ADMIN":
-            navigate("/ADMIN", { replace: true });
+            navigate("/ADMIN/thong-ke", { replace: true });
             break;
           case "STAFF":
-            navigate("/STAFF", { replace: true });
+            navigate("/STAFF/lich-dat-kham", { replace: true });
             break;
           case "VET":
-            navigate("/VET", { replace: true });
+            navigate("/VET/lich-kham-hom-nay", { replace: true });
             break;
           case "SHIPPER":
             navigate("/SHIPPER", { replace: true });
