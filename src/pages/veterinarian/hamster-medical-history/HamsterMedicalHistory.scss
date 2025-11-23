@@ -1,0 +1,195 @@
+/* HamsterMedicalHistory.scss */
+
+/* Biến màu cho chủ đề y tế, chuyên nghiệp */
+$primary-color: #007bff;
+$secondary-color: #0052cc;
+$border-color: #e8e8e8;
+$card-bg: #ffffff;
+$text-color: #333;
+$text-light: #555;
+$shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+$shadow-hover: 0 6px 16px rgba(0, 0, 0, 0.12);
+
+.history-medical-container {
+  padding: 24px 40px;
+  background-color: #f4f7f6; // Một màu nền nhẹ nhàng
+  min-height: 100vh;
+}
+
+/* Header trang */
+.history-medical-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid $border-color;
+}
+
+.header-title {
+  color: $primary-color;
+  font-weight: 700;
+  margin: 0;
+}
+
+/* Card thông tin Hamster ở trên cùng */
+.hamster-info-card {
+  margin-bottom: 24px;
+  border-radius: 12px;
+  box-shadow: $shadow;
+  border: 1px solid $border-color;
+
+  .ant-descriptions-title {
+    color: $secondary-color;
+    font-weight: 600;
+  }
+}
+
+/* Timeline chung */
+.medical-timeline {
+  margin-top: 20px;
+}
+
+/* Card cho mỗi lần khám */
+.timeline-card {
+  border-radius: 12px;
+  background: $card-bg;
+  box-shadow: $shadow;
+  border: 1px solid $border-color;
+  transition: box-shadow 0.3s ease, transform 0.3s ease;
+  margin-bottom: 16px; // Thêm khoảng cách giữa các card
+
+  &:hover {
+    box-shadow: $shadow-hover;
+    transform: translateY(-3px);
+  }
+
+  .ant-card-head {
+    border-bottom: 1px solid $border-color;
+  }
+}
+
+.timeline-card-title {
+  color: $secondary-color;
+  font-weight: 600;
+  font-size: 1.1rem;
+
+  .anticon {
+    margin-right: 8px;
+    color: $primary-color;
+  }
+}
+
+/* Nút xem đơn thuốc */
+.prescription-button {
+  margin-bottom: 16px;
+  background-color: $primary-color;
+  border-color: $primary-color;
+
+  &:hover {
+    background-color: $secondary-color;
+    border-color: $secondary-color;
+  }
+}
+
+/* Mỗi dịch vụ khám trong card */
+.service-item {
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px dashed $border-color;
+
+  &:first-child {
+    margin-top: 0;
+    padding-top: 0;
+    border-top: none;
+  }
+}
+
+.service-item-title {
+  color: $text-color;
+  font-weight: 600;
+  margin-bottom: 12px;
+}
+
+/* Bảng mô tả chi tiết */
+.service-item {
+  .ant-descriptions-item-label {
+    font-weight: 500;
+    color: $text-light;
+  }
+
+  .ant-descriptions-item-content {
+    color: $text-color;
+  }
+
+  .anticon {
+    margin-right: 6px;
+    color: $primary-color;
+  }
+}
+
+/* Wrapper cho ảnh kết quả */
+.result-image-wrapper {
+  margin-top: 10px;
+  text-align: left; // Canh trái ảnh
+}
+
+.result-image {
+  max-width: 400px; // Giới hạn chiều rộng
+  width: 100%;
+  height: auto;
+  border-radius: 8px;
+  border: 1px solid $border-color;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  object-fit: cover;
+  cursor: pointer; // Cho thấy có thể nhấp
+}
+
+.timeline-summary {
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.timeline-card {
+  transition: all 0.3s ease;
+  border-radius: 10px;
+}
+
+.timeline-card:hover {
+  transform: scale(1.01);
+}
+
+.timeline-details {
+  margin-top: 15px;
+  border-top: 1px solid #eee;
+  padding-top: 15px;
+  animation: slideDown 0.25s ease;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.service-item {
+  margin-top: 15px;
+}
+
+.service-item-title {
+  color: #0052cc;
+  margin-bottom: 10px !important;
+}
+
+.result-image {
+  border-radius: 8px;
+}
+
+.prescription-button {
+  margin-bottom: 12px;
+}
