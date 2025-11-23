@@ -13,7 +13,6 @@ import {
   Avatar,
   Space,
   Modal,
-  Upload,
   Image,
   Select,
   Form,
@@ -29,10 +28,7 @@ import {
   CalendarOutlined,
   DollarOutlined,
   MedicineBoxOutlined,
-  CameraOutlined,
   FileImageOutlined,
-  CheckCircleOutlined,
-  PlusOutlined,
   PlayCircleOutlined,
   FileTextOutlined,
   EyeOutlined,
@@ -41,13 +37,12 @@ import {
   ClockCircleOutlined,
 } from '@ant-design/icons';
 import { useNavigate, useParams } from 'react-router-dom';
-import type { UploadProps } from 'antd';
+
 import dayjs from 'dayjs';
 import timezone from 'dayjs/plugin/timezone';
 import utc from 'dayjs/plugin/utc';
 import { 
   getAppointmentById, 
-  checkInAppointment,
   updateAppointmentStatus,
   type AppointmentDetail,
   type AppointmentItemDetail,
@@ -55,8 +50,7 @@ import {
 } from '../../../services/MedicalService';
 import ProfileHamsterService, { type Species } from '../../../services/ProfileHamsterService';
 import { toast } from 'react-toastify';
-import { storage } from '../../../config/firebase'
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+
 import './VetAppointmentDetail.scss';
 
 // Extend dayjs with timezone plugins
@@ -71,19 +65,9 @@ const VetAppointmentDetail: React.FC = () => {
   const [appointment, setAppointment] = useState<AppointmentDetail | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
   
-  // Check-in modal states
-  const [checkInModalVisible, setCheckInModalVisible] = useState<boolean>(false);
-  const [checkInLoading, setCheckInLoading] = useState<boolean>(false);
-  const [uploadedImage, setUploadedImage] = useState<string | null>(null);
-  
   // Tiến hành button loading state
   const [progressLoading, setProgressLoading] = useState<boolean>(false);
   
-  // Image preview modal states
-  const [imagePreviewVisible, setImagePreviewVisible] = useState<boolean>(false);
-  const [previewImage, setPreviewImage] = useState<string>('');
-  const [previewTitle, setPreviewTitle] = useState<string>('');
-
   // Medical record modal states
   const [medicalRecordModalVisible, setMedicalRecordModalVisible] = useState<boolean>(false);
   const [selectedMedicalRecord, setSelectedMedicalRecord] = useState<MedicalRecord | null>(null);
@@ -174,31 +158,9 @@ const VetAppointmentDetail: React.FC = () => {
     }).format(price);
   };
 
-  // Handle file upload to Firebase
-  const handleFileUpload = async (file: File): Promise<string> => {
-    try {
-      // Create a unique filename
-      const timestamp = Date.now();
-      const fileName = `check-in-images/${timestamp}_${file.name}`;
-      const storageRef = ref(storage, fileName);
-      
-      // Upload file to Firebase
-      const snapshot = await uploadBytes(storageRef, file);
-      const downloadURL = await getDownloadURL(snapshot.ref);
-      
-      return downloadURL;
-    } catch (error) {
-      console.error('Error uploading file:', error);
-      throw error;
-    }
-  };
 
-  // Handle image preview
-  const handleImagePreview = (imageUrl: string, title: string) => {
-    setPreviewImage(imageUrl);
-    setPreviewTitle(title);
-    setImagePreviewVisible(true);
-  };
+
+
 
   // Handle medical record modal
   const handleMedicalRecordClick = (item: AppointmentItemDetail) => {
@@ -211,86 +173,9 @@ const VetAppointmentDetail: React.FC = () => {
     }
   };
 
-  // Handle upload change
-  const handleImageUpload: UploadProps['customRequest'] = ({ file, onSuccess, onError }) => {
-    if (file instanceof File) {
-      // Validate file type
-      const isImage = file.type.startsWith('image/');
-      if (!isImage) {
-        message.error('Chỉ được phép tải lên file hình ảnh!');
-        onError?.(new Error('Invalid file type'));
-        return;
-      }
 
-      // Validate file size (max 10MB)
-      const isLt10M = file.size / 1024 / 1024 < 10;
-      if (!isLt10M) {
-        message.error('Kích thước file phải nhỏ hơn 10MB!');
-        onError?.(new Error('File too large'));
-        return;
-      }
 
-      // Create preview and upload to Firebase
-      const reader = new FileReader();
-      reader.onload = async () => {
-        try {
-          message.loading('Đang tải lên hình ảnh...', 0);
-          const imageUrl = await handleFileUpload(file);
-          setUploadedImage(imageUrl);
-          message.destroy();
-          message.success('Tải lên hình ảnh thành công!');
-          onSuccess?.(file);
-        } catch (error) {
-          message.destroy();
-          message.error('Tải lên hình ảnh thất bại!');
-          onError?.(error as Error);
-        }
-      };
-      reader.readAsDataURL(file);
-    }
-  };
 
-  // Handle check-in appointment
-  const handleCheckIn = async () => {
-    if (!uploadedImage) {
-      message.error('Vui lòng tải lên hình ảnh check-in!');
-      return;
-    }
-
-    if (!appointment?.veterinarian?.id) {
-      message.error('Không tìm thấy thông tin bác sĩ thú y!');
-      return;
-    }
-
-    if (!appointmentId) {
-      message.error('Không tìm thấy ID cuộc hẹn!');
-      return;
-    }
-
-    setCheckInLoading(true);
-    try {
-      await checkInAppointment({
-        appointmentId: appointmentId,
-        checkInImage: uploadedImage,
-        veterinarianId: appointment.veterinarian.id,
-        staffId: null, // Default to null as requested
-      });
-
-      message.success('Check-in thành công!');
-      setCheckInModalVisible(false);
-      
-      // Refresh appointment data
-      await fetchAppointmentDetails();
-      
-      // Reset form
-      setUploadedImage(null);
-    } catch (error) {
-      message.error('Check-in thất bại! Vui lòng thử lại.');
-      console.error('Error checking in appointment:', error);
-    } finally {
-      setCheckInLoading(false);
-    }
-  };
 
   // Fetch species list
   const fetchSpeciesList = async () => {
@@ -380,13 +265,7 @@ const VetAppointmentDetail: React.FC = () => {
     }
   };
 
-  // Upload props
-  const uploadProps = {
-    accept: 'image/*',
-    customRequest: handleImageUpload,
-    showUploadList: false,
-    maxCount: 1,
-  };
+
 
   useEffect(() => {
     fetchAppointmentDetails();
@@ -611,101 +490,10 @@ const VetAppointmentDetail: React.FC = () => {
                     {appointment.paymentMethod === 'PAID_AFTER' ? 'Thanh toán sau' : 'Đã thanh toán'}
                   </Tag>
                 </Descriptions.Item>
-                <Descriptions.Item label="Thời gian giao dịch">
+                {/* <Descriptions.Item label="Thời gian giao dịch">
                   {appointment.transactionTime}
-                </Descriptions.Item>
+                </Descriptions.Item> */}
               </Descriptions>
-            </Card>
-          </Col>
-
-          {/* Check-in and Check-out Images */}
-          <Col xs={24} lg={12}>
-            <Card
-              title={
-                <Space>
-                  <CameraOutlined />
-                  <span>Hình ảnh check-in</span>
-                </Space>
-              }
-              className="veterinarian-info-card"
-            >
-              {appointment.checkInImage ? (
-                <div 
-                  className="veterinarian-image-container clickable-image"
-                  onClick={() => handleImagePreview(appointment.checkInImage!, 'Hình ảnh check-in')}
-                  style={{ cursor: 'pointer' }}
-                >
-                  <img
-                    src={appointment.checkInImage}
-                    alt="Check-in"
-                    style={{
-                      width: '100%',
-                      maxHeight: '300px',
-                      objectFit: 'cover',
-                      borderRadius: '8px',
-                      border: '1px solid #d9d9d9',
-                      transition: 'transform 0.2s ease, box-shadow 0.2s ease'
-                    }}
-                  />
-                  <div className="image-overlay">
-                    <Text style={{ color: 'white', fontSize: '14px' }}>
-                      Nhấn để xem chi tiết
-                    </Text>
-                  </div>
-                </div>
-              ) : (
-                <div className="veterinarian-no-image-placeholder">
-                  <Space direction="vertical" style={{ textAlign: 'center', width: '100%' }}>
-                    <FileImageOutlined style={{ fontSize: '48px', color: '#d9d9d9' }} />
-                    <Text type="secondary">Chưa có hình ảnh check-in</Text>
-                  </Space>
-                </div>
-              )}
-            </Card>
-          </Col>
-
-          <Col xs={24} lg={12}>
-            <Card
-              title={
-                <Space>
-                  <CameraOutlined />
-                  <span>Hình ảnh check-out</span>
-                </Space>
-              }
-              className="veterinarian-info-card"
-            >
-              {appointment.checkoutImage ? (
-                <div 
-                  className="veterinarian-image-container clickable-image"
-                  onClick={() => handleImagePreview(appointment.checkoutImage!, 'Hình ảnh check-out')}
-                  style={{ cursor: 'pointer' }}
-                >
-                  <img
-                    src={appointment.checkoutImage}
-                    alt="Check-out"
-                    style={{
-                      width: '100%',
-                      maxHeight: '300px',
-                      objectFit: 'cover',
-                      borderRadius: '8px',
-                      border: '1px solid #d9d9d9',
-                      transition: 'transform 0.2s ease, box-shadow 0.2s ease'
-                    }}
-                  />
-                  <div className="image-overlay">
-                    <Text style={{ color: 'white', fontSize: '14px' }}>
-                      Nhấn để xem chi tiết
-                    </Text>
-                  </div>
-                </div>
-              ) : (
-                <div className="veterinarian-no-image-placeholder">
-                  <Space direction="vertical" style={{ textAlign: 'center', width: '100%' }}>
-                    <FileImageOutlined style={{ fontSize: '48px', color: '#d9d9d9' }} />
-                    <Text type="secondary">Chưa có hình ảnh check-out</Text>
-                  </Space>
-                </div>
-              )}
             </Card>
           </Col>
 
@@ -976,25 +764,6 @@ const VetAppointmentDetail: React.FC = () => {
             <Col span={24}>
               <div style={{ textAlign: 'center', marginTop: '24px' }}>
                 <Space size="large">
-                  {/* Check-in Button - Only show if not checked in yet */}
-                  {!appointment.checkInImage && (
-                    <Button
-                      type="primary"
-                      size="large"
-                      icon={<CheckCircleOutlined />}
-                      onClick={() => setCheckInModalVisible(true)}
-                      style={{
-                        backgroundColor: '#52c41a',
-                        borderColor: '#52c41a',
-                        fontSize: '16px',
-                        height: '48px',
-                        padding: '0 32px',
-                      }}
-                    >
-                      Check-in
-                    </Button>
-                  )}
-                  
                   {/* Tiến hành Button - Show for CHECK_IN, CHECKED_IN and IN_PROGRESS status */}
                   {(appointment.status === 'CHECK_IN' || appointment.status === 'CHECKED_IN' || appointment.status === 'IN_PROGRESS') && (
                     <Button
@@ -1020,122 +789,7 @@ const VetAppointmentDetail: React.FC = () => {
           )}
         </Row>
 
-        {/* Check-in Modal */}
-        <Modal
-          open={checkInModalVisible}
-          onCancel={() => {
-            setCheckInModalVisible(false);
-            setUploadedImage(null);
-          }}
-          footer={[
-            <Button
-              key="cancel"
-              onClick={() => {
-                setCheckInModalVisible(false);
-                setUploadedImage(null);
-              }}
-            >
-              Hủy
-            </Button>,
-            <Button
-              key="submit"
-              type="primary"
-              loading={checkInLoading}
-              onClick={handleCheckIn}
-              disabled={!uploadedImage}
-            >
-              Check-in
-            </Button>,
-          ]}
-          width={600}
-          className="veterinarian-check-in-modal"
-        >
-          <div style={{ padding: '20px 0' }}>
-            <Space direction="vertical" style={{ width: '100%' }} size="large">
-              <div>
-                <Text strong style={{ fontSize: '16px', marginBottom: '8px', display: 'block' }}>
-                  Tải lên hình ảnh check-in:
-                </Text>
-                <Text type="secondary">
-                  Vui lòng chọn hình ảnh để ghi nhận thời điểm check-in của cuộc hẹn.
-                </Text>
-              </div>
 
-              <Upload {...uploadProps}>
-                <div style={{
-                  border: '2px dashed #d9d9d9',
-                  borderRadius: 8,
-                  padding: '40px 20px',
-                  textAlign: 'center',
-                  cursor: 'pointer',
-                  transition: 'border-color 0.3s',
-                  backgroundColor: '#fafafa'
-                }}>
-                  {uploadedImage ? (
-                    <div>
-                      <img
-                        src={uploadedImage}
-                        alt="Check-in preview"
-                        style={{
-                          maxWidth: '100%',
-                          maxHeight: 200,
-                          marginBottom: 16,
-                          borderRadius: 8
-                        }}
-                      />
-                      <p style={{ margin: 0, color: '#666' }}>
-                        Click để thay đổi hình ảnh
-                      </p>
-                    </div>
-                  ) : (
-                    <div>
-                      <PlusOutlined style={{ fontSize: 48, color: '#999', marginBottom: 16 }} />
-                      <p style={{ margin: 0, fontSize: 16, color: '#666' }}>
-                        Click hoặc kéo thả file vào đây
-                      </p>
-                      <p style={{ margin: '8px 0 0 0', fontSize: 14, color: '#999' }}>
-                        Hỗ trợ: JPG, PNG, GIF (tối đa 10MB)
-                      </p>
-                    </div>
-                  )}
-                </div>
-              </Upload>
-
-              {uploadedImage && (
-                <div style={{ textAlign: 'center', marginTop: 16 }}>
-                  <Text type="secondary" style={{ fontSize: '12px' }}>
-                    Hình ảnh đã được tải lên thành công
-                  </Text>
-                </div>
-              )}
-            </Space>
-          </div>
-        </Modal>
-
-        {/* Image Preview Modal */}
-        <Modal
-          open={imagePreviewVisible}
-          title={previewTitle}
-          footer={null}
-          onCancel={() => setImagePreviewVisible(false)}
-          width="80%"
-          centered
-          style={{ maxWidth: '800px' }}
-        >
-          <div style={{ textAlign: 'center' }}>
-            <img
-              src={previewImage}
-              alt={previewTitle}
-              style={{
-                width: '100%',
-                height: 'auto',
-                maxHeight: '70vh',
-                objectFit: 'contain',
-                borderRadius: '8px'
-              }}
-            />
-          </div>
-        </Modal>
 
         {/* Medical Record Modal */}
         <Modal

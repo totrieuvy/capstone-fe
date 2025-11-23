@@ -20,6 +20,7 @@ import {
   Tooltip,
   Badge,
   Collapse,
+  Input,
 } from "antd";
 import {
   ArrowLeftOutlined,
@@ -48,6 +49,7 @@ import {
   getAppointmentById,
   checkInAppointment,
   checkOutAppointment,
+  updateAppointmentStatus,
   type AppointmentDetail,
   type AppointmentItemDetail,
   type MedicalRecord,
@@ -74,6 +76,7 @@ const ManageAppointmentDetail: React.FC = () => {
   const [checkInModalVisible, setCheckInModalVisible] = useState<boolean>(false);
   const [checkInLoading, setCheckInLoading] = useState<boolean>(false);
   const [uploadedImage, setUploadedImage] = useState<string | null>(null);
+  const [healthNote, setHealthNote] = useState<string>("");
 
   // Image preview modal states
   const [imagePreviewVisible, setImagePreviewVisible] = useState<boolean>(false);
@@ -90,6 +93,26 @@ const ManageAppointmentDetail: React.FC = () => {
   const [checkoutImage, setCheckoutImage] = useState<string>("");
   const [uploadingCheckoutImage, setUploadingCheckoutImage] = useState<boolean>(false);
   const [submittingCheckout, setSubmittingCheckout] = useState<boolean>(false);
+
+  // Cancel appointment states
+  const [cancelLoading, setCancelLoading] = useState<boolean>(false);
+
+  // Cancel appointment function
+  const handleCancelAppointment = async () => {
+    if (!appointmentId) return;
+
+    setCancelLoading(true);
+    try {
+      await updateAppointmentStatus(appointmentId, "NO_SHOW");
+      toast.success("Hủy thành công");
+      await fetchAppointmentDetails(); // Refresh appointment data
+    } catch (error) {
+      console.error("Error cancelling appointment:", error);
+      toast.error("Có lỗi xảy ra khi hủy cuộc hẹn");
+    } finally {
+      setCancelLoading(false);
+    }
+  };
 
   // Fetch appointment details
   const fetchAppointmentDetails = async () => {
@@ -128,6 +151,8 @@ const ManageAppointmentDetail: React.FC = () => {
         return "green";
       case "FAILED":
         return "red";
+        case "NO_SHOW":
+          return "red"
       default:
         return "default";
     }
@@ -155,6 +180,8 @@ const ManageAppointmentDetail: React.FC = () => {
         return "Đã xác nhận";
         case "FAILED":
           return "Thanh toán thất bại";
+          case "NO_SHOW":
+            return "Khách không tới"
       default:
         return status.replace("_", " ");
     }
@@ -274,6 +301,7 @@ const ManageAppointmentDetail: React.FC = () => {
         checkInImage: uploadedImage,
         veterinarianId: appointment.veterinarian.id,
         staffId: null, // Default to null as requested
+        healthNote: healthNote,
       });
 
       message.success("Check-in thành công!");
@@ -284,6 +312,7 @@ const ManageAppointmentDetail: React.FC = () => {
 
       // Reset form
       setUploadedImage(null);
+      setHealthNote("");
     } catch (error) {
       message.error("Check-in thất bại! Vui lòng thử lại.");
       console.error("Error checking in appointment:", error);
@@ -457,6 +486,16 @@ const ManageAppointmentDetail: React.FC = () => {
                 <Descriptions.Item label="Thời gian tạo">
                   {dayjs(appointment.createdAt).tz("Asia/Ho_Chi_Minh").format("DD/MM/YYYY HH:mm:ss")}
                 </Descriptions.Item>
+                <Descriptions.Item label="Ghi chú cuộc hẹn">
+                  <Text style={{ fontStyle: appointment.notes ? "normal" : "italic", color: appointment.notes ? "inherit" : "#999" }}>
+                    {appointment.notes || "Không có ghi chú"}
+                  </Text>
+                </Descriptions.Item>
+                <Descriptions.Item label="Ghi chú sức khỏe">
+                  <Text style={{ fontStyle: appointment.healthNote ? "normal" : "italic", color: appointment.healthNote ? "inherit" : "#999" }}>
+                    {appointment.healthNote || "Không có ghi chú"}
+                  </Text>
+                </Descriptions.Item>
               </Descriptions>
             </Card>
           </Col>
@@ -552,7 +591,7 @@ const ManageAppointmentDetail: React.FC = () => {
                     {appointment.paymentMethod === "PAID_AFTER" ? "Thanh toán sau" : "Đã thanh toán"}
                   </Tag>
                 </Descriptions.Item>
-                <Descriptions.Item label="Thời gian giao dịch">{appointment.transactionTime}</Descriptions.Item>
+                {/* <Descriptions.Item label="Thời gian giao dịch">{appointment.transactionTime}</Descriptions.Item> */}
               </Descriptions>
             </Card>
           </Col>
@@ -1126,25 +1165,49 @@ const ManageAppointmentDetail: React.FC = () => {
             </Col>
           )}
 
-          {/* Check-in Button */}
+          {/* Check-in and Cancel Buttons */}
           {appointment.status !== "COMPLETED" && !appointment.checkInImage && (
             <Col span={24}>
               <div style={{ textAlign: "center", marginTop: "24px" }}>
-                <Button
-                  type="primary"
-                  size="large"
-                  icon={<CheckCircleOutlined />}
-                  onClick={() => setCheckInModalVisible(true)}
-                  style={{
-                    backgroundColor: "#52c41a",
-                    borderColor: "#52c41a",
-                    fontSize: "16px",
-                    height: "48px",
-                    padding: "0 32px",
-                  }}
-                >
-                  Check-in
-                </Button>
+                <Row gutter={16} justify="center">
+                  <Col>
+                    <Button
+                      type="primary"
+                      size="large"
+                      icon={<CheckCircleOutlined />}
+                      onClick={() => setCheckInModalVisible(true)}
+                      style={{
+                        backgroundColor: "#52c41a",
+                        borderColor: "#52c41a",
+                        fontSize: "16px",
+                        height: "48px",
+                        padding: "0 32px",
+                      }}
+                    >
+                      Check-in
+                    </Button>
+                  </Col>
+                  {appointment.status === "BOOKED" && (
+                    <Col>
+                      <Button
+                        type="primary"
+                        size="large"
+                        icon={<AlertOutlined />}
+                        onClick={handleCancelAppointment}
+                        loading={cancelLoading}
+                        style={{
+                          backgroundColor: "#ff4d4f",
+                          borderColor: "#ff4d4f",
+                          fontSize: "16px",
+                          height: "48px",
+                          padding: "0 32px",
+                        }}
+                      >
+                        Hủy cuộc hẹn
+                      </Button>
+                    </Col>
+                  )}
+                </Row>
               </div>
             </Col>
           )}
@@ -1180,6 +1243,7 @@ const ManageAppointmentDetail: React.FC = () => {
           onCancel={() => {
             setCheckInModalVisible(false);
             setUploadedImage(null);
+            setHealthNote("");
           }}
           footer={[
             <Button
@@ -1187,6 +1251,7 @@ const ManageAppointmentDetail: React.FC = () => {
               onClick={() => {
                 setCheckInModalVisible(false);
                 setUploadedImage(null);
+                setHealthNote("");
               }}
             >
               Hủy
@@ -1258,6 +1323,21 @@ const ManageAppointmentDetail: React.FC = () => {
                   </Text>
                 </div>
               )}
+
+              <div>
+                <Text strong style={{ fontSize: "16px", marginBottom: "8px", display: "block" }}>
+                  Ghi chú sức khỏe:
+                </Text>
+                <Input.TextArea
+                  value={healthNote}
+                  onChange={(e) => setHealthNote(e.target.value)}
+                  placeholder="Nhập ghi chú về tình trạng sức khỏe của hamster..."
+                  rows={4}
+                  style={{ marginTop: "8px" }}
+                  showCount
+                  maxLength={500}
+                />
+              </div>
             </Space>
           </div>
         </Modal>
