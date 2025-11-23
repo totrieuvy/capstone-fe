@@ -199,7 +199,7 @@ const TrackOrderDetail = () => {
             setCancelTimeLimit(orderPolicy.timesBeforeCheckin);
           }
           if (typeof orderPolicy.refundPercentage === "number") {
-            setRefundPercent(orderPolicy.refundPercentage);
+            setRefundPercent(orderPolicy.refundPercentage * 100); // chuyển từ 0.5 → 50
           }
         }
       }
