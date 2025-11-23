@@ -104,9 +104,9 @@ const Hero151 = ({
             </div> */}
           </div>
           <div className="w-full flex-1">
-            <div className="w-full">
-              <AspectRatio ratio={1 / 1} className="h-full w-full">
-                <div className="grid h-full w-full grid-cols-2 grid-rows-2 gap-4">
+            <div className="max-w-md mx-auto">
+              <AspectRatio ratio={4 / 3} className="h-full w-full">
+                <div className="grid h-full w-full grid-cols-2 grid-rows-2 gap-2">
                   <div className="overflow-hidden rounded-lg border border-muted bg-muted">
                     <img
                       src={images.first}
