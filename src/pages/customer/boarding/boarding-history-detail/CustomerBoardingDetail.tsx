@@ -208,6 +208,7 @@ const BoardingDetail: React.FC = () => {
       COMPLETED: "green",
       IN_PROGRESS: "blue",
       CHECK_OUT: "green",
+      INCIDENT: "red",
     };
     return statusColors[status as keyof typeof statusColors] || "default";
   };
@@ -221,6 +222,7 @@ const BoardingDetail: React.FC = () => {
       COMPLETED: "Hoàn thành",
       IN_PROGRESS: "Đang thực hiện",
       CHECK_OUT: "Hoàn tất",
+      INCIDENT: "Có sự cố",
     };
     return statusTexts[status as keyof typeof statusTexts] || status;
   };

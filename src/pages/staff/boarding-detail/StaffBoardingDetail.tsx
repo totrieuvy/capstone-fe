@@ -448,10 +448,28 @@ const BoardingDetail: React.FC = () => {
             <div className="boarding-info">
               <Descriptions column={2} size="middle">
                 <Descriptions.Item label="Loại chuồng">
-                  <strong>{bookingDetail.cageTypeName}</strong>
+                  <div className="cage-transfer-indicator">
+                    <span className="original-value">{bookingDetail.cageTypeName}</span>
+                    {bookingDetail.newCageTypeName && bookingDetail.newCageTypeName !== bookingDetail.cageTypeName && (
+                      <>
+                        <span className="transfer-arrow">→</span>
+                        <span className="new-value cage-type">{bookingDetail.newCageTypeName}</span>
+                        {/* <Tag color="blue" className="transfer-tag">Chuyển loại chuồng</Tag> */}
+                      </>
+                    )}
+                  </div>
                 </Descriptions.Item>
                 <Descriptions.Item label="Tên chuồng">
-                  <strong>{bookingDetail.cageName || 'Chưa phân chuồng'}</strong>
+                  <div className="cage-transfer-indicator">
+                    <span className="original-value">{bookingDetail.cageName || 'Chưa phân chuồng'}</span>
+                    {bookingDetail.newCageName && bookingDetail.newCageName !== bookingDetail.cageName && (
+                      <>
+                        <span className="transfer-arrow">→</span>
+                        <span className="new-value cage-name">{bookingDetail.newCageName}</span>
+                        {/* <Tag color="green" className="transfer-tag">Chuyển chuồng</Tag> */}
+                      </>
+                    )}
+                  </div>
                 </Descriptions.Item>
                 <Descriptions.Item label="Trạng thái">
                   <Tag color={getStatusColor(bookingDetail.status)}>
@@ -505,6 +523,13 @@ const BoardingDetail: React.FC = () => {
                 {bookingDetail.notes && (
                   <Descriptions.Item label="Ghi chú" span={2}>
                     <div className="notes-text">{bookingDetail.notes}</div>
+                  </Descriptions.Item>
+                )}
+                {bookingDetail.healthNote && (
+                  <Descriptions.Item label="Ghi chú sức khỏe" span={2}>
+                    <div className="health-note">
+                      {bookingDetail.healthNote}
+                    </div>
                   </Descriptions.Item>
                 )}
               </Descriptions>
@@ -607,6 +632,41 @@ const BoardingDetail: React.FC = () => {
                       </strong>
                     </Descriptions.Item>
                   </Descriptions>
+                  
+                  {/* Cage Transfer Information */}
+                  {(bookingDetail.newCageTypeName && bookingDetail.newCageTypeName !== bookingDetail.cageTypeName) ||
+                   (bookingDetail.newCageName && bookingDetail.newCageName !== bookingDetail.cageName) ? (
+                    <div className="cage-transfer-history">
+                      <h5 className="transfer-title">
+                        <HomeOutlined />
+                        Chi tiết chuyển chuồng
+                      </h5>
+                      <div className="transfer-details">
+                        {bookingDetail.newCageTypeName && bookingDetail.newCageTypeName !== bookingDetail.cageTypeName && (
+                          <div className="transfer-item">
+                            <span className="transfer-label">Loại chuồng:</span>
+                            <span className="transfer-from">{bookingDetail.cageTypeName}</span>
+                            <span className="transfer-arrow">→</span>
+                            <span className="transfer-to type-change">{bookingDetail.newCageTypeName}</span>
+                          </div>
+                        )}
+                        {bookingDetail.newCageName && bookingDetail.newCageName !== bookingDetail.cageName && (
+                          <div className="transfer-item">
+                            <span className="transfer-label">Tên chuồng:</span>
+                            <span className="transfer-from">{bookingDetail.cageName || 'Chưa phân chuồng'}</span>
+                            <span className="transfer-arrow">→</span>
+                            <span className="transfer-to name-change">{bookingDetail.newCageName}</span>
+                          </div>
+                        )}
+                      </div>
+                      {/* <div className="transfer-warning">
+                        <p>
+                          ⚠️ Hamster đã được chuyển sang chuồng mới trong quá trình gia hạn
+                        </p>
+                      </div> */}
+                    </div>
+                  ) : null}
+                  
                   <div style={{ 
                     marginTop: '12px', 
                     padding: '8px 12px', 
@@ -620,7 +680,7 @@ const BoardingDetail: React.FC = () => {
                       color: '#389e0d',
                       fontWeight: 500 
                     }}>
-                      ✓ Booking đã được gia hạn thành công
+                       Booking đã được gia hạn thành công
                     </p>
                   </div>
                 </div>

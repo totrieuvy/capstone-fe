@@ -20,6 +20,11 @@ interface Booking {
   customerName: string;
   hamsterName: string;
   status: string;
+  isExtended?: boolean;
+  isOriginalSegment?: boolean;
+  isExtendedSegment?: boolean;
+  hasTransfer?: boolean;
+  originalBookingId?: string;
 }
 
 const BoardingSchedule = () => {
@@ -45,20 +50,28 @@ const BoardingSchedule = () => {
   const [originalCageId, setOriginalCageId] = useState<string | null>(null);
   const [loadingCages, setLoadingCages] = useState<boolean>(false);
 
+  // State for transfer booking hover effect
+  const [hoveredTransferBooking, setHoveredTransferBooking] = useState<string | null>(null);
+
   // Context menu handlers
   const handleViewDetails = (booking: Booking) => {
-    navigate(`/STAFF/booking-detail/${booking.id}`);
+    const originalBookingId = booking.originalBookingId || booking.id;
+    navigate(`/STAFF/booking-detail/${originalBookingId}`);
   };
 
   const handleExtend = async (booking: Booking) => {
-    setSelectedBooking(booking);
+    const originalBookingId = booking.originalBookingId || booking.id;
+    setSelectedBooking({
+      ...booking,
+      id: originalBookingId
+    });
     setNewEndDate(null);
     setSelectedCageId(null);
     setOriginalCageId(null);
     
     try {
       // Get current booking data
-      const currentBookingData = bookings.find(b => b.bookingId === booking.id);
+      const currentBookingData = bookings.find(b => b.bookingId === originalBookingId);
       if (currentBookingData) {
         setOriginalCageId(currentBookingData.cageName);
       }
@@ -135,11 +148,17 @@ const BoardingSchedule = () => {
       return;
     }
 
-    // Get the current effective end date
+    // Get the current booking data
     const currentBookingData = bookings.find(b => b.bookingId === selectedBooking.id);
-    const currentEffectiveEndDate = currentBookingData?.newEndDate && currentBookingData.newEndDate !== null && currentBookingData.newEndDate !== ''
+    if (!currentBookingData) {
+      message.error('Không tìm thấy thông tin đặt lịch hiện tại');
+      return;
+    }
+
+    // Calculate the current effective end date
+    const currentEffectiveEndDate = currentBookingData.newEndDate && currentBookingData.newEndDate !== null && currentBookingData.newEndDate !== ''
       ? dayjs(currentBookingData.newEndDate)
-      : dayjs(currentBookingData?.endDate);
+      : dayjs(currentBookingData.endDate);
 
     if (!newEndDate.isAfter(currentEffectiveEndDate)) {
       message.error('Ngày kết thúc mới phải sau ngày kết thúc hiện tại');
@@ -149,47 +168,105 @@ const BoardingSchedule = () => {
     try {
       setExtendLoading(true);
 
+      // Fetch current booking details to get existing services
+      let existingServiceIds: string[] = [];
+      try {
+        const bookingDetails = await boardingService.getBookingDetails(selectedBooking.id);
+        console.log('Booking details:', bookingDetails);
+        
+        // Extract service IDs from current booking to carry them over
+        if (bookingDetails.services && Array.isArray(bookingDetails.services)) {
+          existingServiceIds = bookingDetails.services.map((service: any) => service.serviceId);
+        }
+        
+        // Also check for additionalServiceIds if they exist
+        if (bookingDetails.additionalServiceIds && Array.isArray(bookingDetails.additionalServiceIds)) {
+          existingServiceIds = [...existingServiceIds, ...bookingDetails.additionalServiceIds];
+        }
+        
+        // Remove duplicates
+        existingServiceIds = [...new Set(existingServiceIds)];
+        console.log('Existing services to carry over:', existingServiceIds);
+      } catch (detailsError) {
+        console.warn('Could not fetch booking details, proceeding without service carryover:', detailsError);
+      }
+
       // Prepare extend request
       const extendRequest: any = {
         bookingId: selectedBooking.id,
         newEndDate: newEndDate.format('YYYY-MM-DD')
       };
 
-      // Determine scenario based on current vs selected cage info
-      const currentCageName = currentBookingData?.cageName;
-      const currentCageTypeId = currentBookingData?.cageTypeId;
-      const selectedCage = availableCages.find(cage => cage.cageId === selectedCageId);
+      // Include existing services in the extension if any exist
+      if (existingServiceIds.length > 0) {
+        extendRequest.serviceIds = existingServiceIds;
+        console.log('Including existing services in extension:', existingServiceIds);
+      }
 
-      // Scenario 1: Keep same cage (both cage type and cage ID same as current)
-      if (selectedCageTypeId === currentCageTypeId && selectedCage?.cageName === currentCageName) {
-        // No additional parameters needed - just extend in same cage
+      // Determine scenario based on current vs selected cage info
+      const currentCageName = currentBookingData.cageName;
+      const currentCageTypeId = currentBookingData.cageTypeId;
+      const selectedCage = availableCages.find(cage => cage.cageId === selectedCageId);
+      const selectedType = allCageTypes.find(type => type.cageTypeId === selectedCageTypeId);
+
+      if (!selectedCage) {
+        message.error('Không tìm thấy thông tin chuồng được chọn');
+        return;
       }
-      // Scenario 2: Same cage type, different cage
-      else if (selectedCageTypeId === currentCageTypeId && selectedCage?.cageName !== currentCageName) {
+
+      // Determine extension scenario
+      const isSameCage = selectedCageTypeId === currentCageTypeId && selectedCage.cageName === currentCageName;
+      const isSameCageType = selectedCageTypeId === currentCageTypeId && selectedCage.cageName !== currentCageName;
+      const isDifferentCageType = selectedCageTypeId !== currentCageTypeId;
+
+      if (isSameCage) {
+        // Scenario 1: Keep same cage (no additional parameters needed)
+        console.log('Extension: Same cage');
+      } else if (isSameCageType) {
+        // Scenario 2: Same cage type, different cage
         extendRequest.CageId = selectedCageId;
-      }
-      // Scenario 3: Different cage type
-      else if (selectedCageTypeId !== currentCageTypeId) {
+        console.log('Extension: Same cage type, different cage', selectedCageId);
+      } else if (isDifferentCageType) {
+        // Scenario 3: Different cage type
         extendRequest.CageTypeId = selectedCageTypeId;
         extendRequest.CageId = selectedCageId;
+        console.log('Extension: Different cage type', selectedCageTypeId, selectedCageId);
       }
 
+      console.log('Extend request:', extendRequest);
       const extendResponse = await boardingService.extendBooking(extendRequest);
+      console.log('Extend response:', extendResponse);
 
-      // Track if this was a cage change extension for visual indicators
-      const isCageChange = selectedCageTypeId !== currentCageTypeId || selectedCage?.cageName !== currentCageName;
-      if (isCageChange) {
-        localStorage.setItem(`cageChange_${selectedBooking.id}`, 'true');
-      }
-
-      // Update local state with the new end date from API response
+      // Determine if this was a cage change extension
+      const isCageChange = !isSameCage;
+      
+      // Update local state with the complete extension response
       setBookings(prevBookings =>
-        prevBookings.map(booking =>
-          booking.bookingId === selectedBooking.id
-            ? { ...booking, newEndDate: extendResponse.newEndDate }
-            : booking
-        )
+        prevBookings.map(booking => {
+          if (booking.bookingId === selectedBooking.id) {
+            const updatedBooking = {
+              ...booking,
+              newEndDate: extendResponse.newEndDate
+            };
+            
+            // If cage transfer occurred, update the new cage information
+            if (isCageChange) {
+              updatedBooking.newCageTypeId = selectedCageTypeId;
+              updatedBooking.newCageName = selectedCage.cageName;
+              updatedBooking.newCageTypeName = selectedType?.typeName || null;
+              console.log('Updated booking with cage transfer:', updatedBooking);
+            } else {
+              console.log('Updated booking without cage transfer:', updatedBooking);
+            }
+            
+            return updatedBooking;
+          }
+          return booking;
+        })
       );
+
+      // Refresh the bookings data to ensure consistency with backend
+      await fetchBookings(currentMonth);
 
       toast.success('Gia hạn thành công');
       handleExtendModalCancel();
@@ -296,41 +373,97 @@ const BoardingSchedule = () => {
     return 'Cơ bản'; // Default fallback
   };
 
-  // Convert API data to display format
+  // Convert API data to display format with support for cage transfers
   const convertToDisplayBookings = (apiBookings: BookingByDateRange[]): Booking[] => {
-    return apiBookings.map(booking => {
+    const displayBookings: Booking[] = [];
+    
+    apiBookings.forEach(booking => {
       const bookingStartDate = dayjs(booking.startDate);
-      // Prioritize newEndDate if it exists and is not null/empty, otherwise use endDate
+      const originalEndDate = dayjs(booking.endDate);
       const effectiveEndDate = booking.newEndDate && booking.newEndDate !== null && booking.newEndDate !== ''
-        ? booking.newEndDate
-        : booking.endDate;
-      const bookingEndDate = dayjs(effectiveEndDate);
+        ? dayjs(booking.newEndDate)
+        : originalEndDate;
       
       // Calculate the visible start and end dates within the current month
       const monthStart = currentMonth.startOf('month');
       const monthEnd = currentMonth.endOf('month');
       
-      // Determine the start date to display (either booking start or month start, whichever is later)
-      const displayStartDate = bookingStartDate.isBefore(monthStart) ? monthStart : bookingStartDate;
+      // Check if this booking has a cage transfer (different cage types or names)
+      const hasCageTransfer = booking.newCageTypeId && 
+        (booking.newCageTypeId !== booking.cageTypeId || 
+         booking.newCageName !== booking.cageName);
       
-      // Determine the end date to display (either booking end or month end, whichever is earlier)
-      const displayEndDate = bookingEndDate.isAfter(monthEnd) ? monthEnd : bookingEndDate;
-      
-      const startDay = displayStartDate.date();
-      const endDay = displayEndDate.date();
-      const cageType = mapCageType(booking.cageTypeName);
-
-      return {
-        id: booking.bookingId,
-        cageId: booking.cageName, // Use the actual cage name from API
-        cageType,
-        startDate: startDay,
-        endDate: endDay,
-        customerName: booking.customerName,
-        hamsterName: booking.hamsterName,
-        status: booking.status
-      };
+      if (hasCageTransfer) {
+        // Create two booking segments: original period and extended period
+        
+        // First segment: Original booking period in original cage
+        const originalDisplayStartDate = bookingStartDate.isBefore(monthStart) ? monthStart : bookingStartDate;
+        const originalDisplayEndDate = originalEndDate.isAfter(monthEnd) ? monthEnd : originalEndDate;
+        
+        if (originalDisplayStartDate.isBefore(originalDisplayEndDate) || originalDisplayStartDate.isSame(originalDisplayEndDate)) {
+          const originalCageType = mapCageType(booking.cageTypeName);
+          displayBookings.push({
+            id: `${booking.bookingId}_original`,
+            cageId: booking.cageName || 'N/A',
+            cageType: originalCageType,
+            startDate: originalDisplayStartDate.date(),
+            endDate: originalDisplayEndDate.date(),
+            customerName: booking.customerName,
+            hamsterName: booking.hamsterName,
+            status: booking.status,
+            isOriginalSegment: true,
+            hasTransfer: true,
+            originalBookingId: booking.bookingId
+          });
+        }
+        
+        // Second segment: Extended period in new cage (only if extension goes beyond original end date)
+        if (effectiveEndDate.isAfter(originalEndDate)) {
+          const extendedStartDate = originalEndDate.add(1, 'day');
+          const extendedDisplayStartDate = extendedStartDate.isBefore(monthStart) ? monthStart : extendedStartDate;
+          const extendedDisplayEndDate = effectiveEndDate.isAfter(monthEnd) ? monthEnd : effectiveEndDate;
+          
+          if (extendedDisplayStartDate.isBefore(extendedDisplayEndDate) || extendedDisplayStartDate.isSame(extendedDisplayEndDate)) {
+            const newCageType = mapCageType(booking.newCageTypeName || booking.cageTypeName);
+            displayBookings.push({
+              id: `${booking.bookingId}_extended`,
+              cageId: booking.newCageName || booking.cageName || 'N/A',
+              cageType: newCageType,
+              startDate: extendedDisplayStartDate.date(),
+              endDate: extendedDisplayEndDate.date(),
+              customerName: booking.customerName,
+              hamsterName: booking.hamsterName,
+              status: booking.status,
+              isExtendedSegment: true,
+              hasTransfer: true,
+              originalBookingId: booking.bookingId
+            });
+          }
+        }
+      } else {
+        // Regular booking without cage transfer
+        const displayStartDate = bookingStartDate.isBefore(monthStart) ? monthStart : bookingStartDate;
+        const displayEndDate = effectiveEndDate.isAfter(monthEnd) ? monthEnd : effectiveEndDate;
+        
+        if (displayStartDate.isBefore(displayEndDate) || displayStartDate.isSame(displayEndDate)) {
+          const cageType = mapCageType(booking.cageTypeName);
+          displayBookings.push({
+            id: booking.bookingId,
+            cageId: booking.cageName || 'N/A',
+            cageType,
+            startDate: displayStartDate.date(),
+            endDate: displayEndDate.date(),
+            customerName: booking.customerName,
+            hamsterName: booking.hamsterName,
+            status: booking.status,
+            isExtended: !!(booking.newEndDate && booking.newEndDate !== null && booking.newEndDate !== ''),
+            originalBookingId: booking.bookingId
+          });
+        }
+      }
     });
+    
+    return displayBookings;
   };
 
   // Initialize data on component mount
@@ -381,26 +514,18 @@ const BoardingSchedule = () => {
     return classes[cageType] || 'cage-type-basic';
   };
 
-  // Helper function to check if a booking has been extended
-  const isBookingExtended = (bookingId: string): boolean => {
-    const booking = bookings.find(b => b.bookingId === bookingId);
-    return booking?.newEndDate !== null && booking?.newEndDate !== undefined && booking?.newEndDate !== '';
-  };
-
-  // Helper function to check if an extended booking involved a cage change
-  const isBookingExtendedWithCageChange = (bookingId: string): boolean => {
-    if (!isBookingExtended(bookingId)) {
-      return false;
+  // Helper function to get the transfer indicator for a booking segment
+  const getTransferIndicator = (booking: Booking): string => {
+    if (booking.hasTransfer) {
+      if (booking.isOriginalSegment) {
+        return ' (Đã gia hạn)';
+      } else if (booking.isExtendedSegment) {
+        return ' (Đã gia hạn)';
+      }
+    } else if (booking.isExtended) {
+      return ' (Đã gia hạn)';
     }
-
-    // This function needs to be enhanced based on how the API tracks cage changes
-    // For now, we'll need additional logic to detect cage changes
-    // This could involve checking if there are multiple cage entries for the same booking
-    // or if there's additional metadata from the extend booking API response
-    
-    // Check if cage change information was stored during the extend operation
-    const cageChangeInfo = localStorage.getItem(`cageChange_${bookingId}`);
-    return cageChangeInfo === 'true';
+    return '';
   };
 
   const renderCheckedInGrid = () => {
@@ -525,15 +650,21 @@ const BoardingSchedule = () => {
                               >
                                 <div
                                   className={`booking-bar ${
-                                    isBookingExtendedWithCageChange(booking.id)
-                                      ? 'booking-bar-chevron'
-                                      : isBookingExtended(booking.id) 
-                                        ? 'booking-bar-extended' 
-                                        : booking.status === 'IN_PROGRESS'
-                                          ? 'booking-bar-blue'
-                                          : booking.status === 'CHECK_OUT'
-                                            ? 'booking-bar-green'
-                                            : 'booking-bar-green'
+                                    booking.hasTransfer && booking.isExtendedSegment
+                                      ? 'booking-bar-transfer-extended'
+                                      : booking.hasTransfer && booking.isOriginalSegment
+                                        ? 'booking-bar-transfer-original'
+                                        : booking.status === 'CHECK_OUT'
+                                          ? 'booking-bar-green'
+                                          : booking.isExtended
+                                            ? 'booking-bar-cyan'
+                                            : booking.status === 'IN_PROGRESS'
+                                              ? 'booking-bar-blue'
+                                              : 'booking-bar-green'
+                                  } ${
+                                    booking.hasTransfer && hoveredTransferBooking === booking.originalBookingId 
+                                      ? 'transfer-booking-hovered' 
+                                      : ''
                                   } ${continuesFromPrevious ? 'continues-from-previous' : ''} ${continuesIntoNext ? 'continues-into-next' : ''}`}
                                   style={{
                                     left: `${leftPosition + 4}px`,
@@ -541,14 +672,25 @@ const BoardingSchedule = () => {
                                     height: `${bookingBarHeight}px`,
                                     top: `${topOffset}px`,
                                     position: 'absolute',
-                                    zIndex: 10 + index,
+                                    zIndex: booking.hasTransfer && hoveredTransferBooking === booking.originalBookingId 
+                                      ? 60 + index 
+                                      : 10 + index,
+                                  }}
+                                  onMouseEnter={() => {
+                                    if (booking.hasTransfer && booking.originalBookingId) {
+                                      setHoveredTransferBooking(booking.originalBookingId);
+                                    }
+                                  }}
+                                  onMouseLeave={() => {
+                                    if (booking.hasTransfer) {
+                                      setHoveredTransferBooking(null);
+                                    }
                                   }}
                                 >
                                   <div className="booking-text">
                                     {continuesFromPrevious && <span className="continuation-indicator">◀ </span>}
                                     {booking.customerName} - {booking.hamsterName}
-                                    {isBookingExtendedWithCageChange(booking.id) && <span className="extended-indicator"> (Đã chuyển chuồng)</span>}
-                                    {isBookingExtended(booking.id) && !isBookingExtendedWithCageChange(booking.id) && <span className="extended-indicator"> (Đã gia hạn)</span>}
+                                    {getTransferIndicator(booking) && <span className="extended-indicator">{getTransferIndicator(booking)}</span>}
                                     {continuesIntoNext && <span className="continuation-indicator"> ▶</span>}
                                   </div>
                                 </div>
@@ -624,29 +766,46 @@ const BoardingSchedule = () => {
                     >
                       <div
                         className={`booking-bar ${
-                          // CANCELLED or NO-SHOW bookings get red bar
-                          booking.status === 'NO-SHOW'
+                          booking.status === 'CANCELLED' || booking.status === 'NO-SHOW'
                             ? 'booking-bar-red'
-                            : booking.status === 'CANCELLED'
-                              ? 'booking-bar-red'
-                              : isBookingExtendedWithCageChange(booking.id)
-                                ? 'booking-bar-chevron'
-                                : booking.status === 'IN_PROGRESS'
-                                  ? 'booking-bar-blue'
-                                  : booking.status === 'CHECK_OUT'
-                                    ? 'booking-bar-green'
-                                    : (isBookingExtended(booking.id) ? 'booking-bar-extended' : 'booking-bar-orange')
+                            : booking.hasTransfer && booking.isExtendedSegment
+                              ? 'booking-bar-transfer-extended'
+                              : booking.hasTransfer && booking.isOriginalSegment
+                                ? 'booking-bar-transfer-original'
+                                : booking.status === 'CHECK_OUT'
+                                  ? 'booking-bar-green'
+                                  : booking.isExtended
+                                    ? 'booking-bar-cyan'
+                                    : booking.status === 'IN_PROGRESS'
+                                      ? 'booking-bar-blue'
+                                      : 'booking-bar-orange'
+                          } ${
+                            booking.hasTransfer && hoveredTransferBooking === booking.originalBookingId 
+                              ? 'transfer-booking-hovered' 
+                              : ''
                           } ${continuesFromPrevious ? 'continues-from-previous' : ''} ${continuesIntoNext ? 'continues-into-next' : ''}`}
                         style={{
                           left: `${leftPosition + 4}px`,
                           width: `${barWidth - 8}px`,
+                          zIndex: booking.hasTransfer && hoveredTransferBooking === booking.originalBookingId 
+                            ? 60 
+                            : 'auto',
+                        }}
+                        onMouseEnter={() => {
+                          if (booking.hasTransfer && booking.originalBookingId) {
+                            setHoveredTransferBooking(booking.originalBookingId);
+                          }
+                        }}
+                        onMouseLeave={() => {
+                          if (booking.hasTransfer) {
+                            setHoveredTransferBooking(null);
+                          }
                         }}
                       >
                         <div className="booking-text">
                           {continuesFromPrevious && <span className="continuation-indicator">◀ </span>}
                           {booking.customerName} - {booking.hamsterName}
-                          {isBookingExtendedWithCageChange(booking.id) && <span className="extended-indicator"> (Đã chuyển chuồng)</span>}
-                          {isBookingExtended(booking.id) && !isBookingExtendedWithCageChange(booking.id) && <span className="extended-indicator"> (Đã gia hạn)</span>}
+                          {getTransferIndicator(booking) && <span className="extended-indicator">{getTransferIndicator(booking)}</span>}
                           {continuesIntoNext && <span className="continuation-indicator"> ▶</span>}
                         </div>
                       </div>
@@ -726,6 +885,40 @@ const BoardingSchedule = () => {
             >
               Tháng sau
             </Button>
+          </div>
+          
+          {/* Booking Status Legend */}
+          <div style={{ marginTop: '24px', padding: '16px', backgroundColor: '#f8f9fa', borderRadius: '8px' }}>
+            <h4 style={{ marginBottom: '12px', color: '#1f2937' }}>Chú thích trạng thái ký gửi:</h4>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '16px', fontSize: '13px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <div style={{ 
+                  width: '20px', 
+                  height: '16px', 
+                  backgroundColor: '#3b82f6', 
+                  borderRadius: '4px' 
+                }}></div>
+                <span>Đang thực hiện</span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <div style={{ 
+                  width: '20px', 
+                  height: '16px', 
+                  backgroundColor: '#22c55e', 
+                  borderRadius: '4px' 
+                }}></div>
+                <span>Đã check-out</span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <div style={{ 
+                  width: '20px', 
+                  height: '16px', 
+                  backgroundColor: '#06b6d4', 
+                  borderRadius: '4px' 
+                }}></div>
+                <span>Đã gia hạn</span>
+              </div>
+            </div>
           </div>
         </div>
 
