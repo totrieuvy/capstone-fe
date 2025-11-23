@@ -2,31 +2,55 @@
   h1 {
     margin-bottom: 20px;
     font-weight: 600;
+    text-align: center;
+    color: #ff8b3d;
   }
 
   /* Thanh tìm kiếm + nút thêm */
   .toolbar {
+    margin-bottom: 20px;
     display: flex;
     justify-content: space-between;
-    align-items: center;
-    margin-bottom: 16px;
+    gap: 15px;
+    flex-wrap: wrap;
 
     .ant-input {
-      border-radius: 6px;
+      border-radius: 8px;
+    }
+
+    .ant-btn-primary {
+      background: #ff8b3d !important;
+      border-color: #ff8b3d !important;
+      color: #fff !important;
+      font-weight: 500;
+
+      &:hover {
+        opacity: 0.85;
+      }
     }
   }
 
   /* Hành động */
-  .action-buttons {
+  .action-buttons .ant-btn {
     display: flex;
-    justify-content: center;
     align-items: center;
-    gap: 8px;
+  }
 
-    button {
-      display: flex;
-      align-items: center;
-      justify-content: center;
+  .action-buttons .ant-btn-primary {
+    background: #1890ff !important;
+    border-color: #1890ff !important;
+
+    &:hover {
+      opacity: 0.9;
+    }
+  }
+
+  .action-buttons .ant-btn-dangerous {
+    background: #ff4d4f !important;
+    border-color: #ff4d4f !important;
+
+    &:hover {
+      opacity: 0.9;
     }
   }
 

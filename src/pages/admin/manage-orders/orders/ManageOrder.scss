@@ -21,66 +21,50 @@
   }
 
   .filter-status {
+    margin-bottom: 20px;
     display: flex;
     flex-wrap: wrap;
+    gap: 10px;
     justify-content: center;
-    gap: 8px;
-    margin-bottom: 20px;
 
     .status-btn {
-      transition: all 0.25s ease;
-      font-weight: 500;
       border-radius: 20px;
-      padding: 0 18px;
-      height: 34px;
-    }
+      padding: 6px 18px;
+      font-weight: 500;
+      transition: 0.2s;
+      border: 1px solid #ff8b3d;
+      color: #ff8b3d;
 
-    .status-btn:hover {
-      transform: translateY(-1px);
-      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+      /* Active (primary) */
+      &.ant-btn-primary {
+        background: #ff8b3d !important;
+        border-color: #ff8b3d !important;
+        color: white !important;
+      }
+
+      &:hover {
+        opacity: 0.85;
+      }
     }
   }
 
+  /* SEARCH + RANGE PICKER BÊN DƯỚI */
   .filter-bar {
+    margin-bottom: 20px;
     display: flex;
     justify-content: center;
-    margin-bottom: 22px;
 
     .filter-controls {
       display: flex;
-      align-items: center;
-      gap: 16px;
-      flex-wrap: wrap;
-      justify-content: center;
+      gap: 15px;
 
-      .ant-input-search,
-      .ant-picker-range {
-        height: 42px !important;
-        border-radius: 8px !important;
-        box-sizing: border-box;
-      }
-
-      .ant-input-affix-wrapper {
-        height: 42px !important;
-        display: flex;
-        align-items: center;
-      }
-
-      .ant-input-search-button {
-        height: 42px !important;
-        display: flex;
-        align-items: center;
-      }
-
+      /* Nếu muốn Search bo tròn đẹp hơn thì thêm: */
       input {
-        height: 42px !important;
-        line-height: 42px !important;
-        font-size: 15px;
+        border-radius: 8px;
       }
 
-      .ant-picker-input > input {
-        height: 42px !important;
-        line-height: 42px !important;
+      .ant-picker {
+        border-radius: 8px;
       }
     }
   }

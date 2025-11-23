@@ -8,6 +8,50 @@
     font-weight: 600;
     margin-bottom: 20px;
     color: #ff7a45;
+    text-align: center;
+  }
+
+  .policy__filter-top {
+    margin-bottom: 15px;
+    display: flex;
+    justify-content: center;
+
+    .filter-buttons {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+
+      button {
+        border-radius: 20px;
+        padding: 6px 18px;
+        border: 1px solid #ff8b3d;
+        color: #ff8b3d;
+        font-weight: 500;
+
+        &.ant-btn-primary {
+          background: #ff8b3d !important;
+          border-color: #ff8b3d !important;
+          color: #fff !important;
+        }
+
+        &:hover {
+          opacity: 0.85;
+        }
+      }
+    }
+  }
+
+  .policy__filter-bottom {
+    margin-bottom: 20px;
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+
+    button.ant-btn-primary {
+      background: #ff8b3d !important;
+      border-color: #ff8b3d !important;
+      color: #fff !important;
+    }
   }
 
   .policy__filters {

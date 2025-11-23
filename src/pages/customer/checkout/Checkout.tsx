@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
-import { useSelector, useDispatch } from "react-redux";
+import { useSelector } from "react-redux";
 import { Card, Input, Button, Select, message, Row, Col, Radio, Spin, Form } from "antd";
-import { clearCart } from "../../../redux/features/cartSlice";
+// import { clearCart } from "../../../redux/features/cartSlice";
 import api from "../../../config/axios";
 import "./Checkout.scss";
 import type { AxiosError } from "axios";
@@ -72,7 +72,7 @@ interface RootState {
 }
 
 const Checkout = () => {
-  const dispatch = useDispatch();
+  // const dispatch = useDispatch();
   const { items: cartItems } = useSelector((state: RootState) => state.cart);
 
   // --- State Management ---
@@ -228,7 +228,7 @@ const Checkout = () => {
     try {
       const { data }: { data: OrderResponse } = await api.post("/api/order", payload);
       if (data.code === 200 || data.code === 201) {
-        dispatch(clearCart());
+        // dispatch(clearCart());
 
         if (paymentMethod === "WALLET") {
           window.location.href = "/payment-success";

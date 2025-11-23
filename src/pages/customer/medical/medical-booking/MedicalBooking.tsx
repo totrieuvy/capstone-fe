@@ -824,9 +824,16 @@ function MedicalBooking() {
           {currentStep > 0 && <Button onClick={() => setCurrentStep((s) => s - 1)}>Quay lại</Button>}
           {currentStep < 2 && (
             <Button
-              type="primary"
+              type={
+                (currentStep === 0 && !selectedHamster) || 
+                (currentStep === 1 && (!selectedSlot || !selectedStaff)) 
+                ? "default" : "primary"
+              }
               onClick={() => setCurrentStep((s) => s + 1)}
-              disabled={currentStep === 0 && !selectedHamster}
+              disabled={
+                (currentStep === 0 && !selectedHamster) || 
+                (currentStep === 1 && (!selectedSlot || !selectedStaff))
+              }
             >
               Tiếp theo
             </Button>

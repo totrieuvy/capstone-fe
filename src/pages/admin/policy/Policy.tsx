@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Table, Button, Modal, Form, Input, Select, Space, message, Spin, Tag } from "antd";
+import { Table, Button, Modal, Form, Input, Select, Space, message, Spin, Tag, Switch } from "antd";
 import { PlusOutlined, SearchOutlined } from "@ant-design/icons";
 import { FiEdit, FiTrash2 } from "react-icons/fi";
 import type { ColumnsType } from "antd/es/table";
@@ -153,8 +153,15 @@ const Policy: React.FC = () => {
       align: "center",
       width: 180,
       render: (service: string) => {
+        let displayName = service;
+
+        if (service === "GROOMING") displayName = "Đặt lịch làm đẹp";
+        else if (service === "BOARDING") displayName = "Đặt lịch giữ hộ";
+        else if (service === "MEDICAL") displayName = "Dịch vụ y tế";
+
         const color = service === "GROOMING" ? "geekblue" : service === "MEDICAL" ? "green" : "volcano";
-        return <Tag color={color}>{service}</Tag>;
+
+        return <Tag color={color}>{displayName}</Tag>;
       },
     },
     {
@@ -188,7 +195,37 @@ const Policy: React.FC = () => {
       <h1>Quản lí chính sách</h1>
 
       <div className="policy__filters">
-        <Space style={{ width: "100%", marginBottom: 16 }}>
+        <div className="policy__filter-top">
+          <div className="filter-buttons">
+            <Button type={!serviceFilter ? "primary" : "default"} onClick={() => setServiceFilter(null)}>
+              Tất cả
+            </Button>
+
+            <Button
+              type={serviceFilter === "GROOMING" ? "primary" : "default"}
+              onClick={() => setServiceFilter("GROOMING")}
+            >
+              Đặt lịch làm đẹp
+            </Button>
+
+            <Button
+              type={serviceFilter === "MEDICAL" ? "primary" : "default"}
+              onClick={() => setServiceFilter("MEDICAL")}
+            >
+              Dịch vụ y tế
+            </Button>
+
+            <Button
+              type={serviceFilter === "BOARDING" ? "primary" : "default"}
+              onClick={() => setServiceFilter("BOARDING")}
+            >
+              Đặt lịch giữ hộ
+            </Button>
+          </div>
+        </div>
+
+        {/* SEARCH + BUTTON Ở DƯỚI */}
+        <div className="policy__filter-bottom">
           <Input
             placeholder="Tìm kiếm chính sách..."
             prefix={<SearchOutlined />}
@@ -197,34 +234,10 @@ const Policy: React.FC = () => {
             style={{ width: 280 }}
           />
 
-          <div className="filter-buttons">
-            <Button type={!serviceFilter ? "primary" : "default"} onClick={() => setServiceFilter(null)}>
-              Tất cả
-            </Button>
-            <Button
-              type={serviceFilter === "GROOMING" ? "primary" : "default"}
-              onClick={() => setServiceFilter("GROOMING")}
-            >
-              GROOMING
-            </Button>
-            <Button
-              type={serviceFilter === "MEDICAL" ? "primary" : "default"}
-              onClick={() => setServiceFilter("MEDICAL")}
-            >
-              MEDICAL
-            </Button>
-            <Button
-              type={serviceFilter === "BOARDING" ? "primary" : "default"}
-              onClick={() => setServiceFilter("BOARDING")}
-            >
-              BOARDING
-            </Button>
-          </div>
-
-          <Button type="primary" icon={<PlusOutlined />} onClick={handleOpenAdd} style={{ marginLeft: "auto" }}>
+          <Button type="primary" icon={<PlusOutlined />} onClick={handleOpenAdd}>
             Thêm chính sách
           </Button>
-        </Space>
+        </div>
       </div>
 
       <Table
@@ -267,10 +280,14 @@ const Policy: React.FC = () => {
               rules={[{ required: true, message: "Vui lòng chọn dịch vụ!" }]}
             >
               <Select placeholder="Chọn dịch vụ áp dụng">
-                <Select.Option value="GROOMING">GROOMING</Select.Option>
-                <Select.Option value="MEDICAL">MEDICAL</Select.Option>
-                <Select.Option value="BOARDING">BOARDING</Select.Option>
+                <Select.Option value="GROOMING">Đặt lịch làm đẹp</Select.Option>
+                <Select.Option value="MEDICAL">Dịch vụ y tế</Select.Option>
+                <Select.Option value="BOARDING">Đặt lịch giữ hộ</Select.Option>
               </Select>
+            </Form.Item>
+
+            <Form.Item name="isActive" label="Trạng thái" valuePropName="checked" initialValue={true}>
+              <Switch checkedChildren="Hoạt động" unCheckedChildren="Không hoạt động" />
             </Form.Item>
 
             <Form.Item>

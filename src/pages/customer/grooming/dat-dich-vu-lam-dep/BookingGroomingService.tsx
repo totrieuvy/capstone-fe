@@ -37,6 +37,7 @@ import ProfileHamsterService, { type HamsterProfile } from "../../../../services
 import "./BookingGroomingService.scss";
 import type { AxiosError } from "axios";
 import { Checkbox, Divider } from "antd";
+import { toast } from "react-toastify";
 
 const { Title } = Typography;
 const { TextArea } = Input;
@@ -164,7 +165,7 @@ function BookingGroomingService() {
 
   useEffect(() => {
     if (!selectedGroomingItem) {
-      message.error("Vui lòng chọn dịch vụ grooming trước.");
+      toast.error("Vui lòng chọn dịch vụ grooming trước.");
       navigate("/dich-vu-lam-dep");
       return;
     }
@@ -323,7 +324,7 @@ function BookingGroomingService() {
       const cacheKey = `${selectedStaff.id}_${date}_${slot.startTime}`;
       const isBookedInCache = staffBookingCache.get(cacheKey);
       if (isBookedInCache === true) {
-        message.warning("Nhân viên này bận vào khung giờ này.");
+        toast.warning("Nhân viên này bận vào khung giờ này.");
         return;
       }
     }
@@ -350,16 +351,16 @@ function BookingGroomingService() {
 
   const handleConfirmBooking = async () => {
     if (selectMode === "staffFirst" && selectedStaff && !selectedSlot) {
-      message.error("Vui lòng chọn một slot trống từ lịch của nhân viên.");
+      toast.error("Vui lòng chọn một slot trống từ lịch của nhân viên.");
       return;
     }
     if (selectMode === "scheduleFirst" && selectedSlot && !selectedStaff) {
-      message.error("Vui lòng chọn một nhân viên cho slot này.");
+      toast.error("Vui lòng chọn một nhân viên cho slot này.");
       return;
     }
 
     if (!selectedHamster || !selectedSlot || !selectedGroomingItem || !selectedStaff) {
-      message.error("Vui lòng chọn đầy đủ thông tin!");
+      toast.error("Vui lòng chọn đầy đủ thông tin!");
       return;
     }
 
@@ -434,14 +435,14 @@ function BookingGroomingService() {
 
       const res = await api.post("/api/appointment", payload);
       if (res.data.code === 200) {
-        message.success("Đặt lịch thành công!");
+        toast.success("Đặt lịch thành công!");
         navigate("/booking-success");
       } else {
         throw new Error(res.data?.message || "Đặt lịch thất bại");
       }
     } catch (err) {
       const e = err as AxiosError;
-      message.error(e.message || "Đặt lịch thất bại!");
+      toast.error(e.message || "Đặt lịch thất bại!");
     } finally {
       setLoading(false);
     }
@@ -833,10 +834,44 @@ function BookingGroomingService() {
         <div className="steps-action">
           {currentStep > 0 && <Button onClick={() => setCurrentStep((s) => s - 1)}>Quay lại</Button>}
           {currentStep < 2 && (
-            <Button type="primary" onClick={() => setCurrentStep((s) => s + 1)}>
+            <Button
+              type="primary"
+              onClick={() => {
+                if (currentStep === 0) {
+                  if (!selectedHamster) {
+                    return toast.error("Vui lòng chọn hamster trước.");
+                  }
+                }
+
+                if (currentStep === 1) {
+                  // Mode 1: chọn lịch trước
+                  if (selectMode === "scheduleFirst") {
+                    if (!selectedSlot) {
+                      return toast.error("Vui lòng chọn slot trước.");
+                    }
+                    if (!selectedStaff) {
+                      return toast.error("Vui lòng chọn nhân viên cho slot.");
+                    }
+                  }
+
+                  // Mode 2: chọn nhân viên trước
+                  if (selectMode === "staffFirst") {
+                    if (!selectedStaff) {
+                      return toast.error("Vui lòng chọn nhân viên trước.");
+                    }
+                    if (!selectedSlot) {
+                      return toast.error("Vui lòng chọn slot trống từ lịch của nhân viên.");
+                    }
+                  }
+                }
+
+                setCurrentStep((s) => s + 1);
+              }}
+            >
               Tiếp theo
             </Button>
           )}
+
           {currentStep === 2 && (
             <Button type="primary" onClick={handleConfirmBooking} disabled={!agreePolicy}>
               Xác nhận đặt lịch

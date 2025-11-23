@@ -21,7 +21,15 @@ const { Search } = Input;
 interface OrderType {
   id: string;
   orderDate: string;
-  status: "PENDING" | "PAID" | "PENDING_DELIVERY" | "DELIVERED" | "REFUNDED";
+  status:
+    | "PENDING"
+    | "PAID"
+    | "PREPARING"
+    | "PENDING_DELIVERY"
+    | "DELIVERED"
+    | "REFUNDED"
+    | "CANCELLED"
+    | "NOT_RECEIVED";
   finalAmount: number;
   customerProfile: {
     fullName: string;
@@ -86,20 +94,29 @@ function ManageOrder() {
   });
 
   const renderStatusTag = (status: OrderType["status"]) => {
-    switch (status) {
-      case "PENDING":
-        return <Tag color="orange">Chờ thanh toán</Tag>;
-      case "PAID":
-        return <Tag color="blue">Đã thanh toán</Tag>;
-      case "PENDING_DELIVERY":
-        return <Tag color="cyan">Đang giao hàng</Tag>;
-      case "DELIVERED":
-        return <Tag color="green">Đã giao</Tag>;
-      case "REFUNDED":
-        return <Tag color="purple">Đã hoàn tiền</Tag>;
-      default:
-        return <Tag>{status}</Tag>;
-    }
+    const colorMap: Record<string, string> = {
+      PENDING: "orange",
+      PAID: "blue",
+      PREPARING: "gold",
+      PENDING_DELIVERY: "cyan",
+      DELIVERED: "green",
+      REFUNDED: "purple",
+      CANCELLED: "red",
+      NOT_RECEIVED: "volcano",
+    };
+
+    const textMap: Record<string, string> = {
+      PENDING: "Chờ thanh toán",
+      PAID: "Đã thanh toán",
+      PREPARING: "Đang chuẩn bị",
+      PENDING_DELIVERY: "Đang giao hàng",
+      DELIVERED: "Đã giao",
+      REFUNDED: "Đã hoàn tiền",
+      CANCELLED: "Đã hủy",
+      NOT_RECEIVED: "Khách không nhận",
+    };
+
+    return <Tag color={colorMap[status]}>{textMap[status]}</Tag>;
   };
 
   const columns: TableColumnsType<OrderType> = [
@@ -183,9 +200,12 @@ function ManageOrder() {
     { key: "ALL", label: "Tất cả" },
     { key: "PENDING", label: "Chờ thanh toán" },
     { key: "PAID", label: "Đã thanh toán" },
+    { key: "PREPARING", label: "Đang chuẩn bị" },
     { key: "PENDING_DELIVERY", label: "Đang giao hàng" },
     { key: "DELIVERED", label: "Đã giao" },
+    { key: "NOT_RECEIVED", label: "Khách không nhận" },
     { key: "REFUNDED", label: "Đã hoàn tiền" },
+    { key: "CANCELLED", label: "Đã hủy" },
   ];
 
   return (
