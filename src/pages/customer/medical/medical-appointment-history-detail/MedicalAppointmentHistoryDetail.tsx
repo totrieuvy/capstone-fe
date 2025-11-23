@@ -108,7 +108,7 @@ const ManageAppointmentDetail: React.FC = () => {
         return "red";
       case "COMPLETED":
         return "green";
-        case "FAILED":
+      case "FAILED":
         return "red";
       default:
         return "default";
@@ -133,7 +133,7 @@ const ManageAppointmentDetail: React.FC = () => {
         return "Đã hủy";
       case "COMPLETED":
         return "Hoàn thành";
-        case "FAILED":
+      case "FAILED":
         return "Thanh toán thất bại";
       default:
         return status.replace("_", " ");
@@ -288,7 +288,17 @@ const ManageAppointmentDetail: React.FC = () => {
                   </Text>
                 </Descriptions.Item>
                 <Descriptions.Item label="Thời gian tạo">
-                  {dayjs(appointment.createdAt).tz("Asia/Ho_Chi_Minh").format("DD/MM/YYYY HH:mm:ss")}
+                  {dayjs(appointment.createdAt).tz("Asia/Ho_Chi_Minh").format("DD/MM/YYYY")}
+                </Descriptions.Item>
+                <Descriptions.Item label="Ghi chú cuộc hẹn">
+                  <Text style={{ fontStyle: appointment.notes ? "normal" : "italic", color: appointment.notes ? "inherit" : "#999" }}>
+                    {appointment.notes || "Không có ghi chú"}
+                  </Text>
+                </Descriptions.Item>
+                <Descriptions.Item label="Ghi chú sức khỏe">
+                  <Text style={{ fontStyle: appointment.healthNote ? "normal" : "italic", color: appointment.healthNote ? "inherit" : "#999" }}>
+                    {appointment.healthNote || "Không có ghi chú"}
+                  </Text>
                 </Descriptions.Item>
               </Descriptions>
             </Card>
@@ -385,7 +395,9 @@ const ManageAppointmentDetail: React.FC = () => {
                     {appointment.paymentMethod === "PAID_AFTER" ? "Thanh toán sau" : "Đã thanh toán"}
                   </Tag>
                 </Descriptions.Item>
-                <Descriptions.Item label="Thời gian giao dịch">{appointment.transactionTime}</Descriptions.Item>
+                {/* <Descriptions.Item label="Thời gian giao dịch">
+                  {dayjs(appointment.transactionTime, "DD-MM-YYYY HH:mm:ss").utc().tz("Asia/Ho_Chi_Minh").format("DD/MM/YYYY HH:mm:ss")}
+                  </Descriptions.Item> */}
               </Descriptions>
             </Card>
           </Col>
@@ -1091,10 +1103,10 @@ const ManageAppointmentDetail: React.FC = () => {
                             selectedMedicalRecord.healthStatus === "Good"
                               ? "green"
                               : selectedMedicalRecord.healthStatus === "Normal"
-                              ? "blue"
-                              : selectedMedicalRecord.healthStatus === "Poor"
-                              ? "red"
-                              : "default"
+                                ? "blue"
+                                : selectedMedicalRecord.healthStatus === "Poor"
+                                  ? "red"
+                                  : "default"
                           }
                           style={{ fontSize: "14px", padding: "4px 8px" }}
                         >
