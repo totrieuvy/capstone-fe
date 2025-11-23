@@ -35,6 +35,16 @@
       color: #ff6f61;
       font-weight: 600;
     }
+
+    .ant-btn {
+      transition: all 0.3s ease;
+      
+      &:hover {
+        background-color: #ff6f61 !important;
+        border-color: #ff6f61 !important;
+        color: white !important;
+      }
+    }
   }
 
   .status-tag-large {

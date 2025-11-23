@@ -445,7 +445,7 @@ export interface AppointmentDetail {
   totalAmount: number;
   totalAmountAfter: number;
   additionalAmount: number | null;
-  notes: string;
+  notes: string | null;
   checkInImage: string | null;
   checkoutImage: string | null;
   slotStart: string;
@@ -458,6 +458,7 @@ export interface AppointmentDetail {
   prescription: Prescription | null;
   discountPercent: number;
   items: AppointmentItemDetail[];
+  healthNote: string | null;
 }
 
 export interface AppointmentDetailResponse {
@@ -482,6 +483,7 @@ export interface CheckInAppointmentRequest {
   checkInImage: string;
   veterinarianId: string;
   staffId?: string | null;
+  healthNote: string;
 }
 
 export interface CheckInAppointmentResponse {

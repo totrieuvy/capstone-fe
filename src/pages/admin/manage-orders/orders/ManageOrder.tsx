@@ -38,6 +38,14 @@ interface OrderType {
   paymentMethod: string;
 }
 
+interface OrderQueryParams {
+  page: number;
+  size: number;
+  sortBy: string;
+  sortDir: string;
+  status?: string;
+}
+
 function ManageOrder() {
   const [orders, setOrders] = useState<OrderType[]>([]);
   const [loading, setLoading] = useState(false);
@@ -50,13 +58,23 @@ function ManageOrder() {
     total: 0,
   });
 
-  const fetchOrders = async (page = 1, size = 10) => {
+  const fetchOrders = async (page = 1, size = 10, status = "ALL") => {
     setLoading(true);
     try {
-      const res = await api.get("/api/order", {
-        params: { page: page - 1, size, sortBy: "createdAt", sortDir: "desc" },
-      });
+      const params: OrderQueryParams = {
+        page: page - 1,
+        size,
+        sortBy: "createdAt",
+        sortDir: "desc",
+      };
+
+      if (status !== "ALL") {
+        params.status = status; // 🔥 Gửi status lên API
+      }
+
+      const res = await api.get("/api/order", { params });
       const data = res.data.data;
+
       setOrders(data.content || []);
       setPagination({
         current: data.pageNumber + 1,
@@ -81,16 +99,17 @@ function ManageOrder() {
   };
 
   const filteredOrders = orders.filter((order) => {
-    const matchStatus = statusFilter === "ALL" ? true : order.status === statusFilter;
     const matchSearch =
       order.customerProfile.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
       order.id.toLowerCase().includes(searchTerm.toLowerCase());
+
     const matchDate =
       dateRange && dateRange[0] && dateRange[1]
         ? dayjs(order.orderDate, "DD-MM-YYYY HH:mm:ss").add(7, "hour").isAfter(dateRange[0]) &&
           dayjs(order.orderDate, "DD-MM-YYYY HH:mm:ss").add(7, "hour").isBefore(dateRange[1])
         : true;
-    return matchStatus && matchSearch && matchDate;
+
+    return matchSearch && matchDate; // ❗ KHÔNG filter status nữa
   });
 
   const renderStatusTag = (status: OrderType["status"]) => {
@@ -217,9 +236,10 @@ function ManageOrder() {
           <Button
             key={s.key}
             type={statusFilter === s.key ? "primary" : "default"}
-            shape="round"
-            className="status-btn"
-            onClick={() => setStatusFilter(s.key)}
+            onClick={() => {
+              setStatusFilter(s.key);
+              fetchOrders(1, pagination.pageSize, s.key); // 🔥 CALL API theo status
+            }}
           >
             {s.label}
           </Button>

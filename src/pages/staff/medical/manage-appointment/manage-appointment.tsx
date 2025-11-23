@@ -138,6 +138,8 @@ const ManageAppointment: React.FC = () => {
         return 'green';
       case 'FAILED':
         return 'red';
+        case 'NO_SHOW':
+          return 'red';
       default:
         return 'default';
     }
@@ -160,6 +162,8 @@ const ManageAppointment: React.FC = () => {
         return 'Hoàn thành';
         case 'FAILED':
         return 'Thanh toán thất bại';
+        case 'NO_SHOW':
+        return 'Khách không tới';
       default:
         return status.replace('_', ' ');
     }
