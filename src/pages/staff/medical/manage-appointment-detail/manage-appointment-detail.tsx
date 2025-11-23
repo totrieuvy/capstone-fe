@@ -49,6 +49,7 @@ import {
   getAppointmentById,
   checkInAppointment,
   checkOutAppointment,
+  updateAppointmentStatus,
   type AppointmentDetail,
   type AppointmentItemDetail,
   type MedicalRecord,
@@ -92,6 +93,26 @@ const ManageAppointmentDetail: React.FC = () => {
   const [checkoutImage, setCheckoutImage] = useState<string>("");
   const [uploadingCheckoutImage, setUploadingCheckoutImage] = useState<boolean>(false);
   const [submittingCheckout, setSubmittingCheckout] = useState<boolean>(false);
+
+  // Cancel appointment states
+  const [cancelLoading, setCancelLoading] = useState<boolean>(false);
+
+  // Cancel appointment function
+  const handleCancelAppointment = async () => {
+    if (!appointmentId) return;
+
+    setCancelLoading(true);
+    try {
+      await updateAppointmentStatus(appointmentId, "NO_SHOW");
+      toast.success("Hủy thành công");
+      await fetchAppointmentDetails(); // Refresh appointment data
+    } catch (error) {
+      console.error("Error cancelling appointment:", error);
+      toast.error("Có lỗi xảy ra khi hủy cuộc hẹn");
+    } finally {
+      setCancelLoading(false);
+    }
+  };
 
   // Fetch appointment details
   const fetchAppointmentDetails = async () => {
@@ -1144,25 +1165,49 @@ const ManageAppointmentDetail: React.FC = () => {
             </Col>
           )}
 
-          {/* Check-in Button */}
+          {/* Check-in and Cancel Buttons */}
           {appointment.status !== "COMPLETED" && !appointment.checkInImage && (
             <Col span={24}>
               <div style={{ textAlign: "center", marginTop: "24px" }}>
-                <Button
-                  type="primary"
-                  size="large"
-                  icon={<CheckCircleOutlined />}
-                  onClick={() => setCheckInModalVisible(true)}
-                  style={{
-                    backgroundColor: "#52c41a",
-                    borderColor: "#52c41a",
-                    fontSize: "16px",
-                    height: "48px",
-                    padding: "0 32px",
-                  }}
-                >
-                  Check-in
-                </Button>
+                <Row gutter={16} justify="center">
+                  <Col>
+                    <Button
+                      type="primary"
+                      size="large"
+                      icon={<CheckCircleOutlined />}
+                      onClick={() => setCheckInModalVisible(true)}
+                      style={{
+                        backgroundColor: "#52c41a",
+                        borderColor: "#52c41a",
+                        fontSize: "16px",
+                        height: "48px",
+                        padding: "0 32px",
+                      }}
+                    >
+                      Check-in
+                    </Button>
+                  </Col>
+                  {appointment.status === "BOOKED" && (
+                    <Col>
+                      <Button
+                        type="primary"
+                        size="large"
+                        icon={<AlertOutlined />}
+                        onClick={handleCancelAppointment}
+                        loading={cancelLoading}
+                        style={{
+                          backgroundColor: "#ff4d4f",
+                          borderColor: "#ff4d4f",
+                          fontSize: "16px",
+                          height: "48px",
+                          padding: "0 32px",
+                        }}
+                      >
+                        Hủy cuộc hẹn
+                      </Button>
+                    </Col>
+                  )}
+                </Row>
               </div>
             </Col>
           )}
