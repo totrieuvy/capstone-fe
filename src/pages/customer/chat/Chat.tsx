@@ -174,7 +174,7 @@ export default function Chat({ conversationId: propConversationId, customerName 
   const dateKeys = Object.keys(grouped).sort();
 
   return (
-    <div style={{ padding: "0 25px", height: "100%" }}>
+    <div style={{ padding: "15px 25px", height: "100%" }}>
       <div
         style={{
           height: "100%",
