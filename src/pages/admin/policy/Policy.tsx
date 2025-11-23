@@ -1,17 +1,33 @@
 import React, { useEffect, useState } from "react";
-import { Table, Button, Modal, Form, Input, Select, Space, message, Spin, Tag, Switch } from "antd";
+import { Table, Button, Modal, Form, Input, Select, Space, message, Spin, Tag } from "antd";
 import { PlusOutlined, SearchOutlined } from "@ant-design/icons";
 import { FiEdit, FiTrash2 } from "react-icons/fi";
 import type { ColumnsType } from "antd/es/table";
 import "./Policy.scss";
 import api from "../../../config/axios";
 
-interface Policy {
+interface Species {
   id: string;
+  speciesName: string;
+}
+
+interface SpeciesRefundDetail {
+  speciesId: string;
+  priceRefund: number;
+}
+
+interface Policy {
+  id?: string;
   policyName: string;
   description: string;
-  applicableServices: string;
-  status: string;
+  applicableServices: "BOOKING" | "GROOMING" | "ORDER" | "MEDICAL";
+  status?: "ACTIVE" | "INACTIVE";
+  refundPercentage: number;
+  timesBeforeCheckin: number;
+  category: "REFUND" | "CANCELLED" | "INFORMATION";
+  cancelTime?: number;
+  blockedDay?: number;
+  speciesRefundDetail: SpeciesRefundDetail[];
 }
 
 interface PolicyResponse {
@@ -20,32 +36,25 @@ interface PolicyResponse {
   data: Policy[];
 }
 
-interface PolicyFormValues {
-  policyName: string;
-  description: string;
-  applicableServices: "GROOMING" | "MEDICAL" | "BOARDING";
-}
-
 const Policy: React.FC = () => {
   const [policies, setPolicies] = useState<Policy[]>([]);
+  const [species, setSpecies] = useState<Species[]>([]);
   const [loading, setLoading] = useState(false);
   const [submitLoading, setSubmitLoading] = useState(false);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [isUpdate, setIsUpdate] = useState(false);
   const [searchText, setSearchText] = useState("");
   const [serviceFilter, setServiceFilter] = useState<string | null>(null);
+  const [currentService, setCurrentService] = useState<Policy["applicableServices"] | "">("");
   const [form] = Form.useForm();
   const [currentId, setCurrentId] = useState<string | null>(null);
 
-  const fetchPolicies = async (): Promise<void> => {
+  const fetchPolicies = async () => {
     setLoading(true);
     try {
       const res = await api.get<PolicyResponse>("/api/policy");
-      if (res.data.code === 200) {
-        setPolicies(res.data.data);
-      } else {
-        message.error(res.data.message || "Không thể lấy danh sách chính sách");
-      }
+      if (res.data.code === 200) setPolicies(res.data.data);
+      else message.error(res.data.message);
     } catch {
       message.error("Lỗi khi lấy danh sách chính sách");
     } finally {
@@ -53,138 +62,130 @@ const Policy: React.FC = () => {
     }
   };
 
-  useEffect(() => {
-    document.title = "Quản lí chính sách";
-    fetchPolicies();
-  }, []);
-
-  const handleOpenAdd = (): void => {
-    setIsUpdate(false);
-    setIsModalVisible(true);
-    form.resetFields();
-  };
-
-  const handleOpenEdit = (record: Policy): void => {
-    setIsUpdate(true);
-    setCurrentId(record.id);
-    setIsModalVisible(true);
-    form.setFieldsValue({
-      policyName: record.policyName,
-      description: record.description,
-      applicableServices: record.applicableServices,
-    });
-  };
-
-  const handleDelete = async (id: string): Promise<void> => {
+  const fetchSpecies = async () => {
     try {
-      const res = await api.delete(`/api/policy/${id}`);
-      if (res.data.code === 200) {
-        message.success("Xóa chính sách thành công!");
-        fetchPolicies();
-      } else {
-        message.error(res.data.message || "Xóa thất bại!");
-      }
+      const res = await api.get("/api/species");
+      setSpecies(res.data.data || []);
     } catch {
-      message.error("Lỗi khi xóa chính sách!");
+      message.error("Lỗi tải danh sách loài");
     }
   };
 
-  const handleSubmit = async (values: PolicyFormValues): Promise<void> => {
-    setSubmitLoading(true);
+  useEffect(() => {
+    fetchPolicies();
+    fetchSpecies();
+  }, []);
+
+  const handleOpenAdd = () => {
+    setIsUpdate(false);
+    setIsModalVisible(true);
+    setCurrentService("");
+    form.resetFields();
+  };
+
+  const handleOpenEdit = (record: Policy) => {
+    setIsUpdate(true);
+    setCurrentId(record.id || null);
+    setIsModalVisible(true);
+    setCurrentService(record.applicableServices);
+    form.setFieldsValue({ ...record });
+  };
+
+  const handleDelete = async (id: string) => {
     try {
-      if (isUpdate && currentId) {
-        const res = await api.put(`/api/policy/${currentId}`, values);
-        if (res.data.code === 200) {
-          message.success("Cập nhật chính sách thành công!");
-        } else {
-          message.error(res.data.message || "Cập nhật thất bại!");
-        }
-      } else {
-        const res = await api.post("/api/policy", values);
-        if (res.data.code === 201 || res.data.code === 200) {
-          message.success("Thêm chính sách thành công!");
-        } else {
-          message.error(res.data.message || "Thêm thất bại!");
-        }
-      }
-      fetchPolicies();
-      handleCancel();
+      const res = await api.delete(`/api/policy/${id}`);
+      if (res.data.code === 200) {
+        message.success("Xóa thành công");
+        fetchPolicies();
+      } else message.error(res.data.message);
     } catch {
-      message.error("Thao tác thất bại!");
+      message.error("Lỗi khi xóa");
+    }
+  };
+
+  const handleSubmit = async (values: Policy) => {
+    setSubmitLoading(true);
+
+    const payload: Policy = {
+      ...values,
+      speciesRefundDetail: values.applicableServices === "BOOKING" ? values.speciesRefundDetail : [],
+      cancelTime:
+        values.applicableServices === "GROOMING" || values.applicableServices === "MEDICAL"
+          ? values.cancelTime
+          : undefined,
+      blockedDay:
+        values.applicableServices === "GROOMING" || values.applicableServices === "MEDICAL"
+          ? values.blockedDay
+          : undefined,
+    };
+
+    try {
+      let res;
+      if (isUpdate && currentId) res = await api.put(`/api/policy/${currentId}`, payload);
+      else res = await api.post("/api/policy", payload);
+
+      if (res.data.code === 200 || res.data.code === 201) {
+        message.success(isUpdate ? "Cập nhật thành công" : "Thêm mới thành công");
+        fetchPolicies();
+        handleCancel();
+      } else message.error(res.data.message);
+    } catch {
+      message.error("Lỗi máy chủ");
     } finally {
       setSubmitLoading(false);
     }
   };
 
-  const handleCancel = (): void => {
+  const handleCancel = () => {
     setIsModalVisible(false);
-    setIsUpdate(false);
     setCurrentId(null);
+    setIsUpdate(false);
+    setCurrentService("");
     form.resetFields();
   };
 
-  // search + filter
-  const filteredData = policies.filter((item) => {
-    const matchSearch = Object.values(item).some((val) => String(val).toLowerCase().includes(searchText.toLowerCase()));
-    const matchService = serviceFilter ? item.applicableServices === serviceFilter : true;
+  const filteredData = policies.filter((i) => {
+    const matchSearch = i.policyName.toLowerCase().includes(searchText.toLowerCase());
+    const matchService = serviceFilter ? i.applicableServices === serviceFilter : true;
     return matchSearch && matchService;
   });
 
+  const serviceMap = {
+    BOOKING: "Đặt lịch giữ hộ",
+    GROOMING: "Làm đẹp",
+    ORDER: "Đặt hàng",
+    MEDICAL: "Y tế",
+  };
+
   const columns: ColumnsType<Policy> = [
-    {
-      title: "Tên chính sách",
-      dataIndex: "policyName",
-      key: "policyName",
-      align: "center",
-      sorter: (a, b) => a.policyName.localeCompare(b.policyName),
-      width: 200,
-    },
+    { title: "Tên chính sách", dataIndex: "policyName", align: "center" },
     {
       title: "Mô tả",
       dataIndex: "description",
-      key: "description",
       align: "center",
-      render: (text: string) => <div style={{ whiteSpace: "pre-wrap", textAlign: "center" }}>{text}</div>,
+      render: (t) => <div style={{ whiteSpace: "pre-wrap" }}>{t}</div>,
     },
     {
-      title: "Dịch vụ áp dụng",
+      title: "Dịch vụ",
       dataIndex: "applicableServices",
-      key: "applicableServices",
       align: "center",
-      width: 180,
-      render: (service: string) => {
-        let displayName = service;
-
-        if (service === "GROOMING") displayName = "Đặt lịch làm đẹp";
-        else if (service === "BOARDING") displayName = "Đặt lịch giữ hộ";
-        else if (service === "MEDICAL") displayName = "Dịch vụ y tế";
-
-        const color = service === "GROOMING" ? "geekblue" : service === "MEDICAL" ? "green" : "volcano";
-
-        return <Tag color={color}>{displayName}</Tag>;
-      },
+      render: (service: Policy["applicableServices"]) => <Tag color="orange">{serviceMap[service]}</Tag>,
     },
     {
       title: "Trạng thái",
       dataIndex: "status",
-      key: "status",
       align: "center",
-      width: 120,
-      render: (status: string) => (
-        <span style={{ color: status === "ACTIVE" ? "#52c41a" : "#ff4d4f" }}>
-          {status === "ACTIVE" ? "Hoạt động" : "Không hoạt động"}
-        </span>
+      render: (st) => (
+        <Tag color={st === "ACTIVE" ? "green" : "red"}>{st === "ACTIVE" ? "Hoạt động" : "Không hoạt động"}</Tag>
       ),
     },
     {
       title: "Hành động",
-      key: "actions",
       align: "center",
-      width: 150,
-      render: (_, record) => (
+      render: (_, r) => (
         <Space>
-          <Button icon={<FiEdit />} onClick={() => handleOpenEdit(record)} size="small" type="primary" />
-          <Button icon={<FiTrash2 />} danger size="small" onClick={() => handleDelete(record.id)} />
+          <Button icon={<FiEdit />} type="primary" size="small" onClick={() => handleOpenEdit(r)} />
+          <Button icon={<FiTrash2 />} danger size="small" onClick={() => handleDelete(r.id!)} />
         </Space>
       ),
     },
@@ -196,98 +197,137 @@ const Policy: React.FC = () => {
 
       <div className="policy__filters">
         <div className="policy__filter-top">
-          <div className="filter-buttons">
-            <Button type={!serviceFilter ? "primary" : "default"} onClick={() => setServiceFilter(null)}>
-              Tất cả
-            </Button>
-
-            <Button
-              type={serviceFilter === "GROOMING" ? "primary" : "default"}
-              onClick={() => setServiceFilter("GROOMING")}
-            >
-              Đặt lịch làm đẹp
-            </Button>
-
-            <Button
-              type={serviceFilter === "MEDICAL" ? "primary" : "default"}
-              onClick={() => setServiceFilter("MEDICAL")}
-            >
-              Dịch vụ y tế
-            </Button>
-
-            <Button
-              type={serviceFilter === "BOARDING" ? "primary" : "default"}
-              onClick={() => setServiceFilter("BOARDING")}
-            >
-              Đặt lịch giữ hộ
-            </Button>
-          </div>
+          <Button className={!serviceFilter ? "ant-btn-primary" : ""} onClick={() => setServiceFilter(null)}>
+            Tất cả
+          </Button>
+          <Button
+            className={serviceFilter === "BOOKING" ? "ant-btn-primary" : ""}
+            onClick={() => setServiceFilter("BOOKING")}
+          >
+            Đặt lịch giữ hộ
+          </Button>
+          <Button
+            className={serviceFilter === "GROOMING" ? "ant-btn-primary" : ""}
+            onClick={() => setServiceFilter("GROOMING")}
+          >
+            Làm đẹp
+          </Button>
+          <Button
+            className={serviceFilter === "ORDER" ? "ant-btn-primary" : ""}
+            onClick={() => setServiceFilter("ORDER")}
+          >
+            Đặt hàng
+          </Button>
+          <Button
+            className={serviceFilter === "MEDICAL" ? "ant-btn-primary" : ""}
+            onClick={() => setServiceFilter("MEDICAL")}
+          >
+            Y tế
+          </Button>
         </div>
 
-        {/* SEARCH + BUTTON Ở DƯỚI */}
         <div className="policy__filter-bottom">
           <Input
-            placeholder="Tìm kiếm chính sách..."
+            placeholder="Tìm kiếm..."
             prefix={<SearchOutlined />}
             value={searchText}
             onChange={(e) => setSearchText(e.target.value)}
-            style={{ width: 280 }}
+            style={{ width: 240 }}
           />
-
           <Button type="primary" icon={<PlusOutlined />} onClick={handleOpenAdd}>
             Thêm chính sách
           </Button>
         </div>
       </div>
 
-      <Table
-        columns={columns}
-        dataSource={filteredData}
-        loading={loading}
-        rowKey="id"
-        pagination={{
-          pageSize: 10,
-          showSizeChanger: true,
-          showTotal: (total) => `Tổng ${total} chính sách`,
-        }}
-        bordered
-      />
+      <Table columns={columns} dataSource={filteredData} loading={loading} rowKey="id" bordered />
 
       <Modal
-        title={isUpdate ? "Cập nhật chính sách" : "Thêm chính sách mới"}
         open={isModalVisible}
+        title={isUpdate ? "Cập nhật chính sách" : "Thêm chính sách"}
         onCancel={handleCancel}
         footer={null}
-        width={600}
+        width={650}
       >
         <Spin spinning={submitLoading}>
           <Form form={form} layout="vertical" onFinish={handleSubmit}>
-            <Form.Item
-              name="policyName"
-              label="Tên chính sách"
-              rules={[{ required: true, message: "Vui lòng nhập tên chính sách!" }]}
-            >
-              <Input placeholder="Nhập tên chính sách" />
+            <Form.Item name="policyName" label="Tên chính sách" rules={[{ required: true }]}>
+              <Input />
             </Form.Item>
 
-            <Form.Item name="description" label="Mô tả" rules={[{ required: true, message: "Vui lòng nhập mô tả!" }]}>
-              <Input.TextArea rows={4} placeholder="Nhập mô tả chi tiết" />
+            <Form.Item name="description" label="Mô tả" rules={[{ required: true }]}>
+              <Input.TextArea rows={3} />
             </Form.Item>
 
-            <Form.Item
-              name="applicableServices"
-              label="Dịch vụ áp dụng"
-              rules={[{ required: true, message: "Vui lòng chọn dịch vụ!" }]}
-            >
-              <Select placeholder="Chọn dịch vụ áp dụng">
-                <Select.Option value="GROOMING">Đặt lịch làm đẹp</Select.Option>
-                <Select.Option value="MEDICAL">Dịch vụ y tế</Select.Option>
-                <Select.Option value="BOARDING">Đặt lịch giữ hộ</Select.Option>
+            <Form.Item name="applicableServices" label="Dịch vụ" rules={[{ required: true }]}>
+              <Select onChange={(v) => setCurrentService(v)}>
+                <Select.Option value="BOOKING">Đặt lịch giữ hộ</Select.Option>
+                <Select.Option value="GROOMING">Làm đẹp</Select.Option>
+                <Select.Option value="ORDER">Đặt hàng</Select.Option>
+                <Select.Option value="MEDICAL">Y tế</Select.Option>
               </Select>
             </Form.Item>
 
-            <Form.Item name="isActive" label="Trạng thái" valuePropName="checked" initialValue={true}>
-              <Switch checkedChildren="Hoạt động" unCheckedChildren="Không hoạt động" />
+            {currentService === "BOOKING" && (
+              <Form.List name="speciesRefundDetail">
+                {(fields, { add, remove }) => (
+                  <>
+                    <Button type="dashed" block style={{ marginBottom: 12 }} onClick={() => add()}>
+                      + Thêm loài
+                    </Button>
+
+                    {fields.map(({ key, name }) => (
+                      <div className="species-row" key={key}>
+                        <Form.Item name={[name, "speciesId"]} label="Loài" rules={[{ required: true }]}>
+                          <Select placeholder="Chọn loài">
+                            {species.map((s) => (
+                              <Select.Option key={s.id} value={s.id}>
+                                {s.speciesName}
+                              </Select.Option>
+                            ))}
+                          </Select>
+                        </Form.Item>
+
+                        <Form.Item name={[name, "priceRefund"]} label="Giá hoàn tiền" rules={[{ required: true }]}>
+                          <Input type="number" />
+                        </Form.Item>
+
+                        <Button danger onClick={() => remove(name)}>
+                          Xóa
+                        </Button>
+                      </div>
+                    ))}
+                  </>
+                )}
+              </Form.List>
+            )}
+
+            {(currentService === "GROOMING" || currentService === "MEDICAL") && (
+              <>
+                <Form.Item name="cancelTime" label="Số lần được phép hủy" rules={[{ required: true }]}>
+                  <Input type="number" min={0} />
+                </Form.Item>
+
+                <Form.Item name="blockedDay" label="Số ngày bị khóa khi hủy" rules={[{ required: true }]}>
+                  <Input type="number" min={0} />
+                </Form.Item>
+              </>
+            )}
+
+            <Form.Item name="refundPercentage" label="Phần trăm hoàn tiền" rules={[{ required: true }]}>
+              <Input type="number" min={0} max={100} />
+            </Form.Item>
+
+            <Form.Item name="timesBeforeCheckin" label="Thời gian được hủy (giờ)" rules={[{ required: true }]}>
+              <Input type="number" min={0} />
+            </Form.Item>
+
+            <Form.Item name="category" label="Loại" rules={[{ required: true }]}>
+              <Select>
+                <Select.Option value="REFUND">REFUND</Select.Option>
+                <Select.Option value="CANCELLED">CANCELLED</Select.Option>
+                <Select.Option value="INFORMATION">INFORMATION</Select.Option>
+              </Select>
             </Form.Item>
 
             <Form.Item>

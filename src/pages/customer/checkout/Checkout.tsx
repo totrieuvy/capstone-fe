@@ -1,6 +1,16 @@
 import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
-import { Card, Input, Button, Select, message, Row, Col, Radio, Spin, Form } from "antd";
+import { Card, Input, Button, Select, message, Row, Col, Radio, Spin, Form, Checkbox, Alert } from "antd";
+// --- Policy Interface ---
+interface Policy {
+  id: string;
+  policyName: string;
+  description: string;
+  applicableServices: string;
+  status: string;
+  refundPercentage: number;
+  timesBeforeCheckin: number;
+}
 // import { clearCart } from "../../../redux/features/cartSlice";
 import api from "../../../config/axios";
 import "./Checkout.scss";
@@ -94,6 +104,9 @@ const Checkout = () => {
   const [loading, setLoading] = useState(false);
   const [shipLoading, setShipLoading] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState<"VNPAY" | "PAYOS" | "WALLET">("VNPAY");
+  // Policy state
+  const [orderPolicies, setOrderPolicies] = useState<Policy[]>([]);
+  const [policyChecked, setPolicyChecked] = useState(false);
 
   const totalWeight = cartItems.reduce((sum, item) => sum + item.weight * item.quantity, 0);
   const totalValue = cartItems.reduce((sum, item) => sum + (item.price || 0) * item.quantity, 0);
@@ -107,6 +120,22 @@ const Checkout = () => {
       navigate("/mua-hang");
     }
   }, [cartItems, navigate]);
+
+  // Fetch refund/order policies
+  useEffect(() => {
+    const fetchPolicies = async () => {
+      try {
+        const { data } = await api.get("/api/policy");
+        if (data.code === 200 && Array.isArray(data.data)) {
+          const filtered = data.data.filter((p: Policy) => p.applicableServices === "ORDER" && p.status === "ACTIVE");
+          setOrderPolicies(filtered);
+        }
+      } catch {
+        // ignore
+      }
+    };
+    fetchPolicies();
+  }, []);
 
   // --- Data Fetching ---
   useEffect(() => {
@@ -432,7 +461,6 @@ const Checkout = () => {
                   </div>
                 ))}
               </div>
-
               <div className="summary-total">
                 <div className="summary-line">
                   <span>Tạm tính</span>
@@ -451,13 +479,42 @@ const Checkout = () => {
                   <h3>{fee !== null ? (totalValue * (1 - discountPercent / 100) + fee).toLocaleString() : "—"} đ</h3>
                 </div>
               </div>
+              {/* --- Policy Section --- */}
+              {orderPolicies.length > 0 && (
+                <div className="policy-section">
+                  <h3 className="policy-title">Chính sách của hệ thống</h3>
+
+                  <Alert
+                    type="info"
+                    showIcon
+                    message={
+                      <ul>
+                        {orderPolicies.map((p) => (
+                          <li key={p.id}>
+                            <strong>{p.policyName}</strong>
+                            <br />
+                            <span>
+                              <b>Phần trăm hoàn tiền:</b> {p.refundPercentage}% &nbsp;|&nbsp;
+                              <b>Thời gian yêu cầu hoàn:</b> {p.timesBeforeCheckin}h sau khi đặt hàng
+                            </span>
+                          </li>
+                        ))}
+                      </ul>
+                    }
+                  />
+
+                  <Checkbox checked={policyChecked} onChange={(e) => setPolicyChecked(e.target.checked)}>
+                    Tôi đã đọc và đồng ý với chính sách hoàn tiền sản phẩm
+                  </Checkbox>
+                </div>
+              )}
 
               <Button
                 type="primary"
                 block
                 onClick={handleCheckout}
                 loading={loading}
-                disabled={fee === null}
+                disabled={fee === null || (orderPolicies.length > 0 && !policyChecked)}
                 className="btn-checkout"
               >
                 {loading ? "Đang xử lý..." : "Thanh toán"}
