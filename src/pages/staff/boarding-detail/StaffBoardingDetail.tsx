@@ -500,7 +500,7 @@ const BoardingDetail: React.FC = () => {
                   </strong>
                 </Descriptions.Item>
                 <Descriptions.Item label="Ngày tạo" span={2}>
-                  {new Date(bookingDetail.createdAt).toLocaleString('vi-VN')}
+                  {bookingDetail.createdAt ? new Date(bookingDetail.createdAt).toLocaleString('vi-VN') : 'N/A'}
                 </Descriptions.Item>
                 {bookingDetail.notes && (
                   <Descriptions.Item label="Ghi chú" span={2}>

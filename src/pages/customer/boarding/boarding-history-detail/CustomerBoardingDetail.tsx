@@ -205,8 +205,8 @@ const BoardingDetail: React.FC = () => {
       PENDING: "orange",
       CANCELLED: "red",
       FAILED: "red",
-      COMPLETED: "blue",
-      IN_PROGRESS: "processing",
+      COMPLETED: "green",
+      IN_PROGRESS: "blue",
       CHECK_OUT: "green",
     };
     return statusColors[status as keyof typeof statusColors] || "default";
@@ -650,7 +650,7 @@ const BoardingDetail: React.FC = () => {
           <Card title="Chi tiết thanh toán" className="payment-card">
             <div className="payment-item">
               <Text>Ngày tạo</Text>
-              <Text>{new Date(booking.createdAt).toLocaleDateString("vi-VN")}</Text>
+              <Text>{booking.createdAt ? new Date(booking.createdAt).toLocaleDateString("vi-VN") : "N/A"}</Text>
             </div>
             <Divider />
             <div className="payment-item total">

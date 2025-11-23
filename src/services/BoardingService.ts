@@ -154,9 +154,9 @@ export interface BookingDetail {
   totalAmountAfter: number;
   status: string;
   notes: string;
-  createdAt: string; // ISO string format
+  createdAt: string | null; // ISO string format or null
   services: BookingDetailService[];
-  cameraId: string;
+  cameraId: string | null;
 }
 
 // Type definitions for file upload
@@ -200,6 +200,8 @@ export interface ExtendBookingRequest {
   bookingId: string;
   newEndDate: string; // Format: YYYY-MM-DD
   serviceIds?: string[]; // Optional service IDs for the extended period
+  CageTypeId?: string; // Optional - for changing cage type
+  CageId?: string; // Optional - for changing specific cage
 }
 
 export interface ExtendedDayDetail {
@@ -216,11 +218,11 @@ export interface ExtendBookingResponse {
   bookingId: string;
   originalEndDate: string; // Format: YYYY-MM-DD
   newEndDate: string; // Format: YYYY-MM-DD
+  cageId?: string; // Cage ID assigned for the extension
   extendedDays: number;
   extensionAmount: number;
   membershipDiscount: number;
   totalAmountAfter: number;
-  paymentStatus: string;
   extendedDayDetails: ExtendedDayDetail[];
   message: string;
 }
