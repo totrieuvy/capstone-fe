@@ -981,15 +981,6 @@ const ManageAppointmentDetail: React.FC = () => {
             </Col>
           )}
 
-          {/* Notes */}
-          {appointment.notes && (
-            <Col span={24}>
-              <Card title="Ghi chú" className="notes-card">
-                <Text>{appointment.notes}</Text>
-              </Card>
-            </Col>
-          )}
-
           {/* Cancel Button */}
           {appointment.status === "BOOKED" && (
             <Col span={24}>
