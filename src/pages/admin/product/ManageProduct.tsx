@@ -305,6 +305,7 @@ function ManageProduct() {
         title={isUpdate ? "Cập nhật sản phẩm" : "Thêm sản phẩm"}
         onCancel={handleCancel}
         footer={null}
+        width={800}
       >
         <Spin spinning={loading}>
           <Form form={form} layout="vertical" onFinish={handleSubmit} initialValues={{ isActive: true }}>
@@ -312,80 +313,100 @@ function ManageProduct() {
               <Input />
             </Form.Item>
 
-            <Form.Item
-              label="Tên sản phẩm"
-              name="name"
-              rules={[{ required: true, message: "Vui lòng nhập tên sản phẩm!" }]}
-            >
-              <Input placeholder="Nhập tên sản phẩm" />
-            </Form.Item>
+            <Row gutter={[16, 16]}>
+              <Col xs={24} md={12}>
+                <Form.Item
+                  label="Tên sản phẩm"
+                  name="name"
+                  rules={[{ required: true, message: "Vui lòng nhập tên sản phẩm!" }]}
+                >
+                  <Input placeholder="Nhập tên sản phẩm" />
+                </Form.Item>
+              </Col>
 
-            <Form.Item label="Mô tả" name="description" rules={[{ required: true, message: "Vui lòng nhập mô tả!" }]}>
-              <Input.TextArea placeholder="Nhập mô tả sản phẩm" rows={3} />
-            </Form.Item>
+              <Col xs={24} md={12}>
+                <Form.Item
+                  label="Danh mục"
+                  name="categoryId"
+                  rules={[{ required: true, message: "Vui lòng chọn danh mục!" }]}
+                >
+                  <Select placeholder="Chọn danh mục">
+                    {categories.map((cat) => (
+                      <Option key={cat.id} value={cat.id}>
+                        {cat.name}
+                      </Option>
+                    ))}
+                  </Select>
+                </Form.Item>
+              </Col>
 
-            <Form.Item
-              label="Cân nặng (gram)"
-              name="weight"
-              rules={[{ required: true, message: "Vui lòng nhập cân nặng!" }]}
-            >
-              <InputNumber style={{ width: "100%" }} min={0} />
-            </Form.Item>
+              <Col xs={24} md={12}>
+                <Form.Item
+                  label="Giá"
+                  name="price"
+                  rules={[
+                    { required: true, message: "Vui lòng nhập giá!" },
+                    { type: "number", min: 1, max: 999999, message: "Giá phải từ 1 đến 999,999!" },
+                  ]}
+                >
+                  <InputNumber style={{ width: "100%" }} min={1} max={999999} />
+                </Form.Item>
+              </Col>
 
-            <Form.Item
-              label="Danh mục"
-              name="categoryId"
-              rules={[{ required: true, message: "Vui lòng chọn danh mục!" }]}
-            >
-              <Select placeholder="Chọn danh mục">
-                {categories.map((cat) => (
-                  <Option key={cat.id} value={cat.id}>
-                    {cat.name}
-                  </Option>
-                ))}
-              </Select>
-            </Form.Item>
+              <Col xs={24} md={12}>
+                <Form.Item
+                  label="Cân nặng (gram)"
+                  name="weight"
+                  rules={[{ required: true, message: "Vui lòng nhập cân nặng!" }]}
+                >
+                  <InputNumber style={{ width: "100%" }} min={0} />
+                </Form.Item>
+              </Col>
 
-            <Form.Item
-              label="Giá"
-              name="price"
-              rules={[
-                { required: true, message: "Vui lòng nhập giá!" },
-                { type: "number", min: 1, max: 999999, message: "Giá phải từ 1 đến 999,999!" },
-              ]}
-            >
-              <InputNumber style={{ width: "100%" }} min={1} max={999999} />
-            </Form.Item>
+              <Col xs={24} md={12}>
+                <Form.Item
+                  label="Số lượng"
+                  name="stockQuantity"
+                  rules={[{ required: true, message: "Vui lòng nhập số lượng!" }]}
+                >
+                  <InputNumber style={{ width: "100%" }} min={0} />
+                </Form.Item>
+              </Col>
 
-            <Form.Item
-              label="Số lượng"
-              name="stockQuantity"
-              rules={[{ required: true, message: "Vui lòng nhập số lượng!" }]}
-            >
-              <InputNumber style={{ width: "100%" }} min={0} />
-            </Form.Item>
+              <Col xs={24} md={12}>
+                <Form.Item label="Trạng thái" name="isActive" valuePropName="checked">
+                  <Switch checkedChildren="Hoạt động" unCheckedChildren="Khoá" />
+                </Form.Item>
+              </Col>
 
-            <Form.Item
-              label="Ảnh sản phẩm"
-              name="imageUrl"
-              valuePropName="fileList"
-              getValueFromEvent={(e) => (Array.isArray(e) ? e : e?.fileList)}
-              rules={[{ required: true, message: "Vui lòng chọn ảnh!" }]}
-            >
-              <Upload listType="picture-card" beforeUpload={() => false} maxCount={1} accept="image/*">
-                <div>Chọn ảnh</div>
-              </Upload>
-            </Form.Item>
+              <Col xs={24}>
+                <Form.Item label="Mô tả" name="description" rules={[{ required: true, message: "Vui lòng nhập mô tả!" }]}>
+                  <Input.TextArea placeholder="Nhập mô tả sản phẩm" rows={3} />
+                </Form.Item>
+              </Col>
 
-            <Form.Item label="Trạng thái" name="isActive" valuePropName="checked">
-              <Switch checkedChildren="Hoạt động" unCheckedChildren="Khoá" />
-            </Form.Item>
+              <Col xs={24}>
+                <Form.Item
+                  label="Ảnh sản phẩm"
+                  name="imageUrl"
+                  valuePropName="fileList"
+                  getValueFromEvent={(e) => (Array.isArray(e) ? e : e?.fileList)}
+                  rules={[{ required: true, message: "Vui lòng chọn ảnh!" }]}
+                >
+                  <Upload listType="picture-card" beforeUpload={() => false} maxCount={1} accept="image/*">
+                    <div>Chọn ảnh</div>
+                  </Upload>
+                </Form.Item>
+              </Col>
 
-            <Form.Item>
-              <Button type="primary" htmlType="submit" block>
-                {isUpdate ? "Cập nhật" : "Thêm sản phẩm"}
-              </Button>
-            </Form.Item>
+              <Col xs={24}>
+                <Form.Item>
+                  <Button type="primary" htmlType="submit" block>
+                    {isUpdate ? "Cập nhật" : "Thêm sản phẩm"}
+                  </Button>
+                </Form.Item>
+              </Col>
+            </Row>
           </Form>
         </Spin>
       </Modal>
