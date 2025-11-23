@@ -1,23 +1,23 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { Row, Col, Card, Button, Spin } from "antd";
 import { getMedicalServices, type Service } from "../../../../services/MedicalService";
 import { selectMedicalItem } from "../../../../redux/features/SelectedMedicalItem";
 import AOS from "aos";
 import "aos/dist/aos.css";
 import "./MedicalList.scss";
-import {
-  DollarOutlined,
-  ClockCircleOutlined,
-  MedicineBoxOutlined,
-} from "@ant-design/icons";
+import { DollarOutlined, ClockCircleOutlined, MedicineBoxOutlined } from "@ant-design/icons";
+import { toast } from "react-toastify";
+import type { RootState } from "@/redux/rootReducer";
 
 function MedicalList() {
   const [services, setServices] = useState<Service[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const navigate = useNavigate();
   const dispatch = useDispatch();
+
+  const user = useSelector((state: RootState) => state.user);
 
   useEffect(() => {
     document.title = "Dịch vụ Y tế - The Hamster";
@@ -44,15 +44,23 @@ function MedicalList() {
 
   const handleBookNowClick = (service: Service) => {
     // Dispatch the selected medical service to Redux store
-    dispatch(selectMedicalItem({
-      id: service.id,
-      name: service.serviceName,
-      type: "service",
-      description: service.description,
-      displayPrice: service.displayPrice,
-      durationMinutes: service.durationMinutes,
-    }));
-    
+
+    if (!user?.token) {
+      toast.error("Vui lòng đăng nhập để đặt dịch vụ.");
+      return navigate("/login");
+    }
+
+    dispatch(
+      selectMedicalItem({
+        id: service.id,
+        name: service.serviceName,
+        type: "service",
+        description: service.description,
+        displayPrice: service.displayPrice,
+        durationMinutes: service.durationMinutes,
+      })
+    );
+
     // Navigate to medical booking page
     navigate("/dich-vu-y-te/dat-dich-vu");
   };

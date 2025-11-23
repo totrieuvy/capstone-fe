@@ -1,7 +1,7 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { Row, Col, Card, Button, Spin, Tabs } from "antd";
 import { useNavigate } from "react-router-dom";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { selectGroomingItem } from "../../../../redux/features/SelectedGroomingItem";
 import api from "../../../../config/axios";
 import AOS from "aos";
@@ -15,6 +15,8 @@ import {
   GiftOutlined,
   CheckOutlined,
 } from "@ant-design/icons";
+import type { RootState } from "@/redux/rootReducer";
+import { toast } from "react-toastify";
 
 interface Service {
   id: string;
@@ -47,6 +49,8 @@ function GroomingPage() {
 
   const navigate = useNavigate();
   const dispatch = useDispatch();
+
+  const user = useSelector((state: RootState) => state.user);
 
   useEffect(() => {
     document.title = "Dịch vụ Grooming - The Hamster";
@@ -107,6 +111,10 @@ function GroomingPage() {
 
   /** ✅ Bấm đặt lịch với nhiều dịch vụ lẻ */
   const handleBookSelectedServices = () => {
+    if (!user?.token) {
+      toast.error("Vui lòng đăng nhập để đặt dịch vụ.");
+      return navigate("/login");
+    }
     if (!selectedServices.length) return;
     // Tạo payload gộp (nhiều service)
     dispatch(
