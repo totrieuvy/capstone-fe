@@ -1,82 +1,43 @@
-// .Dashboard {
-//   padding: 24px;
-//   background-color: #fff;
-//   border-radius: 12px;
-//   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-
-//   .dashboard-title {
-//     text-align: center;
-//     font-size: 28px;
-//     font-weight: 600;
-//     color: #333;
-//     margin-bottom: 20px;
-//   }
-
-//   .dashboard__date-picker {
-//     display: flex;
-//     justify-content: center;
-//     margin-bottom: 24px;
-//   }
-
-//   .stat-card {
-//     text-align: center;
-//     border-radius: 12px;
-//     background-color: #f9f9f9;
-
-//     h2 {
-//       font-size: 36px;
-//       color: #1890ff;
-//       margin: 0;
-//     }
-
-//     .ant-card-head-title {
-//       text-align: center;
-//       font-weight: 500;
-//     }
-//   }
-
-//   .chart-card {
-//     border-radius: 12px;
-//     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-
-//     .chart-container {
-//       position: relative;
-//       height: 350px; // default (the bigger one)
-//     }
-
-//     /* smaller bar charts */
-//     .small-bar {
-//       height: 260px; // -> smaller than before
-//       padding-top: 8px;
-//     }
-
-//     &.small-pie {
-//       .pie {
-//         height: 280px;
-//         width: 46%;
-//         margin: 0 auto;
-//       }
-//     }
-//   }
-// }
-
 .Dashboard {
   padding: 20px;
 }
 
 .dashboard-title {
-  font-size: 28px;
-  font-weight: 700;
-  margin-bottom: 20px;
   text-align: center;
-  color: #fa8c16;
+  font-size: 28px;
+  margin-bottom: 20px;
+}
+
+.dashboard-center-picker {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+/* -------- 5 BOXES -------- */
+.stat-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  margin-top: 20px;
 }
 
 .stat-box {
-  text-align: center;
-  background: #ffffff;
+  flex: 1;
+  background: #fff;
+  padding: 16px;
   border-radius: 10px;
-  box-shadow: rgba(0, 0, 0, 0.08) 0px 4px 12px;
+  text-align: center;
+  box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.08);
+
+  h3 {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 600;
+    color: #444;
+  }
 
   h2 {
     margin-top: 10px;
@@ -86,77 +47,17 @@
   }
 }
 
-/* Center Pickers */
-.dashboard-center-picker {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 15px;
-
-  span {
-    font-size: 16px;
-    font-weight: 600;
+/* Mobile */
+@media (max-width: 768px) {
+  .stat-row {
+    flex-direction: column;
   }
 }
 
-/* Chart area */
 .chart-container {
-  height: 350px;
-  position: relative;
-}
-
-.chart-card {
-  border-radius: 12px;
-  padding: 10px;
-}
-
-/* Table Cards */
-.dashboard-table-card {
-  border-radius: 12px;
-  margin-bottom: 20px;
-}
-
-/* Equal height cards (Staff & Vets) */
-.equal-row {
-  display: flex;
-  align-items: stretch;
-}
-
-.equal-row .equal-card {
-  height: 100%;
-}
-
-/* Table */
-.dashboard-table {
   width: 100%;
-  border-collapse: collapse;
-  margin-top: 10px;
-  font-size: 15px;
-
-  thead {
-    background: #f5f6f8;
-
-    th {
-      padding: 12px;
-      text-align: left;
-      font-weight: 600;
-      color: #555;
-      font-size: 14px;
-    }
-  }
-
-  tbody tr {
-    transition: 0.2s ease;
-    border-bottom: 1px solid #eee;
-
-    &:hover {
-      background: #f0f7ff;
-    }
-
-    td {
-      padding: 12px;
-      color: #333;
-    }
-  }
+  height: 420px;
+  display: flex;
+  justify-content: center; /* CĂN GIỮA NGANG */
+  align-items: center;
 }
