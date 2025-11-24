@@ -159,7 +159,7 @@ function ProfileHamster() {
       };
 
       const { data } = await api.post("/api/hamster", payload);
-      if (data.code === 200) {
+      if (data.code === 201) {
         toast.success("Tạo hồ sơ thành công");
         setCreateModalVisible(false);
         createForm.resetFields();
