@@ -90,9 +90,9 @@ function ManageOrder() {
 
   useEffect(() => {
     document.title = "Quản lí đơn hàng";
-    fetchOrders(pagination.current, pagination.pageSize);
+    fetchOrders(pagination.current, pagination.pageSize, statusFilter);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pagination.current, pagination.pageSize]);
+  }, [pagination.current, pagination.pageSize, statusFilter]);
 
   const handleTableChange = (newPagination: TablePaginationConfig) => {
     setPagination((prev) => ({ ...prev, ...newPagination }));
@@ -235,10 +235,15 @@ function ManageOrder() {
         {statuses.map((s) => (
           <Button
             key={s.key}
-            type={statusFilter === s.key ? "primary" : "default"}
+            type="default"
+            style={{
+              backgroundColor: statusFilter === s.key ? "#ff6f61" : "#f0f0f0",
+              color: statusFilter === s.key ? "white" : "black",
+              borderColor: statusFilter === s.key ? "#ff6f61" : "#d9d9d9",
+            }}
             onClick={() => {
               setStatusFilter(s.key);
-              fetchOrders(1, pagination.pageSize, s.key); // 🔥 CALL API theo status
+              fetchOrders(1, pagination.pageSize, s.key);
             }}
           >
             {s.label}
