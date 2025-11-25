@@ -1,5 +1,4 @@
 import api from "../config/axios";
-import type { Service } from "./AdditionService";
 
 // Type definitions for availability check
 export interface CheckAvailabilityRequest {
@@ -84,21 +83,62 @@ export interface BookingHistoryItem {
   bookingId: string;
   hamsterId: string;
   hamsterName: string;
+  hamsterProfilePicture: string;
+  species: string;
+  dob: string; // Format: YYYY-MM-DD
+  hamsterWeight: number;
+  customerName: string;
+  phoneNumber: string;
+  customerMail: string;
   cageTypeId: string;
+  cageName: string;
+  newCageName: string | null;
   cageTypeName: string;
+  newCageTypeName: string | null;
+  newCageTypeId: string | null;
   startDate: string; // Format: YYYY-MM-DD
   endDate: string; // Format: YYYY-MM-DD
+  newEndDate: string | null; // Format: YYYY-MM-DD
+  checkInImage: string | null;
   totalAmount: number;
   totalAmountAfter: number;
   status: string;
   notes: string;
-  createdAt: string; // ISO string format
-  serviceIds?: string[]; // IDs from Service interface in AddtionService.ts
-  services?: Service[]; // Full service objects for display purposes
+  createdAt: string | null; // ISO string format
+  cameraId: string | null;
+  services: BookingDetailService[];
+  healthNote: string | null;
+  isIncident: boolean;
+}
+
+// Pagination interfaces
+export interface Sort {
+  sorted: boolean;
+  empty: boolean;
+  unsorted: boolean;
+}
+
+export interface Pageable {
+  pageNumber: number;
+  pageSize: number;
+  sort: Sort;
+  offset: number;
+  paged: boolean;
+  unpaged: boolean;
 }
 
 export interface BookingHistoryResponse {
-  bookingHistory: BookingHistoryItem[];
+  content: BookingHistoryItem[];
+  pageable: Pageable;
+  last: boolean;
+  totalElements: number;
+  totalPages: number;
+  first: boolean;
+  size: number;
+  number: number;
+  sort: Sort;
+  numberOfElements: number;
+  empty: boolean;
 }
 
 // Type definitions for bookings by date range
@@ -389,10 +429,15 @@ export const boardingService = {
     }
   },
 
-  // Get booking history for the current user
-  getBookingHistory: async (): Promise<BookingHistoryItem[]> => {
+  // Get booking history for the current user with pagination
+  getBookingHistory: async (page: number = 0, size: number = 10): Promise<BookingHistoryResponse> => {
     try {
-      const response = await api.get<ApiResponse<BookingHistoryItem[]>>("/api/booking/history");
+      const response = await api.get<ApiResponse<BookingHistoryResponse>>("/api/booking/history", {
+        params: {
+          page,
+          size,
+        },
+      });
       return response.data.data;
     } catch (error) {
       console.error("Error fetching booking history:", error);

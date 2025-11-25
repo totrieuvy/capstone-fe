@@ -51,11 +51,18 @@ const BoardingHistory: React.FC = () => {
     try {
       setLoading(true);
       setError(null);
-      const history = await boardingService.getBookingHistory();
+      // For now, get all bookings with a large page size
+      // You can implement pagination later if needed
+      const response = await boardingService.getBookingHistory(0, 1000);
+      const history = response.content;
       setBookingHistory(history);
       
-      // Extract unique cage types from the booking history
-      const uniqueCageTypes = [...new Set(history.map(booking => booking.cageTypeName))];
+      // Extract unique cage types from the booking history (including new cage types)
+      const allCageTypes = history.flatMap(booking => [
+        booking.cageTypeName,
+        ...(booking.newCageTypeName ? [booking.newCageTypeName] : [])
+      ]);
+      const uniqueCageTypes = [...new Set(allCageTypes)];
       setAvailableCageTypes(uniqueCageTypes.sort());
       
       // Extract unique statuses from the booking history
@@ -88,7 +95,10 @@ const BoardingHistory: React.FC = () => {
 
     // Filter by cage type
     if (cageTypeFilter !== 'all') {
-      filtered = filtered.filter(booking => booking.cageTypeName === cageTypeFilter);
+      filtered = filtered.filter(booking => 
+        booking.cageTypeName === cageTypeFilter || 
+        booking.newCageTypeName === cageTypeFilter
+      );
     }
 
     setFilteredHistory(filtered);
@@ -144,13 +154,23 @@ const BoardingHistory: React.FC = () => {
     navigate(`/boarding-schedule/${booking.bookingId}`);
   };
 
-  const renderBookingCard = (booking: BookingHistoryItem) => (
+  const renderBookingCard = (booking: BookingHistoryItem) => {
+    const isExtended = booking.newEndDate && booking.newEndDate !== booking.endDate;
+    const isCageTypeChanged = booking.newCageTypeName && booking.newCageTypeName !== booking.cageTypeName;
+    const hasChanges = isExtended || isCageTypeChanged;
+    
+    return (
     <Card
       key={booking.bookingId}
-      className="booking-card"
+      className={`booking-card ${hasChanges ? 'has-changes' : ''}`}
       hoverable
-      style={{ marginBottom: 16 }}
+      style={{ marginBottom: 16, position: 'relative' }}
     >
+      {hasChanges && (
+        <div className="extension-ribbon">
+          <span>Đã gia hạn</span>
+        </div>
+      )}
       <Row gutter={[16, 16]} align="middle">
         {/* Hamster Name */}
         <Col xs={24} sm={4}>
@@ -164,9 +184,14 @@ const BoardingHistory: React.FC = () => {
         <Col xs={24} sm={4}>
           <div className="booking-info-section">
             <div className="info-label">Loại chuồng</div>
-            <Tag color="blue"  className="cage-tag">
-              {booking.cageTypeName}
-            </Tag>
+            <div>
+              <Tag 
+                color={booking.newCageTypeName && booking.newCageTypeName !== booking.cageTypeName ? "green" : "blue"} 
+                className="cage-tag"
+              >
+                {booking.newCageTypeName || booking.cageTypeName}
+              </Tag>
+            </div>
           </div>
         </Col>
 
@@ -190,8 +215,13 @@ const BoardingHistory: React.FC = () => {
               <CalendarOutlined style={{ marginRight: 4, color: '#52c41a' }} />
               Ngày trả
             </div>
-            <div className="info-value">
-              {new Date(booking.endDate).toLocaleDateString('vi-VN')}
+            <div 
+              className="info-value"
+              style={{
+                color: booking.newEndDate && booking.newEndDate !== booking.endDate ? '#52c41a' : '#333'
+              }}
+            >
+              {new Date(booking.newEndDate || booking.endDate).toLocaleDateString('vi-VN')}
             </div>
           </div>
         </Col>
@@ -229,7 +259,8 @@ const BoardingHistory: React.FC = () => {
         </Col>
       </Row>
     </Card>
-  );
+    );
+  };
 
 
 
@@ -260,47 +291,6 @@ const BoardingHistory: React.FC = () => {
             style={{ marginBottom: 16 }}
           />
         )}
-
-        {/* Statistics Cards */}
-        {/* <Row gutter={16} style={{ marginBottom: 24 }}>
-          <Col xs={24} sm={6}>
-            <Card>
-              <Statistic
-                title="Total Bookings"
-                value={stats.total}
-                prefix={<CalendarOutlined />}
-              />
-            </Card>
-          </Col>
-          <Col xs={24} sm={6}>
-            <Card>
-              <Statistic
-                title="Confirmed"
-                value={stats.confirmed}
-                valueStyle={{ color: '#3f8600' }}
-              />
-            </Card>
-          </Col>
-          <Col xs={24} sm={6}>
-            <Card>
-              <Statistic
-                title="Pending"
-                value={stats.pending}
-                valueStyle={{ color: '#cf1322' }}
-              />
-            </Card>
-          </Col>
-          <Col xs={24} sm={6}>
-            <Card>
-              <Statistic
-                title="Total Spent"
-                value={stats.totalAmount}
-                formatter={(value) => getFormattedPrice(Number(value))}
-                prefix={<DollarOutlined />}
-              />
-            </Card>
-          </Col>
-        </Row> */}
 
         {/* Filters */}
         <Card size="small" style={{ marginBottom: 16 }}>
