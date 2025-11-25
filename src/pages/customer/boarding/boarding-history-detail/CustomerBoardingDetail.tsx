@@ -500,6 +500,7 @@ const BoardingDetail: React.FC = () => {
                   </div>
                 </div>
               </Col>
+              
               <Col span={12}>
                 <div className="info-item">
                   <Text type="secondary">Trạng thái</Text>
@@ -511,6 +512,58 @@ const BoardingDetail: React.FC = () => {
                 </div>
               </Col>
             </Row>
+
+            {/* Extension Information Section */}
+            {(booking.newEndDate || booking.newCageTypeName || booking.newCageName) && (
+              <div className="extension-section">
+                <div className="extension-title">
+                  <Text style={{ fontSize: '16px', fontWeight: 600, color: '#1890ff' }}>
+                    Thông tin gia hạn
+                  </Text>
+                </div>
+                <Row gutter={[16, 12]}>
+                  {booking.newEndDate && (
+                    <Col span={12}>
+                      <div className="info-item extension-item">
+                        <Text type="secondary">Ngày ra mới</Text>
+                        <div className="info-value">
+                          <CalendarOutlined style={{ marginRight: 8, color: "#52c41a" }} />
+                          <Text strong style={{ color: '#52c41a' }}>
+                            {new Date(booking.newEndDate).toLocaleDateString("vi-VN")}
+                          </Text>
+                        </div>
+                      </div>
+                    </Col>
+                  )}
+                  {booking.newCageTypeName && (
+                    <Col span={12}>
+                      <div className="info-item extension-item">
+                        <Text type="secondary">Loại chuồng mới</Text>
+                        <div className="info-value">
+                          <BiCategory style={{ marginRight: 8, color: "#fa8c16" }} />
+                          <Text strong style={{ color: '#fa8c16' }}>
+                            {booking.newCageTypeName}
+                          </Text>
+                        </div>
+                      </div>
+                    </Col>
+                  )}
+                  {booking.newCageName && (
+                    <Col span={12}>
+                      <div className="info-item extension-item">
+                        <Text type="secondary">Tên chuồng mới</Text>
+                        <div className="info-value">
+                          <GiCage style={{ marginRight: 8, color: "#fa8c16" }} />
+                          <Text strong style={{ color: '#fa8c16' }}>
+                            {booking.newCageName}
+                          </Text>
+                        </div>
+                      </div>
+                    </Col>
+                  )}
+                </Row>
+              </div>
+            )}
 
             {booking.notes && (
               <>
@@ -612,42 +665,6 @@ const BoardingDetail: React.FC = () => {
                 </>
               )}
           </Card>
-          {/* Check-in Image Section */}
-          {booking.checkInImage && (
-            <Card title="Hình ảnh check-in" className="checkin-image-card">
-              <div className="checkin-image-container">
-                <Image
-                  width="100%"
-                  height={300}
-                  src={booking.checkInImage}
-                  alt="Check-in"
-                  style={{
-                    borderRadius: 8,
-                    objectFit: "cover",
-                  }}
-                  placeholder={
-                    <div
-                      style={{
-                        width: "100%",
-                        height: 300,
-                        background: "#f0f0f0",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        borderRadius: 8,
-                      }}
-                    >
-                      <EyeOutlined style={{ fontSize: 32, color: "#d9d9d9" }} />
-                    </div>
-                  }
-                />
-                <div style={{ marginTop: 12, textAlign: "center" }}>
-                  <Text type="secondary">Hình ảnh được chụp khi hamster check-in vào chuồng</Text>
-                </div>
-              </div>
-            </Card>
-          )}
-          <br />
           {/* Payment Summary */}
           <Card title="Chi tiết thanh toán" className="payment-card">
             <div className="payment-item">
@@ -774,6 +791,42 @@ const BoardingDetail: React.FC = () => {
               </Timeline>
             )}
           </Card>
+            <br/>
+          {/* Check-in Image Section */}
+          {booking.checkInImage && (
+            <Card title="Hình ảnh check-in" className="checkin-image-card">
+              <div className="checkin-image-container">
+                <Image
+                  width="100%"
+                  height={300}
+                  src={booking.checkInImage}
+                  alt="Check-in"
+                  style={{
+                    borderRadius: 8,
+                    objectFit: "cover",
+                  }}
+                  placeholder={
+                    <div
+                      style={{
+                        width: "100%",
+                        height: 300,
+                        background: "#f0f0f0",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        borderRadius: 8,
+                      }}
+                    >
+                      <EyeOutlined style={{ fontSize: 32, color: "#d9d9d9" }} />
+                    </div>
+                  }
+                />
+                <div style={{ marginTop: 12, textAlign: "center" }}>
+                  <Text type="secondary">Hình ảnh được chụp khi hamster check-in vào chuồng</Text>
+                </div>
+              </div>
+            </Card>
+          )}
         </Col>
       </Row>
 

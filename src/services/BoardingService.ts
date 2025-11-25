@@ -205,6 +205,7 @@ export interface BookingDetail {
   services: BookingDetailService[];
   additionalServiceIds?: string[]; // Additional service IDs for services beyond the main services array
   healthNote: string | null;
+  isIncident: boolean;  
 }
 
 // Type definitions for file upload
@@ -590,15 +591,6 @@ export const boardingService = {
   },
 };
 
-// Get booking details by booking ID (legacy function - consider using boardingService.getBookingDetails instead)
-export const getBookingHistoryDetails = async (bookingId: string): Promise<BookingDetail> => {
-  try {
-    const response = await api.get<ApiResponse<BookingDetail>>(`/api/booking/${bookingId}`);
-    return response.data.data;
-  } catch (error) {
-    console.error("Error fetching booking details:", error);
-    throw error;
-  }
-};
+
 
 export default boardingService;
