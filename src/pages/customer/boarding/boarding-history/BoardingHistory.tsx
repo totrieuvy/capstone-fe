@@ -10,8 +10,8 @@ import {
   Input,
   Row,
   Col,
-  
-  Button
+  Button,
+  Pagination
 } from 'antd';
 import {
   CalendarOutlined,
@@ -38,27 +38,54 @@ const BoardingHistory: React.FC = () => {
   const [cageTypeFilter, setCageTypeFilter] = useState<string>('all');
   const [availableCageTypes, setAvailableCageTypes] = useState<string[]>([]);
   const [availableStatuses, setAvailableStatuses] = useState<string[]>([]);
+  // Pagination states
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize] = useState(4);
+  const [totalElements, setTotalElements] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
 
   useEffect(() => {
     fetchBookingHistory();
-  }, []);
+  }, [currentPage]);
 
   useEffect(() => {
     filterBookings();
   }, [bookingHistory, searchText, statusFilter, cageTypeFilter]);
 
+  // Reset to first page when filters change
+  useEffect(() => {
+    if (currentPage !== 1) {
+      setCurrentPage(1);
+    }
+  }, [searchText, statusFilter, cageTypeFilter]);
+
   const fetchBookingHistory = async () => {
     try {
       setLoading(true);
       setError(null);
-      const history = await boardingService.getBookingHistory();
-      setBookingHistory(history);
+      // Use pagination with page size of 4 and sort by startDate descending
+      const response = await boardingService.getBookingHistory(currentPage - 1, pageSize);
+      const history = response.content;
       
-      // Extract unique cage types from the booking history
-      const uniqueCageTypes = [...new Set(history.map(booking => booking.cageTypeName))];
+      // Sort by startDate in descending order (most recent first)
+      const sortedHistory = history.sort((a, b) => 
+        new Date(b.startDate).getTime() - new Date(a.startDate).getTime()
+      );
+      
+      setBookingHistory(sortedHistory);
+      setTotalElements(response.totalElements);
+      setTotalPages(response.totalPages);
+
+      // Extract unique cage types from all booking history (need to get all for filters)
+      // For now, we'll use the current page data for filters
+      const allCageTypes = history.flatMap(booking => [
+        booking.cageTypeName,
+        ...(booking.newCageTypeName ? [booking.newCageTypeName] : [])
+      ]);
+      const uniqueCageTypes = [...new Set(allCageTypes)];
       setAvailableCageTypes(uniqueCageTypes.sort());
-      
-      // Extract unique statuses from the booking history
+
+      // Extract unique statuses from the current page
       const uniqueStatuses = [...new Set(history.map(booking => booking.status))];
       setAvailableStatuses(uniqueStatuses.sort());
     } catch (err) {
@@ -88,7 +115,10 @@ const BoardingHistory: React.FC = () => {
 
     // Filter by cage type
     if (cageTypeFilter !== 'all') {
-      filtered = filtered.filter(booking => booking.cageTypeName === cageTypeFilter);
+      filtered = filtered.filter(booking =>
+        booking.cageTypeName === cageTypeFilter ||
+        booking.newCageTypeName === cageTypeFilter
+      );
     }
 
     setFilteredHistory(filtered);
@@ -108,9 +138,9 @@ const BoardingHistory: React.FC = () => {
         return 'green';
       case 'CANCELLED':
         return 'red';
-        case 'FAILED':
+      case 'FAILED':
         return 'red';
-        case 'INCIDENT':
+      case 'INCIDENT':
         return 'red';
       default:
         return 'default';
@@ -131,9 +161,9 @@ const BoardingHistory: React.FC = () => {
         return 'Hoàn tất';
       case 'CANCELLED':
         return 'Đã hủy';
-        case 'FAILED':
+      case 'FAILED':
         return 'Thanh toán thất bại';
-        case 'INCIDENT':
+      case 'INCIDENT':
         return 'Có sự cố';
       default:
         return status.replace('_', ' ');
@@ -144,92 +174,122 @@ const BoardingHistory: React.FC = () => {
     navigate(`/boarding-schedule/${booking.bookingId}`);
   };
 
-  const renderBookingCard = (booking: BookingHistoryItem) => (
-    <Card
-      key={booking.bookingId}
-      className="booking-card"
-      hoverable
-      style={{ marginBottom: 16 }}
-    >
-      <Row gutter={[16, 16]} align="middle">
-        {/* Hamster Name */}
-        <Col xs={24} sm={4}>
-          <div className="booking-info-section">
-            <div className="info-label">Tên hamster</div>
-            <div className="hamster-name">{booking.hamsterName}</div>
-          </div>
-        </Col>
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
 
-        {/* Cage Type */}
-        <Col xs={24} sm={4}>
-          <div className="booking-info-section">
-            <div className="info-label">Loại chuồng</div>
-            <Tag color="blue"  className="cage-tag">
-              {booking.cageTypeName}
-            </Tag>
-          </div>
-        </Col>
+  const renderBookingCard = (booking: BookingHistoryItem) => {
+    const isIncident = booking.isIncident;
+    const isExtended = booking.newEndDate && booking.newEndDate !== booking.endDate;
+    const isCageTypeChanged = booking.newCageTypeName && booking.newCageTypeName !== booking.cageTypeName;
+    const hasChanges = isExtended || isCageTypeChanged;
 
-        {/* Check-in Date */}
-        <Col xs={12} sm={4}>
-          <div className="booking-info-section">
-            <div className="info-label">
-              <CalendarOutlined style={{ marginRight: 4, color: '#1890ff' }} />
-              Ngày nhận
+    return (
+      <Card
+        key={booking.bookingId}
+        className={`booking-card ${isIncident ? 'has-incident' : hasChanges ? 'has-changes' : ''}`}
+        hoverable
+        style={{ marginBottom: 16, position: 'relative' }}
+      >
+        {isIncident ? (
+          <div className="incident-ribbon">
+            <span>Sự cố</span>
+          </div>
+        ) : hasChanges && (
+          <div className="extension-ribbon">
+            <span>Gia hạn</span>
+          </div>
+        )}
+        <Row gutter={[16, 16]} align="middle">
+          {/* Hamster Name */}
+          <Col xs={24} sm={4}>
+            <div className="booking-info-section">
+              <div className="info-label">Tên hamster</div>
+              <div className="hamster-name">{booking.hamsterName}</div>
             </div>
-            <div className="info-value">
-              {new Date(booking.startDate).toLocaleDateString('vi-VN')}
-            </div>
-          </div>
-        </Col>
+          </Col>
 
-        {/* Check-out Date */}
-        <Col xs={12} sm={4}>
-          <div className="booking-info-section">
-            <div className="info-label">
-              <CalendarOutlined style={{ marginRight: 4, color: '#52c41a' }} />
-              Ngày trả
+          {/* Cage Type */}
+          <Col xs={24} sm={4}>
+            <div className="booking-info-section">
+              <div className="info-label">Loại chuồng</div>
+              <div>
+                <Tag
+                  color={booking.newCageTypeName && booking.newCageTypeName !== booking.cageTypeName ? "green" : "blue"}
+                  className="cage-tag"
+                >
+                  {booking.newCageTypeName || booking.cageTypeName}
+                </Tag>
+              </div>
             </div>
-            <div className="info-value">
-              {new Date(booking.endDate).toLocaleDateString('vi-VN')}
+          </Col>
+
+          {/* Check-in Date */}
+          <Col xs={12} sm={4}>
+            <div className="booking-info-section">
+              <div className="info-label">
+                <CalendarOutlined style={{ marginRight: 4, color: '#1890ff' }} />
+                Ngày nhận
+              </div>
+              <div className="info-value">
+                {new Date(booking.startDate).toLocaleDateString('vi-VN')}
+              </div>
             </div>
-          </div>
-        </Col>
+          </Col>
 
-        {/* Status */}
-        <Col xs={12} sm={4}>
-          <div className="booking-info-section">
-            {/* <div className="info-label">Trạng thái</div> */}
-            <Tag 
-              color={getStatusColor(booking.status)} 
-              style={{ 
-                minWidth: '80px', 
-                textAlign: 'center',
-                fontSize: '13px',
-                padding: '4px 8px'
-              }}
-            >
-              {getStatusText(booking.status)}
-            </Tag>
-          </div>
-        </Col>
+          {/* Check-out Date */}
+          <Col xs={12} sm={4}>
+            <div className="booking-info-section">
+              <div className="info-label">
+                <CalendarOutlined style={{ marginRight: 4, color: '#52c41a' }} />
+                Ngày trả
+              </div>
+              <div
+                className="info-value"
+                style={{
+                  color: booking.newEndDate && booking.newEndDate !== booking.endDate ? '#52c41a' : '#333'
+                }}
+              >
+                {new Date(booking.newEndDate || booking.endDate).toLocaleDateString('vi-VN')}
+              </div>
+            </div>
+          </Col>
 
-        {/* Action Button */}
-        <Col xs={12} sm={4}>
-          <div className="booking-actions">
-            <Button 
-              type="primary" 
-              size="middle"
-              style={{ width: '100%' }}
-              onClick={() => handleViewDetails(booking)}
-            >
-              Chi tiết
-            </Button>
-          </div>
-        </Col>
-      </Row>
-    </Card>
-  );
+          {/* Status */}
+          <Col xs={12} sm={4}>
+            <div className="booking-info-section">
+              {/* <div className="info-label">Trạng thái</div> */}
+              <Tag
+                color={getStatusColor(booking.status)}
+                style={{
+                  minWidth: '80px',
+                  textAlign: 'center',
+                  fontSize: '13px',
+                  padding: '4px 8px'
+                }}
+              >
+                {getStatusText(booking.status)}
+              </Tag>
+            </div>
+          </Col>
+
+          {/* Action Button */}
+          <Col xs={12} sm={4}>
+            <div className="booking-actions">
+              <Button
+                type="primary"
+                size="middle"
+                style={{ width: '100%' }}
+                onClick={() => handleViewDetails(booking)}
+              >
+                Chi tiết
+              </Button>
+            </div>
+          </Col>
+        </Row>
+      </Card>
+    );
+  };
 
 
 
@@ -260,47 +320,6 @@ const BoardingHistory: React.FC = () => {
             style={{ marginBottom: 16 }}
           />
         )}
-
-        {/* Statistics Cards */}
-        {/* <Row gutter={16} style={{ marginBottom: 24 }}>
-          <Col xs={24} sm={6}>
-            <Card>
-              <Statistic
-                title="Total Bookings"
-                value={stats.total}
-                prefix={<CalendarOutlined />}
-              />
-            </Card>
-          </Col>
-          <Col xs={24} sm={6}>
-            <Card>
-              <Statistic
-                title="Confirmed"
-                value={stats.confirmed}
-                valueStyle={{ color: '#3f8600' }}
-              />
-            </Card>
-          </Col>
-          <Col xs={24} sm={6}>
-            <Card>
-              <Statistic
-                title="Pending"
-                value={stats.pending}
-                valueStyle={{ color: '#cf1322' }}
-              />
-            </Card>
-          </Col>
-          <Col xs={24} sm={6}>
-            <Card>
-              <Statistic
-                title="Total Spent"
-                value={stats.totalAmount}
-                formatter={(value) => getFormattedPrice(Number(value))}
-                prefix={<DollarOutlined />}
-              />
-            </Card>
-          </Col>
-        </Row> */}
 
         {/* Filters */}
         <Card size="small" style={{ marginBottom: 16 }}>
@@ -366,7 +385,26 @@ const BoardingHistory: React.FC = () => {
               </Space>
             </Card>
           ) : (
-            filteredHistory.map(booking => renderBookingCard(booking))
+            <>
+              {filteredHistory.map(booking => renderBookingCard(booking))}
+              {/* Pagination */}
+              {totalElements > pageSize && (
+                <div style={{ textAlign: 'center', marginTop: '24px' }}>
+                  <Pagination
+                    align='end'
+                    current={currentPage}
+                    pageSize={pageSize}
+                    total={totalElements}
+                    onChange={handlePageChange}
+                    showSizeChanger={false}
+                    showQuickJumper
+                    showTotal={(total, range) =>
+                      `${range[0]}-${range[1]} của ${total} booking`
+                    }
+                  />
+                </div>
+              )}
+            </>
           )}
         </div>
       </Card>

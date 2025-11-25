@@ -77,6 +77,40 @@
     }
   }
   
+  // Extension Information Styles
+  .extension-section {
+    margin-top: 16px;
+    padding: 16px;
+    background: linear-gradient(135deg, #e6f7ff 0%, #f0f9ff 100%);
+    border-radius: 8px;
+    border: 1px solid #91d5ff;
+    
+    .extension-title {
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      
+      &::before {
+        content: '';
+        width: 4px;
+        height: 20px;
+        background: linear-gradient(135deg, #1890ff 0%, #52c41a 100%);
+        border-radius: 2px;
+      }
+    }
+    
+    .extension-item {
+      .info-value {
+        margin-top: 6px;
+        
+        .ant-typography {
+          font-weight: 600;
+        }
+      }
+    }
+  }
+  
   .service-info {
     margin-top: 16px;
     
@@ -381,5 +415,31 @@
   
   &:active {
     transform: translateY(0);
+  }
+}
+
+// Extension section responsive design
+@media (max-width: 576px) {
+  .booking-info-card {
+    .extension-section {
+      padding: 12px;
+      
+      .extension-title {
+        font-size: 14px;
+        margin-bottom: 10px;
+      }
+      
+      .ant-row {
+        .ant-col {
+          margin-bottom: 12px;
+          
+          .extension-item {
+            .info-value {
+              font-size: 14px;
+            }
+          }
+        }
+      }
+    }
   }
 }
