@@ -12,7 +12,7 @@ interface RegisterValues {
   email: string;
   phone: string;
   address: string;
-  citizenId: string;
+  // citizenId: string;
   password: string;
   confirm: string;
 }
@@ -38,7 +38,7 @@ const Register = () => {
         email: values.email,
         phone: values.phone,
         address: values.address,
-        citizenId: values.citizenId,
+        // citizenId: values.citizenId,
         password: values.password,
       });
       console.log(response.data);
@@ -102,13 +102,13 @@ const Register = () => {
             <Input placeholder="Nhập địa chỉ nhà của bạn" size="large" />
           </Form.Item>
 
-          <Form.Item
+          {/* <Form.Item
             label="Số căn cước công dân"
             name="citizenId"
             rules={[{ required: true, message: "Vui lòng nhập cố căn cước công dân của bạn!" }]}
           >
             <Input placeholder="Nhập cố căn cước công dân của bạn" size="large" />
-          </Form.Item>
+          </Form.Item> */}
 
           <Form.Item
             label="Mật khẩu"
