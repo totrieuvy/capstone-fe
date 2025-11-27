@@ -80,6 +80,7 @@ import ManageChat from "./pages/staff/chat/ManageChat";
 import ManageCustomer from "./pages/admin/account/ManageCustomer";
 import Home from "./pages/customer/home/Home";
 import HamsterMedicalHistory from "./pages/veterinarian/hamster-medical-history/HamsterMedicalHistory";
+import ManageIncident from "./pages/admin/manageIncident/ManageIncident";
 
 interface User {
   id: number;
@@ -321,6 +322,10 @@ const App = () => {
               element: <ManageTransaction />,
             },
             {
+              path: "quan-li-su-co",
+              element: <ManageIncident />,
+            },
+            {
               path: "*",
               element: <AdminNotFoundPage />,
             },
@@ -383,7 +388,7 @@ const App = () => {
             { path: "lich-kham/:appointmentId", element: <VetAppointmentDetail /> },
             { path: "examination/:appointmentId", element: <Examination /> },
             { path: "quan-li-ke-thuoc", element: <ManageMedicine /> },
-            {path: "hamster-medical-history/:hamsterId", element: <HamsterMedicalHistory />},
+            { path: "hamster-medical-history/:hamsterId", element: <HamsterMedicalHistory /> },
             { path: "*", element: <VetNotFoundPage /> },
           ],
         },
