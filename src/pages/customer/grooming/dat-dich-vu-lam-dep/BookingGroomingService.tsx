@@ -541,6 +541,7 @@ function BookingGroomingService() {
                 { key: "staffFirst", label: "Chọn nhân viên trước", icon: <TeamOutlined /> },
               ]}
             />
+
             {selectMode === "scheduleFirst" ? (
               <>
                 <div className="week-header">
@@ -549,8 +550,24 @@ function BookingGroomingService() {
                     Tuần {currentWeek.isoWeek()} ({getWeekRange(currentWeek).start.format("DD/MM")} -{" "}
                     {getWeekRange(currentWeek).end.format("DD/MM")})
                   </Title>
+
                   <Button icon={<RightOutlined />} onClick={() => handleWeekChange("next")} />
                 </div>
+                <div className="legend">
+                  <div className="legend-item">
+                    <span className="dot available-dot" /> Còn trống
+                  </div>
+                  <div className="legend-item">
+                    <span className="dot selected-dot" /> Đã chọn
+                  </div>
+                  <div className="legend-item">
+                    <span className="dot full-dot" /> Hết chỗ
+                  </div>
+                  <div className="legend-item">
+                    <span className="dot past-dot" /> Quá khứ
+                  </div>
+                </div>
+
                 <div className="weekly-grid">
                   <div className="time-column">
                     <div className="time-cell-header">Giờ</div>

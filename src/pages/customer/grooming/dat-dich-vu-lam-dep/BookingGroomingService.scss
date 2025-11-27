@@ -1,6 +1,44 @@
 .booking-grooming-service {
   padding: 20px 80px;
 
+  /* ===== LEGEND ===== */
+  .legend {
+    display: flex;
+    gap: 20px;
+    margin: 16px 0;
+    align-items: center;
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 14px;
+    }
+
+    .dot {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      display: inline-block;
+    }
+
+    .available-dot {
+      background: #4caf50; // xanh
+    }
+
+    .selected-dot {
+      background: #ff9800; // cam
+    }
+
+    .full-dot {
+      background: #f44336; // đỏ
+    }
+
+    .past-dot {
+      background: #bdbdbd; // xám
+    }
+  }
+
   .policy-section {
     margin-top: 16px;
     background: #fffaf5;
