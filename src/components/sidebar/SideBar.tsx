@@ -86,6 +86,7 @@ const SideBar: React.FC = () => {
           getItem("Nhân viên", "quan-li-nhan-vien"),
           getItem("Khách hàng", "quan-li-khach-hang"),
         ]),
+        getItem("Quản lí sự cố", "quan-li-su-co", <AreaChartOutlined />),
       ];
     } else if (user?.role === "STAFF") {
       items = [
