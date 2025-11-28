@@ -106,7 +106,9 @@
         border-radius: 50%;
         margin-bottom: 10px;
         object-fit: cover;
-        margin: 0 auto 8px auto;
+        display: block;
+        margin-left: auto;
+        margin-right: auto;
       }
 
       &.selected {

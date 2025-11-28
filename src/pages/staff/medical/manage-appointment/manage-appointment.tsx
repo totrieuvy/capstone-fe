@@ -221,9 +221,17 @@ const ManageAppointment: React.FC = () => {
       dataIndex: 'appointmentTime',
       key: 'appointmentTime',
       render: (date: string) => (
-        <span>{dayjs(date).format('DD/MM/YYYY HH:mm')}</span>
+        <span>{dayjs(date).format('DD/MM/YYYY ')}</span>
       ),
       sorter: true,
+    },
+    {
+      title: 'Slot',
+      dataIndex: 'slotStart',
+      key: 'slotStart',
+      render: (time: string) => (
+        <span>{dayjs(time, 'HH:mm:ss').isValid() ? dayjs(time, 'HH:mm:ss').format('HH:mm') : time}</span>
+      ),
     },
     {
       title: 'Bác sĩ Thú y',

@@ -959,6 +959,59 @@ const Examination: React.FC = () => {
     );
   }
 
+   // Get status color
+  const getStatusColor = (status: string) => {
+    switch (status.toUpperCase()) {
+      case 'BOOKED':
+        return 'blue';
+      case 'CHECKED_IN':
+      case 'CHECK_IN':
+        return 'cyan';
+      case 'IN_PROGRESS':
+        return 'orange';
+      case 'CHECK_OUT':
+      case 'CHECKED_OUT':
+        return 'green';
+      case 'NO-SHOW':
+        return 'volcano';
+      case 'CANCELLED':
+        return 'red';
+      case 'COMPLETED':
+        return 'green';
+      case 'FAILED':
+        return 'red';
+      default:
+        return 'default';
+    }
+  };
+
+  // Get status text in Vietnamese
+  const getStatusText = (status: string) => {
+    switch (status.toUpperCase()) {
+      case 'BOOKED':
+        return 'Đã đặt';
+      case 'CHECKED_IN':
+      case 'CHECK_IN':
+        return 'Đã check-in';
+      case 'IN_PROGRESS':
+        return 'Đang thực hiện';
+      case 'CHECK_OUT':
+        return 'Hoàn thành';
+      case 'NO-SHOW':
+        return 'Không đến';
+      case 'CANCELLED':
+        return 'Đã hủy';
+      case 'COMPLETED':
+        return 'Hoàn thành';
+      case 'CONFIRMED':
+        return 'Đã xác nhận';
+        case 'FAILED':
+          return 'Thanh toán thất bại';
+      default:
+        return status.replace('_', ' ');
+    }
+  };
+
   return (
     <div className="examination">
       <div className="examination-container">
@@ -975,8 +1028,8 @@ const Examination: React.FC = () => {
               </Text>
             </Col>
             <Col>
-              <Tag color="processing" className="status-tag-large">
-                {appointmentData.status}
+              <Tag color={getStatusColor(appointmentData.status)} className="status-tag-large">
+                {getStatusText(appointmentData.status)}
               </Tag>
             </Col>
           </Row>
