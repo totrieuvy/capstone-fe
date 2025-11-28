@@ -61,8 +61,12 @@ const BoardingHistory: React.FC = () => {
       const response = await boardingService.getBookingHistory(currentPage - 1, pageSize);
       const history = response.content;
 
-      // Sort by startDate in descending order (most recent first)
-      const sortedHistory = history.sort((a, b) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime());
+      // Sort by createdAt in descending order (most recent first)
+      const sortedHistory = history.sort((a, b) => {
+        const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+        const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+        return dateB - dateA;
+      });
 
       setBookingHistory(sortedHistory);
       setTotalElements(response.totalElements);
