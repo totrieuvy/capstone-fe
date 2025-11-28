@@ -20,7 +20,15 @@ const BoardingHistory: React.FC = () => {
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [cageTypeFilter, setCageTypeFilter] = useState<string>("all");
   const [availableCageTypes, setAvailableCageTypes] = useState<string[]>([]);
-  const [availableStatuses, setAvailableStatuses] = useState<string[]>([]);
+  // Use a fixed list of statuses for filtering
+  const statusOptions = [
+    "PENDING",
+    "BOOKED",
+    "IN_PROGRESS",
+    "CHECK_OUT",
+    "FAILED",
+    "CANCELLED",
+  ];
   // Pagination states
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize] = useState(4);
@@ -53,8 +61,12 @@ const BoardingHistory: React.FC = () => {
       const response = await boardingService.getBookingHistory(currentPage - 1, pageSize);
       const history = response.content;
 
-      // Sort by startDate in descending order (most recent first)
-      const sortedHistory = history.sort((a, b) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime());
+      // Sort by createdAt in descending order (most recent first)
+      const sortedHistory = history.sort((a, b) => {
+        const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+        const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+        return dateB - dateA;
+      });
 
       setBookingHistory(sortedHistory);
       setTotalElements(response.totalElements);
@@ -69,9 +81,7 @@ const BoardingHistory: React.FC = () => {
       const uniqueCageTypes = [...new Set(allCageTypes)];
       setAvailableCageTypes(uniqueCageTypes.sort());
 
-      // Extract unique statuses from the current page
-      const uniqueStatuses = [...new Set(history.map((booking) => booking.status))];
-      setAvailableStatuses(uniqueStatuses.sort());
+      // No need to extract statuses from data anymore
     } catch (err) {
       setError("Failed to fetch booking history. Please try again.");
       console.error("Error fetching booking history:", err);
@@ -92,9 +102,9 @@ const BoardingHistory: React.FC = () => {
       );
     }
 
-    // Filter by status
+    // Filter by status (fixed list)
     if (statusFilter !== "all") {
-      filtered = filtered.filter((booking) => booking.status === statusFilter);
+      filtered = filtered.filter((booking) => statusOptions.includes(booking.status) && booking.status === statusFilter);
     }
 
     // Filter by cage type
@@ -311,7 +321,7 @@ const BoardingHistory: React.FC = () => {
                 loading={loading}
               >
                 <Option value="all">Tất cả trạng thái</Option>
-                {availableStatuses.map((status) => (
+                {statusOptions.map((status) => (
                   <Option key={status} value={status}>
                     {getStatusText(status)}
                   </Option>
