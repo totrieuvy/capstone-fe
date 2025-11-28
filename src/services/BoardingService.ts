@@ -162,7 +162,7 @@ export interface BookingByDateRange {
   customerName: string;
   hamsterName: string;
   isIncident: boolean;
-  incidentSolved: boolean;
+  incidentSolve: boolean;
 }
 
 export interface GetBookingsByDateRangeResponse {
@@ -207,7 +207,8 @@ export interface BookingDetail {
   services: BookingDetailService[];
   additionalServiceIds?: string[]; // Additional service IDs for services beyond the main services array
   healthNote: string | null;
-  isIncident: boolean;  
+  isIncident: boolean;
+  incidentSolve: boolean;
 }
 
 // Type definitions for file upload

@@ -392,6 +392,238 @@
   }
 }
 
+// Incident Report Card Styles (Customer View - Compact)
+.incident-card {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  margin-bottom: 24px;
+  
+  .ant-card-head {
+    background: linear-gradient(135deg, #fff2f0 0%, #ffebe8 100%);
+    border-bottom: 1px solid #ffccc7;
+    padding: 12px 16px;
+    
+    .ant-card-head-title {
+      color: #cf1322;
+      font-size: 16px;
+      font-weight: 600;
+    }
+  }
+
+  .ant-card-body {
+    padding: 16px;
+  }
+
+  .incident-content {
+    .incident-status-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 12px;
+      margin-bottom: 16px;
+      
+      .incident-status-item {
+        display: flex;
+        align-items: flex-start;
+        gap: 8px;
+        padding: 12px;
+        background: #fafafa;
+        border-radius: 6px;
+        border: 1px solid #f0f0f0;
+        transition: all 0.3s ease;
+        
+        .incident-icon-wrapper {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          width: 32px;
+          height: 32px;
+          border-radius: 50%;
+          flex-shrink: 0;
+          
+          &.incident-alert {
+            background: #fff2f0;
+            border: 2px solid #ffccc7;
+            
+            .incident-icon {
+              color: #ff4d4f;
+              font-size: 14px;
+            }
+          }
+          
+          &.incident-pending {
+            background: #fff7e6;
+            border: 2px solid #ffd591;
+            
+            .incident-icon {
+              color: #fa8c16;
+              font-size: 14px;
+            }
+          }
+          
+          &.incident-resolved {
+            background: #f6ffed;
+            border: 2px solid #b7eb8f;
+            
+            .incident-icon {
+              color: #52c41a;
+              font-size: 14px;
+            }
+          }
+        }
+        
+        .incident-details {
+          flex: 1;
+          
+          .incident-title-text {
+            margin: 0 0 6px 0;
+            font-size: 12px;
+            font-weight: 600;
+            color: #262626;
+          }
+          
+          .incident-status-badge,
+          .incident-resolution-badge {
+            .incident-tag,
+            .incident-resolution-tag {
+              font-size: 11px;
+              padding: 2px 6px;
+              border-radius: 4px;
+              font-weight: 500;
+              
+              .anticon {
+                margin-right: 2px;
+              }
+            }
+          }
+        }
+      }
+    }
+    
+    .incident-description {
+      .incident-message {
+        background: #fff;
+        border: 1px solid #f0f0f0;
+        border-radius: 6px;
+        overflow: hidden;
+        
+        .incident-message-content {
+          padding: 12px;
+          
+          .incident-alert-box {
+            .incident-text {
+              margin: 0 0 8px 0;
+              color: #cf1322;
+              font-size: 12px;
+            }
+            
+            .incident-description-text {
+              margin: 0;
+              color: #595959;
+              line-height: 1.5;
+              font-size: 12px;
+            }
+          }
+          
+          .incident-resolved-box {
+            .incident-resolved-text {
+              margin: 0 0 6px 0;
+              color: #389e0d;
+              font-size: 12px;
+            }
+            
+            .incident-resolution-description {
+              margin: 0;
+              color: #595959;
+              font-size: 12px;
+              line-height: 1.5;
+            }
+          }
+        }
+      }
+    }
+  }
+  
+  // Animation for incident card
+  animation: slideInRight 0.4s ease-out;
+}
+
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+// Responsive design for incident card
+@media (max-width: 768px) {
+  .incident-card {
+    .incident-content {
+      .incident-status-grid {
+        gap: 8px;
+        
+        .incident-status-item {
+          padding: 8px;
+          
+          .incident-icon-wrapper {
+            width: 28px;
+            height: 28px;
+            
+            .incident-icon {
+              font-size: 12px;
+            }
+          }
+          
+          .incident-details {
+            .incident-title-text {
+              font-size: 11px;
+            }
+            
+            .incident-status-badge,
+            .incident-resolution-badge {
+              .incident-tag,
+              .incident-resolution-tag {
+                font-size: 10px;
+                padding: 1px 4px;
+              }
+            }
+          }
+        }
+      }
+      
+      .incident-description {
+        .incident-message {
+          .incident-message-content {
+            padding: 8px;
+            
+            .incident-alert-box {
+              .incident-text {
+                font-size: 11px;
+              }
+              
+              .incident-description-text {
+                font-size: 11px;
+              }
+            }
+            
+            .incident-resolved-box {
+              .incident-resolved-text {
+                font-size: 11px;
+              }
+              
+              .incident-resolution-description {
+                font-size: 11px;
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
 // Additional services section styling
 .service-info {
   .service-item {

@@ -31,6 +31,8 @@ import {
   StarOutlined,
   ScissorOutlined,
   ExclamationCircleOutlined,
+  WarningOutlined,
+  CheckCircleOutlined,
 } from "@ant-design/icons";
 import { useParams, useNavigate } from "react-router-dom";
 import { boardingService } from "../../../../services/BoardingService";
@@ -689,6 +691,82 @@ const BoardingDetail: React.FC = () => {
 
         {/* Right Column - Camera and Daily Reports */}
         <Col xs={24} lg={12}>
+          {/* Incident Report Section - Only show when there's an incident */}
+          {booking.isIncident && (
+            <Card title="Báo cáo sự cố" className="incident-card">
+              <div className="incident-content">
+                <div className="incident-status-grid">
+                  <div className="incident-status-item">
+                    <div className="incident-icon-wrapper incident-alert">
+                      <ExclamationCircleOutlined className="incident-icon" />
+                    </div>
+                    <div className="incident-details">
+                      <h4 className="incident-title-text">Trạng thái sự cố</h4>
+                      <div className="incident-status-badge">
+                        <Tag 
+                          color="red" 
+                          icon={<WarningOutlined />} 
+                          className="incident-tag"
+                        >
+                          Có sự cố được báo cáo
+                        </Tag>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="incident-status-item">
+                    <div className={`incident-icon-wrapper ${booking.incidentSolve ? 'incident-resolved' : 'incident-pending'}`}>
+                      {booking.incidentSolve ? (
+                        <CheckCircleOutlined className="incident-icon" />
+                      ) : (
+                        <ExclamationCircleOutlined className="incident-icon" />
+                      )}
+                    </div>
+                    <div className="incident-details">
+                      <h4 className="incident-title-text">Tình trạng xử lý</h4>
+                      <div className="incident-resolution-badge">
+                        <Tag 
+                          color={booking.incidentSolve ? 'green' : 'orange'}
+                          icon={booking.incidentSolve ? <CheckCircleOutlined /> : <ExclamationCircleOutlined />}
+                          className="incident-resolution-tag"
+                        >
+                          {booking.incidentSolve ? 'Đã được giải quyết' : 'Đang xử lý'}
+                        </Tag>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="incident-description">
+                  <div className="incident-message">
+                    <div className="incident-message-content">
+                      {!booking.incidentSolve ? (
+                        <div className="incident-alert-box">
+                          <p className="incident-text">
+                            <strong>⚠️ Sự cố đã được báo cáo:</strong>
+                          </p>
+                          <p className="incident-description-text">
+                            Booking này đã có sự cố được báo cáo và hiện đang trong quá trình xử lý. 
+                            Vui lòng liên hệ với nhân viên để biết thêm thông tin chi tiết.
+                          </p>
+                        </div>
+                      ) : (
+                        <div className="incident-resolved-box">
+                          <p className="incident-resolved-text">
+                            <strong>✅ Sự cố đã được giải quyết thành công</strong>
+                          </p>
+                          <p className="incident-resolution-description">
+                            Tất cả các vấn đề liên quan đến booking này đã được xử lý hoàn tất.
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </Card>
+          )}
+
           {/* Live Camera */}
           <Card title="Camera trực tiếp" className="camera-card">
             <div className="camera-container">
@@ -716,7 +794,7 @@ const BoardingDetail: React.FC = () => {
                 Bật camera
               </Button>
             </div>
-            <div className="camera-info">
+            {/* <div className="camera-info">
               <Text type="secondary">Camera hoạt động 24/7 trong thời gian gửi gài</Text>
               <br />
               <Text type="secondary">Chỉ người sở hữu mới đăng nhập thành công.</Text>
@@ -724,7 +802,7 @@ const BoardingDetail: React.FC = () => {
               <Text type="secondary">Chế động có thể xem thống tin thời gian thực.</Text>
               <br />
               <Text type="secondary">Bấm phát để xem hamster của bạn sẽ đang hoạt động.</Text>
-            </div>
+            </div> */}
           </Card>
 
           {/* Daily Reports */}

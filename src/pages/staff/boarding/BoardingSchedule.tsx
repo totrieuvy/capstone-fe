@@ -894,7 +894,7 @@ const BoardingSchedule = () => {
           
           {/* Booking Status Legend */}
           <div style={{ marginTop: '24px', padding: '16px', backgroundColor: '#f8f9fa', borderRadius: '8px' }}>
-            <h4 style={{ marginBottom: '12px', color: '#1f2937' }}>Chú thích trạng thái:</h4>
+            <h4 style={{ marginBottom: '12px', color: '#1f2937' }}>Chú thích màu:</h4>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '16px', fontSize: '13px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <div style={{ 

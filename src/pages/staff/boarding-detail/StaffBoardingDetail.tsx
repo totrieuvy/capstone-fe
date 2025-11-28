@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Card, Spin, Alert, Button, Tag, Descriptions, Avatar, Modal, Upload, message, List, Radio, Row, Col, Input } from 'antd';
-import { ArrowLeftOutlined, UserOutlined, CalendarOutlined, ShoppingOutlined, UploadOutlined, CameraOutlined, HomeOutlined, EditOutlined, LogoutOutlined } from '@ant-design/icons';
+import { ArrowLeftOutlined, UserOutlined, CalendarOutlined, ShoppingOutlined, UploadOutlined, CameraOutlined, HomeOutlined, EditOutlined, LogoutOutlined, WarningOutlined, CheckCircleOutlined, ExclamationCircleOutlined } from '@ant-design/icons';
 import { boardingService, type BookingDetail } from '../../../services/BoardingService';
 import { cageService, type Cage } from '../../../services/CageService';
 import { storage } from '../../../config/firebase';
@@ -417,7 +417,7 @@ const BoardingDetail: React.FC = () => {
             <p className="booking-id">ID: {bookingDetail.bookingId}</p>
           </div>
           <div className="header-actions">
-            {bookingDetail.status === 'IN_PROGRESS' && (
+            {(bookingDetail.status === 'IN_PROGRESS' && bookingDetail.isIncident === false) && (
               <Button
                 type="primary"
                 danger
@@ -585,11 +585,11 @@ const BoardingDetail: React.FC = () => {
                 <Descriptions.Item label="Ngày tạo" span={2}>
                   {bookingDetail.createdAt ? new Date(bookingDetail.createdAt).toLocaleString('vi-VN') : 'N/A'}
                 </Descriptions.Item>
-                {bookingDetail.notes && (
+                {/* {bookingDetail.notes && (
                   <Descriptions.Item label="Ghi chú" span={2}>
                     <div className="notes-text">{bookingDetail.notes}</div>
                   </Descriptions.Item>
-                )}
+                )} */}
                 {bookingDetail.healthNote && (
                   <Descriptions.Item label="Ghi chú sức khỏe" span={2}>
                     <div className="health-note">
@@ -793,6 +793,101 @@ const BoardingDetail: React.FC = () => {
             )}
           </Card>
         </div>
+
+        {/* Fourth Section: Incident Report - Only show when there's an incident */}
+        {bookingDetail.isIncident && (
+          <div className="info-section">
+            <Card
+              title={
+                <div className="section-title incident-title">
+                  <WarningOutlined />
+                  <span>Báo cáo sự cố</span>
+                </div>
+              }
+              className="info-card incident-card"
+            >
+              <div className="incident-content">
+                <div className="incident-status-grid">
+                  <div className="incident-status-item">
+                    <div className="incident-icon-wrapper incident-alert">
+                      <ExclamationCircleOutlined className="incident-icon" />
+                    </div>
+                    <div className="incident-details">
+                      <h4 className="incident-title-text">Trạng thái sự cố</h4>
+                      <div className="incident-status-badge">
+                        <Tag 
+                          color="red" 
+                          icon={<WarningOutlined />} 
+                          className="incident-tag"
+                        >
+                          Có sự cố được báo cáo
+                        </Tag>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="incident-status-item">
+                    <div className={`incident-icon-wrapper ${bookingDetail.incidentSolve ? 'incident-resolved' : 'incident-pending'}`}>
+                      {bookingDetail.incidentSolve ? (
+                        <CheckCircleOutlined className="incident-icon" />
+                      ) : (
+                        <ExclamationCircleOutlined className="incident-icon" />
+                      )}
+                    </div>
+                    <div className="incident-details">
+                      <h4 className="incident-title-text">Tình trạng xử lý</h4>
+                      <div className="incident-resolution-badge">
+                        <Tag 
+                          color={bookingDetail.incidentSolve ? 'green' : 'orange'}
+                          icon={bookingDetail.incidentSolve ? <CheckCircleOutlined /> : <ExclamationCircleOutlined />}
+                          className="incident-resolution-tag"
+                        >
+                          {bookingDetail.incidentSolve ? 'Đã được giải quyết' : 'Đang xử lý'}
+                        </Tag>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="incident-description">
+                  <div className="incident-message">
+                    <div className="incident-message-header">
+                      <WarningOutlined className="message-icon" />
+                      <h5>Thông tin sự cố</h5>
+                    </div>
+                    <div className="incident-message-content">
+                      {!bookingDetail.incidentSolve ? (
+                        <div className="incident-alert-box">
+                          <p className="incident-text">
+                            <strong>⚠️ Sự cố đã được báo cáo:</strong>
+                          </p>
+                          <p className="incident-description-text">
+                            Booking này đã có sự cố được báo cáo và hiện đang trong quá trình xử lý. 
+                            Vui lòng theo dõi và cập nhật tình trạng xử lý sự cố.
+                          </p>
+                          <div className="incident-action-note">
+                            <p className="action-text">
+                              <strong>Hành động cần thiết:</strong> Staff cần theo dõi và cập nhật trạng thái giải quyết sự cố
+                            </p>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="incident-resolved-box">
+                          <p className="incident-resolved-text">
+                            <strong>✅ Sự cố đã được giải quyết thành công</strong>
+                          </p>
+                          <p className="incident-resolution-description">
+                            Tất cả các vấn đề liên quan đến booking này đã được xử lý hoàn tất.
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </Card>
+          </div>
+        )}
 
         {/* Check-in Button for BOOKED bookings */}
         {(bookingDetail.status === 'BOOKED') && (
