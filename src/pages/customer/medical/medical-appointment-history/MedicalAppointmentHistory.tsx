@@ -10,7 +10,8 @@ import {
     Input,
     Row,
     Col,
-    Button
+    Button,
+    Pagination
 } from 'antd';
 import {
     CalendarOutlined,
@@ -39,25 +40,32 @@ const MedicalAppointmentHistory: React.FC = () => {
     const navigate = useNavigate();
     const [appointmentHistory, setAppointmentHistory] = useState<Appointment[]>([]);
     const [filteredHistory, setFilteredHistory] = useState<Appointment[]>([]);
+    const [totalAppointments, setTotalAppointments] = useState<number>(0);
+    const [currentPage, setCurrentPage] = useState<number>(1);
+    const pageSize = 4;
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [searchText, setSearchText] = useState('');
     const [statusFilter, setStatusFilter] = useState<string>('all');
 
     useEffect(() => {
-        fetchAppointmentHistory();
-    }, []);
+        fetchAppointmentHistory(currentPage);
+    }, [currentPage]);
 
     useEffect(() => {
         filterAppointments();
     }, [appointmentHistory, searchText, statusFilter]);
 
-    const fetchAppointmentHistory = async () => {
+    const fetchAppointmentHistory = async (page: number) => {
         try {
             setLoading(true);
             setError(null);
-            const response = await getMedicalAppointmentHistory();
+            const response = await getMedicalAppointmentHistory({
+                page: page - 1,
+                size: pageSize
+            });
             setAppointmentHistory(response.data.content);
+            setTotalAppointments(response.data.totalElements);
         } catch (err) {
             setError('Failed to fetch appointment history. Please try again.');
             console.error('Error fetching appointment history:', err);
@@ -174,7 +182,7 @@ const MedicalAppointmentHistory: React.FC = () => {
                 </Col>
 
                 {/* Appointment Date & Time */}
-                <Col xs={12} sm={5}>
+                <Col xs={12} sm={4}>
                     <div className="appointment-info-section">
                         <div className="info-label">
                             <CalendarOutlined style={{ marginRight: 4, color: '#1890ff' }} />
@@ -182,6 +190,18 @@ const MedicalAppointmentHistory: React.FC = () => {
                         </div>
                         <div className="info-value">
                             {dayjs(appointment.appointmentTime).tz('Asia/Ho_Chi_Minh').format('DD/MM/YYYY')}
+                        </div>
+                    </div>
+                </Col>
+
+                <Col xs={12} sm={4}>
+                    <div className="appointment-info-section">
+                        <div className="info-label">
+                            <CalendarOutlined style={{ marginRight: 4, color: '#1890ff' }} />
+                            Slot
+                        </div>
+                        <div className="info-value">
+                            {appointment.slotStart ? dayjs(appointment.slotStart, 'HH:mm:ss').format('HH:mm')  : ''}
                         </div>
                     </div>
                 </Col>
@@ -286,7 +306,7 @@ const MedicalAppointmentHistory: React.FC = () => {
                                 <Option value="IN_PROGRESS">Đang thực hiện</Option>
                                 <Option value="CHECK_OUT">Hoàn tất</Option>
                                 <Option value="CANCELLED">Đã hủy</Option>
-                                <Option value="NO_SHOW">Không đến</Option>
+                                <Option value ="NO_SHOW">Không đến</Option>
                                 <Option value ="FAILED">Thanh toán thất bại</Option>
                             </Select>
                         </Col>
@@ -310,6 +330,17 @@ const MedicalAppointmentHistory: React.FC = () => {
                     ) : (
                         filteredHistory.map(appointment => renderAppointmentCard(appointment))
                     )}
+                </div>
+                {/* Pagination */}
+                <div style={{ textAlign: 'center', marginTop: 24 }}>
+                    <Pagination
+                    align='end'
+                        current={currentPage}
+                        pageSize={pageSize}
+                        total={totalAppointments}
+                        onChange={page => setCurrentPage(page)}
+                        showSizeChanger={false}
+                    />
                 </div>
             </Card>
         </div>
