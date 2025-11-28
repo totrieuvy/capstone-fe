@@ -169,17 +169,17 @@ const ManageAppointment: React.FC = () => {
     }
   };
 
-  // Helper function to get unique statuses from appointments
-  const getUniqueStatuses = (appointments: Appointment[]) => {
-    const statuses = [...new Set(appointments.map(apt => apt.status))];
-    return [
-      { value: '', label: 'Tất cả Trạng thái' },
-      ...statuses.map(status => ({
-        value: status,
-        label: getStatusText(status)
-      }))
-    ];
-  };
+  // Use a fixed list of statuses for filtering
+  const fixedStatusList = [
+    { value: '', label: 'Tất cả Trạng thái' },
+    { value: 'BOOKED', label: getStatusText('BOOKED') },
+    { value: 'CHECKED_IN', label: getStatusText('CHECKED_IN') },
+    { value: 'IN_PROGRESS', label: getStatusText('IN_PROGRESS') },
+    { value: 'CHECK_OUT', label: getStatusText('CHECK_OUT') },
+    { value: 'CANCELLED', label: getStatusText('CANCELLED') },
+    { value: 'FAILED', label: getStatusText('FAILED') },
+    { value: 'NO_SHOW', label: getStatusText('NO_SHOW') },
+  ];
 
   // Helper function to get unique veterinarians from appointments
   const getUniqueVeterinarians = (appointments: Appointment[]) => {
@@ -193,8 +193,8 @@ const ManageAppointment: React.FC = () => {
     ];
   };
 
-  // Generate dynamic filter options from all available appointment data
-  const statusOptions = getUniqueStatuses(allAppointments);
+  // Use fixed status options and dynamic veterinarian options
+  const statusOptions = fixedStatusList;
   const veterinarians = getUniqueVeterinarians(allAppointments);
 
   // Table columns
