@@ -1,5 +1,27 @@
 import api from "../config/axios";
 
+// Interfaces for getStaffByRole
+export interface StaffByRole {
+  id: string;
+  fullName: string;
+  email: string;
+  phone: string;
+  status: string;
+  gender?: string;
+}
+
+export interface GetStaffByRoleResponse {
+  code: number;
+  message: string;
+  data: StaffByRole[];
+}
+
+// Get staff by role (default role: VET)
+export const getStaffByRole = async (role: string = 'VET'): Promise<GetStaffByRoleResponse> => {
+  const response = await api.get<GetStaffByRoleResponse>(`/api/staff/role/${role}`);
+  return response.data;
+};
+
 export interface Service {
   id: string;
   serviceType: "MEDICAL" | "FOOD" | "GROOMING";

@@ -16,7 +16,7 @@ import {  ClearOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import type { ColumnsType } from 'antd/es/table';
 import dayjs from 'dayjs';
-import { getAppointments, type Appointment, type AppointmentFilters } from '../../../../services/MedicalService';
+import { getAppointments, getStaffByRole, type Appointment, type AppointmentFilters, type StaffByRole } from '../../../../services/MedicalService';
 import './manage-appointment.scss';
 
 const { Title } = Typography;
@@ -26,7 +26,7 @@ const ManageAppointment: React.FC = () => {
   const navigate = useNavigate();
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
-  const [allAppointments, setAllAppointments] = useState<Appointment[]>([]); // Store unfiltered data for filter options
+  const [veterinarianOptions, setVeterinarianOptions] = useState<StaffByRole[]>([]); // Store vet list for filter
   const [pagination, setPagination] = useState({
     current: 1,
     pageSize: 10,
@@ -42,39 +42,29 @@ const ManageAppointment: React.FC = () => {
     size: 10,
   });
 
-  // Fetch appointments
+  // Fetch appointments and veterinarians
   const fetchAppointments = async (newFilters?: Partial<AppointmentFilters & { veterinarianName?: string }>) => {
     setLoading(true);
     try {
       const filterParams = { ...filters, ...newFilters };
-      
       // Separate veterinarianName from API filters since it's not supported by the API
       const { veterinarianName, ...apiFilters } = filterParams;
-      
+
       // Fetch all appointments for the date without status filter to populate filter options
-      const allAppointmentsForDate = await getAppointments({
-        date: apiFilters.date,
-        serviceType: apiFilters.serviceType,
-        sortDir: apiFilters.sortDir,
-        page: 0,
-        size: 1000, // Get a large number to capture all appointments for the day
-        // Don't include status filter here to get all appointments for filter options
-      });
-      
-      setAllAppointments(allAppointmentsForDate.data.content);
-      
+
+      // Fetch veterinarian list for filter options
+      const vetRes = await getStaffByRole('VET');
+      setVeterinarianOptions(vetRes.data || []);
+
       // Then fetch filtered appointments (with status filter if applied)
       const response = await getAppointments(apiFilters);
-      
       let filteredAppointments = response.data.content;
-      
-      // Apply client-side filtering for veterinarian name
+      // Apply client-side filtering for veterinarian name (fullName)
       if (veterinarianName) {
         filteredAppointments = filteredAppointments.filter(appointment => 
           appointment.veterinarianName === veterinarianName
         );
       }
-      
       setAppointments(filteredAppointments);
       setPagination({
         current: response.data.pageNumber + 1,
@@ -169,33 +159,30 @@ const ManageAppointment: React.FC = () => {
     }
   };
 
-  // Helper function to get unique statuses from appointments
-  const getUniqueStatuses = (appointments: Appointment[]) => {
-    const statuses = [...new Set(appointments.map(apt => apt.status))];
-    return [
-      { value: '', label: 'Tất cả Trạng thái' },
-      ...statuses.map(status => ({
-        value: status,
-        label: getStatusText(status)
-      }))
-    ];
-  };
+  // Use a fixed list of statuses for filtering
+  const fixedStatusList = [
+    { value: '', label: 'Tất cả Trạng thái' },
+    { value: 'BOOKED', label: getStatusText('BOOKED') },
+    { value: 'CHECKED_IN', label: getStatusText('CHECKED_IN') },
+    { value: 'IN_PROGRESS', label: getStatusText('IN_PROGRESS') },
+    { value: 'CHECK_OUT', label: getStatusText('CHECK_OUT') },
+    { value: 'CANCELLED', label: getStatusText('CANCELLED') },
+    { value: 'FAILED', label: getStatusText('FAILED') },
+    { value: 'NO_SHOW', label: getStatusText('NO_SHOW') },
+  ];
 
-  // Helper function to get unique veterinarians from appointments
-  const getUniqueVeterinarians = (appointments: Appointment[]) => {
-    const vets = [...new Set(appointments.map(apt => apt.veterinarianName).filter(Boolean))];
-    return [
-      { value: '', label: 'Tất cả Bác sĩ' },
-      ...vets.map(vet => ({
-        value: vet,
-        label: vet
-      }))
-    ];
-  };
+  // Veterinarian filter options from API
+  const veterinarianFilterOptions = [
+    { value: '', label: 'Tất cả Bác sĩ' },
+    ...veterinarianOptions.map(vet => ({
+      value: vet.fullName,
+      label: vet.fullName
+    }))
+  ];
 
-  // Generate dynamic filter options from all available appointment data
-  const statusOptions = getUniqueStatuses(allAppointments);
-  const veterinarians = getUniqueVeterinarians(allAppointments);
+  // Use fixed status options and veterinarian options from API
+  const statusOptions = fixedStatusList;
+  const veterinarians = veterinarianFilterOptions;
 
   // Table columns
   const columns: ColumnsType<Appointment> = [
