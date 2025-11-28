@@ -392,6 +392,239 @@
   }
 }
 
+// Incident Report Card Styles (Customer View - Compact)
+// All incident report related styles naming should start with customer-incident to avoid conflicts
+.customer-incident-card {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  margin-bottom: 24px;
+  
+  .customer-ant-card-head {
+    background: linear-gradient(135deg, #fff2f0 0%, #ffebe8 100%);
+    border-bottom: 1px solid #ffccc7;
+    padding: 12px 16px;
+    
+    .customer-ant-card-head-title {
+      color: #cf1322;
+      font-size: 16px;
+      font-weight: 600;
+    }
+  }
+
+  .customer-ant-card-body {
+    padding: 16px;
+  }
+
+  .customer-incident-content {
+    .customer-incident-status-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 12px;
+      margin-bottom: 16px;
+      
+      .customer-incident-status-item {
+        display: flex;
+        align-items: flex-start;
+        gap: 8px;
+        padding: 12px;
+        background: #fafafa;
+        border-radius: 6px;
+        border: 1px solid #f0f0f0;
+        transition: all 0.3s ease;
+        
+        .customer-incident-icon-wrapper {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          width: 32px;
+          height: 32px;
+          border-radius: 50%;
+          flex-shrink: 0;
+          
+          &.customer-incident-alert {
+            background: #fff2f0;
+            border: 2px solid #ffccc7;
+            
+            .customer-incident-icon {
+              color: #ff4d4f;
+              font-size: 14px;
+            }
+          }
+          
+          &.customer-incident-pending {
+            background: #fff7e6;
+            border: 2px solid #ffd591;
+            
+            .customer-incident-icon {
+              color: #fa8c16;
+              font-size: 14px;
+            }
+          }
+          
+          &.customer-incident-resolved {
+            background: #f6ffed;
+            border: 2px solid #b7eb8f;
+            
+            .customer-incident-icon {
+              color: #52c41a;
+              font-size: 14px;
+            }
+          }
+        }
+        
+        .customer-incident-details {
+          flex: 1;
+          
+          .customer-incident-title-text {
+            margin: 0 0 6px 0;
+            font-size: 12px;
+            font-weight: 600;
+            color: #262626;
+          }
+          
+          .customer-incident-status-badge,
+          .customer-incident-resolution-badge {
+            .customer-incident-tag,
+            .customer-incident-resolution-tag {
+              font-size: 11px;
+              padding: 2px 6px;
+              border-radius: 4px;
+              font-weight: 500;
+              
+              .anticon {
+                margin-right: 2px;
+              }
+            }
+          }
+        }
+      }
+    }
+    
+    .customer-incident-description {
+      .customer-incident-message {
+        background: #fff;
+        border: 1px solid #f0f0f0;
+        border-radius: 6px;
+        overflow: hidden;
+        
+        .customer-incident-message-content {
+          padding: 12px;
+          
+          .customer-incident-alert-box {
+            .customer-incident-text {
+              margin: 0 0 8px 0;
+              color: #cf1322;
+              font-size: 12px;
+            }
+            
+            .customer-incident-description-text {
+              margin: 0;
+              color: #595959;
+              line-height: 1.5;
+              font-size: 12px;
+            }
+          }
+          
+          .customer-incident-resolved-box {
+            .customer-incident-resolved-text {
+              margin: 0 0 6px 0;
+              color: #389e0d;
+              font-size: 12px;
+            }
+            
+            .customer-incident-resolution-description {
+              margin: 0;
+              color: #595959;
+              font-size: 12px;
+              line-height: 1.5;
+            }
+          }
+        }
+      }
+    }
+  }
+  
+  // Animation for incident card
+  animation: slideInRight 0.4s ease-out;
+}
+
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+// Responsive design for incident card
+@media (max-width: 768px) {
+  .customer-incident-card {
+    .customer-incident-content {
+      .customer-incident-status-grid {
+        gap: 8px;
+        
+        .customer-incident-status-item {
+          padding: 8px;
+          
+          .customer-incident-icon-wrapper {
+            width: 28px;
+            height: 28px;
+            
+            .customer-incident-icon {
+              font-size: 12px;
+            }
+          }
+          
+          .customer-incident-details {
+            .customer-incident-title-text {
+              font-size: 11px;
+            }
+            
+            .customer-incident-status-badge,
+            .customer-incident-resolution-badge {
+              .customer-incident-tag,
+              .customer-incident-resolution-tag {
+                font-size: 10px;
+                padding: 1px 4px;
+              }
+            }
+          }
+        }
+      }
+      
+      .customer-incident-description {
+        .customer-incident-message {
+          .customer-incident-message-content {
+            padding: 8px;
+            
+            .customer-incident-alert-box {
+              .customer-incident-text {
+                font-size: 11px;
+              }
+              
+              .customer-incident-description-text {
+                font-size: 11px;
+              }
+            }
+            
+            .customer-incident-resolved-box {
+              .customer-incident-resolved-text {
+                font-size: 11px;
+              }
+              
+              .customer-incident-resolution-description {
+                font-size: 11px;
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
 // Additional services section styling
 .service-info {
   .service-item {
