@@ -268,7 +268,7 @@ const TrackOrder = () => {
     {
       title: "Tổng",
       dataIndex: "finalAmount",
-      render: (v) => `${v.toLocaleString()}đ`,
+      render: (v) => `${v?.toLocaleString() || "—"}đ`,
     },
     {
       title: "Trạng thái",
@@ -404,7 +404,6 @@ const TrackOrder = () => {
                 pageSize={pagination.pageSize}
                 onChange={(p) => fetchOrders(p, pagination.pageSize, statusFilter, dateRangeFilter)}
                 className="pagination"
-                showTotal={(t) => `Tổng ${t} đơn`}
               />
             </>
           )}

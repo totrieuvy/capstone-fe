@@ -120,7 +120,7 @@ function ProfileHamster() {
     setEditingProfile(hamster);
     updateForm.setFieldsValue({
       ...hamster,
-      dob: dayjs(hamster.dob, "DD-MM-YYYY"),
+      dob: dayjs(hamster.dob, "YYYY-MM-DD"),
       weight: String(hamster.weight),
       profilePicture: [
         {
@@ -287,7 +287,7 @@ function ProfileHamster() {
                         <b style={{ color: "#ff6f61" }}>Màu sắc:</b> {hamster.color}
                       </p>
                       <p>
-                        <b style={{ color: "#ff6f61" }}>Ngày sinh:</b> {hamster.dob}
+                        <b style={{ color: "#ff6f61" }}>Ngày sinh:</b> {dayjs(hamster.dob).format("DD-MM-YYYY")}
                       </p>
                       <p>
                         <b style={{ color: "#ff6f61" }}>Giới tính:</b> {hamster.gender}

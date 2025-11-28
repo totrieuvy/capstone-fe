@@ -89,3 +89,16 @@
     justify-content: center;
   }
 }
+/* Căn icon ▼ và chữ trong Select theo đúng hàng với DatePicker */
+.history-grooming-page .ant-select-selector {
+  display: flex !important;
+  align-items: center !important;
+  line-height: normal !important;
+  height: 34px !important; /* đúng height chuẩn DatePicker của bạn */
+}
+
+/* Icon ▼ căn giữa theo chiều dọc */
+.history-grooming-page .ant-select-arrow {
+  top: 85% !important;
+  transform: translateY(-50%) !important;
+}
