@@ -693,20 +693,20 @@ const BoardingDetail: React.FC = () => {
         <Col xs={24} lg={12}>
           {/* Incident Report Section - Only show when there's an incident */}
           {booking.isIncident && (
-            <Card title="Báo cáo sự cố" className="incident-card">
-              <div className="incident-content">
-                <div className="incident-status-grid">
-                  <div className="incident-status-item">
-                    <div className="incident-icon-wrapper incident-alert">
-                      <ExclamationCircleOutlined className="incident-icon" />
+            <Card title="Báo cáo sự cố" className="customer-incident-card">
+              <div className="customer-incident-content">
+                <div className="customer-incident-status-grid">
+                  <div className="customer-incident-status-item">
+                    <div className="customer-incident-icon-wrapper customer-incident-alert">
+                      <ExclamationCircleOutlined className="customer-incident-icon" />
                     </div>
-                    <div className="incident-details">
-                      <h4 className="incident-title-text">Trạng thái sự cố</h4>
-                      <div className="incident-status-badge">
+                    <div className="customer-incident-details">
+                      <h4 className="customer-incident-title-text">Trạng thái sự cố</h4>
+                      <div className="customer-incident-status-badge">
                         <Tag 
                           color="red" 
                           icon={<WarningOutlined />} 
-                          className="incident-tag"
+                          className="customer-incident-tag"
                         >
                           Có sự cố được báo cáo
                         </Tag>
@@ -714,21 +714,21 @@ const BoardingDetail: React.FC = () => {
                     </div>
                   </div>
 
-                  <div className="incident-status-item">
-                    <div className={`incident-icon-wrapper ${booking.incidentSolve ? 'incident-resolved' : 'incident-pending'}`}>
+                  <div className="customer-incident-status-item">
+                    <div className={`customer-incident-icon-wrapper ${booking.incidentSolve ? 'customer-incident-resolved' : 'customer-incident-pending'}`}>
                       {booking.incidentSolve ? (
-                        <CheckCircleOutlined className="incident-icon" />
+                        <CheckCircleOutlined className="customer-incident-icon" />
                       ) : (
-                        <ExclamationCircleOutlined className="incident-icon" />
+                        <ExclamationCircleOutlined className="customer-incident-icon" />
                       )}
                     </div>
-                    <div className="incident-details">
-                      <h4 className="incident-title-text">Tình trạng xử lý</h4>
-                      <div className="incident-resolution-badge">
+                    <div className="customer-incident-details">
+                      <h4 className="customer-incident-title-text">Tình trạng xử lý</h4>
+                      <div className="customer-incident-resolution-badge">
                         <Tag 
                           color={booking.incidentSolve ? 'green' : 'orange'}
                           icon={booking.incidentSolve ? <CheckCircleOutlined /> : <ExclamationCircleOutlined />}
-                          className="incident-resolution-tag"
+                          className="customer-incident-resolution-tag"
                         >
                           {booking.incidentSolve ? 'Đã được giải quyết' : 'Đang xử lý'}
                         </Tag>
@@ -737,25 +737,25 @@ const BoardingDetail: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="incident-description">
-                  <div className="incident-message">
-                    <div className="incident-message-content">
+                <div className="customer-incident-description">
+                  <div className="customer-incident-message">
+                    <div className="customer-incident-message-content">
                       {!booking.incidentSolve ? (
-                        <div className="incident-alert-box">
-                          <p className="incident-text">
+                        <div className="customer-incident-alert-box">
+                          <p className="customer-incident-text">
                             <strong>⚠️ Sự cố đã được báo cáo:</strong>
                           </p>
-                          <p className="incident-description-text">
+                          <p className="customer-incident-description-text">
                             Booking này đã có sự cố được báo cáo và hiện đang trong quá trình xử lý. 
                             Vui lòng liên hệ với nhân viên để biết thêm thông tin chi tiết.
                           </p>
                         </div>
                       ) : (
-                        <div className="incident-resolved-box">
-                          <p className="incident-resolved-text">
+                        <div className="customer-incident-resolved-box">
+                          <p className="customer-incident-resolved-text">
                             <strong>✅ Sự cố đã được giải quyết thành công</strong>
                           </p>
-                          <p className="incident-resolution-description">
+                          <p className="customer-incident-resolution-description">
                             Tất cả các vấn đề liên quan đến booking này đã được xử lý hoàn tất.
                           </p>
                         </div>
