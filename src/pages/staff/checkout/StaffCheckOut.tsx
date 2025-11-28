@@ -123,7 +123,7 @@ const StaffCheckOut: React.FC = () => {
               </Descriptions.Item>
               <Descriptions.Item label="Trạng thái">
                 <Tag color={checkOutData.status === 'CHECK_OUT' ? 'green' : 'processing'}>
-                  {checkOutData.status === 'CHECK_OUT' ? 'Đã Check-out' : checkOutData.status}
+                  {checkOutData.status === 'CHECK_OUT' ? 'Hoàn tất' : checkOutData.status}
                 </Tag>
               </Descriptions.Item>
               <Descriptions.Item label="Phương thức thanh toán">
