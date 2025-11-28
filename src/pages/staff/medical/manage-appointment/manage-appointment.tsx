@@ -26,7 +26,6 @@ const ManageAppointment: React.FC = () => {
   const navigate = useNavigate();
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
-  const [allAppointments, setAllAppointments] = useState<Appointment[]>([]); // Store unfiltered data for filter options
   const [veterinarianOptions, setVeterinarianOptions] = useState<StaffByRole[]>([]); // Store vet list for filter
   const [pagination, setPagination] = useState({
     current: 1,
@@ -52,14 +51,6 @@ const ManageAppointment: React.FC = () => {
       const { veterinarianName, ...apiFilters } = filterParams;
 
       // Fetch all appointments for the date without status filter to populate filter options
-      const allAppointmentsForDate = await getAppointments({
-        date: apiFilters.date,
-        serviceType: apiFilters.serviceType,
-        sortDir: apiFilters.sortDir,
-        page: 0,
-        size: 1000,
-      });
-      setAllAppointments(allAppointmentsForDate.data.content);
 
       // Fetch veterinarian list for filter options
       const vetRes = await getStaffByRole('VET');
