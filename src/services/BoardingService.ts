@@ -161,6 +161,8 @@ export interface BookingByDateRange {
   newCageTypeId: string | null;
   customerName: string;
   hamsterName: string;
+  isIncident: boolean;
+  incidentSolve: boolean;
 }
 
 export interface GetBookingsByDateRangeResponse {
@@ -205,7 +207,8 @@ export interface BookingDetail {
   services: BookingDetailService[];
   additionalServiceIds?: string[]; // Additional service IDs for services beyond the main services array
   healthNote: string | null;
-  isIncident: boolean;  
+  isIncident: boolean;
+  incidentSolve: boolean;
 }
 
 // Type definitions for file upload
@@ -222,6 +225,7 @@ export interface BookingCheckInRequest {
   bookingId: string;
   checkInImage: string;
   cageId: string;
+  healthNote: string;
 }
 
 export interface DayAssignment {

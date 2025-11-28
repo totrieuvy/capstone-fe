@@ -6,7 +6,7 @@ const Panel: React.FC = () => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
   const menuItems = [
-    { key: "1", to: "/grooming-history", text: "Lịch grooming" },
+    { key: "1", to: "/grooming-history", text: "Lịch làm đẹp" },
     { key: "2", to: "/lich-su-kham", text: "Lịch khám" },
     { key: "3", to: "/boarding-schedule", text: "Lịch gửi hộ" },
   ];

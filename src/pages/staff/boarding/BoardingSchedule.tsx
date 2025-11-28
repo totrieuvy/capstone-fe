@@ -478,7 +478,7 @@ const BoardingSchedule = () => {
       booking.status === 'CHECK_IN' ||
       booking.status === 'IN_PROGRESS' ||
       booking.status === 'CHECK_OUT' ||
-      booking.status === 'INCIDENT'
+      booking.isIncident === true
     )
   );
 
@@ -655,7 +655,7 @@ const BoardingSchedule = () => {
                                       ? 'booking-bar-transfer-extended'
                                       : booking.hasTransfer && booking.isOriginalSegment
                                         ? 'booking-bar-transfer-original'
-                                        : booking.status === 'INCIDENT'
+                                        : bookings.find(b => b.bookingId === (booking.originalBookingId || booking.id))?.isIncident
                                           ? 'booking-bar-red'
                                           : booking.status === 'CHECK_OUT'
                                             ? 'booking-bar-green'
@@ -769,19 +769,21 @@ const BoardingSchedule = () => {
                     >
                       <div
                         className={`booking-bar ${
-                          booking.status === 'CANCELLED' || booking.status === 'NO-SHOW'
+                          bookings.find(b => b.bookingId === (booking.originalBookingId || booking.id))?.isIncident
                             ? 'booking-bar-red'
-                            : booking.hasTransfer && booking.isExtendedSegment
-                              ? 'booking-bar-transfer-extended'
-                              : booking.hasTransfer && booking.isOriginalSegment
-                                ? 'booking-bar-transfer-original'
-                                : booking.status === 'CHECK_OUT'
-                                  ? 'booking-bar-green'
-                                  : booking.isExtended
-                                    ? 'booking-bar-cyan'
-                                    : booking.status === 'IN_PROGRESS'
-                                      ? 'booking-bar-blue'
-                                      : 'booking-bar-orange'
+                            : booking.status === 'CANCELLED' || booking.status === 'NO-SHOW'
+                              ? 'booking-bar-red'
+                              : booking.hasTransfer && booking.isExtendedSegment
+                                ? 'booking-bar-transfer-extended'
+                                : booking.hasTransfer && booking.isOriginalSegment
+                                  ? 'booking-bar-transfer-original'
+                                  : booking.status === 'CHECK_OUT'
+                                    ? 'booking-bar-green'
+                                    : booking.isExtended
+                                      ? 'booking-bar-cyan'
+                                      : booking.status === 'IN_PROGRESS'
+                                        ? 'booking-bar-blue'
+                                        : 'booking-bar-orange'
                           } ${
                             booking.hasTransfer && hoveredTransferBooking === booking.originalBookingId 
                               ? 'transfer-booking-hovered' 
@@ -892,7 +894,7 @@ const BoardingSchedule = () => {
           
           {/* Booking Status Legend */}
           <div style={{ marginTop: '24px', padding: '16px', backgroundColor: '#f8f9fa', borderRadius: '8px' }}>
-            <h4 style={{ marginBottom: '12px', color: '#1f2937' }}>Chú thích trạng thái ký gửi:</h4>
+            <h4 style={{ marginBottom: '12px', color: '#1f2937' }}>Chú thích màu:</h4>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '16px', fontSize: '13px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <div style={{ 
@@ -910,7 +912,7 @@ const BoardingSchedule = () => {
                   backgroundColor: '#22c55e', 
                   borderRadius: '4px' 
                 }}></div>
-                <span>Đã check-out</span>
+                <span>Hoàn tất</span>
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <div style={{ 

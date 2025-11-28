@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Card, Spin, Alert, Button, Tag, Descriptions, Avatar, Modal, Upload, message, List, Radio, Row, Col } from 'antd';
-import { ArrowLeftOutlined, UserOutlined, CalendarOutlined, ShoppingOutlined, UploadOutlined, CameraOutlined, HomeOutlined, EditOutlined, LogoutOutlined } from '@ant-design/icons';
+import { Card, Spin, Alert, Button, Tag, Descriptions, Avatar, Modal, Upload, message, List, Radio, Row, Col, Input } from 'antd';
+import { ArrowLeftOutlined, UserOutlined, CalendarOutlined, ShoppingOutlined, UploadOutlined, CameraOutlined, HomeOutlined, EditOutlined, LogoutOutlined, WarningOutlined, CheckCircleOutlined, ExclamationCircleOutlined } from '@ant-design/icons';
 import { boardingService, type BookingDetail } from '../../../services/BoardingService';
 import { cageService, type Cage } from '../../../services/CageService';
 import { storage } from '../../../config/firebase';
@@ -25,6 +25,7 @@ const BoardingDetail: React.FC = () => {
   const [availableCages, setAvailableCages] = useState<Cage[]>([]);
   const [selectedCageId, setSelectedCageId] = useState<string>('');
   const [cageLoading, setCageLoading] = useState<boolean>(false);
+  const [healthNote, setHealthNote] = useState<string>('');
 
   // Check-out states
   const [checkOutModalVisible, setCheckOutModalVisible] = useState<boolean>(false);
@@ -65,7 +66,7 @@ const BoardingDetail: React.FC = () => {
       await boardingService.handleBookingException(bookingId);
       
       // Show success toast
-      toast.success('Đã bồi thường', {
+      toast.success('Đã gửi báo cáo sự cố', {
         position: 'top-right',
         autoClose: 3000,
         hideProgressBar: false,
@@ -108,7 +109,7 @@ const BoardingDetail: React.FC = () => {
     const statusTexts: Record<string, string> = {
       'BOOKED': 'Đã đặt',
       'IN_PROGRESS': 'Đang thực hiện',
-      'CHECK_OUT': 'Đã check-out', 
+      'CHECK_OUT': 'Hoàn tất', 
       'CANCELLED': 'Đã hủy',
       'NO-SHOW': 'Không xuất hiện',
       'INCIDENT': 'Có sự cố',
@@ -203,6 +204,11 @@ const BoardingDetail: React.FC = () => {
       return;
     }
 
+    if (!healthNote.trim()) {
+      message.error('Vui lòng nhập trạng thái sức khỏe!');
+      return;
+    }
+
     try {
       setCheckInLoading(true);
 
@@ -216,7 +222,8 @@ const BoardingDetail: React.FC = () => {
       await boardingService.checkInBooking({
         bookingId: bookingId,
         checkInImage: imageUrl,
-        cageId: selectedCageId
+        cageId: selectedCageId,
+        healthNote: healthNote,
       });
 
       // Show toast success notification
@@ -239,6 +246,7 @@ const BoardingDetail: React.FC = () => {
       setImagePreview('');
       setSelectedCageId('');
       setAvailableCages([]);
+      setHealthNote('');
     } catch (error) {
       console.error('Check-in error:', error);
       message.error('Có lỗi xảy ra khi check-in. Vui lòng thử lại!');
@@ -254,6 +262,7 @@ const BoardingDetail: React.FC = () => {
     setImagePreview('');
     setSelectedCageId('');
     setAvailableCages([]);
+    setHealthNote('');
   };
 
   // Fetch available cages for the booking's cage type and start date
@@ -408,7 +417,7 @@ const BoardingDetail: React.FC = () => {
             <p className="booking-id">ID: {bookingDetail.bookingId}</p>
           </div>
           <div className="header-actions">
-            {bookingDetail.status === 'IN_PROGRESS' && (
+            {(bookingDetail.status === 'IN_PROGRESS' && bookingDetail.isIncident === false) && (
               <Button
                 type="primary"
                 danger
@@ -479,6 +488,9 @@ const BoardingDetail: React.FC = () => {
                     </Descriptions.Item>
                     <Descriptions.Item label="Cân nặng">
                       {bookingDetail.hamsterWeight}g
+                    </Descriptions.Item>
+                      <Descriptions.Item label="Ghi chú sức khỏe">
+                      {bookingDetail.healthNote || 'Không có'}
                     </Descriptions.Item>
                   </Descriptions>
                 </div>
@@ -573,11 +585,11 @@ const BoardingDetail: React.FC = () => {
                 <Descriptions.Item label="Ngày tạo" span={2}>
                   {bookingDetail.createdAt ? new Date(bookingDetail.createdAt).toLocaleString('vi-VN') : 'N/A'}
                 </Descriptions.Item>
-                {bookingDetail.notes && (
+                {/* {bookingDetail.notes && (
                   <Descriptions.Item label="Ghi chú" span={2}>
                     <div className="notes-text">{bookingDetail.notes}</div>
                   </Descriptions.Item>
-                )}
+                )} */}
                 {bookingDetail.healthNote && (
                   <Descriptions.Item label="Ghi chú sức khỏe" span={2}>
                     <div className="health-note">
@@ -782,6 +794,101 @@ const BoardingDetail: React.FC = () => {
           </Card>
         </div>
 
+        {/* Fourth Section: Incident Report - Only show when there's an incident */}
+        {bookingDetail.isIncident && (
+          <div className="info-section">
+            <Card
+              title={
+                <div className="section-title incident-title">
+                  <WarningOutlined />
+                  <span>Báo cáo sự cố</span>
+                </div>
+              }
+              className="info-card incident-card"
+            >
+              <div className="incident-content">
+                <div className="incident-status-grid">
+                  <div className="incident-status-item">
+                    <div className="incident-icon-wrapper incident-alert">
+                      <ExclamationCircleOutlined className="incident-icon" />
+                    </div>
+                    <div className="incident-details">
+                      <h4 className="incident-title-text">Trạng thái sự cố</h4>
+                      <div className="incident-status-badge">
+                        <Tag 
+                          color="red" 
+                          icon={<WarningOutlined />} 
+                          className="incident-tag"
+                        >
+                          Có sự cố được báo cáo
+                        </Tag>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="incident-status-item">
+                    <div className={`incident-icon-wrapper ${bookingDetail.incidentSolve ? 'incident-resolved' : 'incident-pending'}`}>
+                      {bookingDetail.incidentSolve ? (
+                        <CheckCircleOutlined className="incident-icon" />
+                      ) : (
+                        <ExclamationCircleOutlined className="incident-icon" />
+                      )}
+                    </div>
+                    <div className="incident-details">
+                      <h4 className="incident-title-text">Tình trạng xử lý</h4>
+                      <div className="incident-resolution-badge">
+                        <Tag 
+                          color={bookingDetail.incidentSolve ? 'green' : 'orange'}
+                          icon={bookingDetail.incidentSolve ? <CheckCircleOutlined /> : <ExclamationCircleOutlined />}
+                          className="incident-resolution-tag"
+                        >
+                          {bookingDetail.incidentSolve ? 'Đã được giải quyết' : 'Đang xử lý'}
+                        </Tag>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="incident-description">
+                  <div className="incident-message">
+                    <div className="incident-message-header">
+                      <WarningOutlined className="message-icon" />
+                      <h5>Thông tin sự cố</h5>
+                    </div>
+                    <div className="incident-message-content">
+                      {!bookingDetail.incidentSolve ? (
+                        <div className="incident-alert-box">
+                          <p className="incident-text">
+                            <strong>⚠️ Sự cố đã được báo cáo:</strong>
+                          </p>
+                          <p className="incident-description-text">
+                            Booking này đã có sự cố được báo cáo và hiện đang trong quá trình xử lý. 
+                            Vui lòng theo dõi và cập nhật tình trạng xử lý sự cố.
+                          </p>
+                          <div className="incident-action-note">
+                            <p className="action-text">
+                              <strong>Hành động cần thiết:</strong> Staff cần theo dõi và cập nhật trạng thái giải quyết sự cố
+                            </p>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="incident-resolved-box">
+                          <p className="incident-resolved-text">
+                            <strong>✅ Sự cố đã được giải quyết thành công</strong>
+                          </p>
+                          <p className="incident-resolution-description">
+                            Tất cả các vấn đề liên quan đến booking này đã được xử lý hoàn tất.
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </Card>
+          </div>
+        )}
+
         {/* Check-in Button for BOOKED bookings */}
         {(bookingDetail.status === 'BOOKED') && (
           <div className="info-section">
@@ -846,7 +953,7 @@ const BoardingDetail: React.FC = () => {
               type="primary"
               loading={checkInLoading}
               onClick={handleCheckIn}
-              disabled={!imageFile || !selectedCageId}
+              disabled={!imageFile || !selectedCageId || !healthNote.trim()}
             >
               Xác nhận Check-in & Phân chuồng
             </Button>
@@ -909,10 +1016,33 @@ const BoardingDetail: React.FC = () => {
               </Upload>
             </div>
 
-            {/* Section 2: Cage Selection */}
+            {/* Section 2: Health Note Input */}
+            <div style={{ marginBottom: 24 }}>
+              <h4 style={{ marginBottom: 16, color: '#262626', fontWeight: 600 }}>
+                2. Trạng thái sức khỏe <span style={{ color: '#ff4d4f' }}>*</span>
+              </h4>
+              <p style={{ marginBottom: 16, color: '#666' }}>
+                Nhập trạng thái sức khỏe hiện tại của <strong>{bookingDetail?.hamsterName}</strong> khi check-in.
+              </p>
+              
+              <Input.TextArea
+                value={healthNote}
+                onChange={(e) => setHealthNote(e.target.value)}
+                placeholder="Nhập trạng thái sức khỏe của hamster (bắt buộc)..."
+                rows={3}
+                maxLength={500}
+                showCount
+                style={{
+                  resize: 'none',
+                  borderRadius: 8
+                }}
+              />
+            </div>
+
+            {/* Section 3: Cage Selection */}
             <div>
               <h4 style={{ marginBottom: 16, color: '#262626', fontWeight: 600 }}>
-                2. Chọn chuồng cho hamster
+                3. Chọn chuồng cho hamster
               </h4>
               <p style={{ marginBottom: 16, color: '#666' }}>
                 Chọn chuồng trống cho <strong>{bookingDetail?.hamsterName}</strong> 
