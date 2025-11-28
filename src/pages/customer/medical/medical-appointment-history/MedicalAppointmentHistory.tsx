@@ -281,13 +281,13 @@ const MedicalAppointmentHistory: React.FC = () => {
                                 suffixIcon={<FilterOutlined />}
                             >
                                 <Option value="all">Tất cả trạng thái</Option>
-                                <Option value="CONFIRMED">Confirmed</Option>
-                                <Option value="PAID">Paid</Option>
-                                <Option value="CHECK_IN">Check-in</Option>
-                                <Option value="IN_PROGRESS">In Progress</Option>
-                                <Option value="COMPLETED">Completed</Option>
-                                <Option value="CANCELLED">Cancelled</Option>
-                                <Option value="NO-SHOW">No Show</Option>
+                                <Option value="BOOKED">Đã đặt</Option>
+                                <Option value="CHECKED_IN">Đã check-in</Option>
+                                <Option value="IN_PROGRESS">Đang thực hiện</Option>
+                                <Option value="CHECK_OUT">Hoàn tất</Option>
+                                <Option value="CANCELLED">Đã hủy</Option>
+                                <Option value="NO_SHOW">Không đến</Option>
+                                <Option value ="FAILED">Thanh toán thất bại</Option>
                             </Select>
                         </Col>
                     </Row>
