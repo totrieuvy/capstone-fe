@@ -860,10 +860,10 @@ const BoardingSchedule = () => {
 
   return (
     <div className="boarding-schedule">
-      <div className="schedule-container">
+      <div className="schedule-container" style={{ maxWidth: '1800px', width: '100%', margin: '0 auto' }}>
         <div className="page-header">
           <h1 className="page-title">Quản lí Lịch Ký Gửi Hamster</h1>
-          <p className="page-subtitle">Theo dõi và Quản lí lịch trình ký gửi theo thời gian thực</p>
+          {/* <p className="page-subtitle">Theo dõi và Quản lí lịch trình ký gửi theo thời gian thực</p> */}
 
           {/* Month Navigation */}
           <div className="month-navigation" style={{
