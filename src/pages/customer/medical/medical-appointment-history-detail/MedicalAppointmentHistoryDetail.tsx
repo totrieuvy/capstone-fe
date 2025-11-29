@@ -298,7 +298,7 @@ const ManageAppointmentDetail: React.FC = () => {
                 <Descriptions.Item label="Thời gian tạo">
                   {dayjs(appointment.createdAt).tz("Asia/Ho_Chi_Minh").format("DD/MM/YYYY")}
                 </Descriptions.Item>
-                <Descriptions.Item label="Ghi chú cuộc hẹn">
+                {/* <Descriptions.Item label="Ghi chú cuộc hẹn">
                   <Text style={{ fontStyle: appointment.notes ? "normal" : "italic", color: appointment.notes ? "inherit" : "#999" }}>
                     {appointment.notes || "Không có ghi chú"}
                   </Text>
@@ -307,7 +307,7 @@ const ManageAppointmentDetail: React.FC = () => {
                   <Text style={{ fontStyle: appointment.healthNote ? "normal" : "italic", color: appointment.healthNote ? "inherit" : "#999" }}>
                     {appointment.healthNote || "Không có ghi chú"}
                   </Text>
-                </Descriptions.Item>
+                </Descriptions.Item> */}
               </Descriptions>
             </Card>
           </Col>
