@@ -44,13 +44,19 @@ interface OrderQueryParams {
   sortBy: string;
   sortDir: string;
   status?: string;
+  startDate?: string;
+  endDate?: string;
+  keyword?: string;
 }
 
 function ManageOrder() {
   const [orders, setOrders] = useState<OrderType[]>([]);
   const [loading, setLoading] = useState(false);
   const [statusFilter, setStatusFilter] = useState<string>("ALL");
-  const [dateRange, setDateRange] = useState<[Dayjs | null, Dayjs | null] | null>(null);
+  const [dateRange, setDateRange] = useState<[Dayjs | null, Dayjs | null]>([
+    dayjs(), // hôm nay
+    dayjs().add(10, "day"), // hôm nay + 10 ngày
+  ]);
   const [searchTerm, setSearchTerm] = useState("");
   const [pagination, setPagination] = useState<TablePaginationConfig>({
     current: 1,
@@ -58,6 +64,7 @@ function ManageOrder() {
     total: 0,
   });
 
+  // ---------------- API CALL ----------------
   const fetchOrders = async (page = 1, size = 10, status = "ALL") => {
     setLoading(true);
     try {
@@ -66,10 +73,13 @@ function ManageOrder() {
         size,
         sortBy: "createdAt",
         sortDir: "desc",
+        startDate: dateRange && dateRange[0] ? dateRange[0].format("YYYY-MM-DD") : undefined,
+        endDate: dateRange && dateRange[1] ? dateRange[1].format("YYYY-MM-DD") : undefined,
+        keyword: searchTerm.trim() !== "" ? searchTerm.trim() : undefined,
       };
 
       if (status !== "ALL") {
-        params.status = status; // 🔥 Gửi status lên API
+        params.status = status;
       }
 
       const res = await api.get("/api/order", { params });
@@ -81,37 +91,25 @@ function ManageOrder() {
         pageSize: data.pageSize,
         total: data.totalElements,
       });
-    } catch (err: unknown) {
+    } catch (err) {
       if (err instanceof Error) toast.error("Không thể tải đơn hàng: " + err.message);
     } finally {
       setLoading(false);
     }
   };
 
+  // Auto reload khi phân trang / status / ngày đổi
   useEffect(() => {
     document.title = "Quản lí đơn hàng";
     fetchOrders(pagination.current, pagination.pageSize, statusFilter);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pagination.current, pagination.pageSize, statusFilter]);
+  }, [pagination.current, pagination.pageSize, statusFilter, dateRange]);
 
   const handleTableChange = (newPagination: TablePaginationConfig) => {
     setPagination((prev) => ({ ...prev, ...newPagination }));
   };
 
-  const filteredOrders = orders.filter((order) => {
-    const matchSearch =
-      order.customerProfile.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      order.id.toLowerCase().includes(searchTerm.toLowerCase());
-
-    const matchDate =
-      dateRange && dateRange[0] && dateRange[1]
-        ? dayjs(order.orderDate, "DD-MM-YYYY HH:mm:ss").add(7, "hour").isAfter(dateRange[0]) &&
-          dayjs(order.orderDate, "DD-MM-YYYY HH:mm:ss").add(7, "hour").isBefore(dateRange[1])
-        : true;
-
-    return matchSearch && matchDate; // ❗ KHÔNG filter status nữa
-  });
-
+  // ---------------- RENDER STATUS ----------------
   const renderStatusTag = (status: OrderType["status"]) => {
     const colorMap: Record<string, string> = {
       PENDING: "orange",
@@ -138,6 +136,7 @@ function ManageOrder() {
     return <Tag color={colorMap[status]}>{textMap[status]}</Tag>;
   };
 
+  // ---------------- TABLE COLUMNS ----------------
   const columns: TableColumnsType<OrderType> = [
     {
       title: "Mã đơn hàng",
@@ -181,7 +180,7 @@ function ManageOrder() {
         if (method === "VNPAY")
           return (
             <img
-              src="https://itviec.com/rails/active_storage/representations/proxy/eyJfcmFpbHMiOnsiZGF0YSI6NDAzODMzMCwicHVyIjoiYmxvYl9pZCJ9fQ==--d01b1b407f49d33d4ea19b9218e10da4dc7f231d/eyJfcmFpbHMiOnsiZGF0YSI6eyJmb3JtYXQiOiJwbmciLCJyZXNpemVfdG9fbGltaXQiOlszMDAsMzAwXX0sInB1ciI6InZhcmlhdGlvbiJ9fQ==--e1d036817a0840c585f202e70291f5cdd058753d/logo%20d%E1%BB%8Dc.png"
+              src="https://lh3.googleusercontent.com/iSbTzOYMKCyaYsxjJIJH0hKlHKJ4DBXA-XICR_2PeTqs33fFQGt8pnTno2Twg20_zCuKR2InMPKTBzG2Ll319FL2aLIjYkomaA=rw-w2048"
               alt="VNPAY"
               className="payment-logo"
             />
@@ -203,6 +202,7 @@ function ManageOrder() {
               className="payment-logo"
             />
           );
+
         return <span>{method || "Chưa cập nhật"}</span>;
       },
     },
@@ -231,6 +231,7 @@ function ManageOrder() {
     <div className="ManageOrder">
       <h1>Quản lí đơn hàng</h1>
 
+      {/* Filter theo status */}
       <div className="filter-status">
         {statuses.map((s) => (
           <Button
@@ -251,54 +252,41 @@ function ManageOrder() {
         ))}
       </div>
 
+      {/* Search + Date */}
       <div className="filter-bar">
         <Space className="filter-controls">
           <Search
             placeholder="Tìm theo tên hoặc ID..."
+            onSearch={() => fetchOrders(1, pagination.pageSize, statusFilter)}
             onChange={(e) => setSearchTerm(e.target.value)}
             allowClear
             style={{ width: 340 }}
           />
-          <RangePicker format="DD/MM/YYYY" onChange={(v) => setDateRange(v)} style={{ width: 340 }} />
+          <RangePicker
+            format="DD/MM/YYYY"
+            value={dateRange}
+            onChange={(v) => {
+              // v có thể là null => chuyển về fallback (ở đây fallback là mặc định 10 ngày)
+              if (!v || !v[0] || !v[1]) {
+                setDateRange([dayjs(), dayjs().add(10, "day")]);
+              } else {
+                // v[0], v[1] là Dayjs | null nhưng đã kiểm tra không null ở trên
+                setDateRange([v[0]!, v[1]!]); // non-null assertion OK vì đã kiểm tra
+              }
+            }}
+            style={{ width: 340 }}
+          />{" "}
         </Space>
       </div>
 
+      {/* Table */}
       {loading ? (
         <div className="loading-wrapper">
-          <svg className="hamster-icon" viewBox="0 0 100 100">
-            <circle
-              cx="50"
-              cy="50"
-              r="40"
-              stroke="#1890ff"
-              strokeWidth="6"
-              fill="none"
-              strokeLinecap="round"
-              strokeDasharray="188"
-            >
-              <animateTransform
-                attributeName="transform"
-                type="rotate"
-                values="0 50 50;360 50 50"
-                dur="1s"
-                repeatCount="indefinite"
-              />
-            </circle>
-            <circle cx="70" cy="30" r="6" fill="#1890ff">
-              <animateTransform
-                attributeName="transform"
-                type="rotate"
-                values="0 50 50;360 50 50"
-                dur="0.6s"
-                repeatCount="indefinite"
-              />
-            </circle>
-          </svg>
           <p>Đang tải dữ liệu...</p>
         </div>
       ) : (
         <Table
-          dataSource={filteredOrders}
+          dataSource={orders}
           columns={columns}
           rowKey="id"
           pagination={pagination}
