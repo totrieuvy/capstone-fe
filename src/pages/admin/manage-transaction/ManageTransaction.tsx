@@ -36,6 +36,8 @@ interface TransactionQueryParams {
   startDate?: string;
   endDate?: string;
   search?: string;
+  sortBy?: string;
+  sortDir?: string;
 }
 
 function ManageTransaction() {
@@ -57,8 +59,8 @@ function ManageTransaction() {
      FETCH TRANSACTIONS (BACKEND PAGINATION)
   ====================================== */
   const fetchTransactions = async (
-    page = 1,
-    size = 10,
+    page = pagination.current,
+    size = pagination.pageSize,
     status = statusFilter,
     service = serviceFilter,
     search = searchTerm,
@@ -70,6 +72,8 @@ function ManageTransaction() {
       const params: TransactionQueryParams = {
         page: page - 1,
         size,
+        sortBy: "transactionTime",
+        sortDir: "desc",
       };
 
       if (status !== "ALL") params.status = status;
@@ -91,8 +95,8 @@ function ManageTransaction() {
         pageSize: data.pageSize,
         total: data.totalElements,
       });
-    } catch (error) {
-      toast.error("Không thể tải giao dịch: " + (error as Error).message);
+    } catch {
+      toast.error("Không thể tải giao dịch");
     } finally {
       setLoading(false);
     }
@@ -104,7 +108,7 @@ function ManageTransaction() {
   useEffect(() => {
     document.title = "Quản lí giao dịch";
     fetchTransactions(1, 10);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   /* ================================
@@ -169,6 +173,7 @@ function ManageTransaction() {
           BOOKING: { label: "Đặt lịch giữ hộ", color: "geekblue" },
           GROOMING: { label: "Đặt làm đẹp", color: "magenta" },
           MEDICAL: { label: "Y tế", color: "purple" }, // 🔥 thêm MEDICAL
+          WALLET: { label: "Ví ảo", color: "gold" },
         };
 
         const item = map[text];
@@ -220,6 +225,7 @@ function ManageTransaction() {
     { key: "GROOMING", label: "Đặt làm đẹp" },
     { key: "ORDER", label: "Đơn hàng" },
     { key: "MEDICAL", label: "Y tế" },
+    { key: "WALLET", label: "Ví ảo" },
   ];
 
   /* ================================
