@@ -26,6 +26,10 @@ export default function ManageChat() {
   const staffUser = JSON.parse(localStorage.getItem("user") || "{}");
 
   useEffect(() => {
+    document.title = "Hỗ trợ khách hàng";
+  }, []);
+
+  useEffect(() => {
     const convRef = ref(db, "chats");
 
     const unsub = onValue(convRef, (snapshot) => {

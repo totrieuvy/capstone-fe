@@ -1,22 +1,11 @@
-import React, { useState, useEffect } from 'react';
-import {
-  Table,
-  Button,
-  Modal,
-  Form,
-  Input,
-  Typography,
-  Card,
-  Space,
-  Row,
-  Col,
-} from 'antd';
-import type { ColumnsType } from 'antd/es/table';
-import { EditOutlined, MedicineBoxOutlined } from '@ant-design/icons';
-import { toast } from 'react-toastify';
-import MedicineService from '../../../services/MedicineService';
-import type { Medicine, UpdateMedicineRequest } from '../../../types/medicine';
-import './ManageMedicine.scss';
+import React, { useState, useEffect } from "react";
+import { Table, Button, Modal, Form, Input, Typography, Card, Space, Row, Col } from "antd";
+import type { ColumnsType } from "antd/es/table";
+import { EditOutlined, MedicineBoxOutlined } from "@ant-design/icons";
+import { toast } from "react-toastify";
+import MedicineService from "../../../services/MedicineService";
+import type { Medicine, UpdateMedicineRequest } from "../../../types/medicine";
+import "./ManageMedicine.scss";
 
 const { Title } = Typography;
 
@@ -35,6 +24,7 @@ const ManageMedicine: React.FC = () => {
 
   // Fetch medicines on component mount
   useEffect(() => {
+    document.title = "Quản lí thuốc";
     fetchMedicines();
   }, []);
 
@@ -44,8 +34,8 @@ const ManageMedicine: React.FC = () => {
       const response = await MedicineService.getMedicines();
       setMedicines(response.data);
     } catch (error) {
-      toast.error('Không thể tải danh sách thuốc');
-      console.error('Error fetching medicines:', error);
+      toast.error("Không thể tải danh sách thuốc");
+      console.error("Error fetching medicines:", error);
     } finally {
       setLoading(false);
     }
@@ -65,14 +55,14 @@ const ManageMedicine: React.FC = () => {
     setLoading(true);
     try {
       await MedicineService.updateMedicine(editingMedicine.id, values);
-      toast.success('Cập nhật thuốc thành công');
+      toast.success("Cập nhật thuốc thành công");
       setModalVisible(false);
       setEditingMedicine(null);
       form.resetFields();
       await fetchMedicines(); // Refresh the list
     } catch (error) {
-      toast.error('Không thể cập nhật thuốc');
-      console.error('Error updating medicine:', error);
+      toast.error("Không thể cập nhật thuốc");
+      console.error("Error updating medicine:", error);
     } finally {
       setLoading(false);
     }
@@ -86,26 +76,24 @@ const ManageMedicine: React.FC = () => {
 
   const columns: ColumnsType<MedicineTableData> = [
     {
-      title: 'STT',
-      key: 'index',
+      title: "STT",
+      key: "index",
       width: 80,
-      align: 'center',
+      align: "center",
       render: (_, __, index) => index + 1,
     },
     {
-      title: 'Tên thuốc',
-      dataIndex: 'medicationName',
-      key: 'medicationName',
+      title: "Tên thuốc",
+      dataIndex: "medicationName",
+      key: "medicationName",
       ellipsis: true,
-      render: (text) => (
-        <span className="medicine-name">{text}</span>
-      ),
+      render: (text) => <span className="medicine-name">{text}</span>,
     },
     {
-      title: 'Thao tác',
-      key: 'action',
+      title: "Thao tác",
+      key: "action",
       width: 120,
-      align: 'center',
+      align: "center",
       render: (_, record) => (
         <Button
           type="primary"
@@ -146,7 +134,7 @@ const ManageMedicine: React.FC = () => {
                   Danh sách thuốc
                 </Title>
               </div>
-              
+
               <Table
                 columns={columns}
                 dataSource={tableData}
@@ -156,7 +144,7 @@ const ManageMedicine: React.FC = () => {
                   showSizeChanger: true,
                   showQuickJumper: true,
                   showTotal: (total) => `Tổng ${total} thuốc`,
-                  className: 'custom-pagination',
+                  className: "custom-pagination",
                 }}
                 className="medicine-table"
                 bordered
@@ -179,31 +167,22 @@ const ManageMedicine: React.FC = () => {
           width={500}
           className="update-modal"
         >
-          <Form
-            form={form}
-            layout="vertical"
-            onFinish={handleUpdate}
-            className="update-form"
-          >
+          <Form form={form} layout="vertical" onFinish={handleUpdate} className="update-form">
             <Form.Item
               label="Tên thuốc"
               name="medicationName"
               rules={[
                 {
                   required: true,
-                  message: 'Vui lòng nhập tên thuốc',
+                  message: "Vui lòng nhập tên thuốc",
                 },
                 {
                   min: 2,
-                  message: 'Tên thuốc phải có ít nhất 2 ký tự',
+                  message: "Tên thuốc phải có ít nhất 2 ký tự",
                 },
               ]}
             >
-              <Input
-                placeholder="Nhập tên thuốc"
-                size="large"
-                className="medicine-input"
-              />
+              <Input placeholder="Nhập tên thuốc" size="large" className="medicine-input" />
             </Form.Item>
 
             <Form.Item className="form-buttons">
@@ -211,13 +190,7 @@ const ManageMedicine: React.FC = () => {
                 <Button onClick={handleCancel} size="large">
                   Hủy
                 </Button>
-                <Button
-                  type="primary"
-                  htmlType="submit"
-                  loading={loading}
-                  size="large"
-                  className="submit-button"
-                >
+                <Button type="primary" htmlType="submit" loading={loading} size="large" className="submit-button">
                   Cập nhật
                 </Button>
               </Space>

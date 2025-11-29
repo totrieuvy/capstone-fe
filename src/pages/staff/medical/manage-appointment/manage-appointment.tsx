@@ -1,23 +1,17 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
+import { Table, Card, DatePicker, Select, Button, Typography, Row, Col, message, Tag, Spin } from "antd";
+import { ClearOutlined } from "@ant-design/icons";
+import { useNavigate } from "react-router-dom";
+import type { ColumnsType } from "antd/es/table";
+import dayjs from "dayjs";
 import {
-  Table,
-  Card,
-  DatePicker,
-  Select,
-  Button,
-  Typography,
-  Row,
-  Col,
-  message,
-  Tag,
-  Spin,
-} from 'antd';
-import {  ClearOutlined } from '@ant-design/icons';
-import { useNavigate } from 'react-router-dom';
-import type { ColumnsType } from 'antd/es/table';
-import dayjs from 'dayjs';
-import { getAppointments, getStaffByRole, type Appointment, type AppointmentFilters, type StaffByRole } from '../../../../services/MedicalService';
-import './manage-appointment.scss';
+  getAppointments,
+  getStaffByRole,
+  type Appointment,
+  type AppointmentFilters,
+  type StaffByRole,
+} from "../../../../services/MedicalService";
+import "./manage-appointment.scss";
 
 const { Title } = Typography;
 const { Option } = Select;
@@ -35,12 +29,16 @@ const ManageAppointment: React.FC = () => {
 
   // Filter states
   const [filters, setFilters] = useState<AppointmentFilters & { veterinarianName?: string }>({
-    date: dayjs().format('YYYY-MM-DD'),
-    serviceType: 'MEDICAL',
-    sortDir: 'asc',
+    date: dayjs().format("YYYY-MM-DD"),
+    serviceType: "MEDICAL",
+    sortDir: "asc",
     page: 0,
     size: 10,
   });
+
+  useEffect(() => {
+    document.title = "Lịch đặt khám";
+  }, []);
 
   // Fetch appointments and veterinarians
   const fetchAppointments = async (newFilters?: Partial<AppointmentFilters & { veterinarianName?: string }>) => {
@@ -53,7 +51,7 @@ const ManageAppointment: React.FC = () => {
       // Fetch all appointments for the date without status filter to populate filter options
 
       // Fetch veterinarian list for filter options
-      const vetRes = await getStaffByRole('VET');
+      const vetRes = await getStaffByRole("VET");
       setVeterinarianOptions(vetRes.data || []);
 
       // Then fetch filtered appointments (with status filter if applied)
@@ -61,8 +59,8 @@ const ManageAppointment: React.FC = () => {
       let filteredAppointments = response.data.content;
       // Apply client-side filtering for veterinarian name (fullName)
       if (veterinarianName) {
-        filteredAppointments = filteredAppointments.filter(appointment => 
-          appointment.veterinarianName === veterinarianName
+        filteredAppointments = filteredAppointments.filter(
+          (appointment) => appointment.veterinarianName === veterinarianName
         );
       }
       setAppointments(filteredAppointments);
@@ -72,15 +70,18 @@ const ManageAppointment: React.FC = () => {
         total: veterinarianName ? filteredAppointments.length : response.data.totalElements,
       });
     } catch (error) {
-      message.error('Không thể tải danh sách cuộc hẹn. Vui lòng thử lại.');
-      console.error('Error fetching appointments:', error);
+      message.error("Không thể tải danh sách cuộc hẹn. Vui lòng thử lại.");
+      console.error("Error fetching appointments:", error);
     } finally {
       setLoading(false);
     }
   };
 
   // Handle filter changes
-  const handleFilterChange = (key: keyof (AppointmentFilters & { veterinarianName?: string }), value: any) => {
+  const handleFilterChange = (
+    key: keyof (AppointmentFilters & { veterinarianName?: string }),
+    value: string | number | undefined
+  ) => {
     const newFilters = { ...filters, [key]: value, page: 0 };
     setFilters(newFilters);
     fetchAppointments(newFilters);
@@ -100,9 +101,9 @@ const ManageAppointment: React.FC = () => {
   // Handle clear filters
   const handleClearFilters = () => {
     const defaultFilters = {
-      date: dayjs().format('YYYY-MM-DD'),
-      serviceType: 'MEDICAL' as const,
-      sortDir: 'asc' as const,
+      date: dayjs().format("YYYY-MM-DD"),
+      serviceType: "MEDICAL" as const,
+      sortDir: "asc" as const,
       page: 0,
       size: 10,
       veterinarianName: undefined,
@@ -114,70 +115,70 @@ const ManageAppointment: React.FC = () => {
   // Get status color
   const getStatusColor = (status: string) => {
     switch (status.toUpperCase()) {
-      case 'BOOKED':
-        return 'blue';
-      case 'CHECKED_IN':
-        return 'cyan';
-      case 'IN_PROGRESS':
-        return 'orange';
-      case 'NO-SHOW':
-        return 'volcano';
-      case 'CANCELLED':
-        return 'red';
-      case 'CHECK_OUT':
-        return 'green';
-      case 'FAILED':
-        return 'red';
-        case 'NO_SHOW':
-          return 'red';
+      case "BOOKED":
+        return "blue";
+      case "CHECKED_IN":
+        return "cyan";
+      case "IN_PROGRESS":
+        return "orange";
+      case "NO-SHOW":
+        return "volcano";
+      case "CANCELLED":
+        return "red";
+      case "CHECK_OUT":
+        return "green";
+      case "FAILED":
+        return "red";
+      case "NO_SHOW":
+        return "red";
       default:
-        return 'default';
+        return "default";
     }
   };
 
   // Get status text in Vietnamese
   const getStatusText = (status: string) => {
     switch (status.toUpperCase()) {
-      case 'BOOKED':
-        return 'Đã đặt';
-      case 'CHECKED_IN':
-        return 'Đã check-in';
-      case 'IN_PROGRESS':
-        return 'Đang thực hiện';
-      case 'NO-SHOW':
-        return 'Không đến';
-      case 'CANCELLED':
-        return 'Đã hủy';
-      case 'CHECK_OUT':
-        return 'Hoàn thành';
-        case 'FAILED':
-        return 'Thanh toán thất bại';
-        case 'NO_SHOW':
-        return 'Khách không tới';
+      case "BOOKED":
+        return "Đã đặt";
+      case "CHECKED_IN":
+        return "Đã check-in";
+      case "IN_PROGRESS":
+        return "Đang thực hiện";
+      case "NO-SHOW":
+        return "Không đến";
+      case "CANCELLED":
+        return "Đã hủy";
+      case "CHECK_OUT":
+        return "Hoàn thành";
+      case "FAILED":
+        return "Thanh toán thất bại";
+      case "NO_SHOW":
+        return "Khách không tới";
       default:
-        return status.replace('_', ' ');
+        return status.replace("_", " ");
     }
   };
 
   // Use a fixed list of statuses for filtering
   const fixedStatusList = [
-    { value: '', label: 'Tất cả Trạng thái' },
-    { value: 'BOOKED', label: getStatusText('BOOKED') },
-    { value: 'CHECKED_IN', label: getStatusText('CHECKED_IN') },
-    { value: 'IN_PROGRESS', label: getStatusText('IN_PROGRESS') },
-    { value: 'CHECK_OUT', label: getStatusText('CHECK_OUT') },
-    { value: 'CANCELLED', label: getStatusText('CANCELLED') },
-    { value: 'FAILED', label: getStatusText('FAILED') },
-    { value: 'NO_SHOW', label: getStatusText('NO_SHOW') },
+    { value: "", label: "Tất cả Trạng thái" },
+    { value: "BOOKED", label: getStatusText("BOOKED") },
+    { value: "CHECKED_IN", label: getStatusText("CHECKED_IN") },
+    { value: "IN_PROGRESS", label: getStatusText("IN_PROGRESS") },
+    { value: "CHECK_OUT", label: getStatusText("CHECK_OUT") },
+    { value: "CANCELLED", label: getStatusText("CANCELLED") },
+    { value: "FAILED", label: getStatusText("FAILED") },
+    { value: "NO_SHOW", label: getStatusText("NO_SHOW") },
   ];
 
   // Veterinarian filter options from API
   const veterinarianFilterOptions = [
-    { value: '', label: 'Tất cả Bác sĩ' },
-    ...veterinarianOptions.map(vet => ({
+    { value: "", label: "Tất cả Bác sĩ" },
+    ...veterinarianOptions.map((vet) => ({
       value: vet.fullName,
-      label: vet.fullName
-    }))
+      label: vet.fullName,
+    })),
   ];
 
   // Use fixed status options and veterinarian options from API
@@ -187,71 +188,59 @@ const ManageAppointment: React.FC = () => {
   // Table columns
   const columns: ColumnsType<Appointment> = [
     {
-      title: 'Tên Khách hàng',
-      dataIndex: 'customerName',
-      key: 'customerName',
+      title: "Tên Khách hàng",
+      dataIndex: "customerName",
+      key: "customerName",
       sorter: true,
-      render: (text: string) => (
-        <span className="customer-name">{text}</span>
-      ),
+      render: (text: string) => <span className="customer-name">{text}</span>,
     },
     {
-      title: 'Tên Chuột hamster',
-      dataIndex: 'hamsterName',
-      key: 'hamsterName',
-      render: (text: string) => (
-        <span className="hamster-name">{text}</span>
-      ),
+      title: "Tên Chuột hamster",
+      dataIndex: "hamsterName",
+      key: "hamsterName",
+      render: (text: string) => <span className="hamster-name">{text}</span>,
     },
     {
-      title: 'Thời gian Hẹn',
-      dataIndex: 'appointmentTime',
-      key: 'appointmentTime',
-      render: (date: string) => (
-        <span>{dayjs(date).format('DD/MM/YYYY ')}</span>
-      ),
+      title: "Thời gian Hẹn",
+      dataIndex: "appointmentTime",
+      key: "appointmentTime",
+      render: (date: string) => <span>{dayjs(date).format("DD/MM/YYYY ")}</span>,
       sorter: true,
     },
     {
-      title: 'Slot',
-      dataIndex: 'slotStart',
-      key: 'slotStart',
+      title: "Slot",
+      dataIndex: "slotStart",
+      key: "slotStart",
       render: (time: string) => (
-        <span>{dayjs(time, 'HH:mm:ss').isValid() ? dayjs(time, 'HH:mm:ss').format('HH:mm')  : time}</span>
+        <span>{dayjs(time, "HH:mm:ss").isValid() ? dayjs(time, "HH:mm:ss").format("HH:mm") : time}</span>
       ),
     },
     {
-      title: 'Bác sĩ Thú y',
-      dataIndex: 'veterinarianName',
-      key: 'veterinarianName',
-      render: (text: string) => (
-        <span className="veterinarian-name">{text || 'Chưa phân công'}</span>
-      ),
+      title: "Bác sĩ Thú y",
+      dataIndex: "veterinarianName",
+      key: "veterinarianName",
+      render: (text: string) => <span className="veterinarian-name">{text || "Chưa phân công"}</span>,
     },
     {
-      title: 'Trạng thái',
-      dataIndex: 'status',
-      key: 'status',
+      title: "Trạng thái",
+      dataIndex: "status",
+      key: "status",
       render: (status: string) => (
         <Tag color={getStatusColor(status)} className="status-tag">
           {getStatusText(status)}
         </Tag>
       ),
-      filters: statusOptions.slice(1).map(option => ({
+      filters: statusOptions.slice(1).map((option) => ({
         text: option.label,
         value: option.value,
       })),
     },
     {
-      title: 'Thao tác',
-      key: 'action',
+      title: "Thao tác",
+      key: "action",
       width: 120,
       render: (_, record) => (
-        <Button
-          type="primary"
-          size="small"
-          onClick={() => navigate(`/STAFF/lich-dat-kham/${record.id}`)}
-        >
+        <Button type="primary" size="small" onClick={() => navigate(`/STAFF/lich-dat-kham/${record.id}`)}>
           Chi tiết
         </Button>
       ),
@@ -261,6 +250,7 @@ const ManageAppointment: React.FC = () => {
   // Initial load
   useEffect(() => {
     fetchAppointments();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (
@@ -268,36 +258,36 @@ const ManageAppointment: React.FC = () => {
       <Card className="appointment-container">
         <div className="header-section">
           <Title level={2} className="page-title">
-             Quản lí lịch khám
+            Quản lí lịch khám
           </Title>
-          
+
           {/* Filter Section */}
           <Card className="filter-card" size="small">
             <Row gutter={[16, 16]} align="middle">
               <Col xs={24} sm={8} md={6}>
                 <div className="filter-item">
-                    {/* Filter by date */}
+                  {/* Filter by date */}
                   <DatePicker
                     value={filters.date ? dayjs(filters.date) : dayjs()}
-                    onChange={(date) => 
-                      handleFilterChange('date', date ? date.format('YYYY-MM-DD') : dayjs().format('YYYY-MM-DD'))
+                    onChange={(date) =>
+                      handleFilterChange("date", date ? date.format("YYYY-MM-DD") : dayjs().format("YYYY-MM-DD"))
                     }
-                    style={{ width: '100%' }}
+                    style={{ width: "100%" }}
                     placeholder="Chọn ngày"
                   />
                 </div>
               </Col>
-              
+
               <Col xs={24} sm={8} md={6}>
                 <div className="filter-item">
-                    {/* Filter by status */}
+                  {/* Filter by status */}
                   <Select
-                    value={filters.status || ''}
-                    onChange={(value) => handleFilterChange('status', value || undefined)}
-                    style={{ width: '100%' }}
+                    value={filters.status || ""}
+                    onChange={(value) => handleFilterChange("status", value || undefined)}
+                    style={{ width: "100%" }}
                     placeholder="Chọn trạng thái"
                   >
-                    {statusOptions.map(option => (
+                    {statusOptions.map((option) => (
                       <Option key={option.value} value={option.value}>
                         {option.label}
                       </Option>
@@ -305,17 +295,17 @@ const ManageAppointment: React.FC = () => {
                   </Select>
                 </div>
               </Col>
-              
+
               <Col xs={24} sm={8} md={6}>
                 <div className="filter-item">
-                    {/* Filter by veterinarian */}
+                  {/* Filter by veterinarian */}
                   <Select
-                    value={filters.veterinarianName || ''}
-                    onChange={(value) => handleFilterChange('veterinarianName', value || undefined)}
-                    style={{ width: '100%' }}
+                    value={filters.veterinarianName || ""}
+                    onChange={(value) => handleFilterChange("veterinarianName", value || undefined)}
+                    style={{ width: "100%" }}
                     placeholder="Chọn bác sĩ"
                   >
-                    {veterinarians.map(option => (
+                    {veterinarians.map((option) => (
                       <Option key={option.value} value={option.value}>
                         {option.label}
                       </Option>
@@ -323,14 +313,14 @@ const ManageAppointment: React.FC = () => {
                   </Select>
                 </div>
               </Col>
-              
+
               <Col xs={24} sm={24} md={6}>
                 <div className="filter-item">
                   <Button
                     type="default"
                     icon={<ClearOutlined />}
                     onClick={handleClearFilters}
-                    style={{ width: '100%' }}
+                    style={{ width: "100%" }}
                   >
                     Xóa Bộ lọc
                   </Button>
@@ -353,8 +343,7 @@ const ManageAppointment: React.FC = () => {
                 total: pagination.total,
                 showSizeChanger: true,
                 showQuickJumper: true,
-                showTotal: (total, range) =>
-                  `${range[0]}-${range[1]} của ${total} cuộc hẹn`,
+                showTotal: (total, range) => `${range[0]}-${range[1]} của ${total} cuộc hẹn`,
                 onChange: handleTableChange,
                 onShowSizeChange: handleTableChange,
               }}
