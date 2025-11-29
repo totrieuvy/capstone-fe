@@ -25,6 +25,14 @@ interface Booking {
   isExtendedSegment?: boolean;
   hasTransfer?: boolean;
   originalBookingId?: string;
+  // Added fields for extension support
+  newEndDate?: string | null;
+  newCageTypeId?: string | null;
+  newCageTypeName?: string | null;
+  newCageName?: string | null;
+  cageTypeName?: string;
+  cageName?: string;  
+  isIncident?: boolean;
 }
 
 const BoardingSchedule = () => {
@@ -302,8 +310,8 @@ const BoardingSchedule = () => {
       onClick: () => handleViewDetails(booking),
     });
 
-    // Only show 'Gia hạn' if not extended and not CHECK_OUT
-    if (!booking.newEndDate && (booking.status === 'IN_PROGRESS' || booking.status === 'CHECK_IN')) {
+    // Only show 'Gia hạn' if not extended, not CHECK_OUT, and not incident
+    if (!booking.newEndDate && (booking.isIncident === false) && (booking.status === 'IN_PROGRESS' || booking.status === 'CHECKED_IN')) {
       items.push({
         key: 'extend',
         label: 'Gia hạn',
