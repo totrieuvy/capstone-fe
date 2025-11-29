@@ -30,6 +30,8 @@ interface ServiceItem {
 }
 
 interface GroomingDetail {
+  discount: number;
+  discountPercent: number;
   id: string;
   customerName: string;
   hamsterName: string;
@@ -135,8 +137,25 @@ const TrackGroomingDetail: React.FC = () => {
     );
 
   const totalServicePrice = detail.items.reduce((sum, it) => sum + it.price, 0);
-  const totalPay = (detail.totalAmountAfter || 0) + (detail.additionalAmount || 0);
+  const baseAfterDiscount = Number(detail.totalAmountAfter || 0);
 
+  // tiền gốc chưa giảm
+  const baseBeforeDiscount = Number(detail.totalAmount || 0);
+
+  // tổng giá của tất cả items đang có
+  const itemsTotal = (detail.items || []).reduce((sum, it) => sum + Number(it.price || 0), 0);
+
+  // phần dịch vụ bổ sung (chưa giảm)
+  const additionalBeforeDiscount = itemsTotal > baseBeforeDiscount ? itemsTotal - baseBeforeDiscount : 0;
+
+  // discount %
+  const discountPercent = Number(detail.discountPercent || 0);
+
+  // phần dịch vụ bổ sung (đã giảm)
+  const additionalAfterDiscount = Math.round((additionalBeforeDiscount * (100 - discountPercent)) / 100);
+
+  // tổng thanh toán cuối
+  const totalPay = baseAfterDiscount + additionalAfterDiscount;
   return (
     <div className="track-grooming-detail-page">
       <div className="tgd-container">
@@ -230,13 +249,17 @@ const TrackGroomingDetail: React.FC = () => {
               </Title>
               <Descriptions column={1}>
                 <Descriptions.Item label="Tiền ban đầu (đã giảm)">
-                  {getFormattedPrice(detail.totalAmountAfter)}
+                  {getFormattedPrice(baseAfterDiscount)}
                 </Descriptions.Item>
-                {detail.additionalAmount ? (
-                  <Descriptions.Item label="Dịch vụ bổ sung">
-                    {getFormattedPrice(detail.additionalAmount)}
-                  </Descriptions.Item>
-                ) : null}
+
+                <Descriptions.Item label="Dịch vụ bổ sung (chưa giảm)">
+                  {getFormattedPrice(additionalBeforeDiscount)}
+                </Descriptions.Item>
+
+                <Descriptions.Item label="Dịch vụ bổ sung (đã giảm)">
+                  {getFormattedPrice(additionalAfterDiscount)}
+                </Descriptions.Item>
+
                 <Descriptions.Item label="Tổng thanh toán">
                   <Text strong>{getFormattedPrice(totalPay)}</Text>
                 </Descriptions.Item>

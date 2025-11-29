@@ -81,6 +81,11 @@ export default function Chat({ conversationId: propConversationId, customerName 
   // ------------------------------------------------------------------
   // SYNC conversationId truyền từ STAFF
   // ------------------------------------------------------------------
+
+  useEffect(() => {
+    document.title = "Hỗ trợ khách hàng";
+  }, []);
+
   useEffect(() => {
     if (propConversationId) setConversationId(propConversationId);
   }, [propConversationId]);
