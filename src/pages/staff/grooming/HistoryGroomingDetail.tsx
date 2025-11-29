@@ -525,7 +525,7 @@ const HistoryGroomingDetail = () => {
                 </Card>
               )}
             </Card>
-<br />
+            <br />
             {/* ---- Dịch vụ ---- */}
             <Card className="services-card section-card" bordered={false}>
               <Title level={4}>
@@ -565,12 +565,18 @@ const HistoryGroomingDetail = () => {
                 value={selectedServices}
                 onChange={setSelectedServices}
               >
-                {groomingServices.map((service) => (
-                  <Option key={service.id} value={service.id}>
-                    {service.serviceName} ({getFormattedPrice(service.displayPrice)})
-                  </Option>
-                ))}
+                {groomingServices
+                  .filter((service) => {
+                    const usedServiceIds = detail.items.map((item) => item.serviceId);
+                    return !usedServiceIds.includes(service.id);
+                  })
+                  .map((service) => (
+                    <Option key={service.id} value={service.id}>
+                      {service.serviceName} ({getFormattedPrice(service.displayPrice)})
+                    </Option>
+                  ))}
               </Select>
+
               <Button
                 type="primary"
                 style={{ marginTop: 12 }}
@@ -646,7 +652,7 @@ const HistoryGroomingDetail = () => {
                 </Button>
               )}
             </Card>
-<br />
+            <br />
             {/* ---- Check-out ---- */}
             {detail.status === "IN_PROGRESS" ? (
               <Card className="image-card section-card" bordered={false}>
