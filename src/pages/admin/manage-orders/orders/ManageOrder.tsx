@@ -46,7 +46,7 @@ interface OrderQueryParams {
   status?: string;
   startDate?: string;
   endDate?: string;
-  keyword?: string;
+  customerName?: string;
 }
 
 function ManageOrder() {
@@ -75,7 +75,7 @@ function ManageOrder() {
         sortDir: "desc",
         startDate: dateRange && dateRange[0] ? dateRange[0].format("YYYY-MM-DD") : undefined,
         endDate: dateRange && dateRange[1] ? dateRange[1].format("YYYY-MM-DD") : undefined,
-        keyword: searchTerm.trim() !== "" ? searchTerm.trim() : undefined,
+        customerName: searchTerm.trim() !== "" ? searchTerm.trim() : undefined,
       };
 
       if (status !== "ALL") {
