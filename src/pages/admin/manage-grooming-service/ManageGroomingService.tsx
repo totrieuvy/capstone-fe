@@ -31,6 +31,7 @@ interface Price {
   speciesId: string;
   speciesName?: string;
   price: number;
+  priceAfter?: number; // Thêm trường priceAfter để dùng trong Form
 }
 
 interface GroomingService {
@@ -158,13 +159,20 @@ function ManageGroomingService() {
     setLoading(true);
     try {
       const payload = {
+        serviceType: "GROOMING",
         serviceName: values.serviceName,
         description: values.description,
         durationMinutes: values.durationMinutes,
-        // Chỉ gửi những giá trị có price > 0
-        prices: values.prices.filter((p) => p.price > 0),
-        // Lấy isActive từ form values (mặc định true cho Create)
-        isActive: values.isActive === undefined ? true : values.isActive,
+
+        prices: values.prices
+          .filter((p) => (p.priceAfter ?? 0) > 0)
+          .map((p) => ({
+            priceId: p.priceId,
+            speciesId: p.speciesId,
+            price: p.priceAfter,
+          })),
+
+        isActive: values.isActive ?? true,
       };
 
       if (isUpdate && values.id) {
