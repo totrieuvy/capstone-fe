@@ -25,6 +25,14 @@ interface Booking {
   isExtendedSegment?: boolean;
   hasTransfer?: boolean;
   originalBookingId?: string;
+  // Added fields for extension support
+  newEndDate?: string | null;
+  newCageTypeId?: string | null;
+  newCageTypeName?: string | null;
+  newCageName?: string | null;
+  cageTypeName?: string;
+  cageName?: string;  
+  isIncident?: boolean;
 }
 
 const BoardingSchedule = () => {
@@ -293,18 +301,17 @@ const BoardingSchedule = () => {
 
   // Fetch bookings for the current month
   const getContextMenuItems = (booking: Booking): MenuProps['items'] => {
-    const items: MenuProps['items'] = [
-      {
-        key: 'viewDetails',
-        label: 'Xem chi tiết',
-        icon: <EyeOutlined />,
-        onClick: () => handleViewDetails(booking),
-      },
-    ];
+    const items: MenuProps['items'] = [];
+    // Always show 'Xem chi tiết'
+    items.push({
+      key: 'viewDetails',
+      label: 'Xem chi tiết',
+      icon: <EyeOutlined />,
+      onClick: () => handleViewDetails(booking),
+    });
 
-    // Allow extending bookings that are in progress, checked out, or checked in
-    // These are the statuses where extension makes sense
-    if (booking.status === 'IN_PROGRESS' || booking.status === 'CHECK_OUT' || booking.status === 'CHECK_IN') {
+    // Only show 'Gia hạn' if not extended, not CHECK_OUT, and not incident
+    if (!booking.newEndDate && (booking.isIncident === false) && (booking.status === 'IN_PROGRESS' || booking.status === 'CHECKED_IN')) {
       items.push({
         key: 'extend',
         label: 'Gia hạn',

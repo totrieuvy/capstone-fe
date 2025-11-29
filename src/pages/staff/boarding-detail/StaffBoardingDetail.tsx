@@ -36,6 +36,7 @@ const BoardingDetail: React.FC = () => {
 
   // Exception handling states
   const [exceptionLoading, setExceptionLoading] = useState<boolean>(false);
+  const [reportIncidentModalVisible, setReportIncidentModalVisible] = useState<boolean>(false);
 
   useEffect(() => {
     if (bookingId) {
@@ -57,6 +58,11 @@ const BoardingDetail: React.FC = () => {
     }
   };
 
+  // Handle booking exception confirmation
+  const handleShowReportIncidentModal = () => {
+    setReportIncidentModalVisible(true);
+  };
+
   // Handle booking exception
   const handleBookingException = async () => {
     if (!bookingId) return;
@@ -74,6 +80,9 @@ const BoardingDetail: React.FC = () => {
         pauseOnHover: true,
         draggable: true,
       });
+
+      // Close the modal
+      setReportIncidentModalVisible(false);
 
       // Re-fetch booking details to update the UI
       await fetchBookingDetail(bookingId);
@@ -403,7 +412,7 @@ const BoardingDetail: React.FC = () => {
     <div className="boarding-detail">
       <div className="boarding-detail-container">
         {/* Header */}
-        <div className="detail-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div className="detail-header">
           <Button 
             type="text" 
             icon={<ArrowLeftOutlined />} 
@@ -415,19 +424,6 @@ const BoardingDetail: React.FC = () => {
           <div className="header-content">
             <h1 className="page-title">Chi tiết Booking</h1>
             <p className="booking-id">ID: {bookingDetail.bookingId}</p>
-          </div>
-          <div className="header-actions">
-            {(bookingDetail.status === 'IN_PROGRESS' && bookingDetail.isIncident === false) && (
-              <Button
-                type="primary"
-                danger
-                size="small"
-                loading={exceptionLoading}
-                onClick={handleBookingException}
-              >
-                Báo cáo sự cố
-              </Button>
-            )}
           </div>
         </div>
 
@@ -909,8 +905,7 @@ const BoardingDetail: React.FC = () => {
         {/* Create Care Log Button and Check Out Button for CHECK_IN and IN_PROGRESS bookings */}
         {(bookingDetail.status === 'IN_PROGRESS' || bookingDetail.status === 'CHECK_IN') && (
           <div className="info-section">
-            <div style={{ textAlign: 'center', display: 'flex', gap: '16px', justifyContent: 'center' }}>
-             
+            <div style={{ textAlign: 'center', display: 'flex', gap: '16px', justifyContent: 'center', flexWrap: 'wrap' }}>
               <Button
                 type="primary"
                 size="large"
@@ -920,6 +915,18 @@ const BoardingDetail: React.FC = () => {
               >
                 Tạo báo cáo
               </Button>
+              {(bookingDetail.status === 'IN_PROGRESS' && bookingDetail.isIncident === false) && (
+                <Button
+                  type="primary"
+                  danger
+                  size="large"
+                  onClick={handleShowReportIncidentModal}
+                  icon={<WarningOutlined />}
+                  className="report-incident-button"
+                >
+                  Báo cáo sự cố
+                </Button>
+              )}
               <Button
                 type="primary"
                 size="large"
@@ -1379,6 +1386,113 @@ const BoardingDetail: React.FC = () => {
                   </Col>
                 </Row>
               </Card>
+            </div>
+          </div>
+        </Modal>
+
+        {/* Report Incident Confirmation Modal */}
+        <Modal
+          title={
+            <div className="modal-title">
+              <WarningOutlined style={{ color: '#ff4d4f' }} />
+              <span style={{ marginLeft: 8 }}>Xác nhận báo cáo sự cố</span>
+            </div>
+          }
+          open={reportIncidentModalVisible}
+          onCancel={() => setReportIncidentModalVisible(false)}
+          footer={[
+            <Button key="cancel" onClick={() => setReportIncidentModalVisible(false)}>
+              Hủy
+            </Button>,
+            <Button
+              key="confirm"
+              type="primary"
+              danger
+              loading={exceptionLoading}
+              onClick={handleBookingException}
+              icon={<WarningOutlined />}
+            >
+              Xác nhận báo cáo
+            </Button>
+          ]}
+          width={500}
+          centered
+        >
+          <div style={{ padding: '20px 0' }}>
+            <div style={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              gap: '12px',
+              marginBottom: '16px',
+              padding: '16px',
+              backgroundColor: '#fff2f0',
+              border: '1px solid #ffccc7',
+              borderRadius: '8px'
+            }}>
+              <ExclamationCircleOutlined style={{ 
+                fontSize: '24px', 
+                color: '#ff4d4f' 
+              }} />
+              <div>
+                <h4 style={{ 
+                  margin: '0 0 8px 0', 
+                  color: '#cf1322',
+                  fontSize: '16px',
+                  fontWeight: 600
+                }}>
+                  Cảnh báo quan trọng
+                </h4>
+                <p style={{ 
+                  margin: 0, 
+                  color: '#8c8c8c',
+                  fontSize: '14px'
+                }}>
+                  Hành động này không thể hoàn tác
+                </p>
+              </div>
+            </div>
+            
+            <div style={{ marginBottom: '16px' }}>
+              <p style={{ 
+                margin: '0 0 12px 0', 
+                fontSize: '16px', 
+                color: '#262626',
+                fontWeight: 500
+              }}>
+                Bạn có chắc chắn muốn báo cáo sự cố cho booking này?
+              </p>
+              <p style={{ 
+                margin: '0 0 8px 0', 
+                fontSize: '14px', 
+                color: '#595959'
+              }}>
+                <strong>Booking ID:</strong> {bookingDetail?.bookingId}
+              </p>
+              <p style={{ 
+                margin: '0', 
+                fontSize: '14px', 
+                color: '#595959'
+              }}>
+                <strong>Hamster:</strong> {bookingDetail?.hamsterName}
+              </p>
+            </div>
+            
+            <div style={{
+              padding: '12px',
+              backgroundColor: '#fff7e6',
+              border: '1px solid #ffd591',
+              borderRadius: '6px'
+            }}>
+              <p style={{ 
+                margin: 0, 
+                fontSize: '14px', 
+                color: '#d46b08',
+                lineHeight: '1.5'
+              }}>
+                <strong>Lưu ý:</strong> Sau khi báo cáo sự cố, booking sẽ được đánh dấu là có sự cố 
+                và sẽ cần được xử lý bởi quản lý. Vui lòng đảm bảo rằng thực sự có sự cố xảy ra 
+                trước khi xác nhận.
+              </p>
             </div>
           </div>
         </Modal>
