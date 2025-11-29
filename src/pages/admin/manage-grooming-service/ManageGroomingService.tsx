@@ -112,7 +112,7 @@ function ManageGroomingService() {
           // Nếu có giá cũ, dùng priceId, nếu không thì để undefined (khi người dùng thêm loài mới)
           priceId: existingPrice?.priceId,
           speciesId: sp.id,
-          price: existingPrice?.price || 0, // Giá trị mặc định là 0
+          priceAfter: existingPrice?.price || 0,
         };
       });
 
@@ -277,7 +277,7 @@ function ManageGroomingService() {
             form.resetFields();
             // Thiết lập giá trị mặc định cho Create
             form.setFieldsValue({
-              prices: species.map((sp) => ({ speciesId: sp.id, price: 0 })),
+              prices: species.map((sp) => ({ speciesId: sp.id, priceAfter: 0 })),
               isActive: true,
             });
           }}
