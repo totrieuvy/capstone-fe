@@ -84,12 +84,34 @@ function GroomingPage() {
   const comboIcon: ReactNode = <GiftOutlined />;
 
   /** ✅ Chọn hoặc bỏ chọn dịch vụ lẻ */
+  // const toggleServiceSelect = (service: Service) => {
+  //   setSelectedServices((prev) => {
+  //     const isSelected = prev.some((s) => s.id === service.id);
+  //     if (isSelected) {
+  //       return prev.filter((s) => s.id !== service.id);
+  //     }
+  //     return [...prev, service];
+  //   });
+  // };
+
   const toggleServiceSelect = (service: Service) => {
     setSelectedServices((prev) => {
       const isSelected = prev.some((s) => s.id === service.id);
+
+      // 👉 Nếu đang SELECTED → nghĩa là user muốn BỎ CHỌN
       if (isSelected) {
-        return prev.filter((s) => s.id !== service.id);
+        return prev.filter((s) => s.id !== service.id); // Không check thời gian
       }
+
+      // 👉 Nếu đang chọn thêm dịch vụ mới
+      const totalMinutes = prev.reduce((sum, s) => sum + s.durationMinutes, 0);
+      const newTotal = totalMinutes + service.durationMinutes;
+
+      if (newTotal > 60) {
+        toast.error("Tổng thời gian không được vượt quá 60 phút!");
+        return prev; // Không thêm dịch vụ mới
+      }
+
       return [...prev, service];
     });
   };
