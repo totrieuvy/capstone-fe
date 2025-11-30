@@ -1,26 +1,32 @@
 import React, { useState, useEffect } from "react";
 import { Table, Button, Modal, Form, Input, Typography, Card, Space, Row, Col } from "antd";
 import type { ColumnsType } from "antd/es/table";
-import { EditOutlined, MedicineBoxOutlined } from "@ant-design/icons";
+import { EditOutlined, MedicineBoxOutlined, PlusOutlined } from "@ant-design/icons";
 import { toast } from "react-toastify";
 import MedicineService from "../../../services/MedicineService";
-import type { Medicine, UpdateMedicineRequest } from "../../../types/medicine";
+import type { Medicine, UpdateMedicineRequest, CreateMedicineRequest } from "../../../types/medicine";
 import "./ManageMedicine.scss";
 
 const { Title } = Typography;
+const { TextArea } = Input;
 
 interface MedicineTableData {
   key: string;
   id: string;
   medicationName: string;
+  description: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 const ManageMedicine: React.FC = () => {
   const [medicines, setMedicines] = useState<Medicine[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [modalVisible, setModalVisible] = useState<boolean>(false);
+  const [createModalVisible, setCreateModalVisible] = useState<boolean>(false);
   const [editingMedicine, setEditingMedicine] = useState<Medicine | null>(null);
   const [form] = Form.useForm();
+  const [createForm] = Form.useForm();
 
   // Fetch medicines on component mount
   useEffect(() => {
@@ -32,7 +38,12 @@ const ManageMedicine: React.FC = () => {
     setLoading(true);
     try {
       const response = await MedicineService.getMedicines();
-      setMedicines(response.data);
+      setMedicines(
+        response.data.map((medicine: any) => ({
+          ...medicine,
+          description: medicine.description ?? "",
+        }))
+      );
     } catch (error) {
       toast.error("Không thể tải danh sách thuốc");
       console.error("Error fetching medicines:", error);
@@ -45,6 +56,7 @@ const ManageMedicine: React.FC = () => {
     setEditingMedicine(medicine);
     form.setFieldsValue({
       medicationName: medicine.medicationName,
+      description: medicine.description,
     });
     setModalVisible(true);
   };
@@ -74,6 +86,27 @@ const ManageMedicine: React.FC = () => {
     form.resetFields();
   };
 
+  const handleCreate = async (values: CreateMedicineRequest) => {
+    setLoading(true);
+    try {
+      await MedicineService.createMedicine(values);
+      toast.success("Thêm thuốc thành công");
+      setCreateModalVisible(false);
+      createForm.resetFields();
+      await fetchMedicines(); // Refresh the list
+    } catch (error) {
+      toast.error("Không thể thêm thuốc");
+      console.error("Error creating medicine:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCreateCancel = () => {
+    setCreateModalVisible(false);
+    createForm.resetFields();
+  };
+
   const columns: ColumnsType<MedicineTableData> = [
     {
       title: "STT",
@@ -86,8 +119,15 @@ const ManageMedicine: React.FC = () => {
       title: "Tên thuốc",
       dataIndex: "medicationName",
       key: "medicationName",
-      ellipsis: true,
+      width: 250,
       render: (text) => <span className="medicine-name">{text}</span>,
+    },
+    {
+      title: "Mô tả",
+      dataIndex: "description",
+      key: "description",
+      ellipsis: true,
+      render: (text) => <span className="medicine-description">{text}</span>,
     },
     {
       title: "Thao tác",
@@ -97,7 +137,13 @@ const ManageMedicine: React.FC = () => {
       render: (_, record) => (
         <Button
           type="primary"
-          onClick={() => handleEdit({ id: record.id, medicationName: record.medicationName })}
+          onClick={() => handleEdit({
+            id: record.id,
+            medicationName: record.medicationName,
+            description: record.description,
+            createdAt: record.createdAt,
+            updatedAt: record.updatedAt
+          })}
           className="update-button"
         >
           Cập nhật
@@ -106,15 +152,27 @@ const ManageMedicine: React.FC = () => {
     },
   ];
 
-  const tableData: MedicineTableData[] = medicines.map((medicine) => ({
+  // Sort medicines by updatedAt descending (latest updated first), then by createdAt descending
+  const sortedMedicines = [...medicines].sort((a, b) => {
+    const updatedAtDiff = new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
+    if (updatedAtDiff !== 0) {
+      return updatedAtDiff;
+    }
+    return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+  });
+
+  const tableData: MedicineTableData[] = sortedMedicines.map((medicine) => ({
     key: medicine.id,
     id: medicine.id,
     medicationName: medicine.medicationName,
+    description: medicine.description,
+    createdAt: medicine.createdAt,
+    updatedAt: medicine.updatedAt,
   }));
 
   return (
     <div className="manage-medicine">
-      <div className="manage-medicine-container">
+      <div className="manage-medicine-container"> 
         <Row gutter={[24, 24]}>
           <Col span={24}>
             <Card className="header-card">
@@ -133,6 +191,18 @@ const ManageMedicine: React.FC = () => {
                 <Title level={4} className="table-title">
                   Danh sách thuốc
                 </Title>
+              </div>
+
+              <div className="table-actions">
+                <Button
+                  type="primary"
+                  icon={<PlusOutlined />}
+                  onClick={() => setCreateModalVisible(true)}
+                  size="large"
+                  className="add-button"
+                >
+                  Thêm thuốc
+                </Button>
               </div>
 
               <Table
@@ -185,6 +255,30 @@ const ManageMedicine: React.FC = () => {
               <Input placeholder="Nhập tên thuốc" size="large" className="medicine-input" />
             </Form.Item>
 
+            <Form.Item
+              label="Mô tả"
+              name="description"
+              rules={[
+                {
+                  required: true,
+                  message: "Vui lòng nhập mô tả",
+                },
+                {
+                  min: 5,
+                  message: "Mô tả phải có ít nhất 5 ký tự",
+                },
+              ]}
+            >
+              <TextArea 
+                placeholder="Nhập mô tả thuốc" 
+                size="large" 
+                className="medicine-input"
+                rows={4}
+                maxLength={500}
+                showCount
+              />
+            </Form.Item>
+
             <Form.Item className="form-buttons">
               <Space size="middle">
                 <Button onClick={handleCancel} size="large">
@@ -192,6 +286,74 @@ const ManageMedicine: React.FC = () => {
                 </Button>
                 <Button type="primary" htmlType="submit" loading={loading} size="large" className="submit-button">
                   Cập nhật
+                </Button>
+              </Space>
+            </Form.Item>
+          </Form>
+        </Modal>
+
+        <Modal
+          title={
+            <Space align="center">
+              <PlusOutlined />
+              <span>Thêm thuốc mới</span>
+            </Space>
+          }
+          open={createModalVisible}
+          onCancel={handleCreateCancel}
+          footer={null}
+          width={500}
+          className="update-modal"
+        >
+          <Form form={createForm} layout="vertical" onFinish={handleCreate} className="update-form">
+            <Form.Item
+              label="Tên thuốc"
+              name="medicationName"
+              rules={[
+                {
+                  required: true,
+                  message: "Vui lòng nhập tên thuốc",
+                },
+                {
+                  min: 2,
+                  message: "Tên thuốc phải có ít nhất 2 ký tự",
+                },
+              ]}
+            >
+              <Input placeholder="Nhập tên thuốc" size="large" className="medicine-input" />
+            </Form.Item>
+
+            <Form.Item
+              label="Mô tả"
+              name="description"
+              rules={[
+                {
+                  required: true,
+                  message: "Vui lòng nhập mô tả",
+                },
+                {
+                  min: 5,
+                  message: "Mô tả phải có ít nhất 5 ký tự",
+                },
+              ]}
+            >
+              <TextArea 
+                placeholder="Nhập mô tả thuốc" 
+                size="large" 
+                className="medicine-input"
+                rows={4}
+                maxLength={500}
+                showCount
+              />
+            </Form.Item>
+
+            <Form.Item className="form-buttons">
+              <Space size="middle">
+                <Button onClick={handleCreateCancel} size="large">
+                  Hủy
+                </Button>
+                <Button type="primary" htmlType="submit" loading={loading} size="large" className="submit-button">
+                  Thêm
                 </Button>
               </Space>
             </Form.Item>

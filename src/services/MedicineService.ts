@@ -4,14 +4,19 @@ import api from "../config/axios";
 export interface Medicine {
   id: string;
   medicationName: string;
+  description: string | null; // updated to allow null
+  createdAt: string | null;   // updated to allow null
+  updatedAt: string | null;   // updated to allow null
 }
 
 export interface CreateMedicineRequest {
   medicationName: string;
+  description?: string | null; // optional and nullable
 }
 
 export interface UpdateMedicineRequest {
   medicationName: string;
+  description?: string | null; // optional and nullable
 }
 
 export interface MedicineResponse {

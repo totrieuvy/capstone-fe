@@ -51,7 +51,32 @@
         font-weight: 600;
       }
     }
+    
+    .table-actions {
+      margin-bottom: 16px;
+      display: flex;
+      justify-content: flex-end;
+
+      .add-button {
+        background: #1890ff;
+        border-color: #1890ff;
+        border-radius: 8px;
+        font-weight: 500;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+
+        &:hover,
+        &:focus {
+          background: #40a9ff;
+          border-color: #40a9ff;
+          transform: translateY(-1px);
+          box-shadow: 0 4px 12px rgba(24, 144, 255, 0.3);
+        }
+      }
   }
+}
 
   .medicine-table {
     .ant-table-thead {

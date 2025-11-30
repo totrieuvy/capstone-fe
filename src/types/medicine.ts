@@ -1,6 +1,9 @@
 export interface Medicine {
   id: string;
   medicationName: string;
+  description: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface CreateMedicineRequest {
