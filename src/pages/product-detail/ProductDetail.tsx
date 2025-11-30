@@ -140,14 +140,14 @@ function ProductDetail() {
                 <Text>{product.weight} g</Text>
               </div>
 
-              <div className="actions">
+              {/* <div className="actions">
                 <Button type="primary" icon={<ShoppingCartOutlined />} className="add-btn">
                   Thêm vào giỏ hàng
                 </Button>
                 <Button icon={<HeartOutlined />} className="wishlist-btn">
                   Yêu thích
                 </Button>
-              </div>
+              </div> */}
             </div>
           </Col>
         </Row>
