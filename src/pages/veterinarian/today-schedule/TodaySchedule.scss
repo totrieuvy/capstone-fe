@@ -145,11 +145,12 @@ $not-checked-border: #4DB6AC;
         }
       }
 
-      .appointment-slot {
-        min-height: 80px;
+    .appointment-slot {
+        height: 80px;
         border-bottom: 1px solid $border-color;
         padding: 12px 16px;
         transition: all 0.2s ease;
+        overflow: hidden;
 
         &:hover {
           filter: brightness(0.98);

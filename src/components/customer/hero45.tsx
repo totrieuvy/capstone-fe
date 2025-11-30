@@ -1,4 +1,4 @@
-import { Search, Shield, Star, Clock } from "lucide-react";
+import { Star, ShoppingCart, Clock, Stethoscope } from "lucide-react";
 import React from "react";
 
 import { Badge } from "@/components/ui/badge";
@@ -26,12 +26,12 @@ const Hero45 = ({
   features = [
     //Provide title and desription for buying hamster products, healthcare service, groomin service, boarding service
     {
-      icon: <Search className="h-auto w-5" />,
+      icon: <ShoppingCart className="h-auto w-5" />,
       title: "Mua sản phẩm hamster",
-      description: "Tìm kiếm và mua các sản phẩm hamster chất lượng cao, từ thức ăn đến phụ kiện chăm sóc."
+      description: "Tìm kiếm và mua các sản phẩm, phụ kiện hamster chất lượng cao."
     },
     {
-      icon: <Shield className="h-auto w-5" />,
+      icon: <Stethoscope className="h-auto w-5" />,
       title: "Dịch vụ chăm sóc sức khỏe",
       description: "Đặt lịch chăm sóc sức khỏe cho hamster của bạn với hệ thống thanh toán an toàn và các dịch vụ được xác thực."
     },
