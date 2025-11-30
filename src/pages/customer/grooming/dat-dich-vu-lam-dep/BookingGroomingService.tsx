@@ -535,7 +535,23 @@ function BookingGroomingService() {
             </Title>
             <Tabs
               activeKey={selectMode}
-              onChange={(key) => setSelectMode(key as "scheduleFirst" | "staffFirst")}
+              onChange={(key) => {
+                setSelectMode(key as "scheduleFirst" | "staffFirst");
+
+                // 🔥 FIX: reset nhân viên & slot khi chuyển về tab chọn nhân viên trước
+                if (key === "staffFirst") {
+                  setSelectedStaff(null);
+                  setSelectedSlot(null);
+                  setAllStaffs([]); // ép load lại
+                  fetchSlots(currentWeek); // load full slot để build lại staff list
+                }
+
+                // Khi chuyển về chọn lịch trước → cũng nên reset
+                if (key === "scheduleFirst") {
+                  setSelectedStaff(null);
+                  setSelectedSlot(null);
+                }
+              }}
               items={[
                 { key: "scheduleFirst", label: "Chọn lịch trước", icon: <CalendarOutlined /> },
                 { key: "staffFirst", label: "Chọn nhân viên trước", icon: <TeamOutlined /> },
