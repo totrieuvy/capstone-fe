@@ -1,7 +1,7 @@
 import { useEffect, useState, useMemo } from "react";
 import { useParams } from "react-router-dom";
-import { Card, Image, Spin, Typography, Row, Col, Button, Rate, Tag, Divider, Tabs, Avatar, Progress } from "antd";
-import { ShoppingCartOutlined, HeartOutlined, UserOutlined } from "@ant-design/icons";
+import { Card, Image, Spin, Typography, Row, Col, Rate, Tag, Divider, Tabs, Avatar, Progress } from "antd";
+import { UserOutlined } from "@ant-design/icons";
 import { getFormattedPrice } from "../../utils/formatPrice";
 import api from "../../config/axios";
 import { toast } from "react-toastify";
@@ -140,14 +140,14 @@ function ProductDetail() {
                 <Text>{product.weight} g</Text>
               </div>
 
-              <div className="actions">
+              {/* <div className="actions">
                 <Button type="primary" icon={<ShoppingCartOutlined />} className="add-btn">
                   Thêm vào giỏ hàng
                 </Button>
                 <Button icon={<HeartOutlined />} className="wishlist-btn">
                   Yêu thích
                 </Button>
-              </div>
+              </div> */}
             </div>
           </Col>
         </Row>
