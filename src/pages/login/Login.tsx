@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { GoogleAuthProvider, signInWithPopup } from "firebase/auth";
 import { auth, googleProvider } from "../../config/firebase";
 import { useForm } from "antd/es/form/Form";
-import { AxiosError } from "axios";
+// import { AxiosError } from "axios";
 import api from "../../config/axios";
 import { toast } from "react-toastify";
 import { useDispatch } from "react-redux";
@@ -18,9 +18,9 @@ interface LoginValues {
   password: string;
 }
 
-interface ApiError {
-  message: string;
-}
+// interface ApiError {
+//   message: string;
+// }
 
 const LoginForm = () => {
   const [form] = useForm();
@@ -77,7 +77,8 @@ const LoginForm = () => {
         const user = response.data.data.user;
         const role = user.role;
 
-        toast.success(response.data.message);
+        // toast.success(response.data.message);
+        toast.success("Đăng nhập thành công!");
 
         localStorage.setItem("token", token);
 
@@ -104,9 +105,10 @@ const LoginForm = () => {
             navigate("/", { replace: true });
         }
       }
-    } catch (error: unknown) {
-      const err = error as AxiosError<ApiError>;
-      toast.error(err.response?.data?.message || "Login failed");
+    } catch {
+      // const err = error as AxiosError<ApiError>;
+      // toast.error(err.response?.data?.message || "Login failed");
+      toast.error("Sai email hoặc mật khẩu. Vui lòng thử lại!");
     } finally {
       setLoading(false);
       form.resetFields();
