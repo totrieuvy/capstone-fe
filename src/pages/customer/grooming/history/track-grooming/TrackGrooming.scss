@@ -1,69 +1,189 @@
-.track-grooming {
-  padding: 24px;
+/* TrackGrooming.scss
+   Style for TrackGrooming.tsx
+   - Layout giống MedicalAppointmentHistory
+   - Responsive: mobile -> stack, desktop -> 6-column-like cards
+*/
 
-  .grooming-header {
-    margin-bottom: 20px;
-    text-align: left;
+$bg-card: #ffffff;
+$bg-page: #f5f7fa;
+$muted: #8c8c8c;
+$primary: #1890ff;
+$accent: #ff6f61;
+$card-border: #e8eaf0;
+$shadow: 0 6px 18px rgba(23, 47, 77, 0.06);
 
-    h2 {
-      font-weight: 600;
-      color: #333;
-    }
-  }
+.medical-appointment-history {
+  background: $bg-page;
+  padding: 18px;
 
   .ant-card {
-    border-radius: 12px;
+    border-radius: 10px;
+    box-shadow: none;
+    border: 0;
   }
 
-  .grooming-cards-container {
+  > .ant-card {
+    background: transparent;
+    border: 0;
+    padding: 0;
+  }
+
+  .medical-history-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+
+    h2 {
+      margin: 0;
+      font-weight: 600;
+      color: #111827;
+    }
+  }
+
+  /* FILTER CARD */
+  .ant-card + .ant-card {
+    margin-bottom: 18px;
+  }
+
+  /* Cards container */
+  .appointment-cards-container {
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    gap: 12px;
   }
 
-  .grooming-card {
-    border-radius: 10px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-    transition: all 0.2s ease;
+  /* Single appointment card */
+  .appointment-card {
+    background: $bg-card;
+    border: 1px solid $card-border;
+    border-radius: 12px;
+    padding: 14px;
+    box-shadow: $shadow;
+    transition: transform 150ms ease, box-shadow 150ms ease;
 
     &:hover {
-      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.1);
-      transform: translateY(-2px);
+      transform: translateY(-4px);
+      box-shadow: 0 12px 30px rgba(23, 47, 77, 0.08);
     }
 
-    .grooming-info {
+    .appointment-info-section {
       .info-label {
-        font-size: 13px;
-        color: #888;
+        font-size: 12px;
+        color: $muted;
+        margin-bottom: 6px;
+        display: flex;
+        align-items: center;
+        svg {
+          font-size: 14px;
+        }
+      }
+
+      .hamster-name {
+        font-weight: 600;
+        color: #111827;
+        font-size: 15px;
+        word-break: break-word;
       }
 
       .info-value {
-        font-size: 15px;
-        font-weight: 500;
-        color: #333;
+        color: #222b3a;
+        font-size: 14px;
       }
+    }
+
+    .appointment-actions {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* layout tweaks for columns inside Card (Row/Col from antd) */
+    .ant-row {
+      align-items: center;
     }
   }
 
-  .grooming-loading {
+  /* Loading screen */
+  .medical-history-loading {
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    height: 60vh;
+    padding: 40px 0;
+
     p {
       margin-top: 12px;
-      color: #666;
+      color: $muted;
     }
   }
 
-  @media (max-width: 768px) {
+  /* Empty state adjustments */
+  .ant-empty-description {
+    color: $muted;
+  }
+
+  /* Tags style override for better visual */
+  .ant-tag {
+    border-radius: 8px;
+    font-weight: 600;
+    letter-spacing: 0.2px;
+  }
+
+  /* Small screens: stack columns */
+  @media (max-width: 575px) {
     padding: 12px;
 
-    .grooming-card {
-      .info-value {
-        font-size: 14px;
+    .appointment-card {
+      padding: 12px;
+      .appointment-info-section {
+        .info-label {
+          font-size: 11px;
+        }
+        .hamster-name {
+          font-size: 14px;
+        }
+        .info-value {
+          font-size: 13px;
+        }
       }
     }
   }
+
+  /* Medium screens: tighten spacing */
+  @media (min-width: 576px) and (max-width: 991px) {
+    padding: 14px;
+
+    .appointment-card {
+      padding: 12px;
+    }
+  }
+
+  /* Desktop: make cards look spacious */
+  @media (min-width: 992px) {
+    padding: 20px;
+
+    .appointment-card {
+      padding: 16px;
+    }
+  }
+}
+
+/* Utility: make action buttons consistent */
+.appointment-card .ant-btn-primary {
+  background: $accent;
+  border-color: $accent;
+  box-shadow: none;
+}
+
+/* Reset button style small */
+.medical-appointment-history .ant-btn {
+  border-radius: 8px;
+}
+
+/* Accessibility: focus styles */
+.appointment-card .ant-btn:focus,
+.medical-appointment-history .ant-select-focused {
+  outline: 3px solid rgba(24, 144, 255, 0.12);
+  outline-offset: 2px;
 }
