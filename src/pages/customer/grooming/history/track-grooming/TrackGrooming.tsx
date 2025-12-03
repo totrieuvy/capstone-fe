@@ -180,7 +180,7 @@ const TrackGrooming: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="medical-history-loading">
+      <div className="grooming-history-loading">
         <Spin size="large" />
         <p>Đang tải lịch Grooming...</p>
       </div>
@@ -188,9 +188,9 @@ const TrackGrooming: React.FC = () => {
   }
 
   return (
-    <div className="medical-appointment-history">
+    <div className="grooming-appointment-history">
       <Card>
-        <div className="medical-history-header">
+        <div className="grooming-history-header">
           <Title level={2}>Lịch Grooming</Title>
         </div>
 
@@ -199,7 +199,7 @@ const TrackGrooming: React.FC = () => {
         {/* Filters */}
         <Card size="small" style={{ marginBottom: 16 }}>
           <Row gutter={16} align="middle">
-            <Col xs={24} sm={6}>
+            <Col xs={24} sm={8}>
               <Select style={{ width: "100%" }} value={statusFilter} onChange={setStatusFilter}>
                 <Option value="ALL">Tất cả trạng thái</Option>
                 <Option value="BOOKED">Đã đặt</Option>
@@ -210,7 +210,7 @@ const TrackGrooming: React.FC = () => {
               </Select>
             </Col>
 
-            <Col xs={24} sm={6}>
+            <Col xs={24} sm={8}>
               <DatePicker
                 format="DD/MM/YYYY"
                 value={date}
@@ -219,7 +219,7 @@ const TrackGrooming: React.FC = () => {
               />
             </Col>
 
-            <Col xs={24} sm={4}>
+            <Col xs={24} sm={8}>
               <Button icon={<ReloadOutlined />} style={{ width: "100%" }} onClick={handleReset}>
                 Đặt lại
               </Button>
