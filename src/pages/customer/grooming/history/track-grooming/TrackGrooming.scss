@@ -1,6 +1,6 @@
 /* TrackGrooming.scss
    Style for TrackGrooming.tsx
-   - Layout giống MedicalAppointmentHistory
+   - Layout giống groomingAppointmentHistory
    - Responsive: mobile -> stack, desktop -> 6-column-like cards
 */
 
@@ -12,9 +12,13 @@ $accent: #ff6f61;
 $card-border: #e8eaf0;
 $shadow: 0 6px 18px rgba(23, 47, 77, 0.06);
 
-.medical-appointment-history {
+.grooming-appointment-history {
   background: $bg-page;
   padding: 18px;
+
+  .ant-card-body {
+    padding: 20px;
+  }
 
   .ant-card {
     border-radius: 10px;
@@ -28,7 +32,7 @@ $shadow: 0 6px 18px rgba(23, 47, 77, 0.06);
     padding: 0;
   }
 
-  .medical-history-header {
+  .grooming-history-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -36,8 +40,9 @@ $shadow: 0 6px 18px rgba(23, 47, 77, 0.06);
 
     h2 {
       margin: 0;
-      font-weight: 600;
-      color: #111827;
+      font-weight: 700;
+      color: #ff6f61;
+      font-size: 28px;
     }
   }
 
@@ -69,7 +74,7 @@ $shadow: 0 6px 18px rgba(23, 47, 77, 0.06);
 
     .appointment-info-section {
       .info-label {
-        font-size: 12px;
+        font-size: 14px;
         color: $muted;
         margin-bottom: 6px;
         display: flex;
@@ -80,15 +85,17 @@ $shadow: 0 6px 18px rgba(23, 47, 77, 0.06);
       }
 
       .hamster-name {
-        font-weight: 600;
+        font-weight: 700;
         color: #111827;
-        font-size: 15px;
+        font-size: 20px;
         word-break: break-word;
+        color: #ff6f61;
       }
 
       .info-value {
-        color: #222b3a;
-        font-size: 14px;
+        font-size: 16px;
+        color: #333;
+        font-weight: 650;
       }
     }
 
@@ -105,7 +112,7 @@ $shadow: 0 6px 18px rgba(23, 47, 77, 0.06);
   }
 
   /* Loading screen */
-  .medical-history-loading {
+  .grooming-history-loading {
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -177,13 +184,13 @@ $shadow: 0 6px 18px rgba(23, 47, 77, 0.06);
 }
 
 /* Reset button style small */
-.medical-appointment-history .ant-btn {
+.grooming-appointment-history .ant-btn {
   border-radius: 8px;
 }
 
 /* Accessibility: focus styles */
 .appointment-card .ant-btn:focus,
-.medical-appointment-history .ant-select-focused {
+.grooming-appointment-history .ant-select-focused {
   outline: 3px solid rgba(24, 144, 255, 0.12);
   outline-offset: 2px;
 }
