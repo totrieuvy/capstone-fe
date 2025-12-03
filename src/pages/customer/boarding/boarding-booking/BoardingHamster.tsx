@@ -1149,12 +1149,12 @@ function BoardingHamster() {
                   )}
                 </Row>
 
-                <Alert
+                {/* <Alert
                   message="Các ngày lễ, Tết sẽ có phụ thu 20% trên giá dịch vụ hàng ngày"
                   type="warning"
                   showIcon
                   style={{ marginTop: 16 }}
-                />
+                /> */}
               </Card>
 
               {/* Cage Types Selection */}
