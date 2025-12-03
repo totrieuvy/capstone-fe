@@ -568,7 +568,7 @@ const BoardingDetail: React.FC = () => {
                     </div>
                   </Descriptions.Item>
                 )}
-                <Descriptions.Item label="Tổng tiền">
+                <Descriptions.Item label="Tổng tiền đã thanh toán">
                   <strong className="total-amount">
                     {formatPrice(bookingDetail.totalAmount)}
                   </strong>
@@ -586,13 +586,13 @@ const BoardingDetail: React.FC = () => {
                     <div className="notes-text">{bookingDetail.notes}</div>
                   </Descriptions.Item>
                 )} */}
-                {bookingDetail.healthNote && (
+                {/* {bookingDetail.healthNote && (
                   <Descriptions.Item label="Ghi chú sức khỏe" span={2}>
                     <div className="health-note">
                       {bookingDetail.healthNote}
                     </div>
                   </Descriptions.Item>
-                )}
+                )} */}
               </Descriptions>
             </div>
             

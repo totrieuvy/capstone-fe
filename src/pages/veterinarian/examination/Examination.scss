@@ -305,6 +305,7 @@
         border: 2px solid #b7eb8f;
         border-radius: 8px;
         transition: all 0.3s ease;
+        min-height: 80px; // Ensure consistent height
 
         &:hover {
           border-color: #52c41a;
@@ -322,6 +323,122 @@
           border: 2px solid #52c41a;
           border-radius: 8px;
           overflow: hidden;
+          flex-shrink: 0; // Prevent image from shrinking
+        }
+      }
+    }
+
+    // Ensure consistent field heights in medical records
+    .ant-form-item-control-input {
+      min-height: 32px;
+    }
+
+    .ant-select-selector {
+      min-height: 32px !important;
+    }
+
+    // Better spacing for form items in medical records
+    .ant-form-item {
+      margin-bottom: 16px;
+
+      &:last-child {
+        margin-bottom: 0;
+      }
+    }
+
+    // Ensure consistent content box heights
+    .medical-content-box {
+      min-height: 60px;
+      display: flex;
+      align-items: flex-start;
+      padding: 12px;
+      background: #fafafa;
+      border-radius: 6px;
+      word-break: break-word;
+      border: 1px solid #f0f0f0;
+      transition: all 0.3s ease;
+
+      &:hover {
+        border-color: #d9d9d9;
+        box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+      }
+    }
+
+    // Enhanced existing medical record display
+    .existing-record-section {
+      .ant-collapse-content-box {
+        padding: 20px !important;
+        background: #ffffff;
+      }
+
+      .record-field {
+        margin-bottom: 16px;
+
+        &:last-child {
+          margin-bottom: 0;
+        }
+
+        .field-label {
+          display: block;
+          margin-bottom: 8px;
+          font-weight: 600;
+          color: #262626;
+          font-size: 14px;
+        }
+
+        .field-content {
+          height: 80px;
+          display: flex;
+          align-items: center;
+          padding: 12px;
+          background: #fafafa;
+          border-radius: 6px;
+          border: 1px solid #f0f0f0;
+          transition: all 0.3s ease;
+
+          &:hover {
+            border-color: #d9d9d9;
+            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+          }
+
+          &.content-box {
+            align-items: flex-start;
+            overflow: auto;
+          }
+        }
+      }
+
+      .image-display {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+
+        .image-placeholder {
+          width: 56px;
+          height: 56px;
+          background: #f0f0f0;
+          border-radius: 6px;
+          border: 1px dashed #d9d9d9;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+
+        .image-info {
+          flex: 1;
+
+          .status-text {
+            color: #52c41a;
+            font-size: 13px;
+            font-weight: 500;
+            display: block;
+            margin-bottom: 4px;
+          }
+
+          .help-text {
+            color: #8c8c8c;
+            font-size: 12px;
+          }
         }
       }
     }
@@ -515,14 +632,64 @@
       .image-upload-success .image-preview {
         padding: 12px;
         gap: 12px;
+        flex-direction: column;
+        text-align: center;
 
         .ant-image {
           width: 60px !important;
           height: 60px !important;
+          align-self: center;
         }
 
         .image-info {
           gap: 2px;
+        }
+      }
+
+      // Better mobile grid alignment
+      .medical-content-box {
+        min-height: 50px;
+        font-size: 14px;
+      }
+
+      // Mobile styles for existing records
+      .existing-record-section {
+        .record-field {
+          margin-bottom: 12px;
+
+          .field-label {
+            font-size: 13px;
+            margin-bottom: 6px;
+          }
+
+          .field-content {
+            height: 60px;
+            padding: 10px;
+
+            &.content-box {
+              height: 60px;
+            }
+          }
+        }
+
+        .image-display {
+          flex-direction: row;
+          gap: 10px;
+
+          .image-placeholder {
+            width: 48px;
+            height: 48px;
+          }
+
+          .image-info {
+            .status-text {
+              font-size: 12px;
+            }
+
+            .help-text {
+              font-size: 11px;
+            }
+          }
         }
       }
     }
@@ -646,6 +813,7 @@
         gap: 10px;
         flex-direction: column;
         text-align: center;
+        min-height: 100px;
 
         .ant-image {
           width: 50px !important;
@@ -655,6 +823,56 @@
 
         .image-info {
           gap: 2px;
+        }
+      }
+
+      // Ensure consistent grid on mobile
+      .medical-content-box {
+        min-height: 45px;
+        font-size: 13px;
+        padding: 10px;
+      }
+
+      // Extra small screen styles for existing records
+      .existing-record-section {
+        .record-field {
+          margin-bottom: 10px;
+
+          .field-label {
+            font-size: 12px;
+            margin-bottom: 4px;
+          }
+
+          .field-content {
+            height: 50px;
+            padding: 8px;
+
+            &.content-box {
+              height: 50px;
+            }
+          }
+        }
+
+        .image-display {
+          flex-direction: column;
+          text-align: center;
+          gap: 8px;
+
+          .image-placeholder {
+            width: 40px;
+            height: 40px;
+            align-self: center;
+          }
+
+          .image-info {
+            .status-text {
+              font-size: 11px;
+            }
+
+            .help-text {
+              font-size: 10px;
+            }
+          }
         }
       }
     }

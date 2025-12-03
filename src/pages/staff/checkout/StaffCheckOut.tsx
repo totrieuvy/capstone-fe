@@ -56,7 +56,7 @@ const StaffCheckOut: React.FC = () => {
 
   const handlePayment = () => {
     if (checkOutData.paymentUrl) {
-      window.open(checkOutData.paymentUrl, '_blank');
+      window.location.href = checkOutData.paymentUrl;
     }
   };
 
@@ -122,8 +122,14 @@ const StaffCheckOut: React.FC = () => {
                 </Tag>
               </Descriptions.Item>
               <Descriptions.Item label="Trạng thái">
-                <Tag color={checkOutData.status === 'CHECK_OUT' ? 'green' : 'processing'}>
-                  {checkOutData.status === 'CHECK_OUT' ? 'Hoàn tất' : checkOutData.status}
+                <Tag color={
+                  checkOutData.status === 'CHECK_OUT' ? 'green' : 
+                  checkOutData.status === 'IN_PROGRESS' ? 'processing' : 
+                  'default'
+                }>
+                  {checkOutData.status === 'CHECK_OUT' ? 'Hoàn tất' : 
+                   checkOutData.status === 'IN_PROGRESS' ? 'Đang thực hiện' : 
+                   checkOutData.status}
                 </Tag>
               </Descriptions.Item>
               <Descriptions.Item label="Phương thức thanh toán">

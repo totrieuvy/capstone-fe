@@ -675,6 +675,12 @@ const BoardingDetail: React.FC = () => {
             </div>
             <Divider />
             <div className="payment-item total">
+              <Text strong>Tổng tiền đã thanh toán</Text>
+              <Text strong className="total-amount">
+                {getFormattedPrice(booking.totalAmount)}
+              </Text>
+            </div>
+            <div className="payment-item total">
               <Text strong>Tổng tiền (trước giảm giá)</Text>
               <Text strong className="total-amount">
                 {getFormattedPrice(booking.totalAmount)}
