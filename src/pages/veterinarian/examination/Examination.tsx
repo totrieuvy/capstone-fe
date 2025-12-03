@@ -709,7 +709,7 @@ const Examination: React.FC = () => {
               </Col>
 
               {/* Health Status */}
-              <Col xs={24} md={8}>
+              <Col xs={24} md={12}>
                 <Form.Item
                   label="Tình trạng sức khỏe"
                   required
@@ -729,7 +729,7 @@ const Examination: React.FC = () => {
               </Col>
 
               {/* Image Upload */}
-              <Col xs={24} md={16}>
+              <Col xs={24} md={12}>
                 <Form.Item
                   label="Hình ảnh kết quả khám"
                   required
@@ -745,7 +745,11 @@ const Examination: React.FC = () => {
                           height={80}
                           style={{ objectFit: 'cover', borderRadius: '8px', cursor: 'pointer' }}
                           preview={false}
-                          onClick={() => handleImagePreview(uploadState.imageUrl, `Kết quả khám - ${record.serviceName}`)}
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            handleImagePreview(uploadState.imageUrl, `Kết quả khám - ${record.serviceName}`);
+                          }}
                         />
                         <div className="image-info">
                           <Text strong style={{ color: '#52c41a' }}>
@@ -838,27 +842,46 @@ const Examination: React.FC = () => {
         children: (
           <div style={{ padding: '8px 0' }}>
             <Row gutter={[16, 16]}>
+              {/* First row - Diagnosis and Symptoms */}
               <Col xs={24} md={12}>
-                <div>
-                  <Text strong>Chẩn đoán:</Text>
-                  <div style={{ marginTop: 8, padding: 12, background: '#fafafa', borderRadius: 6 }}>
-                    <Text>{record.diagnosis}</Text>
+                <div style={{ height: '100%' }}>
+                  <Text strong style={{ display: 'block', marginBottom: '8px', fontSize: '14px' }}>Chẩn đoán:</Text>
+                  <div className="medical-content-box" style={{ height: '80px', overflow: 'auto' }}>
+                    <Text style={{ lineHeight: '1.5' }}>{record.diagnosis}</Text>
                   </div>
                 </div>
               </Col>
               <Col xs={24} md={12}>
-                <div>
-                  <Text strong>Triệu chứng:</Text>
-                  <div style={{ marginTop: 8, padding: 12, background: '#fafafa', borderRadius: 6 }}>
-                    <Text>{record.symptom}</Text>
+                <div style={{ height: '100%' }}>
+                  <Text strong style={{ display: 'block', marginBottom: '8px', fontSize: '14px' }}>Triệu chứng:</Text>
+                  <div className="medical-content-box" style={{ height: '80px', overflow: 'auto' }}>
+                    <Text style={{ lineHeight: '1.5' }}>{record.symptom}</Text>
                   </div>
                 </div>
               </Col>
-              <Col xs={24} md={8}>
-                <div>
-                  <Text strong>Tình trạng sức khỏe:</Text>
-                  <div style={{ marginTop: 8 }}>
-                    <Tag color={record.healthStatus === 'normal' ? 'green' : record.healthStatus === 'critical' ? 'red' : 'orange'}>
+              
+              {/* Second row - Health Status and Image */}
+              <Col xs={24} md={12}>
+                <div style={{ height: '100%', marginTop: '16px' }}>
+                  <Text strong style={{ display: 'block', marginBottom: '8px', fontSize: '14px' }}>Tình trạng sức khỏe:</Text>
+                  <div style={{ 
+                    height: '80px', 
+                    display: 'flex', 
+                    alignItems: 'center',
+                    padding: '12px',
+                    background: '#fafafa',
+                    borderRadius: '6px',
+                    border: '1px solid #f0f0f0'
+                  }}>
+                    <Tag 
+                      color={record.healthStatus === 'normal' ? 'green' : record.healthStatus === 'critical' ? 'red' : 'orange'}
+                      style={{ 
+                        fontSize: '13px', 
+                        padding: '4px 12px', 
+                        borderRadius: '16px',
+                        fontWeight: '500'
+                      }}
+                    >
                       {record.healthStatus === 'normal' ? 'Bình thường' :
                        record.healthStatus === 'mild' ? 'Nhẹ' :
                        record.healthStatus === 'moderate' ? 'Trung bình' :
@@ -867,19 +890,62 @@ const Examination: React.FC = () => {
                   </div>
                 </div>
               </Col>
-              <Col xs={24} md={16}>
-                <div>
-                  <Text strong>Hình ảnh kết quả:</Text>
-                  <div style={{ marginTop: 8 }}>
-                    {record.linkResult && (
-                      <Image
-                        src={record.linkResult}
-                        alt="Kết quả khám"
-                        width={80}
-                        height={80}
-                        style={{ objectFit: 'cover', borderRadius: '8px', cursor: 'pointer' }}
-                        onClick={() => handleImagePreview(record.linkResult, `Kết quả khám - ${item.serviceName}`)}
-                      />
+              <Col xs={24} md={12}>
+                <div style={{ height: '100%', marginTop: '16px' }}>
+                  <Text strong style={{ display: 'block', marginBottom: '8px', fontSize: '14px' }}>Hình ảnh kết quả:</Text>
+                  <div style={{ 
+                    height: '80px', 
+                    display: 'flex', 
+                    alignItems: 'center',
+                    padding: '12px',
+                    background: '#fafafa',
+                    borderRadius: '6px',
+                    border: '1px solid #f0f0f0'
+                  }}>
+                    {record.linkResult ? (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                        <Image
+                          src={record.linkResult}
+                          alt="Kết quả khám"
+                          width={56}
+                          height={56}
+                          style={{ 
+                            objectFit: 'cover', 
+                            borderRadius: '6px', 
+                            cursor: 'pointer',
+                            border: '2px solid #52c41a'
+                          }}
+                          preview={false}
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            handleImagePreview(record.linkResult, `Kết quả khám - ${item.serviceName}`);
+                          }}
+                        />
+                        <div>
+                          <Text style={{ color: '#52c41a', fontSize: '13px', fontWeight: '500' }}>
+                            ✓ Hình ảnh kết quả khám
+                          </Text>
+                          <br />
+                          <Text type="secondary" style={{ fontSize: '12px' }}>Nhấn để xem chi tiết</Text>
+                        </div>
+                      </div>
+                    ) : (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <div style={{ 
+                          width: '56px', 
+                          height: '56px',
+                          background: '#f0f0f0',
+                          borderRadius: '6px',
+                          border: '1px dashed #d9d9d9',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center'
+                        }}>
+                          <Text type="secondary" style={{ fontSize: '12px' }}>N/A</Text>
+                        </div>
+                        <Text type="secondary" style={{ fontSize: '13px' }}>Không có hình ảnh</Text>
+                      </div>
                     )}
                   </div>
                 </div>
@@ -1784,9 +1850,10 @@ const Examination: React.FC = () => {
         width="80%"
         centered
         style={{ maxWidth: '800px' }}
+        destroyOnClose={true}
       >
         <div style={{ textAlign: 'center' }}>
-          <img
+          <Image
             src={previewImage}
             alt={previewTitle}
             style={{
@@ -1796,6 +1863,7 @@ const Examination: React.FC = () => {
               objectFit: 'contain',
               borderRadius: '8px'
             }}
+            preview={false}
           />
         </div>
       </Modal>
