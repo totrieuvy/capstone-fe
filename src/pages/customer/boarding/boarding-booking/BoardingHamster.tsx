@@ -1039,7 +1039,7 @@ function BoardingHamster() {
                               </p>
                                <p>
                                 <span className="label">Ngày sinh:</span>
-                                <span className="value">{hamster.dob}</span>
+                                <span className="value">{dayjs(hamster.dob).format('DD/MM/YYYY')}</span>
                               </p>
                               <p>
                                 <span className="label">Màu:</span>
@@ -1149,12 +1149,12 @@ function BoardingHamster() {
                   )}
                 </Row>
 
-                <Alert
+                {/* <Alert
                   message="Các ngày lễ, Tết sẽ có phụ thu 20% trên giá dịch vụ hàng ngày"
                   type="warning"
                   showIcon
                   style={{ marginTop: 16 }}
-                />
+                /> */}
               </Card>
 
               {/* Cage Types Selection */}

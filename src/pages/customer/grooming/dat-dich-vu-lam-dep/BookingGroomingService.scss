@@ -148,7 +148,7 @@
     }
 
     img {
-      width: 150px;
+      width: 120px;
       height: 150px;
       object-fit: cover;
       border-radius: 10px 0 0 10px;
@@ -156,19 +156,19 @@
     }
 
     .hamster__name {
-      font-size: 16px;
+      font-size: 15px;
       font-weight: 700;
       color: #ff6f61;
-      margin: 0 0 8px 0;
+      margin: 0 0 6px 0;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
     }
 
     .hamster__info-compact {
-      font-size: 14px;
+      font-size: 13px;
       p {
-        margin: 4px 0;
+        margin: 2px 0;
         display: flex;
         justify-content: space-between;
         align-items: center;
@@ -177,11 +177,13 @@
           color: #888;
           font-weight: 500;
           margin-right: 8px;
+          min-width: 70px;
         }
 
         .value {
           color: #333;
           font-weight: 600;
+          text-align: right;
         }
       }
     }
