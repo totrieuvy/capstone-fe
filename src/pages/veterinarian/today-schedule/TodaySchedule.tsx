@@ -24,10 +24,10 @@ interface Appointment {
   statusLabel: string;
 }
 
-const timeSlots = ["09:00", "10:00", "11:00-13:00", "14:00", "15:00", "16:00", "17:00"];
+const timeSlots = ["09:00", "10:00", "11:00-13:00", "13:00" ,"14:00", "15:00", "16:00", "17:00"];
 
 const statusConfig = {
-  CHECKED_IN: { color: "#4DB6AC", bg: "#80CBC4", label: "Đã nhận" },
+  CHECKED_IN: { color: "#4DB6AC", bg: "#80CBC4", label: "Đã check-in" },
   IN_PROGRESS: { color: "#FDD835", bg: "#FFF59D", label: "Đang khám" },
   CHECK_OUT: { color: "#4CAF50", bg: "#A5D6A7", label: "Hoàn thành" },
   BOOKED: { color: "#2196F3", bg: "#90CAF9", label: "Đã đặt" },

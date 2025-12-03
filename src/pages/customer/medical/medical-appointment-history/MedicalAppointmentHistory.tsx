@@ -50,11 +50,11 @@ const MedicalAppointmentHistory: React.FC = () => {
 
     useEffect(() => {
         fetchAppointmentHistory(currentPage);
-    }, [currentPage]);
+    }, [currentPage, statusFilter]);
 
     useEffect(() => {
         filterAppointments();
-    }, [appointmentHistory, searchText, statusFilter]);
+    }, [appointmentHistory, searchText]);
 
     const fetchAppointmentHistory = async (page: number) => {
         try {
@@ -62,7 +62,8 @@ const MedicalAppointmentHistory: React.FC = () => {
             setError(null);
             const response = await getMedicalAppointmentHistory({
                 page: page - 1,
-                size: pageSize
+                size: pageSize,
+                status: statusFilter !== 'all' ? statusFilter : undefined
             });
             setAppointmentHistory(response.data.content);
             setTotalAppointments(response.data.totalElements);
@@ -86,11 +87,7 @@ const MedicalAppointmentHistory: React.FC = () => {
             );
         }
 
-        // Filter by status
-        if (statusFilter !== 'all') {
-            filtered = filtered.filter(appointment => appointment.status === statusFilter);
-        }
-
+        // Status filtering is now handled by the API, so we don't need client-side filtering
         setFilteredHistory(filtered);
     };
 
@@ -297,7 +294,10 @@ const MedicalAppointmentHistory: React.FC = () => {
                                 style={{ width: '100%' }}
                                 placeholder="Lọc theo trạng thái"
                                 value={statusFilter}
-                                onChange={setStatusFilter}
+                                onChange={(value) => {
+                                    setStatusFilter(value);
+                                    setCurrentPage(1); // Reset to first page when filter changes
+                                }}
                                 suffixIcon={<FilterOutlined />}
                             >
                                 <Option value="all">Tất cả trạng thái</Option>
