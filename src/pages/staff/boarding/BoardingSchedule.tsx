@@ -420,7 +420,9 @@ const BoardingSchedule = () => {
             status: booking.status,
             isOriginalSegment: true,
             hasTransfer: true,
-            originalBookingId: booking.bookingId
+            originalBookingId: booking.bookingId,
+            newEndDate: booking.newEndDate,
+            isIncident: booking.isIncident
           });
         }
         
@@ -443,7 +445,9 @@ const BoardingSchedule = () => {
               status: booking.status,
               isExtendedSegment: true,
               hasTransfer: true,
-              originalBookingId: booking.bookingId
+              originalBookingId: booking.bookingId,
+              newEndDate: booking.newEndDate,
+              isIncident: booking.isIncident
             });
           }
         }
@@ -464,7 +468,9 @@ const BoardingSchedule = () => {
             hamsterName: booking.hamsterName,
             status: booking.status,
             isExtended: !!(booking.newEndDate && booking.newEndDate !== null && booking.newEndDate !== ''),
-            originalBookingId: booking.bookingId
+            originalBookingId: booking.bookingId,
+            newEndDate: booking.newEndDate,
+            isIncident: booking.isIncident
           });
         }
       }
