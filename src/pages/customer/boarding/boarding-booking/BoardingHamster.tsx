@@ -1039,7 +1039,7 @@ function BoardingHamster() {
                               </p>
                                <p>
                                 <span className="label">Ngày sinh:</span>
-                                <span className="value">{hamster.dob}</span>
+                                <span className="value">{dayjs(hamster.dob).format('DD/MM/YYYY')}</span>
                               </p>
                               <p>
                                 <span className="label">Màu:</span>

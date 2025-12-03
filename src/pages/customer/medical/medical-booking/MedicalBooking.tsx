@@ -401,8 +401,8 @@ function MedicalBooking() {
                       onClick={() => handleSelectHamster(hamster)}
                       bodyStyle={{ padding: 0 }}
                     >
-                      <div style={{ display: "flex", height: "100%" }}>
-                        <div style={{ width: 150, flexShrink: 0 }}>
+                      <div style={{ display: "flex", height: "180px" }}>
+                        <div style={{ width: 120, flexShrink: 0 }}>
                           <img
                             src={hamster.profilePicture}
                             alt={hamster.name}
@@ -414,24 +414,28 @@ function MedicalBooking() {
                             }}
                           />
                         </div>
-                        <div style={{ flex: 1, padding: 16 }}>
+                        <div style={{ flex: 1, padding: "12px 16px" }}>
                           <h4 className="hamster__name">{hamster.name}</h4>
                           <div className="hamster__info-compact">
                             <p>
-                              <span className="label">Loài:</span> <span className="value">{hamster.species}</span>
+                              <span className="label">Loài:</span>
+                              <span className="value">{hamster.species}</span>
                             </p>
                             <p>
-                              <span className="label">Ngày sinh:</span> <span className="value">{hamster.dob}</span>
+                              <span className="label">Ngày sinh:</span>
+                              <span className="value">{dayjs(hamster.dob).format('DD/MM/YYYY')}</span>
                             </p>
                             <p>
-                              <span className="label">Màu:</span> <span className="value">{hamster.color}</span>
+                              <span className="label">Màu:</span>
+                              <span className="value">{hamster.color}</span>
                             </p>
                             <p>
-                              <span className="label">Giới tính:</span>{" "}
+                              <span className="label">Giới tính:</span>
                               <span className="value">{hamster.gender === "Male" ? "Đực" : "Cái"}</span>
                             </p>
                             <p>
-                              <span className="label">Cân nặng:</span> <span className="value">{hamster.weight}g</span>
+                              <span className="label">Cân nặng:</span>
+                              <span className="value">{hamster.weight}g</span>
                             </p>
                           </div>
                         </div>
