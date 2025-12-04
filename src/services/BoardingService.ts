@@ -435,12 +435,25 @@ export const boardingService = {
   },
 
   // Get booking history for the current user with pagination
-  getBookingHistory: async (page: number = 0, size: number = 10): Promise<BookingHistoryResponse> => {
+  getBookingHistory: async (
+    page: number = 0, 
+    size: number = 10,
+    sortBy: string = "createdAt",
+    sortDir: string = "desc",
+    hamsterName: string = "",
+    status: string = "",
+    cageTypeId: string = ""
+  ): Promise<BookingHistoryResponse> => {
     try {
       const response = await api.get<ApiResponse<BookingHistoryResponse>>("/api/booking/history", {
         params: {
           page,
           size,
+          sortBy,
+          sortDir,
+          hamsterName,
+          status,
+          cageTypeId,
         },
       });
       return response.data.data;

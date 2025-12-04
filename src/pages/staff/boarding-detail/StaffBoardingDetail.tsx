@@ -962,7 +962,7 @@ const BoardingDetail: React.FC = () => {
               onClick={handleCheckIn}
               disabled={!imageFile || !selectedCageId || !healthNote.trim()}
             >
-              Xác nhận Check-in & Phân chuồng
+              Xác nhận 
             </Button>
           ]}
           width={600}
@@ -1139,7 +1139,7 @@ const BoardingDetail: React.FC = () => {
               onClick={handleCheckOut}
               disabled={!checkOutImageFile}
             >
-              Xác nhận Check-out
+              Xác nhận 
             </Button>
           ]}
           width={600}
