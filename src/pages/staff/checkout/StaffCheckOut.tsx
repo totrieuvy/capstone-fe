@@ -217,7 +217,7 @@ const StaffCheckOut: React.FC = () => {
                 onClick={() => navigate('/STAFF/lich-dat-boarding')}
                 className="success-button"
               >
-                Hoàn tất và quay về danh sách
+                Xác nhận thanh toán
               </Button>
             </div>
           )}
