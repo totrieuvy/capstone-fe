@@ -160,8 +160,10 @@ const BoardingHistory: React.FC = () => {
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [cageTypeFilter, setCageTypeFilter] = useState<string>("all");
   const [availableCageTypes, setAvailableCageTypes] = useState<string[]>([]);
-  const [sortBy, setSortBy] = useState<string>("createdAt");
-  const [sortDir, setSortDir] = useState<string>("desc");
+  
+  // Fixed sort parameters since we don't have UI controls for these
+  const sortBy = "createdAt";
+  const sortDir = "desc";
   
   // Memoize status options to prevent recreation
   const statusOptions = useMemo(() => [
@@ -176,12 +178,11 @@ const BoardingHistory: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize] = useState(4);
   const [totalElements, setTotalElements] = useState(0);
-  const [, setTotalPages] = useState(0);
 
   useEffect(() => {
     fetchBookingHistory();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentPage, searchText, statusFilter, cageTypeFilter, sortBy, sortDir]);
+  }, [currentPage, searchText, statusFilter, cageTypeFilter]);
 
   // Reset to first page when filters change
   useEffect(() => {
@@ -189,7 +190,7 @@ const BoardingHistory: React.FC = () => {
       setCurrentPage(1);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchText, statusFilter, cageTypeFilter, sortBy, sortDir]);
+  }, [searchText, statusFilter, cageTypeFilter]);
 
   const fetchBookingHistory = async () => {
     try {
@@ -215,7 +216,6 @@ const BoardingHistory: React.FC = () => {
       const history = response.content;
       setBookingHistory(history);
       setTotalElements(response.totalElements);
-      setTotalPages(response.totalPages);
 
       // Extract unique cage types from current page data for filters
       const allCageTypes = history.flatMap((booking) => [
