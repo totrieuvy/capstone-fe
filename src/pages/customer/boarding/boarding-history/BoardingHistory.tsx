@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { Card, Tag, Space, Typography, Spin, Alert, Select, Input, Row, Col, Button, Pagination } from "antd";
 import { CalendarOutlined, SearchOutlined, FilterOutlined } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
@@ -10,40 +10,179 @@ const { Title } = Typography;
 const { Option } = Select;
 const { Search } = Input;
 
+// Memoized Filter Section Component - moved outside to prevent recreation
+const FilterSection = React.memo<{
+  searchText: string;
+  statusFilter: string;
+  cageTypeFilter: string;
+  availableCageTypes: string[];
+  statusOptions: string[];
+  loading: boolean;
+  onSearchChange: (value: string) => void;
+  onSearchTrigger: (value: string) => void;
+  onStatusFilterChange: (value: string) => void;
+  onCageTypeFilterChange: (value: string) => void;
+  getStatusText: (status: string) => string;
+}>(({ 
+  searchText, 
+  statusFilter, 
+  cageTypeFilter, 
+  availableCageTypes, 
+  statusOptions, 
+  loading, 
+  onSearchChange, 
+  onSearchTrigger,
+  onStatusFilterChange, 
+  onCageTypeFilterChange, 
+  getStatusText 
+}) => (
+  <Card size="small" style={{ marginBottom: 16 }}>
+    <Row gutter={16} align="middle">
+      <Col xs={24} sm={8}>
+        <Search
+          placeholder="Tìm kiếm theo tên hamster hoặc mã đặt phòng"
+          allowClear
+          value={searchText}
+          onChange={(e) => onSearchChange(e.target.value)}
+          onSearch={onSearchTrigger}
+          prefix={<SearchOutlined />}
+        />
+      </Col>
+      <Col xs={24} sm={6}>
+        <Select
+          style={{ width: "100%" }}
+          placeholder="Lọc theo trạng thái"
+          value={statusFilter}
+          onChange={onStatusFilterChange}
+          suffixIcon={<FilterOutlined />}
+          loading={loading}
+        >
+          <Option value="all">Tất cả trạng thái</Option>
+          {statusOptions.map((status) => (
+            <Option key={status} value={status}>
+              {getStatusText(status)}
+            </Option>
+          ))}
+        </Select>
+      </Col>
+      <Col xs={24} sm={6}>
+        <Select
+          style={{ width: "100%" }}
+          placeholder="Lọc theo loại chuồng"
+          value={cageTypeFilter}
+          onChange={onCageTypeFilterChange}
+          suffixIcon={<FilterOutlined />}
+          loading={loading}
+        >
+          <Option value="all">Tất cả loại chuồng</Option>
+          {availableCageTypes.map((cageType) => (
+            <Option key={cageType} value={cageType}>
+              {cageType}
+            </Option>
+          ))}
+        </Select>
+      </Col>
+    </Row>
+  </Card>
+));
+
+// Memoized Booking Cards Component - moved outside to prevent recreation
+const BookingCards = React.memo<{
+  bookingHistory: BookingHistoryItem[];
+  searchText: string;
+  statusFilter: string;
+  cageTypeFilter: string;
+  totalElements: number;
+  pageSize: number;
+  currentPage: number;
+  onPageChange: (page: number) => void;
+  renderBookingCard: (booking: BookingHistoryItem) => React.ReactNode;
+}>(({ 
+  bookingHistory, 
+  searchText, 
+  statusFilter, 
+  cageTypeFilter, 
+  totalElements, 
+  pageSize, 
+  currentPage, 
+  onPageChange, 
+  renderBookingCard 
+}) => (
+  <div className="booking-cards-container">
+    {bookingHistory.length === 0 ? (
+      <Card style={{ textAlign: "center", padding: "40px" }}>
+        <Space direction="vertical" size="large">
+          <CalendarOutlined style={{ fontSize: "48px", color: "#d9d9d9" }} />
+          <div>
+            <Title level={4} type="secondary">
+              {searchText || statusFilter !== "all" || cageTypeFilter !== "all" 
+                ? "Không tìm thấy kết quả" 
+                : "Không có lịch sử đặt phòng"}
+            </Title>
+            <Typography.Text type="secondary">
+              {searchText || statusFilter !== "all" || cageTypeFilter !== "all" 
+                ? "Thử thay đổi bộ lọc để xem thêm kết quả."
+                : "Bạn chưa có bất kỳ đặt phòng nào. Hãy đặt phòng cho hamster của bạn ngay!"}
+            </Typography.Text>
+          </div>
+        </Space>
+      </Card>
+    ) : (
+      <>
+        {bookingHistory.map((booking) => renderBookingCard(booking))}
+        {/* Pagination */}
+        {totalElements > pageSize && (
+          <div style={{ textAlign: "center", marginTop: "24px" }}>
+            <Pagination
+              align="end"
+              current={currentPage}
+              pageSize={pageSize}
+              total={totalElements}
+              onChange={onPageChange}
+              showSizeChanger={false}
+              showQuickJumper
+              showTotal={(total, range) => `${range[0]}-${range[1]} của ${total} booking`}
+            />
+          </div>
+        )}
+      </>
+    )}
+  </div>
+));
+
 const BoardingHistory: React.FC = () => {
   const navigate = useNavigate();
   const [bookingHistory, setBookingHistory] = useState<BookingHistoryItem[]>([]);
-  const [filteredHistory, setFilteredHistory] = useState<BookingHistoryItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [searchText, setSearchText] = useState("");
+  const [searchText, setSearchText] = useState(""); // This triggers API calls
+  const [inputSearchText, setInputSearchText] = useState(""); // This is for the input display
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [cageTypeFilter, setCageTypeFilter] = useState<string>("all");
   const [availableCageTypes, setAvailableCageTypes] = useState<string[]>([]);
-  // Use a fixed list of statuses for filtering
-  const statusOptions = [
+  
+  // Fixed sort parameters since we don't have UI controls for these
+  const sortBy = "createdAt";
+  const sortDir = "desc";
+  
+  // Memoize status options to prevent recreation
+  const statusOptions = useMemo(() => [
     "PENDING",
     "BOOKED",
     "IN_PROGRESS",
     "CHECK_OUT",
     "FAILED",
     "CANCELLED",
-  ];
+  ], []);
   // Pagination states
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize] = useState(4);
   const [totalElements, setTotalElements] = useState(0);
-  const [, setTotalPages] = useState(0);
 
   useEffect(() => {
     fetchBookingHistory();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentPage]);
-
-  useEffect(() => {
-    filterBookings();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [bookingHistory, searchText, statusFilter, cageTypeFilter]);
+  }, [currentPage, searchText, statusFilter, cageTypeFilter]);
 
   // Reset to first page when filters change
   useEffect(() => {
@@ -57,23 +196,28 @@ const BoardingHistory: React.FC = () => {
     try {
       setLoading(true);
       setError(null);
-      // Use pagination with page size of 4 and sort by startDate descending
-      const response = await boardingService.getBookingHistory(currentPage - 1, pageSize);
+      
+      // Prepare API parameters
+      const hamsterNameParam = searchText.trim();
+      const statusParam = statusFilter === "all" ? "" : statusFilter;
+      const cageTypeParam = cageTypeFilter === "all" ? "" : cageTypeFilter;
+      
+      // Call API with dynamic parameters
+      const response = await boardingService.getBookingHistory(
+        currentPage - 1, 
+        pageSize,
+        sortBy,
+        sortDir,
+        hamsterNameParam,
+        statusParam,
+        cageTypeParam
+      );
+      
       const history = response.content;
-
-      // Sort by createdAt in descending order (most recent first)
-      const sortedHistory = history.sort((a, b) => {
-        const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
-        const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
-        return dateB - dateA;
-      });
-
-      setBookingHistory(sortedHistory);
+      setBookingHistory(history);
       setTotalElements(response.totalElements);
-      setTotalPages(response.totalPages);
 
-      // Extract unique cage types from all booking history (need to get all for filters)
-      // For now, we'll use the current page data for filters
+      // Extract unique cage types from current page data for filters
       const allCageTypes = history.flatMap((booking) => [
         booking.cageTypeName,
         ...(booking.newCageTypeName ? [booking.newCageTypeName] : []),
@@ -81,7 +225,6 @@ const BoardingHistory: React.FC = () => {
       const uniqueCageTypes = [...new Set(allCageTypes)];
       setAvailableCageTypes(uniqueCageTypes.sort());
 
-      // No need to extract statuses from data anymore
     } catch (err) {
       setError("Failed to fetch booking history. Please try again.");
       console.error("Error fetching booking history:", err);
@@ -90,34 +233,9 @@ const BoardingHistory: React.FC = () => {
     }
   };
 
-  const filterBookings = () => {
-    let filtered = [...bookingHistory];
 
-    // Filter by search text (hamster name or booking ID only)
-    if (searchText) {
-      filtered = filtered.filter(
-        (booking) =>
-          booking.hamsterName.toLowerCase().includes(searchText.toLowerCase()) ||
-          booking.bookingId.toLowerCase().includes(searchText.toLowerCase())
-      );
-    }
 
-    // Filter by status (fixed list)
-    if (statusFilter !== "all") {
-      filtered = filtered.filter((booking) => statusOptions.includes(booking.status) && booking.status === statusFilter);
-    }
-
-    // Filter by cage type
-    if (cageTypeFilter !== "all") {
-      filtered = filtered.filter(
-        (booking) => booking.cageTypeName === cageTypeFilter || booking.newCageTypeName === cageTypeFilter
-      );
-    }
-
-    setFilteredHistory(filtered);
-  };
-
-  const getStatusColor = (status: string) => {
+  const getStatusColor = useCallback((status: string) => {
     switch (status.toUpperCase()) {
       case "PENDING":
         return "orange";
@@ -138,9 +256,9 @@ const BoardingHistory: React.FC = () => {
       default:
         return "default";
     }
-  };
+  }, []);
 
-  const getStatusText = (status: string) => {
+  const getStatusText = useCallback((status: string) => {
     switch (status.toUpperCase()) {
       case "PENDING":
         return "Chờ xử lý";
@@ -161,17 +279,35 @@ const BoardingHistory: React.FC = () => {
       default:
         return status.replace("_", " ");
     }
-  };
+  }, []);
 
-  const handleViewDetails = (booking: BookingHistoryItem) => {
+  const handleViewDetails = useCallback((booking: BookingHistoryItem) => {
     navigate(`/boarding-schedule/${booking.bookingId}`);
-  };
+  }, [navigate]);
 
-  const handlePageChange = (page: number) => {
+  const handlePageChange = useCallback((page: number) => {
     setCurrentPage(page);
-  };
+  }, []);
 
-  const renderBookingCard = (booking: BookingHistoryItem) => {
+  const handleSearchChange = useCallback((value: string) => {
+    // Only update input display, don't trigger API call
+    setInputSearchText(value);
+  }, []);
+
+  const handleSearchTrigger = useCallback((value: string) => {
+    // This triggers the actual API call when search icon is clicked
+    setSearchText(value);
+  }, []);
+
+  const handleStatusFilterChange = useCallback((value: string) => {
+    setStatusFilter(value);
+  }, []);
+
+  const handleCageTypeFilterChange = useCallback((value: string) => {
+    setCageTypeFilter(value);
+  }, []);
+
+  const renderBookingCard = useCallback((booking: BookingHistoryItem) => {
     const isIncident = booking.isIncident;
     const isExtended = booking.newEndDate && booking.newEndDate !== booking.endDate;
     const isCageTypeChanged = booking.newCageTypeName && booking.newCageTypeName !== booking.cageTypeName;
@@ -277,9 +413,7 @@ const BoardingHistory: React.FC = () => {
         </Row>
       </Card>
     );
-  };
-
-  // const stats = getStatistics();
+  }, [getStatusColor, getStatusText, handleViewDetails]);
 
   if (loading) {
     return (
@@ -300,91 +434,32 @@ const BoardingHistory: React.FC = () => {
         {error && <Alert message="Error" description={error} type="error" closable style={{ marginBottom: 16 }} />}
 
         {/* Filters */}
-        <Card size="small" style={{ marginBottom: 16 }}>
-          <Row gutter={16} align="middle">
-            <Col xs={24} sm={8}>
-              <Search
-                placeholder="Tìm kiếm theo tên hamster hoặc mã đặt phòng"
-                allowClear
-                value={searchText}
-                onChange={(e) => setSearchText(e.target.value)}
-                prefix={<SearchOutlined />}
-              />
-            </Col>
-            <Col xs={24} sm={6}>
-              <Select
-                style={{ width: "100%" }}
-                placeholder="Lọc theo trạng thái"
-                value={statusFilter}
-                onChange={setStatusFilter}
-                suffixIcon={<FilterOutlined />}
-                loading={loading}
-              >
-                <Option value="all">Tất cả trạng thái</Option>
-                {statusOptions.map((status) => (
-                  <Option key={status} value={status}>
-                    {getStatusText(status)}
-                  </Option>
-                ))}
-              </Select>
-            </Col>
-            <Col xs={24} sm={6}>
-              <Select
-                style={{ width: "100%" }}
-                placeholder="Lọc theo loại chuồng"
-                value={cageTypeFilter}
-                onChange={setCageTypeFilter}
-                suffixIcon={<FilterOutlined />}
-                loading={loading}
-              >
-                <Option value="all">Tất cả loại chuồng</Option>
-                {availableCageTypes.map((cageType) => (
-                  <Option key={cageType} value={cageType}>
-                    {cageType}
-                  </Option>
-                ))}
-              </Select>
-            </Col>
-          </Row>
-        </Card>
+        <FilterSection 
+          searchText={inputSearchText}
+          statusFilter={statusFilter}
+          cageTypeFilter={cageTypeFilter}
+          availableCageTypes={availableCageTypes}
+          statusOptions={statusOptions}
+          loading={loading}
+          onSearchChange={handleSearchChange}
+          onSearchTrigger={handleSearchTrigger}
+          onStatusFilterChange={handleStatusFilterChange}
+          onCageTypeFilterChange={handleCageTypeFilterChange}
+          getStatusText={getStatusText}
+        />
 
         {/* Booking Cards */}
-        <div className="booking-cards-container">
-          {filteredHistory.length === 0 ? (
-            <Card style={{ textAlign: "center", padding: "40px" }}>
-              <Space direction="vertical" size="large">
-                <CalendarOutlined style={{ fontSize: "48px", color: "#d9d9d9" }} />
-                <div>
-                  <Title level={4} type="secondary">
-                    Không có lịch sử đặt phòng
-                  </Title>
-                  <Typography.Text type="secondary">
-                    Bạn chưa có bất kỳ đặt phòng nào. Hãy đặt phòng cho hamster của bạn ngay!
-                  </Typography.Text>
-                </div>
-              </Space>
-            </Card>
-          ) : (
-            <>
-              {filteredHistory.map((booking) => renderBookingCard(booking))}
-              {/* Pagination */}
-              {totalElements > pageSize && (
-                <div style={{ textAlign: "center", marginTop: "24px" }}>
-                  <Pagination
-                    align="end"
-                    current={currentPage}
-                    pageSize={pageSize}
-                    total={totalElements}
-                    onChange={handlePageChange}
-                    showSizeChanger={false}
-                    showQuickJumper
-                    showTotal={(total, range) => `${range[0]}-${range[1]} của ${total} booking`}
-                  />
-                </div>
-              )}
-            </>
-          )}
-        </div>
+        <BookingCards 
+          bookingHistory={bookingHistory}
+          searchText={searchText}
+          statusFilter={statusFilter}
+          cageTypeFilter={cageTypeFilter}
+          totalElements={totalElements}
+          pageSize={pageSize}
+          currentPage={currentPage}
+          onPageChange={handlePageChange}
+          renderBookingCard={renderBookingCard}
+        />
       </Card>
     </div>
   );
