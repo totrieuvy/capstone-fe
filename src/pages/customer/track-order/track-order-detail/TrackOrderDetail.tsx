@@ -381,7 +381,11 @@ const TrackOrderDetail = () => {
 
               {order.paymentMethod === "WALLET" && (
                 <>
-                  <img src="https://i.pinimg.com/...jpg" alt="WALLET" className="payment-logo" />
+                  <img
+                    src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT2mZQ9QbMgq9hGCLWzL4ALr870gurzUpV1mg&s"
+                    alt="WALLET"
+                    className="payment-logo"
+                  />
                 </>
               )}
             </div>
