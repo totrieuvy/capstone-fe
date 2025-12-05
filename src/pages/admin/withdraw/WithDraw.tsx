@@ -90,13 +90,13 @@ const WithDraw: React.FC = () => {
       });
 
       if (res.data.code === 200) {
-        message.success("Đã xác nhận hoàn thành giao dịch!");
+        toast.success("Đã xác nhận hoàn thành giao dịch!");
         fetchWithdraws();
       } else {
-        message.error(res.data.message || "Cập nhật thất bại!");
+        toast.error(res.data.message || "Cập nhật thất bại!");
       }
     } catch {
-      message.error("Lỗi khi upload ảnh hoặc cập nhật trạng thái!");
+      toast.error("Lỗi khi upload ảnh hoặc cập nhật trạng thái!");
     }
   };
 

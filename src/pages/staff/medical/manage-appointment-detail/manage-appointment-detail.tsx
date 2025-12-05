@@ -264,11 +264,11 @@ const ManageAppointmentDetail: React.FC = () => {
           const imageUrl = await handleFileUpload(file);
           setUploadedImage(imageUrl);
           message.destroy();
-          message.success("Tải lên hình ảnh thành công!");
+          toast.success("Tải lên hình ảnh thành công!");
           onSuccess?.(file);
         } catch (error) {
           message.destroy();
-          message.error("Tải lên hình ảnh thất bại!");
+          toast.error("Tải lên hình ảnh thất bại!");
           onError?.(error as Error);
         }
       };
@@ -303,7 +303,7 @@ const ManageAppointmentDetail: React.FC = () => {
         healthNote: healthNote,
       });
 
-      message.success("Check-in thành công!");
+      toast.success("Check-in thành công!");
       setCheckInModalVisible(false);
 
       // Refresh appointment data

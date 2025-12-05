@@ -9,6 +9,7 @@ import "./TrackOrder.scss";
 
 import utc from "dayjs/plugin/utc";
 import timezone from "dayjs/plugin/timezone";
+import { toast } from "react-toastify";
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
@@ -297,13 +298,13 @@ const TrackOrder = () => {
                       const res = await api.patch<{ code: number; message?: string }>(`/api/order/cancel/${record.id}`);
 
                       if (res.data.code === 200) {
-                        message.success("Đã hủy đơn hàng.");
+                        toast.success("Đã hủy đơn hàng.");
                         fetchOrders(pagination.currentPage, pagination.pageSize, statusFilter, dateRangeFilter);
                       } else {
-                        message.error(res.data.message || "Không thể hủy đơn hàng.");
+                        toast.error(res.data.message || "Không thể hủy đơn hàng.");
                       }
                     } catch {
-                      message.error("Lỗi khi hủy đơn hàng.");
+                      toast.error("Lỗi khi hủy đơn hàng.");
                     }
                   }}
                 >
