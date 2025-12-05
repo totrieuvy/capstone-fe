@@ -62,6 +62,29 @@
         color: #555;
         font-size: 15px;
       }
+
+      /* Default: empty stars are gray */
+      .ant-rate {
+        color: #d9d9d9;
+      }
+
+      /* Filled stars (full or half) are yellow */
+      .ant-rate .ant-rate-star-full .anticon-star,
+      .ant-rate .ant-rate-star-half .ant-rate-star-first .anticon-star {
+        color: #ffb400 !important;
+      }
+
+      /* When disabled, filled stars still yellow */
+      .ant-rate-disabled .ant-rate-star-full .anticon-star,
+      .ant-rate-disabled .ant-rate-star-half .ant-rate-star-first .anticon-star {
+        color: #ffb400 !important;
+        opacity: 1 !important;
+      }
+
+      /* Zero stars: keep gray (default ant-rate behavior) */
+      .ant-rate-disabled .ant-rate-star-zero .anticon-star {
+        color: #d9d9d9 !important;
+      }
     }
 
     .price-box {
