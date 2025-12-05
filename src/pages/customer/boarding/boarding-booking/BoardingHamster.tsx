@@ -626,7 +626,7 @@ function BoardingHamster() {
     
     // Close the modal
     setChangeDateModalVisible(false);
-    message.success("Đã cập nhật ngày đặt phòng thành công!");
+    toast.success("Đã cập nhật ngày đặt phòng thành công!");
   };
 
   // Function to calculate booking cost with specific dates (for modal date change)
@@ -777,7 +777,7 @@ function BoardingHamster() {
     
     // Close the modal
     setChangeCageModalVisible(false);
-    message.success("Đã cập nhật loại chuồng thành công!");
+    toast.success("Đã cập nhật loại chuồng thành công!");
   };
 
   // Function to calculate booking cost with specific cage type (for modal cage change)
@@ -889,7 +889,7 @@ function BoardingHamster() {
     
     // Close the modal
     setChangeHamsterModalVisible(false);
-    message.success("Đã cập nhật hamster thành công!");
+    toast.success("Đã cập nhật hamster thành công!");
   };
 
   // Function to cancel hamster change

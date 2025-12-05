@@ -12,6 +12,7 @@ import utc from "dayjs/plugin/utc";
 import timezone from "dayjs/plugin/timezone";
 import customParseFormat from "dayjs/plugin/customParseFormat";
 import duration from "dayjs/plugin/duration";
+import { toast } from "react-toastify";
 
 dayjs.extend(customParseFormat);
 dayjs.extend(utc);
@@ -52,6 +53,13 @@ interface OrderDetail {
   paymentMethod?: string;
   deliveredAt: string | null;
   statusHistory?: StatusHistory[];
+  customerProfile?: {
+    fullName: string;
+    email: string;
+    address: string;
+    citizenId: string;
+    phoneNumber: string;
+  };
 }
 
 interface Feedback {
@@ -214,13 +222,13 @@ const TrackOrderDetail = () => {
     try {
       const { data } = await api.patch<{ code: number; message?: string }>(`/api/order/cancel/${order.id}`);
       if (data.code === 200) {
-        message.success("Đã hủy đơn hàng.");
+        toast.success("Đã hủy đơn hàng.");
         fetchOrderDetail(order.id);
       } else {
-        message.error(data.message || "Không thể hủy đơn hàng.");
+        toast.error(data.message || "Không thể hủy đơn hàng.");
       }
     } catch {
-      message.error("Lỗi khi hủy đơn hàng.");
+      toast.error("Lỗi khi hủy đơn hàng.");
     } finally {
       setIsCancelling(false);
     }
@@ -235,12 +243,12 @@ const TrackOrderDetail = () => {
         comment,
       });
       if (data.code === 200) {
-        message.success("Đã gửi đánh giá!");
+        toast.success("Đã gửi đánh giá!");
         setIsFeedbackModalOpen(false);
         fetchFeedbacks(selectedProductId);
       }
     } catch {
-      message.error("Lỗi gửi đánh giá.");
+      toast.error("Lỗi gửi đánh giá.");
     }
   };
 
@@ -352,6 +360,16 @@ const TrackOrderDetail = () => {
         {/* SHIPPING + PAYMENT */}
         <div className="shipping-info">
           <h3>Thông tin giao hàng & Thanh toán</h3>
+          {order.customerProfile && (
+            <>
+              <p style={{ margin: "10px 0px" }}>
+                <strong>Tên người nhận hàng:</strong> {order.customerProfile.fullName}
+              </p>
+              <p style={{ margin: "10px 0px" }}>
+                <strong>Số điện thoại người nhận hàng:</strong> {order.customerProfile.phoneNumber}
+              </p>
+            </>
+          )}
           <p>
             <strong>Địa chỉ:</strong> {order.deliveryAddress || "Chưa cập nhật"}
           </p>

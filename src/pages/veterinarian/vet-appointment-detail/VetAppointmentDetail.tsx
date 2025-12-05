@@ -247,12 +247,12 @@ const VetAppointmentDetail: React.FC = () => {
     try {
       // If status is already IN_PROGRESS, just redirect without API call
       if (appointment?.status === 'IN_PROGRESS') {
-        message.success('Chuyển đến trang thực hiện khám bệnh!');
+        toast.success('Chuyển đến trang thực hiện khám bệnh!');
         navigate(`/VET/examination/${appointmentId}`);
       } else {
         // If status is CHECK_IN or CHECKED_IN, update to IN_PROGRESS first
         await updateAppointmentStatus(appointmentId, 'IN_PROGRESS');
-        message.success('Đã chuyển trạng thái sang đang thực hiện!');
+        toast.success('Đã chuyển trạng thái sang đang thực hiện!');
         
         // Redirect to examination page
         navigate(`/VET/examination/${appointmentId}`);
