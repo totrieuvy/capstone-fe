@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Table, Button, Modal, Form, Input, Select, Space, message, Spin, Tag } from "antd";
 import { PlusOutlined, SearchOutlined } from "@ant-design/icons";
-import { FiEdit, FiTrash2 } from "react-icons/fi";
+import { FiEdit } from "react-icons/fi";
 import type { ColumnsType } from "antd/es/table";
 import "./Policy.scss";
 import api from "../../../config/axios";
@@ -91,17 +91,17 @@ const Policy: React.FC = () => {
     form.setFieldsValue({ ...record });
   };
 
-  const handleDelete = async (id: string) => {
-    try {
-      const res = await api.delete(`/api/policy/${id}`);
-      if (res.data.code === 200) {
-        message.success("Xóa thành công");
-        fetchPolicies();
-      } else message.error(res.data.message);
-    } catch {
-      message.error("Lỗi khi xóa");
-    }
-  };
+  // const handleDelete = async (id: string) => {
+  //   try {
+  //     const res = await api.delete(`/api/policy/${id}`);
+  //     if (res.data.code === 200) {
+  //       message.success("Xóa thành công");
+  //       fetchPolicies();
+  //     } else message.error(res.data.message);
+  //   } catch {
+  //     message.error("Lỗi khi xóa");
+  //   }
+  // };
 
   const handleSubmit = async (values: Policy) => {
     setSubmitLoading(true);
@@ -185,7 +185,7 @@ const Policy: React.FC = () => {
       render: (_, r) => (
         <Space>
           <Button icon={<FiEdit />} type="primary" size="small" onClick={() => handleOpenEdit(r)} />
-          <Button icon={<FiTrash2 />} danger size="small" onClick={() => handleDelete(r.id!)} />
+          {/* <Button icon={<FiTrash2 />} danger size="small" onClick={() => handleDelete(r.id!)} /> */}
         </Space>
       ),
     },
