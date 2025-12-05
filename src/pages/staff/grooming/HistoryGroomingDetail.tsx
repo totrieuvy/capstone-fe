@@ -33,6 +33,7 @@ import { storage } from "../../../config/firebase";
 import "./HistoryGroomingDetail.scss";
 import dayjs from "dayjs";
 import { getFormattedPrice } from "../../../utils/formatPrice";
+import { toast } from "react-toastify";
 
 const { Title, Text } = Typography;
 const { Option } = Select;
@@ -152,10 +153,10 @@ const HistoryGroomingDetail = () => {
         hamsterId: detail.hamsterId,
         speciesId: selectedSpecies,
       });
-      message.success("Đã đổi loài và hủy lịch hiện tại!");
+      toast.success("Đã đổi loài và hủy lịch hiện tại!");
       fetchDetail();
     } catch {
-      message.error("Không thể đổi loài!");
+      toast.error("Không thể đổi loài!");
     }
   };
 
