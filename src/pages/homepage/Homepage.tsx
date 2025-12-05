@@ -69,6 +69,7 @@ function Homepage() {
   const [showPopup, setShowPopup] = useState(false);
   const dispatch = useDispatch();
   const user = useSelector((state: RootState) => state.user);
+  const cart = useSelector((state: RootState) => state.cart);
   const navigate = useNavigate();
 
   const fetchProducts = useCallback(async () => {
@@ -121,6 +122,13 @@ function Homepage() {
 
   const handleCategoryChange = (checkedValues: (string | number)[]) => {
     setSelectedCategories(checkedValues as string[]);
+  };
+
+  const isProductDisabled = (product: Product): boolean => {
+    if (product.stockQuantity === 0) return true;
+    const cartItem = cart.items.find((item) => item.id === product.id);
+    if (cartItem && cartItem.quantity >= product.stockQuantity) return true;
+    return false;
   };
 
   const handleAddToCart = (product: Product) => {
@@ -225,8 +233,13 @@ function Homepage() {
                                 </Link>
                                 <p className="product-price">{getFormattedPrice(product.price)}</p>
                                 <p className="product-stock">Số lượng: {product.stockQuantity}</p>
-                                <Button type="primary" className="buy-button" onClick={() => handleAddToCart(product)}>
-                                  Mua hàng
+                                <Button
+                                  type="primary"
+                                  className="buy-button"
+                                  onClick={() => handleAddToCart(product)}
+                                  disabled={isProductDisabled(product)}
+                                >
+                                  {product.stockQuantity === 0 ? "Hết hàng" : "Mua hàng"}
                                 </Button>
                               </div>
                             </Card>

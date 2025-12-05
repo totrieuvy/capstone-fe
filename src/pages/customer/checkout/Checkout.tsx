@@ -107,6 +107,9 @@ const Checkout = () => {
   // Policy state
   const [orderPolicies, setOrderPolicies] = useState<Policy[]>([]);
   const [policyChecked, setPolicyChecked] = useState(false);
+  // Validation errors
+  const [nameError, setNameError] = useState<string>("");
+  const [phoneError, setPhoneError] = useState<string>("");
 
   const totalWeight = cartItems.reduce((sum, item) => sum + item.weight * item.quantity, 0);
   const totalValue = cartItems.reduce((sum, item) => sum + (item.price || 0) * item.quantity, 0);
@@ -240,10 +243,35 @@ const Checkout = () => {
   };
 
   const handleCheckout = async () => {
-    if (!fullName.trim() || !phone.trim() || !addressDetail.trim()) {
-      message.warning("Vui lòng điền đầy đủ thông tin nhận hàng.");
-      return;
+    // Reset errors
+    setNameError("");
+    setPhoneError("");
+
+    let hasError = false;
+
+    // Validate fullName
+    if (!fullName.trim()) {
+      setNameError("Vui lòng nhập họ và tên");
+      hasError = true;
     }
+
+    // Validate phone
+    if (!phone.trim()) {
+      setPhoneError("Vui lòng nhập số điện thoại");
+      hasError = true;
+    } else if (!/^\d{10,11}$/.test(phone.trim())) {
+      setPhoneError("Số điện thoại không hợp lệ (10-11 chữ số)");
+      hasError = true;
+    }
+
+    // Validate address
+    if (!addressDetail.trim()) {
+      message.warning("Vui lòng nhập địa chỉ cụ thể.");
+      hasError = true;
+    }
+
+    if (hasError) return;
+
     if (fee === null) {
       message.warning("Vui lòng tính phí giao hàng trước khi thanh toán.");
       return;
@@ -277,6 +305,8 @@ const Checkout = () => {
       wardName,
       weight: totalWeight,
       shippingMethod: "GHTK",
+      receiverName: fullName.trim(),
+      phoneNumber: phone.trim(),
     };
 
     setLoading(true);
@@ -345,13 +375,35 @@ const Checkout = () => {
               <Form layout="vertical">
                 <Row gutter={16}>
                   <Col xs={24} sm={12}>
-                    <Form.Item label="Họ và tên">
-                      <Input value={fullName} onChange={(e) => setFullName(e.target.value)} />
+                    <Form.Item
+                      label="Họ và tên người nhận hàng"
+                      validateStatus={nameError ? "error" : ""}
+                      help={nameError}
+                    >
+                      <Input
+                        value={fullName}
+                        onChange={(e) => {
+                          setFullName(e.target.value);
+                          if (nameError) setNameError("");
+                        }}
+                      />
                     </Form.Item>
                   </Col>
                   <Col xs={24} sm={12}>
-                    <Form.Item label="Số điện thoại">
-                      <Input value={phone} onChange={(e) => setPhone(e.target.value)} />
+                    <Form.Item
+                      label="Số điện thoại người nhận hàng"
+                      validateStatus={phoneError ? "error" : ""}
+                      help={phoneError}
+                    >
+                      <Input
+                        value={phone}
+                        maxLength={11}
+                        onChange={(e) => {
+                          const value = e.target.value.replace(/\D/g, "");
+                          setPhone(value);
+                          if (phoneError) setPhoneError("");
+                        }}
+                      />
                     </Form.Item>
                   </Col>
                 </Row>
