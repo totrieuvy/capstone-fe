@@ -110,7 +110,7 @@ const HistoryGrooming = () => {
   };
 
   useEffect(() => {
-    document.title = "Lịch sử Grooming";
+    document.title = "Lịch đặt Grooming";
     fetchStaff();
     fetchAppointments(1);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -196,7 +196,7 @@ const HistoryGrooming = () => {
   return (
     <div className="history-grooming-page">
       <div className="container">
-        <h1 className="page-title">Lịch sử Grooming</h1>
+        <h1 className="page-title">Lịch đặt Grooming</h1>
 
         {/* FILTER CARD */}
         <Card className="filter-card">

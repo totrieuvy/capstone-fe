@@ -4,6 +4,7 @@ import { SearchOutlined, EyeOutlined } from "@ant-design/icons";
 import type { ColumnsType } from "antd/es/table";
 import "./ManageCustomer.scss";
 import api from "../../../config/axios";
+import { toast } from "react-toastify";
 
 interface Customer {
   id: string;
@@ -51,12 +52,12 @@ const ManageCustomer: React.FC = () => {
     try {
       await api.patch(`/api/admin/account/${id}/status?action=${action}`);
 
-      message.success(action === "BLOCK" ? "Đã khóa tài khoản!" : "Đã mở khóa tài khoản!");
+      toast.success(action === "BLOCK" ? "Đã khóa tài khoản!" : "Đã mở khóa tài khoản!");
 
       fetchCustomers(currentPage, pageSize);
       setIsDetailModalVisible(false);
     } catch {
-      message.error("Thao tác thất bại!");
+      toast.error("Thao tác thất bại!");
     }
   };
 

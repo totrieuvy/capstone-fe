@@ -33,6 +33,7 @@ import { storage } from "../../../config/firebase";
 import "./HistoryGroomingDetail.scss";
 import dayjs from "dayjs";
 import { getFormattedPrice } from "../../../utils/formatPrice";
+import { toast } from "react-toastify";
 
 const { Title, Text } = Typography;
 const { Option } = Select;
@@ -152,10 +153,10 @@ const HistoryGroomingDetail = () => {
         hamsterId: detail.hamsterId,
         speciesId: selectedSpecies,
       });
-      message.success("Đã đổi loài và hủy lịch hiện tại!");
+      toast.success("Đã đổi loài và hủy lịch hiện tại!");
       fetchDetail();
     } catch {
-      message.error("Không thể đổi loài!");
+      toast.error("Không thể đổi loài!");
     }
   };
 
@@ -213,10 +214,10 @@ const HistoryGroomingDetail = () => {
         isConfirmed: true,
       });
 
-      message.success("Tạo lịch mới thành công!");
+      toast.success("Tạo lịch mới thành công!");
       fetchDetail?.();
     } catch {
-      message.error("Không thể tạo lịch mới!");
+      toast.error("Không thể tạo lịch mới!");
     }
   };
 
@@ -268,10 +269,10 @@ const HistoryGroomingDetail = () => {
         appointmentId: id,
         checkInImage: url,
       });
-      message.success("Check-in thành công!");
+      toast.success("Check-in thành công!");
       fetchDetail();
     } catch {
-      message.error("Lỗi khi upload ảnh check-in!");
+      toast.error("Lỗi khi upload ảnh check-in!");
     } finally {
       setUploading(false);
     }
@@ -282,10 +283,10 @@ const HistoryGroomingDetail = () => {
     if (!id) return;
     try {
       await api.patch(`/api/appointment/${id}`, { status: "IN_PROGRESS" });
-      message.success("Cập nhật trạng thái: Đang thực hiện!");
+      toast.success("Cập nhật trạng thái: Đang thực hiện!");
       fetchDetail();
     } catch {
-      message.error("Không thể cập nhật trạng thái!");
+      toast.error("Không thể cập nhật trạng thái!");
     }
   };
 
@@ -294,10 +295,10 @@ const HistoryGroomingDetail = () => {
     if (!id) return;
     try {
       await api.patch(`/api/appointment/${id}`, { status: "CANCELLED" });
-      message.success("Đã hủy lịch Grooming thành công!");
+      toast.success("Đã hủy lịch Grooming thành công!");
       fetchDetail();
     } catch {
-      message.error("Không thể hủy lịch Grooming!");
+      toast.error("Không thể hủy lịch Grooming!");
     }
   };
 
@@ -338,11 +339,11 @@ const HistoryGroomingDetail = () => {
         additionalAmount: totalAddedBeforeDiscount, // gửi tổng CHƯA giảm
         items: selectedItems,
       });
-      message.success("Đã thêm dịch vụ thành công!");
+      toast.success("Đã thêm dịch vụ thành công!");
       setSelectedServices([]);
       fetchDetail();
     } catch {
-      message.error("Không thể thêm dịch vụ!");
+      toast.error("Không thể thêm dịch vụ!");
     }
   };
 
@@ -368,15 +369,15 @@ const HistoryGroomingDetail = () => {
       });
 
       if (res.data.code === 200 && res.data.data?.paymentUrl) {
-        message.success("Tạo link thanh toán thành công!");
+        toast.success("Tạo link thanh toán thành công!");
         window.location.href = res.data.data.paymentUrl;
         fetchDetail();
       } else {
-        message.success("Check-out thành công!");
+        toast.success("Check-out thành công!");
         fetchDetail();
       }
     } catch {
-      message.error("Không thể thực hiện check-out!");
+      toast.error("Không thể thực hiện check-out!");
     } finally {
       setCheckoutUploading(false);
     }
