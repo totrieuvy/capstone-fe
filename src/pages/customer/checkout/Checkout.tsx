@@ -228,7 +228,7 @@ const Checkout = () => {
       if (data.code === 200 && data.success) {
         const feeValue = data.data.total ?? 0;
         setFee(feeValue);
-        message.success(`Phí giao hàng dự kiến: ${feeValue.toLocaleString()}đ`);
+        toast.success(`Phí giao hàng dự kiến: ${feeValue.toLocaleString()}đ`);
       } else {
         message.error(data.message || "Không thể tính phí giao hàng. Vui lòng thử lại.");
       }
