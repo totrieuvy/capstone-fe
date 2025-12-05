@@ -52,6 +52,13 @@ interface OrderDetail {
   paymentMethod?: string;
   deliveredAt: string | null;
   statusHistory?: StatusHistory[];
+  customerProfile?: {
+    fullName: string;
+    email: string;
+    address: string;
+    citizenId: string;
+    phoneNumber: string;
+  };
 }
 
 interface Feedback {
@@ -352,6 +359,16 @@ const TrackOrderDetail = () => {
         {/* SHIPPING + PAYMENT */}
         <div className="shipping-info">
           <h3>Thông tin giao hàng & Thanh toán</h3>
+          {order.customerProfile && (
+            <>
+              <p style={{ margin: "10px 0px" }}>
+                <strong>Tên người nhận hàng:</strong> {order.customerProfile.fullName}
+              </p>
+              <p style={{ margin: "10px 0px" }}>
+                <strong>Số điện thoại người nhận hàng:</strong> {order.customerProfile.phoneNumber}
+              </p>
+            </>
+          )}
           <p>
             <strong>Địa chỉ:</strong> {order.deliveryAddress || "Chưa cập nhật"}
           </p>

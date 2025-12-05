@@ -89,7 +89,13 @@
         height: 100%;
         display: flex;
         flex-direction: column;
-        justify-content: space-between;
+
+        .ant-card-body {
+          padding: 0;
+          display: flex;
+          flex-direction: column;
+          height: 100%;
+        }
 
         &:hover {
           transform: translateY(-5px);
@@ -102,6 +108,7 @@
           object-fit: cover;
           border-top-left-radius: 12px;
           border-top-right-radius: 12px;
+          flex-shrink: 0;
         }
 
         .product-info {
@@ -117,7 +124,11 @@
             color: #333;
             margin: 10px 0;
             text-align: center;
-            min-height: 48px;
+            min-height: 54px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            line-height: 1.5;
           }
 
           .product-price {
@@ -144,13 +155,20 @@
             font-weight: 500;
             transition: all 0.25s ease;
 
-            &:hover {
+            &:hover:not(:disabled) {
               opacity: 0.9;
               transform: scale(1.05);
             }
 
-            &:active {
+            &:active:not(:disabled) {
               transform: scale(0.95);
+            }
+
+            &:disabled {
+              background: #d9d9d9;
+              color: #999;
+              cursor: not-allowed;
+              opacity: 0.6;
             }
           }
         }
