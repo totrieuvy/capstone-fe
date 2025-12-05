@@ -14,6 +14,7 @@ import api from "../../../../../config/axios";
 import dayjs from "dayjs";
 import { getFormattedPrice } from "../../../../../utils/formatPrice";
 import "./TrackGroomingDetail.scss";
+import { toast } from "react-toastify";
 
 const { Title, Text } = Typography;
 
@@ -84,14 +85,14 @@ const TrackGroomingDetail: React.FC = () => {
     try {
       const res = await api.delete(`/api/appointment/${id}`);
       if (res.status === 200 || res.data?.code === 200) {
-        message.success("Đã hủy lịch thành công");
+        toast.success("Đã hủy lịch thành công");
         fetchDetail(); // cập nhật lại dữ liệu
       } else {
-        message.error(res.data?.message || "Hủy lịch thất bại");
+        toast.error(res.data?.message || "Hủy lịch thất bại");
       }
     } catch (err) {
       console.error("Cancel error:", err);
-      message.error("Lỗi khi hủy lịch");
+      toast.error("Lỗi khi hủy lịch");
     } finally {
       setCancelLoading(false);
     }
