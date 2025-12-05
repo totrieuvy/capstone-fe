@@ -5,6 +5,7 @@ import { FiEdit, FiTrash2 } from "react-icons/fi";
 import type { ColumnsType } from "antd/es/table";
 import "./Policy.scss";
 import api from "../../../config/axios";
+import { toast } from "react-toastify";
 
 interface Species {
   id: string;
@@ -95,11 +96,11 @@ const Policy: React.FC = () => {
     try {
       const res = await api.delete(`/api/policy/${id}`);
       if (res.data.code === 200) {
-        message.success("Xóa thành công");
+        toast.success("Xóa thành công");
         fetchPolicies();
-      } else message.error(res.data.message);
+      } else toast.error(res.data.message);
     } catch {
-      message.error("Lỗi khi xóa");
+      toast.error("Lỗi khi xóa");
     }
   };
 
@@ -125,12 +126,12 @@ const Policy: React.FC = () => {
       else res = await api.post("/api/policy", payload);
 
       if (res.data.code === 200 || res.data.code === 201) {
-        message.success(isUpdate ? "Cập nhật thành công" : "Thêm mới thành công");
+        toast.success(isUpdate ? "Cập nhật thành công" : "Thêm mới thành công");
         fetchPolicies();
         handleCancel();
-      } else message.error(res.data.message);
+      } else toast.error(res.data.message);
     } catch {
-      message.error("Lỗi máy chủ");
+      toast.error("Lỗi máy chủ");
     } finally {
       setSubmitLoading(false);
     }
