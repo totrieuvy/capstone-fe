@@ -295,10 +295,10 @@ const HistoryGroomingDetail = () => {
     if (!id) return;
     try {
       await api.patch(`/api/appointment/${id}`, { status: "CANCELLED" });
-      message.success("Đã hủy lịch Grooming thành công!");
+      toast.success("Đã hủy lịch Grooming thành công!");
       fetchDetail();
     } catch {
-      message.error("Không thể hủy lịch Grooming!");
+      toast.error("Không thể hủy lịch Grooming!");
     }
   };
 
