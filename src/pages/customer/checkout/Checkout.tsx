@@ -325,18 +325,22 @@ const Checkout = () => {
 
         return;
       } else {
-        message.error(data.message || "Thanh toán thất bại, vui lòng thử lại.");
+        toast.error(data.message || "Thanh toán thất bại, vui lòng thử lại.");
         return;
       }
     } catch (err) {
       let errMsg = "Đã có lỗi xảy ra.";
 
-      const error = err as AxiosError; // ✔ Không còn báo any vì AxiosError là type cụ thể
-
+      const error = err as AxiosError;
       const rawData = error.response?.data;
 
+      // Nếu backend trả về object JSON với code 400
+      if (typeof rawData === "object" && rawData !== null && "code" in rawData && "message" in rawData) {
+        const errorData = rawData as { code: number; message: string };
+        errMsg = errorData.message;
+      }
       // Nếu backend trả về JSON string → parse
-      if (typeof rawData === "string") {
+      else if (typeof rawData === "string") {
         try {
           const parsed = JSON.parse(rawData);
           if (parsed?.message) errMsg = parsed.message;
@@ -344,18 +348,12 @@ const Checkout = () => {
           // ignore
         }
       }
-
-      // Nếu backend trả object JSON
-      else if (typeof rawData === "object" && rawData !== null && "message" in rawData) {
-        errMsg = (rawData as { message: string }).message;
-      }
-
       // Nếu axios có lỗi khác
       else if (error.message) {
         errMsg = error.message;
       }
 
-      message.error(errMsg);
+      toast.error(errMsg);
       return;
     } finally {
       setLoading(false);
