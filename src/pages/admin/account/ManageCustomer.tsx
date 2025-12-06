@@ -206,13 +206,15 @@ const ManageCustomer: React.FC = () => {
 
             {/* 🔥 BUTTON BLOCK / UNBLOCK */}
             <div style={{ marginTop: 20, display: "flex", gap: 10 }}>
-              <button className="btn-block" onClick={() => updateStatus(selectedCustomer.id, "BLOCK")}>
-                Khóa tài khoản
-              </button>
-
-              <button className="btn-unblock" onClick={() => updateStatus(selectedCustomer.id, "UNBLOCK")}>
-                Mở khóa tài khoản
-              </button>
+              {selectedCustomer.status === "ACTIVE" ? (
+                <button className="btn-block" onClick={() => updateStatus(selectedCustomer.id, "BLOCK")}>
+                  Khóa tài khoản
+                </button>
+              ) : (
+                <button className="btn-unblock" onClick={() => updateStatus(selectedCustomer.id, "UNBLOCK")}>
+                  Mở khóa tài khoản
+                </button>
+              )}
             </div>
           </div>
         )}
