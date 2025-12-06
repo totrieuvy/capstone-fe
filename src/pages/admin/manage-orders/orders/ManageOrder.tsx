@@ -53,10 +53,7 @@ function ManageOrder() {
   const [orders, setOrders] = useState<OrderType[]>([]);
   const [loading, setLoading] = useState(false);
   const [statusFilter, setStatusFilter] = useState<string>("ALL");
-  const [dateRange, setDateRange] = useState<[Dayjs | null, Dayjs | null]>([
-    dayjs(), // hôm nay
-    dayjs().add(10, "day"), // hôm nay + 10 ngày
-  ]);
+  const [dateRange, setDateRange] = useState<[Dayjs | null, Dayjs | null]>([null, null]);
   const [searchTerm, setSearchTerm] = useState("");
   const [pagination, setPagination] = useState<TablePaginationConfig>({
     current: 1,
@@ -73,13 +70,19 @@ function ManageOrder() {
         size,
         sortBy: "createdAt",
         sortDir: "desc",
-        startDate: dateRange && dateRange[0] ? dateRange[0].format("YYYY-MM-DD") : undefined,
-        endDate: dateRange && dateRange[1] ? dateRange[1].format("YYYY-MM-DD") : undefined,
-        customerName: searchTerm.trim() !== "" ? searchTerm.trim() : undefined,
       };
 
       if (status !== "ALL") {
         params.status = status;
+      }
+
+      if (dateRange && dateRange[0] && dateRange[1]) {
+        params.startDate = dateRange[0].format("YYYY-MM-DD");
+        params.endDate = dateRange[1].format("YYYY-MM-DD");
+      }
+
+      if (searchTerm.trim() !== "") {
+        params.customerName = searchTerm.trim();
       }
 
       const res = await api.get("/api/order", { params });
@@ -256,7 +259,7 @@ function ManageOrder() {
       <div className="filter-bar">
         <Space className="filter-controls">
           <Search
-            placeholder="Tìm theo tên hoặc ID..."
+            placeholder="Tìm theo tên khách hàng"
             onSearch={() => fetchOrders(1, pagination.pageSize, statusFilter)}
             onChange={(e) => setSearchTerm(e.target.value)}
             allowClear
@@ -266,12 +269,10 @@ function ManageOrder() {
             format="DD/MM/YYYY"
             value={dateRange}
             onChange={(v) => {
-              // v có thể là null => chuyển về fallback (ở đây fallback là mặc định 10 ngày)
               if (!v || !v[0] || !v[1]) {
-                setDateRange([dayjs(), dayjs().add(10, "day")]);
+                setDateRange([null, null]);
               } else {
-                // v[0], v[1] là Dayjs | null nhưng đã kiểm tra không null ở trên
-                setDateRange([v[0]!, v[1]!]); // non-null assertion OK vì đã kiểm tra
+                setDateRange([v[0]!, v[1]!]);
               }
             }}
             style={{ width: 340 }}
