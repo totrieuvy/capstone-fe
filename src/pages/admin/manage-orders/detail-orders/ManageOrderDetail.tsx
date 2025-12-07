@@ -178,7 +178,7 @@ function ManageOrderDetail() {
               </Descriptions.Item>
               <Descriptions.Item label="Khách hàng">{order.customerProfile.fullName}</Descriptions.Item>
               <Descriptions.Item label="Email">{order.customerProfile.email}</Descriptions.Item>
-              <Descriptions.Item label="CMND/CCCD">{order.customerProfile.citizenId}</Descriptions.Item>
+              {/* <Descriptions.Item label="CMND/CCCD">{order.customerProfile.citizenId}</Descriptions.Item> */}
               <Descriptions.Item label="Địa chỉ KH">{order.customerProfile.address}</Descriptions.Item>
               <Descriptions.Item label="Phương thức thanh toán">
                 {order.paymentMethod === "VNPAY" ? (
