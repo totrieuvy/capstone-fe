@@ -101,6 +101,7 @@ const TrackGrooming: React.FC = () => {
       IN_PROGRESS: "orange",
       CHECK_OUT: "green",
       CANCELLED: "red",
+      FAILED: "purple",
     };
 
     const mapText: Record<string, string> = {
@@ -109,6 +110,7 @@ const TrackGrooming: React.FC = () => {
       IN_PROGRESS: "Đang thực hiện",
       CHECK_OUT: "Hoàn tất",
       CANCELLED: "Đã hủy",
+      FAILED: "Thanh toán thất bại",
     };
 
     return (
@@ -217,6 +219,7 @@ const TrackGrooming: React.FC = () => {
                 <Option value="IN_PROGRESS">Đang thực hiện</Option>
                 <Option value="CHECK_OUT">Hoàn tất</Option>
                 <Option value="CANCELLED">Đã hủy</Option>
+                <Option value="FAILED">Thanh toán thất bại</Option>
               </Select>
             </Col>
 
