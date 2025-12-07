@@ -201,19 +201,16 @@ const BoardingSchedule = () => {
         const bookingDetails = await boardingService.getBookingDetails(selectedBooking.id);
         console.log('Booking details:', bookingDetails);
         
-        // Extract service IDs from current booking to carry them over
+        // Extract service IDs from current booking, but only carry over FOOD services
         if (bookingDetails.services && Array.isArray(bookingDetails.services)) {
-          existingServiceIds = bookingDetails.services.map((service: any) => service.serviceId);
+          existingServiceIds = bookingDetails.services
+            .filter((service: any) => service.serviceType === 'FOOD')
+            .map((service: any) => service.serviceId);
         }
         
-        // Also check for additionalServiceIds if they exist
-        if (bookingDetails.additionalServiceIds && Array.isArray(bookingDetails.additionalServiceIds)) {
-          existingServiceIds = [...existingServiceIds, ...bookingDetails.additionalServiceIds];
-        }
-        
-        // Remove duplicates
+        // Remove duplicates (if any)
         existingServiceIds = [...new Set(existingServiceIds)];
-        console.log('Existing services to carry over:', existingServiceIds);
+        console.log('Existing FOOD services to carry over:', existingServiceIds);
       } catch (detailsError) {
         console.warn('Could not fetch booking details, proceeding without service carryover:', detailsError);
       }
@@ -224,10 +221,10 @@ const BoardingSchedule = () => {
         newEndDate: newEndDate.format('YYYY-MM-DD')
       };
 
-      // Include existing services in the extension if any exist
+      // Include existing FOOD services in the extension if any exist
       if (existingServiceIds.length > 0) {
         extendRequest.serviceIds = existingServiceIds;
-        console.log('Including existing services in extension:', existingServiceIds);
+        console.log('Including existing FOOD services in extension:', existingServiceIds);
       }
 
       // Determine scenario based on current vs selected cage info
