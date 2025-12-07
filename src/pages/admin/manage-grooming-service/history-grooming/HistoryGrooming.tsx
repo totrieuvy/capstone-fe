@@ -196,7 +196,7 @@ const HistoryGrooming = () => {
   return (
     <div className="history-grooming-page">
       <div className="container">
-        <h1 className="page-title">Lịch đặt Grooming</h1>
+        <h1 className="page-title">Lịch đặt làm đẹp</h1>
 
         {/* FILTER CARD */}
         <Card className="filter-card">
