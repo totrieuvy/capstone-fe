@@ -2,8 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Card, Spin, Alert, Button, Tag, Descriptions, Avatar, Modal, Upload, message, List, Radio, Row, Col, Input } from 'antd';
 import { ArrowLeftOutlined, UserOutlined, CalendarOutlined, ShoppingOutlined, UploadOutlined, CameraOutlined, HomeOutlined, EditOutlined, LogoutOutlined, WarningOutlined, CheckCircleOutlined, ExclamationCircleOutlined } from '@ant-design/icons';
-import { boardingService, type BookingDetail } from '../../../services/BoardingService';
-import { cageService, type Cage } from '../../../services/CageService';
+import { boardingService, type BookingDetail, type AvailableCage } from '../../../services/BoardingService';
 import { storage } from '../../../config/firebase';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import type { UploadProps } from 'antd/es/upload/interface';
@@ -22,7 +21,7 @@ const BoardingDetail: React.FC = () => {
   const [imagePreview, setImagePreview] = useState<string>('');
   
   // Cage assignment states (now part of check-in process)
-  const [availableCages, setAvailableCages] = useState<Cage[]>([]);
+  const [availableCages, setAvailableCages] = useState<AvailableCage[]>([]);
   const [selectedCageId, setSelectedCageId] = useState<string>('');
   const [cageLoading, setCageLoading] = useState<boolean>(false);
   const [healthNote, setHealthNote] = useState<string>('');
@@ -274,23 +273,22 @@ const BoardingDetail: React.FC = () => {
     setHealthNote('');
   };
 
-  // Fetch available cages for the booking's cage type and start date
+  // Fetch available cages for the booking's cage type and date range
   const fetchAvailableCages = async () => {
     if (!bookingDetail) return;
     
     try {
       setCageLoading(true);
-      const response = await cageService.getCagesByTypeAndDate({
+      const response = await boardingService.getAvailableCagesByType({
         cageTypeId: bookingDetail.cageTypeId,
-        date: bookingDetail.startDate
+        startDate: bookingDetail.startDate,
+        endDate: bookingDetail.endDate
       });
       
-      // Filter only available cages
-      const availableCages = response.cages.filter(cage => cage.status === 'Available');
-      setAvailableCages(availableCages);
+      setAvailableCages(response);
       
-      if (availableCages.length === 0) {
-        message.warning('Không có chuồng trống cho loại chuồng này trong ngày bắt đầu!');
+      if (response.length === 0) {
+        message.warning('Không có chuồng trống cho loại chuồng này trong khoảng thời gian đã chọn!');
       }
     } catch (error) {
       console.error('Error fetching available cages:', error);
@@ -573,9 +571,9 @@ const BoardingDetail: React.FC = () => {
                     {formatPrice(bookingDetail.totalAmount)}
                   </strong>
                 </Descriptions.Item>
-                <Descriptions.Item label="Thành tiền">
+                <Descriptions.Item label="Phí bổ sung (đã giảm giá)">
                   <strong className="final-amount">
-                    {formatPrice(bookingDetail.totalAmountAfter)}
+                    {formatPrice(bookingDetail.totalAmountAfter - bookingDetail.totalAmount)}
                   </strong>
                 </Descriptions.Item>
                 <Descriptions.Item label="Ngày tạo" span={2}>
@@ -1210,65 +1208,7 @@ const BoardingDetail: React.FC = () => {
               
               <Card style={{ backgroundColor: '#fafafa' }}>
                 <Row gutter={[12, 12]}>
-                  <Col xs={24} sm={8}>
-                    <Card
-                      hoverable
-                      className={`payment-method-card ${checkOutPaymentMethod === 'WALLET' ? 'selected' : ''}`}
-                      onClick={() => setCheckOutPaymentMethod('WALLET')}
-                      style={{
-                        borderRadius: 12,
-                        border: checkOutPaymentMethod === 'WALLET'
-                          ? "2px solid #1890ff"
-                          : "1px solid #f0f0f0",
-                        cursor: "pointer",
-                        textAlign: "center",
-                        height: 100,
-                        display: "flex",
-                        flexDirection: "column",
-                        justifyContent: "center",
-                        alignItems: "center",
-                        position: "relative",
-                      }}
-                      bodyStyle={{ padding: 12 }}
-                    >
-                      <div style={{
-                        width: 40,
-                        height: 40,
-                        background: "#f0f0f0",
-                        borderRadius: 8,
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        marginBottom: 8,
-                        fontSize: 20
-                      }}>
-                        👛
-                      </div>
-                      <p style={{ margin: 0, fontSize: 14, fontWeight: 600, color: "#333" }}>
-                        Ví ảo
-                      </p>
-                      {checkOutPaymentMethod === 'WALLET' && (
-                        <div style={{
-                          position: "absolute",
-                          top: 8,
-                          right: 8,
-                          background: "#1890ff",
-                          color: "white",
-                          borderRadius: "50%",
-                          width: 20,
-                          height: 20,
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          fontSize: 12,
-                          fontWeight: "bold"
-                        }}>
-                          ✓
-                        </div>
-                      )}
-                    </Card>
-                  </Col>
-                  <Col xs={24} sm={8}>
+                  <Col xs={24} sm={12}>
                     <Card
                       hoverable
                       className={`payment-method-card ${checkOutPaymentMethod === 'VNPAY' ? 'selected' : ''}`}
@@ -1326,7 +1266,7 @@ const BoardingDetail: React.FC = () => {
                       )}
                     </Card>
                   </Col>
-                  <Col xs={24} sm={8}>
+                  <Col xs={24} sm={12}>
                     <Card
                       hoverable
                       className={`payment-method-card ${checkOutPaymentMethod === 'PAYOS' ? 'selected' : ''}`}
