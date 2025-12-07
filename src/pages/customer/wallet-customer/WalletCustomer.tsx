@@ -305,6 +305,7 @@ function WalletCustomer() {
           FAILED: { text: "Thất bại", color: "red" },
           REJECTED: { text: "Đã từ chối", color: "volcano" },
           PENDING: { text: "Đang xử lý", color: "gold" },
+          REFUNDED: { text: "Đã hoàn tiền", color: "lime" },
         };
         const config = statusConfig[status] || { text: status, color: "default" };
         return <Tag color={config.color}>{config.text}</Tag>;
