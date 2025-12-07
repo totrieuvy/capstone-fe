@@ -130,6 +130,7 @@ const HistoryGrooming = () => {
     IN_PROGRESS: "cyan",
     CHECK_OUT: "green",
     CANCELLED: "red",
+    FAILED: "purple",
   };
 
   const mapName: Record<string, string> = {
@@ -138,6 +139,7 @@ const HistoryGrooming = () => {
     IN_PROGRESS: "Đang thực hiện",
     CHECK_OUT: "Hoàn tất",
     CANCELLED: "Đã hủy",
+    FAILED: "Thanh toán thất bại",
   };
 
   const getStatusTag = (status: string) => <Tag color={mapColor[status]}>{mapName[status]}</Tag>;
@@ -220,6 +222,7 @@ const HistoryGrooming = () => {
                 <Option value="IN_PROGRESS">Đang thực hiện</Option>
                 <Option value="CHECK_OUT">Hoàn tất</Option>
                 <Option value="CANCELLED">Đã hủy</Option>
+                <Option value="FAILED">Thanh toán thất bại</Option>
               </Select>
             </Col>
 
