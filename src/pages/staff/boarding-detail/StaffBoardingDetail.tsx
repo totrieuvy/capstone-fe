@@ -566,16 +566,16 @@ const BoardingDetail: React.FC = () => {
                     </div>
                   </Descriptions.Item>
                 )}
-                <Descriptions.Item label="Tổng tiền đã thanh toán">
+                {/* <Descriptions.Item label="Tổng tiền đã thanh toán">
                   <strong className="total-amount">
                     {formatPrice(bookingDetail.totalAmount)}
                   </strong>
-                </Descriptions.Item>
-                <Descriptions.Item label="Phí bổ sung (đã giảm giá)">
+                </Descriptions.Item> */}
+                {/* <Descriptions.Item label="Phí bổ sung (đã giảm giá)">
                   <strong className="final-amount">
                     {formatPrice(bookingDetail.totalAmountAfter - bookingDetail.totalAmount)}
                   </strong>
-                </Descriptions.Item>
+                </Descriptions.Item> */}
                 <Descriptions.Item label="Ngày tạo" span={2}>
                   {bookingDetail.createdAt ? new Date(bookingDetail.createdAt).toLocaleString('vi-VN') : 'N/A'}
                 </Descriptions.Item>
@@ -772,13 +772,13 @@ const BoardingDetail: React.FC = () => {
                     </div>
                   </div>
                 ))}
-                <div className="services-total">
+                {/* <div className="services-total">
                   <strong>
                     Tổng dịch vụ: {formatPrice(
                       bookingDetail.services.reduce((sum, service) => sum + service.price, 0)
                     )}
                   </strong>
-                </div>
+                </div> */}
               </div>
             ) : (
               <div className="no-services">
