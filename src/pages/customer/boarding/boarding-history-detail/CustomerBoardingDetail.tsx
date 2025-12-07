@@ -516,7 +516,7 @@ const BoardingDetail: React.FC = () => {
             </Row>
 
             {/* Extension Information Section */}
-            {(booking.newEndDate && booking.newCageTypeName && booking.newCageName) && (
+            {(booking.newEndDate || booking.newCageTypeName || booking.newCageName) && (
               <div className="extension-section">
                 <div className="extension-title">
                   <Text style={{ fontSize: '16px', fontWeight: 600, color: '#1890ff' }}>
@@ -681,15 +681,19 @@ const BoardingDetail: React.FC = () => {
               </Text>
             </div>
             <div className="payment-item total">
-              <Text strong>Tổng tiền (trước giảm giá)</Text>
+              <Text strong>Tổng tiền đặt dịch vụ bổ sung</Text>
               <Text strong className="total-amount">
-                {getFormattedPrice(booking.totalAmount)}
+                {getFormattedPrice(
+                  booking.services && booking.services.length > 0
+                    ? booking.services.reduce((sum, service) => sum + service.price, 0)
+                    : 0
+                )}
               </Text>
             </div>
             <div className="payment-item final-total">
-              <Title level={4}>Tổng cộng</Title>
+              <Title level={4}>Phí bổ sung (đã giảm giá)</Title>
               <Title level={4} className="final-amount">
-                {getFormattedPrice(booking.totalAmountAfter)}
+                {getFormattedPrice(booking.totalAmountAfter - booking.totalAmount)}
               </Title>
             </div>
           </Card>

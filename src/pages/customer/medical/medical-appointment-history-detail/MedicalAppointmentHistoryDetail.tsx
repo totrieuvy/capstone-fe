@@ -396,6 +396,11 @@ const ManageAppointmentDetail: React.FC = () => {
                         {formatPrice(appointment.additionalAmount * (1 - appointment.discountPercent / 100))}
                       </Text>
                     </Descriptions.Item>
+                    <Descriptions.Item label={`Tổng cộng`}>
+                      <Text style={{ color: "#52c41a" }}>
+                        {formatPrice(appointment.totalAmountAfter + appointment.additionalAmount * (1 - appointment.discountPercent / 100))}
+                      </Text>
+                    </Descriptions.Item>
                   </>
                 )}
                 <Descriptions.Item label="Phương thức thanh toán">
