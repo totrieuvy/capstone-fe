@@ -1133,34 +1133,51 @@ const BoardingSchedule = () => {
                   }}>
                     {availableCages.map(cage => {
                       const isOriginalCage = cage.cageName === originalCageId;
+                      const isInUse = cage.status === 'In Use' || cage.status === 'IN_USE';
+                      // const isAvailable = cage.status === 'Available' || cage.status === 'AVAILABLE';
+                      const isDisabled = isInUse && !isOriginalCage;
+                      
                       return (
                         <div
                           key={cage.cageId}
-                          onClick={() => setSelectedCageId(cage.cageId)}
+                          onClick={() => !isDisabled && setSelectedCageId(cage.cageId)}
                           style={{
                             padding: '12px 8px',
                             border: selectedCageId === cage.cageId 
                               ? '2px solid #1890ff' 
                               : isOriginalCage 
                                 ? '2px solid #52c41a'
-                                : '1px solid #d9d9d9',
+                                : isDisabled
+                                  ? '1px solid #ffccc7'
+                                  : '1px solid #d9d9d9',
                             borderRadius: '8px',
-                            cursor: 'pointer',
+                            cursor: isDisabled ? 'not-allowed' : 'pointer',
                             textAlign: 'center',
                             backgroundColor: selectedCageId === cage.cageId 
                               ? '#e6f7ff' 
                               : isOriginalCage
                                 ? '#f6ffed'
-                                : 'white',
+                                : isDisabled
+                                  ? '#fff1f0'
+                                  : 'white',
                             transition: 'all 0.2s',
-                            position: 'relative'
+                            position: 'relative',
+                            opacity: isDisabled ? 0.6 : 1
                           }}
                         >
                           <div style={{ fontWeight: 'bold', marginBottom: '4px' }}>
                             {cage.cageName}
                           </div>
-                          <div style={{ fontSize: '12px', color: isOriginalCage ? '#666' : '#52c41a' }}>
-                            {isOriginalCage ? 'Chuồng hiện tại' : 'Có sẵn'}
+                          <div style={{ 
+                            fontSize: '12px', 
+                            color: isOriginalCage 
+                              ? '#666' 
+                              : isInUse 
+                                ? '#ff4d4f' 
+                                : '#52c41a',
+                            fontWeight: '500'
+                          }}>
+                            {isOriginalCage ? 'Chuồng hiện tại' : isInUse ? 'Hết chỗ' : 'Có sẵn'}
                           </div>
                           {isOriginalCage && (
                             <div style={{

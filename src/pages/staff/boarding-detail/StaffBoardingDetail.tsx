@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Card, Spin, Alert, Button, Tag, Descriptions, Avatar, Modal, Upload, message, List, Radio, Row, Col, Input } from 'antd';
-import { ArrowLeftOutlined, UserOutlined, CalendarOutlined, ShoppingOutlined, UploadOutlined, CameraOutlined, HomeOutlined, EditOutlined, LogoutOutlined, WarningOutlined, CheckCircleOutlined, ExclamationCircleOutlined } from '@ant-design/icons';
+import { ArrowLeftOutlined, UserOutlined, CalendarOutlined, ShoppingOutlined, UploadOutlined, CameraOutlined, HomeOutlined, EditOutlined, LogoutOutlined, WarningOutlined, CheckCircleOutlined, ExclamationCircleOutlined, DollarOutlined } from '@ant-design/icons';
 import { boardingService, type BookingDetail, type AvailableCage } from '../../../services/BoardingService';
 import { storage } from '../../../config/firebase';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
@@ -785,6 +785,79 @@ const BoardingDetail: React.FC = () => {
                 <p>Không có dịch vụ bổ sung nào</p>
               </div>
             )}
+          </Card>
+        </div>
+
+        {/* Payment Details Section */}
+        <div className="info-section">
+          <Card
+            title={
+              <div className="section-title">
+                <DollarOutlined />
+                <span>Chi tiết thanh toán</span>
+              </div>
+            }
+            className="info-card payment-details-card"
+          >
+            <div className="payment-details-simple">
+              {/* Main Payment */}
+              <div className="payment-row main">
+                <span className="payment-label">Tổng tiền đã thanh toán</span>
+                <span className="payment-value primary">
+                  {formatPrice(bookingDetail.totalAmount)}
+                </span>
+              </div>
+
+              {/* Grooming Services Sub-section */}
+              {bookingDetail.serviceTotalPrice > 0 && (
+                <div className="payment-subsection grooming-subsection">
+                  <div className="subsection-header">
+                    <h5>Dịch vụ làm đẹp</h5>
+                  </div>
+                  <div className="payment-row original">
+                    <span className="payment-label">Giá gốc</span>
+                    <span className="payment-value strikethrough">
+                      {formatPrice(bookingDetail.serviceTotalPrice)}
+                    </span>
+                  </div>
+                  <div className="payment-row final">
+                    <span className="payment-label">Tổng tiền dịch vụ làm đẹp ({bookingDetail.serviceDiscount}% giảm giá)</span>
+                    <span className="payment-value success">
+                      {formatPrice(bookingDetail.serviceTotalPriceAfter)}
+                    </span>
+                  </div>
+                </div>
+              )}
+
+              {/* Extension Sub-section */}
+              {bookingDetail.extendTotalPrice > 0 && (
+                <div className="payment-subsection extension-subsection">
+                  <div className="subsection-header">
+                    <h5>Gia hạn</h5>
+                  </div>
+                  <div className="payment-row original">
+                    <span className="payment-label">Giá gốc</span>
+                    <span className="payment-value strikethrough">
+                      {formatPrice(bookingDetail.extendTotalPrice)}
+                    </span>
+                  </div>
+                  <div className="payment-row final">
+                    <span className="payment-label">Tổng tiền gia hạn ({bookingDetail.extendDiscountPercent}% giảm giá)</span>
+                    <span className="payment-value success">
+                      {formatPrice(bookingDetail.extendTotalPriceAfter)}
+                    </span>
+                  </div>
+                </div>
+              )}
+
+              {/* Total Additional Fee */}
+              <div className="payment-row total">
+                <span className="payment-label">Phí bổ sung (đã giảm giá)</span>
+                <span className="payment-value total-value">
+                  {formatPrice(bookingDetail.totalAmountAfter - bookingDetail.totalAmount)}
+                </span>
+              </div>
+            </div>
           </Card>
         </div>
 
