@@ -518,7 +518,7 @@
       box-shadow: 0 2px 8px rgba(114, 46, 209, 0.06);
       
       .ant-collapse-header {
-        background: linear-gradient(135deg, #f9f0ff 0%, #fff0f6 100%);
+        background: #d8b4fe;
         border-bottom: 1px solid #efdbff;
         padding: 16px 20px;
         font-weight: 600;
@@ -546,7 +546,7 @@
       
       &.ant-collapse-item-active {
         .ant-collapse-header {
-          background: linear-gradient(135deg, #f0e6ff 0%, #ffe0eb 100%);
+          background: #d8b4fe;
           color: #9254de;
         }
       }
@@ -560,7 +560,7 @@
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
     
     .ant-table-thead > tr > th {
-      background: linear-gradient(135deg, #722ed1 0%, #9254de 100%);
+      background: #d8b4fe;
       color: white;
       font-weight: 600;
       font-size: 14px;
