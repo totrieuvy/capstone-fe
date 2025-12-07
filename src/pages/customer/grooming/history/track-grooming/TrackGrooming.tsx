@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Card, Tag, Typography, Spin, Alert, Select, DatePicker, Row, Col, Button, Empty } from "antd";
+import { Card, Tag, Typography, Spin, Alert, Select, DatePicker, Row, Col, Button, Empty, Pagination } from "antd";
 import { CalendarOutlined, UserOutlined, ClockCircleOutlined, ReloadOutlined } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
 import dayjs, { Dayjs } from "dayjs";
@@ -29,13 +29,13 @@ interface ApiResponse {
 }
 
 interface AppointmentQueryParams {
-  date: string;
+  date?: string;
   serviceType: "GROOMING";
   sortBy: string;
   sortDir: "asc" | "desc";
   page: number;
   size: number;
-  status?: string; // optional
+  status?: string;
 }
 
 const TrackGrooming: React.FC = () => {
@@ -47,13 +47,18 @@ const TrackGrooming: React.FC = () => {
 
   // Filters
   const [statusFilter, setStatusFilter] = useState<string>("ALL");
-  const [date, setDate] = useState<Dayjs>(dayjs());
+  const [date, setDate] = useState<Dayjs | null>(null);
+
+  // Pagination
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [pageSize, setPageSize] = useState<number>(10);
+  const [totalElements, setTotalElements] = useState<number>(0);
 
   // Auto fetch when filter changed
   useEffect(() => {
     fetchAppointments();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [statusFilter, date]);
+  }, [statusFilter, date, currentPage, pageSize]);
 
   const fetchAppointments = async () => {
     setLoading(true);
@@ -61,13 +66,16 @@ const TrackGrooming: React.FC = () => {
 
     try {
       const params: AppointmentQueryParams = {
-        date: date.format("YYYY-MM-DD"),
         serviceType: "GROOMING",
         sortBy: "createdAt",
         sortDir: "desc",
-        page: 0,
-        size: 10,
+        page: currentPage - 1,
+        size: pageSize,
       };
+
+      if (date) {
+        params.date = date.format("YYYY-MM-DD");
+      }
 
       if (statusFilter !== "ALL") params.status = statusFilter;
 
@@ -75,6 +83,7 @@ const TrackGrooming: React.FC = () => {
 
       if (res.data.code === 200) {
         setAppointments(res.data.data.content || []);
+        setTotalElements(res.data.data.totalElements);
       } else {
         setError(res.data.message || "Không thể tải lịch");
       }
@@ -111,7 +120,8 @@ const TrackGrooming: React.FC = () => {
 
   const handleReset = () => {
     setStatusFilter("ALL");
-    setDate(dayjs());
+    setDate(null);
+    setCurrentPage(1);
   };
 
   const handleViewDetail = (id: string) => {
@@ -191,7 +201,7 @@ const TrackGrooming: React.FC = () => {
     <div className="grooming-appointment-history">
       <Card>
         <div className="grooming-history-header">
-          <Title level={2}>Lịch Grooming</Title>
+          <Title level={2}>Lịch làm đẹp</Title>
         </div>
 
         {error && <Alert message="Lỗi" description={error} type="error" closable style={{ marginBottom: 16 }} />}
@@ -230,11 +240,28 @@ const TrackGrooming: React.FC = () => {
         {/* Appointment cards */}
         <div className="appointment-cards-container">
           {appointments.length === 0 ? (
-            <Empty description="Không có lịch Grooming nào." />
+            <Empty description="Không có lịch làm đẹp nào." />
           ) : (
             appointments.map((g) => renderCard(g))
           )}
         </div>
+
+        {/* Pagination */}
+        {totalElements > 0 && (
+          <div style={{ display: "flex", justifyContent: "center", marginTop: 24 }}>
+            <Pagination
+              current={currentPage}
+              pageSize={pageSize}
+              total={totalElements}
+              onChange={(page, size) => {
+                setCurrentPage(page);
+                setPageSize(size);
+              }}
+              showSizeChanger
+              showTotal={(total) => `Tổng ${total} lịch hẹn`}
+            />
+          </div>
+        )}
       </Card>
     </div>
   );

@@ -91,7 +91,7 @@ const SideBar: React.FC = () => {
     } else if (user?.role === "STAFF") {
       items = [
         getItem("Dịch vụ y tế", "medical-checkup", <BiPlusMedical />, [getItem("Lịch đặt khám", "lich-dat-kham")]),
-        getItem("Grooming", "grooming", <SkinOutlined />, [getItem("Lịch đặt grooming", "lich-dat-grooming")]),
+        getItem("Làm đẹp", "grooming", <SkinOutlined />, [getItem("Lịch đặt làm đẹp", "lich-dat-grooming")]),
         getItem("Chat", "chat", <IoChatboxEllipsesOutline />, [getItem("Quản lí chat", "quan-li-chat")]),
 
         getItem("Boarding", "boarding", <HomeOutlined />, [
