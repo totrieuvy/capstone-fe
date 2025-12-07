@@ -158,6 +158,8 @@
     &.discount {
       .discount-amount {
         color: #52c41a;
+        font-size: 16px;
+        font-weight: 600;
       }
     }
     
@@ -171,6 +173,22 @@
         margin: 0;
       }
     }
+    
+    // Extension pricing styles
+    .original-price {
+      color: #999 !important;
+      text-decoration: line-through;
+      font-size: 16px;
+    }
+  }
+  
+  // Extension section with background highlight
+  .extension-pricing-section {
+    background: linear-gradient(135deg, #f0f9ff 0%, #e6f7ff 100%);
+    padding: 12px;
+    border-radius: 8px;
+    margin: 8px 0;
+    border: 1px solid #91d5ff;
   }
 }
 

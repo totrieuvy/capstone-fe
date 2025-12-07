@@ -680,16 +680,45 @@ const BoardingDetail: React.FC = () => {
                 {getFormattedPrice(booking.totalAmount)}
               </Text>
             </div>
-            <div className="payment-item total">
-              <Text strong>Tổng tiền đặt dịch vụ bổ sung</Text>
-              <Text strong className="total-amount">
-                {getFormattedPrice(
-                  booking.services && booking.services.length > 0
-                    ? booking.services.reduce((sum, service) => sum + service.price, 0)
-                    : 0
-                )}
-              </Text>
-            </div>
+            <Divider />
+            {/* Additional Services (Grooming) Section */}
+            {booking.serviceTotalPrice > 0 && (
+              <div className="extension-pricing-section">
+                <div className="payment-item">
+                  <Text strong>Tổng tiền dịch vụ làm đẹp (giá gốc)</Text>
+                  <Text strong className="original-price" style={{ textDecoration: 'line-through', color: '#999' }}>
+                    {getFormattedPrice(booking.serviceTotalPrice)}
+                  </Text>
+                </div>
+                <div className="payment-item total">
+                  <Text strong>Tổng tiền dịch vụ làm đẹp ({booking.serviceDiscount}% giảm giá)</Text>
+                  <Text strong className="total-amount" style={{ color: '#52c41a', fontSize: '20px' }}>
+                    {getFormattedPrice(booking.serviceTotalPriceAfter)}
+                  </Text>
+                </div>
+              </div>
+            )}
+            {/* Extension Pricing Section - Only show if there's extension */}
+            {booking.extendTotalPrice > 0 && (
+              <>
+                <Divider />
+                <div className="extension-pricing-section">
+                  <div className="payment-item">
+                    <Text strong>Tổng tiền gia hạn (giá gốc)</Text>
+                    <Text strong className="original-price" style={{ textDecoration: 'line-through', color: '#999' }}>
+                      {getFormattedPrice(booking.extendTotalPrice)}
+                    </Text>
+                  </div>
+                  <div className="payment-item total">
+                    <Text strong>Tổng tiền gia hạn ({booking.extendDiscountPercent}% giảm giá)</Text>
+                    <Text strong className="total-amount" style={{ color: '#52c41a', fontSize: '20px' }}>
+                      {getFormattedPrice(booking.extendTotalPriceAfter)}
+                    </Text>
+                  </div>
+                </div>
+              </>
+            )}
+            <Divider />
             <div className="payment-item final-total">
               <Title level={4}>Phí bổ sung (đã giảm giá)</Title>
               <Title level={4} className="final-amount">
