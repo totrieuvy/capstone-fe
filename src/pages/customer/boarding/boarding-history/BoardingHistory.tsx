@@ -15,7 +15,7 @@ const FilterSection = React.memo<{
   searchText: string;
   statusFilter: string;
   cageTypeFilter: string;
-  availableCageTypes: string[];
+  availableCageTypes: Array<{ id: string; name: string }>;
   statusOptions: string[];
   loading: boolean;
   onSearchChange: (value: string) => void;
@@ -76,8 +76,8 @@ const FilterSection = React.memo<{
         >
           <Option value="all">Tất cả loại chuồng</Option>
           {availableCageTypes.map((cageType) => (
-            <Option key={cageType} value={cageType}>
-              {cageType}
+            <Option key={cageType.id} value={cageType.id}>
+              {cageType.name}
             </Option>
           ))}
         </Select>
@@ -159,7 +159,7 @@ const BoardingHistory: React.FC = () => {
   const [inputSearchText, setInputSearchText] = useState(""); // This is for the input display
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [cageTypeFilter, setCageTypeFilter] = useState<string>("all");
-  const [availableCageTypes, setAvailableCageTypes] = useState<string[]>([]);
+  const [availableCageTypes, setAvailableCageTypes] = useState<Array<{ id: string; name: string }>>([]);
   
   // Fixed sort parameters since we don't have UI controls for these
   const sortBy = "createdAt";
@@ -217,13 +217,18 @@ const BoardingHistory: React.FC = () => {
       setBookingHistory(history);
       setTotalElements(response.totalElements);
 
-      // Extract unique cage types from current page data for filters
-      const allCageTypes = history.flatMap((booking) => [
-        booking.cageTypeName,
-        ...(booking.newCageTypeName ? [booking.newCageTypeName] : []),
-      ]);
-      const uniqueCageTypes = [...new Set(allCageTypes)];
-      setAvailableCageTypes(uniqueCageTypes.sort());
+      // Extract unique cage types with IDs from current page data for filters
+      const cageTypesMap = new Map<string, string>();
+      history.forEach((booking) => {
+        cageTypesMap.set(booking.cageTypeId, booking.cageTypeName);
+        if (booking.newCageTypeId && booking.newCageTypeName) {
+          cageTypesMap.set(booking.newCageTypeId, booking.newCageTypeName);
+        }
+      });
+      const uniqueCageTypes = Array.from(cageTypesMap.entries())
+        .map(([id, name]) => ({ id, name }))
+        .sort((a, b) => a.name.localeCompare(b.name));
+      setAvailableCageTypes(uniqueCageTypes);
 
     } catch (err) {
       setError("Failed to fetch booking history. Please try again.");
