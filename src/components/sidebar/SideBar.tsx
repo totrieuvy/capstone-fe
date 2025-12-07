@@ -68,8 +68,8 @@ const SideBar: React.FC = () => {
         ]),
         getItem("Quản lí dịch vụ", "service-management", <BiPlusMedical />, [
           getItem("Dịch vụ y tế", "quan-li-dich-vu-y-te"),
-          getItem("Grooming lẻ", "quan-li-dich-vu-grooming/grooming-le"),
-          getItem("Grooming combo", "quan-li-dich-vu-grooming/grooming-combo"),
+          getItem("Dịch vụ làm đẹp", "quan-li-dich-vu-grooming/grooming-le"),
+          getItem("Combo dịch vụ làm đẹp", "quan-li-dich-vu-grooming/grooming-combo"),
         ]),
         getItem("Cơ sở hạ tầng", "infrastructure", <GiCage />, [
           getItem("Loại chuồng", "quan-li-loai-chuong"),
