@@ -699,6 +699,281 @@
   }
 }
 
+// Payment Details Card Styles
+.payment-details-card {
+  .payment-details-simple {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    
+    .payment-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 16px;
+      background: #fafafa;
+      border-radius: 8px;
+      border: 1px solid #e5e7eb;
+      transition: all 0.3s ease;
+      
+      &:hover {
+        background: #f5f5f5;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+      }
+      
+      &.main {
+        background: linear-gradient(135deg, #e6f7ff 0%, #bae7ff 100%);
+        border-color: #91d5ff;
+        padding: 14px 16px;
+        
+        .payment-label {
+          font-size: 15px;
+          font-weight: 600;
+          color: #1f2937;
+        }
+      }
+      
+      &.original {
+        background: #f9f9f9;
+        border-color: #e0e0e0;
+        padding: 10px 16px;
+        
+        .payment-label {
+          color: #999;
+          font-weight: 400;
+          font-size: 13px;
+        }
+      }
+      
+      &.final {
+        background: linear-gradient(135deg, #f6ffed 0%, #f9ffe6 100%);
+        border-color: #b7eb8f;
+        
+        .payment-label {
+          font-weight: 600;
+        }
+      }
+      
+      &.total {
+        background: linear-gradient(135deg, #fff2f0 0%, #ffebe8 100%);
+        border: 2px solid #ffccc7;
+        padding: 16px;
+        margin-top: 8px;
+        
+        .payment-label {
+          font-size: 16px;
+          font-weight: 600;
+          color: #1f2937;
+        }
+      }
+      
+      .payment-label {
+        font-size: 14px;
+        color: #374151;
+        font-weight: 500;
+      }
+      
+      .payment-value {
+        font-size: 16px;
+        font-weight: 600;
+        
+        &.primary {
+          color: #1890ff;
+          font-size: 18px;
+        }
+        
+        &.strikethrough {
+          text-decoration: line-through;
+          color: #999;
+          font-size: 14px;
+          font-weight: 400;
+        }
+        
+        &.success {
+          color: #52c41a;
+          font-size: 18px;
+        }
+        
+        &.total-value {
+          color: #f5222d;
+          font-size: 20px;
+        }
+      }
+    }
+    
+    // Payment Sub-sections
+    .payment-subsection {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      padding: 16px;
+      border-radius: 10px;
+      border: 2px solid;
+      background: #fff;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+      
+      &.grooming-subsection {
+        border-color: #52c41a;
+        background: linear-gradient(135deg, #fcffe6 0%, #f6ffed 100%);
+      }
+      
+      &.extension-subsection {
+        border-color: #1890ff;
+        background: linear-gradient(135deg, #f0f5ff 0%, #e6f7ff 100%);
+      }
+      
+      .subsection-header {
+        margin-bottom: 8px;
+        padding-bottom: 8px;
+        border-bottom: 2px solid;
+        
+        h5 {
+          margin: 0;
+          font-size: 15px;
+          font-weight: 700;
+          color: #262626;
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
+        }
+      }
+      
+      &.grooming-subsection .subsection-header {
+        border-bottom-color: #b7eb8f;
+        
+        h5 {
+          color: #389e0d;
+        }
+      }
+      
+      &.extension-subsection .subsection-header {
+        border-bottom-color: #91d5ff;
+        
+        h5 {
+          color: #0958d9;
+        }
+      }
+      
+      .payment-row {
+        margin: 0;
+        background: #fff;
+        
+        &.original {
+          background: #fafafa;
+        }
+        
+        &.final {
+          background: #fff;
+          border-width: 2px;
+        }
+      }
+    }
+  }
+}
+
+// Responsive design for payment details
+@media (max-width: 768px) {
+  .payment-details-card {
+    .payment-details-simple {
+      .payment-row {
+        padding: 10px 12px;
+        
+        &.main {
+          padding: 12px;
+        }
+        
+        &.original {
+          padding: 8px 12px;
+        }
+        
+        .payment-label {
+          font-size: 13px;
+        }
+        
+        .payment-value {
+          font-size: 14px;
+          
+          &.primary {
+            font-size: 16px;
+          }
+          
+          &.success {
+            font-size: 16px;
+          }
+          
+          &.total-value {
+            font-size: 18px;
+          }
+        }
+        
+        &.total {
+          padding: 12px;
+          
+          .payment-label {
+            font-size: 14px;
+          }
+        }
+      }
+      
+      .payment-subsection {
+        padding: 12px;
+        
+        .subsection-header {
+          h5 {
+            font-size: 14px;
+          }
+        }
+      }
+    }
+  }
+}
+
+@media (max-width: 480px) {
+  .payment-details-card {
+    .payment-details-simple {
+      gap: 12px;
+      
+      .payment-row {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 6px;
+        padding: 8px 10px;
+        
+        &.main {
+          flex-direction: row;
+          justify-content: space-between;
+          align-items: center;
+          padding: 10px;
+        }
+        
+        &.total {
+          flex-direction: row;
+          justify-content: space-between;
+          align-items: center;
+          padding: 12px 10px;
+        }
+        
+        .payment-value {
+          align-self: flex-end;
+        }
+      }
+      
+      .payment-subsection {
+        padding: 10px;
+        gap: 6px;
+        
+        .subsection-header {
+          margin-bottom: 6px;
+          padding-bottom: 6px;
+          
+          h5 {
+            font-size: 13px;
+          }
+        }
+      }
+    }
+  }
+}
+
 // Incident Report Card Styles
 .incident-card {
   border-left: 4px solid #ff4d4f;

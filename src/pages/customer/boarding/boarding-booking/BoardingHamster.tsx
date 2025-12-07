@@ -252,6 +252,11 @@ function BoardingHamster() {
 
   const handleDateChange = (dates: [Dayjs | null, Dayjs | null] | null) => {
     if (dates && dates[0] && dates[1]) {
+      // Check if start date and end date are the same
+      if (dates[0].isSame(dates[1], "day")) {
+        message.warning("Ngày gửi và ngày nhận không thể giống nhau. Vui lòng chọn ít nhất 2 ngày khác nhau.");
+        return;
+      }
       // Check if the date range exceeds 1 month
       const daysDifference = dates[1].diff(dates[0], "day");
       if (daysDifference > 30) {
@@ -534,6 +539,11 @@ function BoardingHamster() {
   // Function to handle date change in the modal
   const handleModalDateChange = async (dates: [Dayjs | null, Dayjs | null] | null) => {
     if (dates && dates[0] && dates[1]) {
+      // Check if start date and end date are the same
+      if (dates[0].isSame(dates[1], "day")) {
+        message.warning("Ngày gửi và ngày nhận không thể giống nhau. Vui lòng chọn ít nhất 2 ngày khác nhau.");
+        return;
+      }
       // Check if the date range exceeds 1 month
       const daysDifference = dates[1].diff(dates[0], "day");
       if (daysDifference > 30) {
