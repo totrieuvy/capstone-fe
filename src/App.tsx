@@ -58,7 +58,7 @@ import HistoryGroomingDetail from "./pages/staff/grooming/HistoryGroomingDetail"
 import MedicalBooking from "./pages/customer/medical/medical-booking/MedicalBooking";
 import TrackGrooming from "./pages/customer/grooming/history/track-grooming/TrackGrooming";
 import TrackGroomingDetail from "./pages/customer/grooming/history/track-grooming-detail/TrackGroomingDetail";
-import GroomingPaymentSuccess from "./pages/customer/grooming/payment-success/GroomingPaymentSuccess";
+import GroomingPaymentSuccess from "./pages/staff/grooming/payment-success/GroomingPaymentSuccess";
 import ManageAppointment from "./pages/staff/medical/manage-appointment/manage-appointment";
 import ManageAppointmentDetail from "./pages/staff/medical/manage-appointment-detail/manage-appointment-detail";
 import MedicalAppointmentHistory from "./pages/customer/medical/medical-appointment-history/MedicalAppointmentHistory";
@@ -81,6 +81,7 @@ import ManageCustomer from "./pages/admin/account/ManageCustomer";
 import Home from "./pages/customer/home/Home";
 import HamsterMedicalHistory from "./pages/veterinarian/hamster-medical-history/HamsterMedicalHistory";
 import ManageIncident from "./pages/admin/manageIncident/ManageIncident";
+import GroomingPaymentFailure from "./pages/staff/grooming/payment-success/GroomingPaymentFailure";
 
 interface User {
   id: number;
@@ -352,27 +353,16 @@ const App = () => {
             { path: "thong-so-iot", element: <Iot /> },
             { path: "lich-dat-grooming", element: <HistoryGrooming /> },
             { path: "groomingpayment-success", element: <GroomingPaymentSuccess /> },
+            { path: "groomingpayment-failure", element: <GroomingPaymentFailure /> },
             { path: "lich-dat-grooming/:id", element: <HistoryGroomingDetail /> },
             { path: "*", element: <StaffNotFoundPage /> },
             { path: "lich-dat-kham", element: <ManageAppointment /> },
             { path: "lich-dat-kham/:appointmentId", element: <ManageAppointmentDetail /> },
+            {path: "boardingpayment-success", element: <BoardingPaymentSuccess />},
+            {path: "boardingpayment-failure", element: <BoardingPaymentFailure />},
+            {path: "medical-payment-success", element: <MedicalPaymentSuccess />},
+            {path: "medical-payment-failure", element: <MedicalPaymentFailure />}, 
           ],
-        },
-        {
-          path: "boardingpayment-success",
-          element: <BoardingPaymentSuccess />,
-        },
-        {
-          path: "boardingpayment-failure",
-          element: <BoardingPaymentFailure />,
-        },
-        {
-          path: "medical-payment-success",
-          element: <MedicalPaymentSuccess />,
-        },
-        {
-          path: "medical-payment-failure",
-          element: <MedicalPaymentFailure />,
         },
       ],
     },

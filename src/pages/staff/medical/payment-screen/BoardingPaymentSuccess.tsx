@@ -7,7 +7,7 @@ const BoardingPaymentSuccess: React.FC = () => {
   const navigate = useNavigate();
 
   const handleBackToDashboard = () => {
-    navigate('/STAFF');
+    navigate('/STAFF/lich-dat-boarding');
   };
 
   return (
@@ -47,7 +47,7 @@ const BoardingPaymentSuccess: React.FC = () => {
               boxShadow: '0 4px 12px rgba(24, 144, 255, 0.3)',
             }}
           >
-            Về trang chủ
+            Về danh sách đặt lịch boarding
           </Button>
         }
         style={{
