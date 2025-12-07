@@ -280,11 +280,15 @@ function WalletCustomer() {
       dataIndex: "serviceName",
       key: "serviceName",
       render: (service: string) => {
-        const serviceMap: Record<string, string> = {
-          WALLET: "Nạp tiền ví ảo",
-          ORDER: "Đặt hàng",
+        const serviceConfig: Record<string, { text: string; color: string }> = {
+          WALLET: { text: "Ví ảo", color: "purple" },
+          ORDER: { text: "Đặt hàng", color: "blue" },
+          BOOKING: { text: "Đặt lịch giữ hộ", color: "cyan" },
+          GROOMING: { text: "Dịch vụ làm đẹp", color: "geekblue" },
+          MEDICAL: { text: "Khám bệnh", color: "magenta" },
         };
-        return <Tag color="orange">{serviceMap[service] || service}</Tag>;
+        const config = serviceConfig[service] || { text: service, color: "orange" };
+        return <Tag color={config.color}>{config.text}</Tag>;
       },
     },
     {
@@ -292,28 +296,18 @@ function WalletCustomer() {
       dataIndex: "status",
       key: "status",
       render: (status: string) => {
-        let color = "orange";
-        let text = status;
-        switch (status) {
-          case "SUCCESS":
-          case "COMPLETED":
-            color = "green";
-            text = "Đã hoàn thành";
-            break;
-          case "REFUNDED":
-            color = "blue";
-            text = "Đã hoàn tiền";
-            break;
-          case "FAILED":
-            color = "red";
-            text = "Thất bại";
-            break;
-          case "PENDING":
-            color = "gold";
-            text = "Đang xử lý";
-            break;
-        }
-        return <Tag color={color}>{text}</Tag>;
+        const statusConfig: Record<string, { text: string; color: string }> = {
+          BOOKED: { text: "Đã đặt lịch", color: "cyan" },
+          CHECK_OUT: { text: "Đã trả", color: "blue" },
+          IN_PROGRESS: { text: "Đang thực hiện", color: "processing" },
+          PAID: { text: "Đã thanh toán", color: "geekblue" },
+          COMPLETED: { text: "Đã hoàn thành", color: "green" },
+          FAILED: { text: "Thất bại", color: "red" },
+          REJECTED: { text: "Đã từ chối", color: "volcano" },
+          PENDING: { text: "Đang xử lý", color: "gold" },
+        };
+        const config = statusConfig[status] || { text: status, color: "default" };
+        return <Tag color={config.color}>{config.text}</Tag>;
       },
     },
     {
