@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
-import { Card, Descriptions, Tag, Spin, Row, Col, message } from "antd";
+import { Card, Descriptions, Tag, Spin, Row, Col, message, Button, Modal, Form, Input } from "antd";
+import { EditOutlined } from "@ant-design/icons";
 import api from "../../../config/axios";
+import { toast } from "react-toastify";
 import "./ViewProfile.scss";
 
 interface MembershipHistory {
@@ -30,9 +32,19 @@ interface ApiResponse {
   data: CustomerProfile;
 }
 
+interface UpdateProfileValues {
+  email: string;
+  phone: string;
+  fullName: string;
+  address: string;
+}
+
 const ViewProfile = () => {
   const [profile, setProfile] = useState<CustomerProfile | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
+  const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
+  const [updating, setUpdating] = useState<boolean>(false);
+  const [form] = Form.useForm();
 
   useEffect(() => {
     document.title = "Hồ sơ khách hàng";
@@ -51,6 +63,36 @@ const ViewProfile = () => {
       message.error("Không thể tải hồ sơ khách hàng!" + (error as Error).message);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const showUpdateModal = () => {
+    if (profile) {
+      form.setFieldsValue({
+        email: profile.email,
+        phone: profile.phone,
+        fullName: profile.fullName,
+        address: profile.address,
+      });
+      setIsModalOpen(true);
+    }
+  };
+
+  const handleUpdateProfile = async (values: UpdateProfileValues) => {
+    setUpdating(true);
+    try {
+      const response = await api.put("/api/customer", values);
+      if (response.data.code === 200) {
+        toast.success("Cập nhật hồ sơ thành công");
+        setIsModalOpen(false);
+        fetchProfile();
+      } else {
+        toast.error(response.data.message || "Cập nhật thất bại!");
+      }
+    } catch {
+      toast.error("Đã xảy ra lỗi khi cập nhật hồ sơ!");
+    } finally {
+      setUpdating(false);
     }
   };
 
@@ -89,7 +131,12 @@ const ViewProfile = () => {
   return (
     <div className="view-profile-page">
       <div className="container">
-        <h1 className="page-title">🐹 Hồ sơ Khách hàng</h1>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
+          <h1 className="page-title">🐹 Hồ sơ Khách hàng</h1>
+          <Button type="primary" icon={<EditOutlined />} onClick={showUpdateModal}>
+            Cập nhật hồ sơ
+          </Button>
+        </div>
 
         {/* Thông tin cá nhân */}
         <Card className="profile-card" title="Thông tin cá nhân" bordered={false}>
@@ -98,7 +145,7 @@ const ViewProfile = () => {
             <Descriptions.Item label="Email">{profile.email}</Descriptions.Item>
             <Descriptions.Item label="Số điện thoại">{profile.phone}</Descriptions.Item>
             <Descriptions.Item label="Địa chỉ">{profile.address}</Descriptions.Item>
-            <Descriptions.Item label="CCCD/CMND">{profile.citizenId}</Descriptions.Item>
+            {/* <Descriptions.Item label="CCCD/CMND">{profile.citizenId}</Descriptions.Item> */}
             <Descriptions.Item label="Hạng hiện tại">
               <Tag color={getRankColor(profile.rank)} style={{ fontWeight: 600 }}>
                 {profile.rank}
@@ -140,6 +187,64 @@ const ViewProfile = () => {
           ))}
         </Row>
       </div>
+
+      {/* Modal Cập nhật hồ sơ */}
+      <Modal
+        title="Cập nhật hồ sơ"
+        open={isModalOpen}
+        onCancel={() => setIsModalOpen(false)}
+        footer={[
+          <Button key="cancel" onClick={() => setIsModalOpen(false)}>
+            Hủy
+          </Button>,
+          <Button key="submit" type="primary" loading={updating} onClick={() => form.submit()}>
+            Cập nhật
+          </Button>,
+        ]}
+      >
+        <Form form={form} layout="vertical" onFinish={handleUpdateProfile}>
+          <Form.Item
+            label="Họ và tên"
+            name="fullName"
+            rules={[{ required: true, message: "Vui lòng nhập họ và tên!" }]}
+          >
+            <Input placeholder="Nhập họ và tên" />
+          </Form.Item>
+
+          <Form.Item
+            label="Email"
+            name="email"
+            rules={[
+              { required: true, message: "Vui lòng nhập email!" },
+              { type: "email", message: "Email không hợp lệ!" },
+            ]}
+          >
+            <Input placeholder="Nhập email" />
+          </Form.Item>
+
+          <Form.Item
+            label="Số điện thoại"
+            name="phone"
+            rules={[
+              { required: true, message: "Vui lòng nhập số điện thoại!" },
+              { pattern: /^[0-9]{10,11}$/, message: "Số điện thoại phải từ 10-11 chữ số!" },
+            ]}
+          >
+            <Input
+              placeholder="Nhập số điện thoại"
+              maxLength={11}
+              onChange={(e) => {
+                const value = e.target.value.replace(/\D/g, "");
+                form.setFieldValue("phone", value);
+              }}
+            />
+          </Form.Item>
+
+          <Form.Item label="Địa chỉ" name="address" rules={[{ required: true, message: "Vui lòng nhập địa chỉ!" }]}>
+            <Input.TextArea rows={3} placeholder="Nhập địa chỉ" />
+          </Form.Item>
+        </Form>
+      </Modal>
     </div>
   );
 };
