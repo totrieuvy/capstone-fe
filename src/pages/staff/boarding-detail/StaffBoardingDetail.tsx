@@ -571,9 +571,9 @@ const BoardingDetail: React.FC = () => {
                     {formatPrice(bookingDetail.totalAmount)}
                   </strong>
                 </Descriptions.Item>
-                <Descriptions.Item label="Thành tiền">
+                <Descriptions.Item label="Phí bổ sung (đã giảm giá)">
                   <strong className="final-amount">
-                    {formatPrice(bookingDetail.totalAmountAfter)}
+                    {formatPrice(bookingDetail.totalAmountAfter - bookingDetail.totalAmount)}
                   </strong>
                 </Descriptions.Item>
                 <Descriptions.Item label="Ngày tạo" span={2}>
@@ -1208,65 +1208,7 @@ const BoardingDetail: React.FC = () => {
               
               <Card style={{ backgroundColor: '#fafafa' }}>
                 <Row gutter={[12, 12]}>
-                  <Col xs={24} sm={8}>
-                    <Card
-                      hoverable
-                      className={`payment-method-card ${checkOutPaymentMethod === 'WALLET' ? 'selected' : ''}`}
-                      onClick={() => setCheckOutPaymentMethod('WALLET')}
-                      style={{
-                        borderRadius: 12,
-                        border: checkOutPaymentMethod === 'WALLET'
-                          ? "2px solid #1890ff"
-                          : "1px solid #f0f0f0",
-                        cursor: "pointer",
-                        textAlign: "center",
-                        height: 100,
-                        display: "flex",
-                        flexDirection: "column",
-                        justifyContent: "center",
-                        alignItems: "center",
-                        position: "relative",
-                      }}
-                      bodyStyle={{ padding: 12 }}
-                    >
-                      <div style={{
-                        width: 40,
-                        height: 40,
-                        background: "#f0f0f0",
-                        borderRadius: 8,
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        marginBottom: 8,
-                        fontSize: 20
-                      }}>
-                        👛
-                      </div>
-                      <p style={{ margin: 0, fontSize: 14, fontWeight: 600, color: "#333" }}>
-                        Ví ảo
-                      </p>
-                      {checkOutPaymentMethod === 'WALLET' && (
-                        <div style={{
-                          position: "absolute",
-                          top: 8,
-                          right: 8,
-                          background: "#1890ff",
-                          color: "white",
-                          borderRadius: "50%",
-                          width: 20,
-                          height: 20,
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          fontSize: 12,
-                          fontWeight: "bold"
-                        }}>
-                          ✓
-                        </div>
-                      )}
-                    </Card>
-                  </Col>
-                  <Col xs={24} sm={8}>
+                  <Col xs={24} sm={12}>
                     <Card
                       hoverable
                       className={`payment-method-card ${checkOutPaymentMethod === 'VNPAY' ? 'selected' : ''}`}
@@ -1324,7 +1266,7 @@ const BoardingDetail: React.FC = () => {
                       )}
                     </Card>
                   </Col>
-                  <Col xs={24} sm={8}>
+                  <Col xs={24} sm={12}>
                     <Card
                       hoverable
                       className={`payment-method-card ${checkOutPaymentMethod === 'PAYOS' ? 'selected' : ''}`}
