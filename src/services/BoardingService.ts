@@ -393,6 +393,24 @@ export interface CageFloorPlanItem {
   bookingStatus: string | null;
 }
 
+// Type definitions for available cages by cage type and date range
+export interface GetAvailableCagesByTypeRequest {
+  cageTypeId: string;
+  startDate: string; // Format: YYYY-MM-DD
+  endDate: string; // Format: YYYY-MM-DD
+}
+
+export interface AvailableCage {
+  cageId: string;
+  cageName: string;
+  status: string;
+}
+
+export interface GetAvailableCagesByTypeResponse {
+  cages: AvailableCage[];
+  message: string;
+}
+
 export interface ApiResponse<T> {
   code: number;
   message: string;
@@ -603,6 +621,25 @@ export const boardingService = {
       return response.data.data;
     } catch (error) {
       console.error("Error fetching cage floor plan:", error);
+      throw error;
+    }
+  },
+
+  // Get available cages by cage type and date range
+  getAvailableCagesByType: async (request: GetAvailableCagesByTypeRequest): Promise<AvailableCage[]> => {
+    try {
+      const response = await api.get<ApiResponse<AvailableCage[]>>(
+        `/api/cage/type/${request.cageTypeId}/date-range`,
+        {
+          params: {
+            startDate: request.startDate,
+            endDate: request.endDate,
+          },
+        }
+      );
+      return response.data.data;
+    } catch (error) {
+      console.error("Error fetching available cages by type:", error);
       throw error;
     }
   },
