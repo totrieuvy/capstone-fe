@@ -196,7 +196,7 @@ function ManageComboGrooming() {
 
   // --- Effects ---
   useEffect(() => {
-    document.title = "Quản lí Combo Grooming";
+    document.title = "Quản lí combo dịch vụ làm đẹp";
     const loadData = async () => {
       await fetchSpecies();
       await fetchServices();
@@ -475,7 +475,7 @@ function ManageComboGrooming() {
 
   return (
     <div className="ManageComboGrooming">
-      <h1>Quản lí Combo Grooming</h1>
+      <h1>Quản lí combo dịch vụ làm đẹp</h1>
 
       <div className="toolbar">
         <Search

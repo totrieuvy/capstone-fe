@@ -267,7 +267,7 @@ function ManageGroomingService() {
 
   return (
     <div className="ManageGroomingService">
-      <h1>Quản lí dịch vụ Grooming</h1>
+      <h1>Quản lí dịch vụ làm đẹp</h1>
 
       <div className="toolbar">
         <Search
