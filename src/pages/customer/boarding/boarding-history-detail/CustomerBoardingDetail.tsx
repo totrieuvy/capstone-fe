@@ -516,7 +516,7 @@ const BoardingDetail: React.FC = () => {
             </Row>
 
             {/* Extension Information Section */}
-            {(booking.newEndDate && booking.newCageTypeName && booking.newCageName) && (
+            {(booking.newEndDate || booking.newCageTypeName || booking.newCageName) && (
               <div className="extension-section">
                 <div className="extension-title">
                   <Text style={{ fontSize: '16px', fontWeight: 600, color: '#1890ff' }}>
