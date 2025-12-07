@@ -92,8 +92,15 @@ const BoardingSchedule = () => {
         const currentCageTypeId = currentBookingData.cageTypeId;
         setSelectedCageTypeId(currentCageTypeId);
         
-        // Load cages for current cage type
-        await loadCagesForType(currentBookingData.cageTypeName);
+        // Get the current effective end date to use as start date for extension
+        const currentEffectiveEndDate = currentBookingData.newEndDate && currentBookingData.newEndDate !== null && currentBookingData.newEndDate !== ''
+          ? currentBookingData.newEndDate
+          : currentBookingData.endDate;
+        
+        // Load cages for current cage type with date range
+        // Note: We'll load initially with a placeholder end date, actual filtering happens when user selects new end date
+        const futureDate = dayjs(currentEffectiveEndDate).add(30, 'days').format('YYYY-MM-DD');
+        await loadCagesForType(currentCageTypeId, currentEffectiveEndDate, futureDate);
       }
     } catch (error) {
       console.error('Error initializing extend modal:', error);
@@ -119,15 +126,15 @@ const BoardingSchedule = () => {
       console.error('Error loading cage types:', error);
     }
   };
-  // Function to load cages for selected cage type
-  const loadCagesForType = async (cageTypeName: string) => {
+  // Function to load cages for selected cage type with date range
+  const loadCagesForType = async (cageTypeId: string, startDate: string, endDate: string) => {
     try {
       setLoadingCages(true);
-      const floorPlan = await boardingService.getCageFloorPlan();
-      const availableCagesForType = floorPlan.filter(cage => 
-        cage.cageTypeName === cageTypeName && 
-        (cage.status === 'AVAILABLE' || cage.bookingStatus === null)
-      );
+      const availableCagesForType = await boardingService.getAvailableCagesByType({
+        cageTypeId,
+        startDate,
+        endDate
+      });
       setAvailableCages(availableCagesForType);
     } catch (error) {
       console.error('Error loading cages for type:', error);
@@ -142,10 +149,22 @@ const BoardingSchedule = () => {
     setSelectedCageTypeId(cageTypeId);
     setSelectedCageId(null); // Reset cage selection
     
-    // Find the selected cage type and load its cages
-    const selectedType = allCageTypes.find(type => type.cageTypeId === cageTypeId);
-    if (selectedType) {
-      await loadCagesForType(selectedType.typeName);
+    // Get the current booking data to determine date range
+    if (selectedBooking) {
+      const currentBookingData = bookings.find(b => b.bookingId === selectedBooking.id);
+      if (currentBookingData) {
+        // Get the current effective end date to use as start date for extension
+        const currentEffectiveEndDate = currentBookingData.newEndDate && currentBookingData.newEndDate !== null && currentBookingData.newEndDate !== ''
+          ? currentBookingData.newEndDate
+          : currentBookingData.endDate;
+        
+        // If user has selected a new end date, use it; otherwise use a placeholder future date
+        const extensionEndDate = newEndDate 
+          ? newEndDate.format('YYYY-MM-DD')
+          : dayjs(currentEffectiveEndDate).add(30, 'days').format('YYYY-MM-DD');
+        
+        await loadCagesForType(cageTypeId, currentEffectiveEndDate, extensionEndDate);
+      }
     }
   };
 
@@ -483,6 +502,21 @@ const BoardingSchedule = () => {
   useEffect(() => {
     fetchBookings(currentMonth);
   }, [currentMonth]);
+
+  // Reload cages when new end date is selected
+  useEffect(() => {
+    if (newEndDate && selectedCageTypeId && selectedBooking) {
+      const currentBookingData = bookings.find(b => b.bookingId === selectedBooking.id);
+      if (currentBookingData) {
+        const currentEffectiveEndDate = currentBookingData.newEndDate && currentBookingData.newEndDate !== null && currentBookingData.newEndDate !== ''
+          ? currentBookingData.newEndDate
+          : currentBookingData.endDate;
+        
+        // Reload cages with the new date range
+        loadCagesForType(selectedCageTypeId, currentEffectiveEndDate, newEndDate.format('YYYY-MM-DD'));
+      }
+    }
+  }, [newEndDate]);
 
   // Separate bookings by status
   // First table: Bookings that are checked in or in progress (CHECK_IN, IN_PROGRESS, CHECK_OUT, INCIDENT)

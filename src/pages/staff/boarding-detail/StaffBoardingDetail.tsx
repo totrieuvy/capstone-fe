@@ -2,8 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Card, Spin, Alert, Button, Tag, Descriptions, Avatar, Modal, Upload, message, List, Radio, Row, Col, Input } from 'antd';
 import { ArrowLeftOutlined, UserOutlined, CalendarOutlined, ShoppingOutlined, UploadOutlined, CameraOutlined, HomeOutlined, EditOutlined, LogoutOutlined, WarningOutlined, CheckCircleOutlined, ExclamationCircleOutlined } from '@ant-design/icons';
-import { boardingService, type BookingDetail } from '../../../services/BoardingService';
-import { cageService, type Cage } from '../../../services/CageService';
+import { boardingService, type BookingDetail, type AvailableCage } from '../../../services/BoardingService';
 import { storage } from '../../../config/firebase';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import type { UploadProps } from 'antd/es/upload/interface';
@@ -22,7 +21,7 @@ const BoardingDetail: React.FC = () => {
   const [imagePreview, setImagePreview] = useState<string>('');
   
   // Cage assignment states (now part of check-in process)
-  const [availableCages, setAvailableCages] = useState<Cage[]>([]);
+  const [availableCages, setAvailableCages] = useState<AvailableCage[]>([]);
   const [selectedCageId, setSelectedCageId] = useState<string>('');
   const [cageLoading, setCageLoading] = useState<boolean>(false);
   const [healthNote, setHealthNote] = useState<string>('');
@@ -274,23 +273,22 @@ const BoardingDetail: React.FC = () => {
     setHealthNote('');
   };
 
-  // Fetch available cages for the booking's cage type and start date
+  // Fetch available cages for the booking's cage type and date range
   const fetchAvailableCages = async () => {
     if (!bookingDetail) return;
     
     try {
       setCageLoading(true);
-      const response = await cageService.getCagesByTypeAndDate({
+      const response = await boardingService.getAvailableCagesByType({
         cageTypeId: bookingDetail.cageTypeId,
-        date: bookingDetail.startDate
+        startDate: bookingDetail.startDate,
+        endDate: bookingDetail.endDate
       });
       
-      // Filter only available cages
-      const availableCages = response.cages.filter(cage => cage.status === 'Available');
-      setAvailableCages(availableCages);
+      setAvailableCages(response);
       
-      if (availableCages.length === 0) {
-        message.warning('Không có chuồng trống cho loại chuồng này trong ngày bắt đầu!');
+      if (response.length === 0) {
+        message.warning('Không có chuồng trống cho loại chuồng này trong khoảng thời gian đã chọn!');
       }
     } catch (error) {
       console.error('Error fetching available cages:', error);
