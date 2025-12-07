@@ -106,6 +106,7 @@ const TrackGroomingDetail: React.FC = () => {
       CHECKOUT: "success",
       CANCELLED: "red",
       CHECK_OUT: "green",
+      FAILED: "purple",
     };
     const textMap: Record<string, string> = {
       BOOKED: "Đã đặt",
@@ -114,6 +115,7 @@ const TrackGroomingDetail: React.FC = () => {
       CHECKOUT: "Hoàn tất",
       CANCELLED: "Đã hủy",
       CHECK_OUT: "Hoàn tất",
+      FAILED: "Thanh toán thất bại",
     };
     return <Tag color={colorMap[status] || "default"}>{textMap[status] || status}</Tag>;
   };

@@ -241,6 +241,7 @@ const HistoryGroomingDetail = () => {
       CHECKOUT: "success",
       CANCELLED: "red",
       CHECK_OUT: "green",
+      FAILED: "purple",
     };
     const textMap: Record<string, string> = {
       BOOKED: "Đã đặt",
@@ -249,6 +250,7 @@ const HistoryGroomingDetail = () => {
       CHECKOUT: "Hoàn tất",
       CANCELLED: "Đã hủy",
       CHECK_OUT: "Hoàn tất",
+      FAILED: "Thanh toán thất bại",
     };
     return (
       <Tag color={colorMap[status] || "default"} style={{ fontWeight: 600, fontSize: "14px" }}>
