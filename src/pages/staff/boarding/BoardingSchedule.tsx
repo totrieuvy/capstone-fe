@@ -89,15 +89,19 @@ const BoardingSchedule = () => {
         const currentCageTypeId = currentBookingData.cageTypeId;
         setSelectedCageTypeId(currentCageTypeId);
         
-        // Get the current effective end date to use as start date for extension
+        // Get the current effective end date
         const currentEffectiveEndDate = currentBookingData.newEndDate && currentBookingData.newEndDate !== null && currentBookingData.newEndDate !== ''
           ? currentBookingData.newEndDate
           : currentBookingData.endDate;
         
+        // Calculate extension start date (end date + 1 day)
+        // This prevents the current cage from showing as "In Use" for the extension period
+        const extensionStartDate = dayjs(currentEffectiveEndDate).add(1, 'day').format('YYYY-MM-DD');
+        
         // Load cages for current cage type with date range
         // Note: We'll load initially with a placeholder end date, actual filtering happens when user selects new end date
-        const futureDate = dayjs(currentEffectiveEndDate).add(30, 'days').format('YYYY-MM-DD');
-        await loadCagesForType(currentCageTypeId, currentEffectiveEndDate, futureDate);
+        const futureDate = dayjs(currentEffectiveEndDate).add(31, 'days').format('YYYY-MM-DD');
+        await loadCagesForType(currentCageTypeId, extensionStartDate, futureDate);
       }
     } catch (error) {
       console.error('Error initializing extend modal:', error);
@@ -150,17 +154,20 @@ const BoardingSchedule = () => {
     if (selectedBooking) {
       const currentBookingData = bookings.find(b => b.bookingId === selectedBooking.id);
       if (currentBookingData) {
-        // Get the current effective end date to use as start date for extension
+        // Get the current effective end date
         const currentEffectiveEndDate = currentBookingData.newEndDate && currentBookingData.newEndDate !== null && currentBookingData.newEndDate !== ''
           ? currentBookingData.newEndDate
           : currentBookingData.endDate;
         
+        // Calculate extension start date (end date + 1 day)
+        const extensionStartDate = dayjs(currentEffectiveEndDate).add(1, 'day').format('YYYY-MM-DD');
+        
         // If user has selected a new end date, use it; otherwise use a placeholder future date
         const extensionEndDate = newEndDate 
           ? newEndDate.format('YYYY-MM-DD')
-          : dayjs(currentEffectiveEndDate).add(30, 'days').format('YYYY-MM-DD');
+          : dayjs(currentEffectiveEndDate).add(31, 'days').format('YYYY-MM-DD');
         
-        await loadCagesForType(cageTypeId, currentEffectiveEndDate, extensionEndDate);
+        await loadCagesForType(cageTypeId, extensionStartDate, extensionEndDate);
       }
     }
   };
@@ -235,22 +242,21 @@ const BoardingSchedule = () => {
         return;
       }
 
-      // Determine extension scenario
+      // Always include CageTypeId and CageId in the extend request
+      // The API expects these parameters to properly assign the cage for the extension period
+      extendRequest.CageTypeId = selectedCageTypeId;
+      extendRequest.CageId = selectedCageId;
+
+      // Determine extension scenario for logging and UI update purposes
       const isSameCage = selectedCageTypeId === currentCageTypeId && selectedCage.cageName === currentCageName;
       const isSameCageType = selectedCageTypeId === currentCageTypeId && selectedCage.cageName !== currentCageName;
       const isDifferentCageType = selectedCageTypeId !== currentCageTypeId;
 
       if (isSameCage) {
-        // Scenario 1: Keep same cage (no additional parameters needed)
-        console.log('Extension: Same cage');
+        console.log('Extension: Same cage', selectedCageTypeId, selectedCageId);
       } else if (isSameCageType) {
-        // Scenario 2: Same cage type, different cage
-        extendRequest.CageId = selectedCageId;
-        console.log('Extension: Same cage type, different cage', selectedCageId);
+        console.log('Extension: Same cage type, different cage', selectedCageTypeId, selectedCageId);
       } else if (isDifferentCageType) {
-        // Scenario 3: Different cage type
-        extendRequest.CageTypeId = selectedCageTypeId;
-        extendRequest.CageId = selectedCageId;
         console.log('Extension: Different cage type', selectedCageTypeId, selectedCageId);
       }
 
@@ -505,8 +511,11 @@ const BoardingSchedule = () => {
           ? currentBookingData.newEndDate
           : currentBookingData.endDate;
         
+        // Calculate extension start date (end date + 1 day)
+        const extensionStartDate = dayjs(currentEffectiveEndDate).add(1, 'day').format('YYYY-MM-DD');
+        
         // Reload cages with the new date range
-        loadCagesForType(selectedCageTypeId, currentEffectiveEndDate, newEndDate.format('YYYY-MM-DD'));
+        loadCagesForType(selectedCageTypeId, extensionStartDate, newEndDate.format('YYYY-MM-DD'));
       }
     }
   }, [newEndDate]);
