@@ -55,7 +55,6 @@ const BoardingSchedule = () => {
   const [selectedCageTypeId, setSelectedCageTypeId] = useState<string | null>(null);
   const [availableCages, setAvailableCages] = useState<any[]>([]);
   const [selectedCageId, setSelectedCageId] = useState<string | null>(null);
-  const [originalCageId, setOriginalCageId] = useState<string | null>(null);
   const [loadingCages, setLoadingCages] = useState<boolean>(false);
 
   // State for transfer booking hover effect
@@ -75,13 +74,11 @@ const BoardingSchedule = () => {
     });
     setNewEndDate(null);
     setSelectedCageId(null);
-    setOriginalCageId(null);
     
     try {
       // Get current booking data
       const currentBookingData = bookings.find(b => b.bookingId === originalBookingId);
       if (currentBookingData) {
-        setOriginalCageId(currentBookingData.cageName);
       }
       
       // Load all cage types first
@@ -312,7 +309,6 @@ const BoardingSchedule = () => {
     setSelectedCageTypeId(null);
     setAvailableCages([]);
     setSelectedCageId(null);
-    setOriginalCageId(null);
   };
 
   // Fetch bookings for the current month
@@ -1130,7 +1126,6 @@ const BoardingSchedule = () => {
                   }}>
                     {availableCages.map(cage => {
                       const isInUse = cage.status === 'In Use' || cage.status === 'IN_USE';
-                      // const isAvailable = cage.status === 'Available' || cage.status === 'AVAILABLE';
                       const isDisabled = isInUse;
                       
                       return (
