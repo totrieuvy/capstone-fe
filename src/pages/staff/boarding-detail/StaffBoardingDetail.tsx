@@ -1140,38 +1140,42 @@ const BoardingDetail: React.FC = () => {
                 >
                   <List
                     dataSource={availableCages}
-                    renderItem={(cage) => (
-                      <List.Item
-                        key={cage.cageId}
-                        style={{
-                          padding: '12px 16px',
-                          border: selectedCageId === cage.cageId ? '2px solid #1890ff' : '1px solid #f0f0f0',
-                          borderRadius: 8,
-                          marginBottom: 8,
-                          backgroundColor: selectedCageId === cage.cageId ? '#f6ffed' : '#fafafa',
-                          cursor: 'pointer',
-                          transition: 'all 0.3s ease'
-                        }}
-                        onClick={() => setSelectedCageId(cage.cageId)}
-                      >
-                        <List.Item.Meta
-                          avatar={
-                            <Radio value={cage.cageId} />
-                          }
-                          title={
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                              <HomeOutlined style={{ color: '#1890ff' }} />
-                              <span>{cage.cageName}</span>
-                            </div>
-                          }
-                          description={
-                            <Tag color="green">
-                              {cage.status === 'Available' ? 'Trống' : cage.status}
-                            </Tag>
-                          }
-                        />
-                      </List.Item>
-                    )}
+                    renderItem={(cage) => {
+                      const isInUse = cage.status === 'In Use';
+                      return (
+                        <List.Item
+                          key={cage.cageId}
+                          style={{
+                            padding: '12px 16px',
+                            border: selectedCageId === cage.cageId ? '2px solid #1890ff' : '1px solid #f0f0f0',
+                            borderRadius: 8,
+                            marginBottom: 8,
+                            backgroundColor: isInUse ? '#fff1f0' : (selectedCageId === cage.cageId ? '#f6ffed' : '#fafafa'),
+                            cursor: isInUse ? 'not-allowed' : 'pointer',
+                            transition: 'all 0.3s ease',
+                            opacity: isInUse ? 0.6 : 1
+                          }}
+                          onClick={() => !isInUse && setSelectedCageId(cage.cageId)}
+                        >
+                          <List.Item.Meta
+                            avatar={
+                              <Radio value={cage.cageId} disabled={isInUse} />
+                            }
+                            title={
+                              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                                <HomeOutlined style={{ color: isInUse ? '#ff4d4f' : '#1890ff' }} />
+                                <span style={{ color: isInUse ? '#ff4d4f' : 'inherit' }}>{cage.cageName}</span>
+                              </div>
+                            }
+                            description={
+                              <Tag color={isInUse ? 'red' : 'green'}>
+                                {cage.status === 'Available' ? 'Trống' : isInUse ? 'Hết chỗ' : cage.status}
+                              </Tag>
+                            }
+                          />
+                        </List.Item>
+                      );
+                    }}
                   />
                 </Radio.Group>
               ) : (

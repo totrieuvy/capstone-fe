@@ -55,7 +55,6 @@ const BoardingSchedule = () => {
   const [selectedCageTypeId, setSelectedCageTypeId] = useState<string | null>(null);
   const [availableCages, setAvailableCages] = useState<any[]>([]);
   const [selectedCageId, setSelectedCageId] = useState<string | null>(null);
-  const [originalCageId, setOriginalCageId] = useState<string | null>(null);
   const [loadingCages, setLoadingCages] = useState<boolean>(false);
 
   // State for transfer booking hover effect
@@ -75,13 +74,11 @@ const BoardingSchedule = () => {
     });
     setNewEndDate(null);
     setSelectedCageId(null);
-    setOriginalCageId(null);
     
     try {
       // Get current booking data
       const currentBookingData = bookings.find(b => b.bookingId === originalBookingId);
       if (currentBookingData) {
-        setOriginalCageId(currentBookingData.cageName);
       }
       
       // Load all cage types first
@@ -312,7 +309,6 @@ const BoardingSchedule = () => {
     setSelectedCageTypeId(null);
     setAvailableCages([]);
     setSelectedCageId(null);
-    setOriginalCageId(null);
   };
 
   // Fetch bookings for the current month
@@ -1129,10 +1125,8 @@ const BoardingSchedule = () => {
                     padding: '4px'
                   }}>
                     {availableCages.map(cage => {
-                      const isOriginalCage = cage.cageName === originalCageId;
                       const isInUse = cage.status === 'In Use' || cage.status === 'IN_USE';
-                      // const isAvailable = cage.status === 'Available' || cage.status === 'AVAILABLE';
-                      const isDisabled = isInUse && !isOriginalCage;
+                      const isDisabled = isInUse;
                       
                       return (
                         <div
@@ -1142,21 +1136,17 @@ const BoardingSchedule = () => {
                             padding: '12px 8px',
                             border: selectedCageId === cage.cageId 
                               ? '2px solid #1890ff' 
-                              : isOriginalCage 
-                                ? '2px solid #52c41a'
-                                : isDisabled
-                                  ? '1px solid #ffccc7'
-                                  : '1px solid #d9d9d9',
+                              : isDisabled
+                                ? '1px solid #ffccc7'
+                                : '1px solid #d9d9d9',
                             borderRadius: '8px',
                             cursor: isDisabled ? 'not-allowed' : 'pointer',
                             textAlign: 'center',
                             backgroundColor: selectedCageId === cage.cageId 
                               ? '#e6f7ff' 
-                              : isOriginalCage
-                                ? '#f6ffed'
-                                : isDisabled
-                                  ? '#fff1f0'
-                                  : 'white',
+                              : isDisabled
+                                ? '#fff1f0'
+                                : 'white',
                             transition: 'all 0.2s',
                             position: 'relative',
                             opacity: isDisabled ? 0.6 : 1
@@ -1167,33 +1157,11 @@ const BoardingSchedule = () => {
                           </div>
                           <div style={{ 
                             fontSize: '12px', 
-                            color: isOriginalCage 
-                              ? '#666' 
-                              : isInUse 
-                                ? '#ff4d4f' 
-                                : '#52c41a',
+                            color: isInUse ? '#ff4d4f' : '#52c41a',
                             fontWeight: '500'
                           }}>
-                            {isOriginalCage ? 'Chuồng hiện tại' : isInUse ? 'Hết chỗ' : 'Có sẵn'}
+                            {isInUse ? 'Hết chỗ' : 'Có sẵn'}
                           </div>
-                          {isOriginalCage && (
-                            <div style={{
-                              position: 'absolute',
-                              top: '-6px',
-                              right: '-6px',
-                              backgroundColor: '#52c41a',
-                              color: 'white',
-                              borderRadius: '50%',
-                              width: '16px',
-                              height: '16px',
-                              fontSize: '10px',
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center'
-                            }}>
-                              ✓
-                            </div>
-                          )}
                         </div>
                       );
                     })}
