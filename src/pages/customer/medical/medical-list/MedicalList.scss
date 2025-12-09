@@ -26,7 +26,7 @@
   .medical-content {
     max-width: 1200px;
     margin: 40px auto 60px;
-    padding: 0 20px;
+    padding: 0 20px 60px;
     text-align: center;
     background: none;
     box-shadow: none;
@@ -47,7 +47,6 @@
       transition: all 0.3s ease;
       background: #fff;
       height: 100%;
-
       &:hover {
         transform: translateY(-5px);
         box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
