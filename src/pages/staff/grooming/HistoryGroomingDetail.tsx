@@ -49,7 +49,8 @@ interface ServiceItem {
   serviceName?: string;
   serviceComboName?: string;
   price: number;
-  comboServices?: string[]; // 👈 Thêm dòng này
+  comboServices?: string[];
+  serviceComboId?: string; // 👈 Thêm dòng này
 }
 
 interface GroomingDetail {
@@ -90,6 +91,15 @@ interface Species {
   speciesName: string;
 }
 
+interface ComboService {
+  id: string;
+  comboName: string;
+  description: string;
+  serviceCount: number;
+  displayPrice: string;
+  isActive: boolean;
+}
+
 const HistoryGroomingDetail = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -103,6 +113,7 @@ const HistoryGroomingDetail = () => {
   const [speciesList, setSpeciesList] = useState<Species[]>([]);
   const [selectedSpecies, setSelectedSpecies] = useState<string | null>(null);
   const [, setCheckOutImageUrl] = useState<string | null>(null);
+  const [comboServices, setComboServices] = useState<ComboService[]>([]);
 
   const fetchSpecies = async () => {
     try {
@@ -114,6 +125,17 @@ const HistoryGroomingDetail = () => {
       message.error("Không thể tải danh sách loài!");
     }
   };
+
+  const fetchComboBySpecies = useCallback(async (speciesId: string) => {
+    try {
+      const res = await api.get(`/api/combo/species/${speciesId}`);
+      if (res.data.code === 200) {
+        setComboServices(res.data.data);
+      }
+    } catch {
+      message.error("Không thể tải combo!");
+    }
+  }, []);
 
   // ======================= FETCH =======================
   const fetchServicesBySpecies = useCallback(async (speciesId: string) => {
@@ -135,13 +157,17 @@ const HistoryGroomingDetail = () => {
       if (res.data.code === 200) {
         const data: GroomingDetail = res.data.data;
         setDetail(data);
-        if (data.speciesId) fetchServicesBySpecies(data.speciesId);
+        if (data.speciesId) {
+          fetchServicesBySpecies(data.speciesId);
+          fetchComboBySpecies(data.speciesId); // 👈 thêm dòng này
+        }
       } else message.error(res.data.message);
     } catch {
       message.error("Lỗi khi tải chi tiết grooming!");
     } finally {
       setLoading(false);
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id, fetchServicesBySpecies]);
 
   // ======================= ĐỔI LOÀI =======================
@@ -183,13 +209,22 @@ const HistoryGroomingDetail = () => {
     try {
       // map serviceId -> giá (đã bỏ dấu phẩy)
       const speciesPriceMap = new Map(groomingServices.map((s) => [s.id, parseVND(s.displayPrice)]));
+      const comboPriceMap = new Map(comboServices.map((c) => [c.id, parseVND(c.displayPrice)]));
 
       // áp giá theo speciesId hiện tại cho từng item
       const items = (detail.items || []).map((i) => {
-        const mapped = i.serviceId ? speciesPriceMap.get(i.serviceId) : undefined;
+        let price = 0;
+
+        if (i.serviceId) {
+          price = speciesPriceMap.get(i.serviceId) ?? parseVND(i.price);
+        } else if (i.serviceComboId) {
+          price = comboPriceMap.get(i.serviceComboId) ?? parseVND(i.price);
+        }
+
         return {
-          serviceId: i.serviceId,
-          price: mapped ?? parseVND(i.price), // fallback nếu không tìm thấy
+          serviceId: i.serviceId ?? null,
+          serviceComboId: i.serviceComboId ?? null,
+          price,
         };
       });
 
