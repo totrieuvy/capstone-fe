@@ -43,6 +43,34 @@
   overflow-x: auto;
 }
 
+// Sticky header container for checked-in bookings table
+.sticky-header-container {
+  max-height: 600px;
+  overflow-y: auto;
+  overflow-x: auto;
+  position: relative;
+  
+  // Custom scrollbar styling
+  &::-webkit-scrollbar {
+    width: 12px;
+    height: 12px;
+  }
+  
+  &::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 10px;
+  }
+  
+  &::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 10px;
+    
+    &:hover {
+      background: #555;
+    }
+  }
+}
+
 .table-wrapper {
   display: inline-block;
   min-width: 100%;
@@ -54,7 +82,8 @@
   border-bottom: 2px solid #d1d5db;
   position: sticky;
   top: 0;
-  z-index: 10;
+  z-index: 100;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .cage-id-header {
@@ -64,6 +93,7 @@
   font-size: 14px;
   border-right: 1px solid #d1d5db;
   flex-shrink: 0;
+  background-color: #f3f4f6;
 }
 
 .date-cell {
@@ -77,6 +107,10 @@
 
 .cage-type-row {
   display: flex;
+  position: sticky;
+  top: 49px; // Position below the header row (header row height + border)
+  z-index: 90;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
   
   &.cage-type-basic {
     background-color: #a5f3fc;
@@ -102,6 +136,7 @@
   font-weight: bold;
   border-right: 1px solid #d1d5db;
   flex-shrink: 0;
+  // Background color inherited from parent .cage-type-row
 }
 
 .empty-cell {

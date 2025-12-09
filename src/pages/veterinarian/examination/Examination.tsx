@@ -723,7 +723,7 @@ const Examination: React.FC = () => {
                     <Option value="mild">Nhẹ</Option>
                     <Option value="moderate">Trung bình</Option>
                     <Option value="severe">Nghiêm trọng</Option>
-                    <Option value="critical">Nguy kích</Option>
+                    <Option value="critical">Nguy kịch</Option>
                   </Select>
                 </Form.Item>
               </Col>
@@ -885,7 +885,7 @@ const Examination: React.FC = () => {
                       {record.healthStatus === 'normal' ? 'Bình thường' :
                        record.healthStatus === 'mild' ? 'Nhẹ' :
                        record.healthStatus === 'moderate' ? 'Trung bình' :
-                       record.healthStatus === 'severe' ? 'Nghiêm trọng' : 'Nguy kích'}
+                       record.healthStatus === 'severe' ? 'Nghiêm trọng' : 'Nguy kịch'}
                     </Tag>
                   </div>
                 </div>

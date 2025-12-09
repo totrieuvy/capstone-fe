@@ -92,6 +92,7 @@ const ManageAppointmentDetail: React.FC = () => {
   const [checkoutImage, setCheckoutImage] = useState<string>("");
   const [uploadingCheckoutImage, setUploadingCheckoutImage] = useState<boolean>(false);
   const [submittingCheckout, setSubmittingCheckout] = useState<boolean>(false);
+  const [checkoutPaymentMethod, setCheckoutPaymentMethod] = useState<'VNPAY' | 'PAYOS'>('VNPAY');
 
   // Cancel appointment states
   const [cancelLoading, setCancelLoading] = useState<boolean>(false);
@@ -353,6 +354,7 @@ const ManageAppointmentDetail: React.FC = () => {
       const checkoutRequest: CheckOutAppointmentRequest = {
         appointmentId: appointment.id,
         checkOutImage: checkoutImage,
+        paymentMethod: checkoutPaymentMethod,
         additionalAmount: appointment.additionalAmount || 0,
       };
 
@@ -1410,17 +1412,25 @@ const ManageAppointmentDetail: React.FC = () => {
                       <Descriptions.Item label="Tình trạng sức khỏe">
                         <Tag
                           color={
-                            selectedMedicalRecord.healthStatus === "Good"
+                            selectedMedicalRecord.healthStatus === "normal"
                               ? "green"
-                              : selectedMedicalRecord.healthStatus === "Normal"
-                              ? "blue"
-                              : selectedMedicalRecord.healthStatus === "Poor"
+                              : selectedMedicalRecord.healthStatus === "mild"
+                              ? "orange"
+                              : selectedMedicalRecord.healthStatus === "moderate"
+                              ? "orange"
+                              : selectedMedicalRecord.healthStatus === "severe"
+                              ? "orange"
+                              : selectedMedicalRecord.healthStatus === "critical"
                               ? "red"
                               : "default"
                           }
                           style={{ fontSize: "14px", padding: "4px 8px" }}
                         >
-                          {selectedMedicalRecord.healthStatus || "Chưa xác định"}
+                          {selectedMedicalRecord.healthStatus === "normal" ? "Bình thường" :
+                           selectedMedicalRecord.healthStatus === "mild" ? "Nhẹ" :
+                           selectedMedicalRecord.healthStatus === "moderate" ? "Trung bình" :
+                           selectedMedicalRecord.healthStatus === "severe" ? "Nghiêm trọng" :
+                           selectedMedicalRecord.healthStatus === "critical" ? "Nguy kịch" : "Chưa xác định"}
                         </Tag>
                       </Descriptions.Item>
                     </Descriptions>
@@ -1473,6 +1483,7 @@ const ManageAppointmentDetail: React.FC = () => {
           onCancel={() => {
             setCheckoutModalVisible(false);
             setCheckoutImage("");
+            setCheckoutPaymentMethod('VNPAY');
           }}
           footer={[
             <Button
@@ -1480,6 +1491,7 @@ const ManageAppointmentDetail: React.FC = () => {
               onClick={() => {
                 setCheckoutModalVisible(false);
                 setCheckoutImage("");
+                setCheckoutPaymentMethod('VNPAY');
               }}
             >
               Hủy
@@ -1504,7 +1516,7 @@ const ManageAppointmentDetail: React.FC = () => {
           <div style={{ padding: "16px 0" }}>
             <Alert
               message="Xác nhận thông tin thanh toán"
-              description="Hệ thống sẽ tạo liên kết thanh toán và chuyển hướng đến trang thanh toán VNPay. Vui lòng kiểm tra lại thông tin và tải lên hình ảnh checkout trước khi tiếp tục."
+              description="Hệ thống sẽ tạo liên kết thanh toán và chuyển hướng đến trang thanh toán. Vui lòng chọn phương thức thanh toán, kiểm tra lại thông tin và tải lên hình ảnh checkout trước khi tiếp tục."
               type="info"
               showIcon
               style={{ marginBottom: 16 }}
@@ -1569,6 +1581,141 @@ const ManageAppointmentDetail: React.FC = () => {
                     </div>
                   </Col>
                 )}
+              </Row>
+            </Card>
+
+            {/* Payment Method Selection */}
+            <Card size="small" style={{ marginBottom: 16 }}>
+              <Row gutter={[16, 16]}>
+                <Col span={24}>
+                  <Text strong>Chọn phương thức thanh toán:</Text>
+                </Col>
+                <Col span={24}>
+                  <Row gutter={[12, 12]}>
+                    <Col xs={24} sm={12}>
+                      <Card
+                        hoverable
+                        className={`payment-method-card ${checkoutPaymentMethod === 'VNPAY' ? 'selected' : ''}`}
+                        onClick={() => setCheckoutPaymentMethod('VNPAY')}
+                        style={{
+                          borderRadius: 12,
+                          border: checkoutPaymentMethod === 'VNPAY'
+                            ? "2px solid #1890ff"
+                            : "1px solid #f0f0f0",
+                          cursor: "pointer",
+                          height: 100,
+                          position: "relative",
+                        }}
+                        bodyStyle={{ 
+                          padding: 12, 
+                          width: '100%',
+                          height: '100%',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          alignItems: 'center',
+                          justifyContent: 'center'
+                        }}
+                      >
+                        <div style={{
+                          width: 40,
+                          height: 40,
+                          background: "#f0f0f0",
+                          borderRadius: 8,
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          marginBottom: 8,
+                          fontSize: 20
+                        }}>
+                          🏦
+                        </div>
+                        <p style={{ margin: 0, fontSize: 14, fontWeight: 600, color: "#333" }}>
+                          VNPay
+                        </p>
+                        {checkoutPaymentMethod === 'VNPAY' && (
+                          <div style={{
+                            position: "absolute",
+                            top: 8,
+                            right: 8,
+                            background: "#1890ff",
+                            color: "white",
+                            borderRadius: "50%",
+                            width: 20,
+                            height: 20,
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            fontSize: 12,
+                            fontWeight: "bold"
+                          }}>
+                            ✓
+                          </div>
+                        )}
+                      </Card>
+                    </Col>
+                    <Col xs={24} sm={12}>
+                      <Card
+                        hoverable
+                        className={`payment-method-card ${checkoutPaymentMethod === 'PAYOS' ? 'selected' : ''}`}
+                        onClick={() => setCheckoutPaymentMethod('PAYOS')}
+                        style={{
+                          borderRadius: 12,
+                          border: checkoutPaymentMethod === 'PAYOS'
+                            ? "2px solid #1890ff"
+                            : "1px solid #f0f0f0",
+                          cursor: "pointer",
+                          height: 100,
+                          position: "relative",
+                        }}
+                        bodyStyle={{ 
+                          padding: 12, 
+                          width: '100%',
+                          height: '100%',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          alignItems: 'center',
+                          justifyContent: 'center'
+                        }}
+                      >
+                        <div style={{
+                          width: 40,
+                          height: 40,
+                          background: "#f0f0f0",
+                          borderRadius: 8,
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          marginBottom: 8,
+                          fontSize: 20
+                        }}>
+                          💳
+                        </div>
+                        <p style={{ margin: 0, fontSize: 14, fontWeight: 600, color: "#333" }}>
+                          PayOS
+                        </p>
+                        {checkoutPaymentMethod === 'PAYOS' && (
+                          <div style={{
+                            position: "absolute",
+                            top: 8,
+                            right: 8,
+                            background: "#1890ff",
+                            color: "white",
+                            borderRadius: "50%",
+                            width: 20,
+                            height: 20,
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            fontSize: 12,
+                            fontWeight: "bold"
+                          }}>
+                            ✓
+                          </div>
+                        )}
+                      </Card>
+                    </Col>
+                  </Row>
+                </Col>
               </Row>
             </Card>
 
