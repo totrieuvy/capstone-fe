@@ -581,12 +581,12 @@ const BoardingSchedule = () => {
   const renderCheckedInGrid = () => {
     return (
       <Card
-        className="schedule-card"
+        className="schedule-card checked-in-card"
         title={<div className="card-title">Bảng theo dõi danh sách đã check in</div>}
         headStyle={{ background: 'linear-gradient(to right, #15803d, #16a34a)', border: 'none' }}
         bodyStyle={{ padding: 0 }}
       >
-        <div className="table-container">
+        <div className="table-container sticky-header-container">
           <div className="table-wrapper">
             {/* Date Header Row */}
             <div className="header-row">
@@ -623,34 +623,56 @@ const BoardingSchedule = () => {
                   {cagesWithBookings.map((cageId) => {
                     const cageBookings = checkedInBookings.filter(b => b.cageId === cageId);
 
-                    // Function to detect overlapping bookings on the same date
-                    const getBookingLayers = (bookings: Booking[]) => {
-                      const layers: { [key: number]: Booking[] } = {};
-
-                      bookings.forEach(booking => {
-                        for (let date = booking.startDate; date <= booking.endDate; date++) {
-                          if (!layers[date]) {
-                            layers[date] = [];
-                          }
-                          layers[date].push(booking);
+                    // Function to assign layers to bookings based on actual visual overlap
+                    const assignBookingLayers = (bookings: Booking[]): Map<string, number> => {
+                      const layerAssignments = new Map<string, number>();
+                      
+                      // Sort bookings by start date, then by end date
+                      const sortedBookings = [...bookings].sort((a, b) => {
+                        if (a.startDate !== b.startDate) {
+                          return a.startDate - b.startDate;
                         }
+                        return a.endDate - b.endDate;
                       });
 
-                      return layers;
+                      // Track which layer is occupied until which date
+                      const layerEndDates: number[] = [];
+
+                      sortedBookings.forEach(booking => {
+                        // Find the first available layer where the booking can fit
+                        let assignedLayer = -1;
+                        
+                        for (let layer = 0; layer < layerEndDates.length; layer++) {
+                          // A booking can use this layer if it starts AFTER the previous booking in this layer ends
+                          // We don't consider same-day as overlap (allows consecutive bookings on same row)
+                          if (booking.startDate > layerEndDates[layer]) {
+                            assignedLayer = layer;
+                            layerEndDates[layer] = booking.endDate;
+                            break;
+                          }
+                        }
+
+                        // If no available layer found, create a new one
+                        if (assignedLayer === -1) {
+                          assignedLayer = layerEndDates.length;
+                          layerEndDates.push(booking.endDate);
+                        }
+
+                        layerAssignments.set(booking.id, assignedLayer);
+                      });
+
+                      return layerAssignments;
                     };
 
-                    const bookingLayers = getBookingLayers(cageBookings);
+                    const bookingLayerMap = assignBookingLayers(cageBookings);
+                    
+                    // Calculate maximum number of layers needed
+                    const maxLayers = Math.max(1, ...Array.from(bookingLayerMap.values()).map(layer => layer + 1));
 
-                    // Calculate maximum overlapping bookings for this cage to determine row height
-                    const maxOverlappingBookings = Math.max(
-                      1, // At least 1 booking
-                      ...Object.values(bookingLayers).map(bookingsOnDate => bookingsOnDate.length)
-                    );
-
-                    // Calculate row height based on number of overlapping bookings
+                    // Calculate row height based on number of layers
                     const baseRowHeight = 48; // Original row height
                     const bookingBarHeight = 36; // Standard booking bar height
-                    const rowHeight = Math.max(baseRowHeight, maxOverlappingBookings * (bookingBarHeight + 4) + 8);
+                    const rowHeight = Math.max(baseRowHeight, maxLayers * (bookingBarHeight + 4) + 8);
 
                     return (
                       <div key={cageId} className="cage-row" style={{ minHeight: `${rowHeight}px` }}>
@@ -679,15 +701,8 @@ const BoardingSchedule = () => {
                             const continuesFromPrevious = bookingStartDate.isBefore(monthStart, 'day');
                             const continuesIntoNext = effectiveEndDate.isAfter(monthEnd, 'day');
 
-                            // Calculate the layer position for this booking
-                            let bookingLayer = 0;
-                            for (let date = booking.startDate; date <= booking.endDate; date++) {
-                              const bookingsOnDate = bookingLayers[date] || [];
-                              if (bookingsOnDate.length > 1) {
-                                bookingLayer = bookingsOnDate.findIndex(b => b.id === booking.id);
-                                break;
-                              }
-                            }
+                            // Get the layer position for this booking
+                            const bookingLayer = bookingLayerMap.get(booking.id) || 0;
 
                             // Calculate vertical position based on layer
                             const topOffset = 4 + (bookingLayer * (bookingBarHeight + 4));
@@ -700,14 +715,14 @@ const BoardingSchedule = () => {
                               >
                                 <div
                                   className={`booking-bar ${
-                                    booking.hasTransfer && booking.isExtendedSegment
-                                      ? 'booking-bar-transfer-extended'
-                                      : booking.hasTransfer && booking.isOriginalSegment
-                                        ? 'booking-bar-transfer-original'
-                                        : bookings.find(b => b.bookingId === (booking.originalBookingId || booking.id))?.isIncident
-                                          ? 'booking-bar-red'
-                                          : booking.status === 'CHECK_OUT'
-                                            ? 'booking-bar-green'
+                                    bookings.find(b => b.bookingId === (booking.originalBookingId || booking.id))?.isIncident
+                                      ? 'booking-bar-red'
+                                      : booking.status === 'CHECK_OUT'
+                                        ? 'booking-bar-green'
+                                        : booking.hasTransfer && booking.isExtendedSegment
+                                          ? 'booking-bar-transfer-extended'
+                                          : booking.hasTransfer && booking.isOriginalSegment
+                                            ? 'booking-bar-transfer-original'
                                             : booking.isExtended
                                               ? 'booking-bar-cyan'
                                               : booking.status === 'IN_PROGRESS'
@@ -822,12 +837,12 @@ const BoardingSchedule = () => {
                             ? 'booking-bar-red'
                             : booking.status === 'CANCELLED' || booking.status === 'NO-SHOW'
                               ? 'booking-bar-red'
-                              : booking.hasTransfer && booking.isExtendedSegment
-                                ? 'booking-bar-transfer-extended'
-                                : booking.hasTransfer && booking.isOriginalSegment
-                                  ? 'booking-bar-transfer-original'
-                                  : booking.status === 'CHECK_OUT'
-                                    ? 'booking-bar-green'
+                              : booking.status === 'CHECK_OUT'
+                                ? 'booking-bar-green'
+                                : booking.hasTransfer && booking.isExtendedSegment
+                                  ? 'booking-bar-transfer-extended'
+                                  : booking.hasTransfer && booking.isOriginalSegment
+                                    ? 'booking-bar-transfer-original'
                                     : booking.isExtended
                                       ? 'booking-bar-cyan'
                                       : booking.status === 'IN_PROGRESS'

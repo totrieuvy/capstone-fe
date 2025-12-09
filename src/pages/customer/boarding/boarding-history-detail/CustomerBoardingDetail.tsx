@@ -691,7 +691,7 @@ const BoardingDetail: React.FC = () => {
                   </Text>
                 </div>
                 <div className="payment-item total">
-                  <Text strong>Tổng tiền dịch vụ làm đẹp ({booking.serviceDiscount}% giảm giá)</Text>
+                  <Text strong>Tổng tiền dịch vụ làm đẹp ({booking.serviceDiscountPercent}% giảm giá)</Text>
                   <Text strong className="total-amount" style={{ color: '#52c41a', fontSize: '20px' }}>
                     {getFormattedPrice(booking.serviceTotalPriceAfter)}
                   </Text>
