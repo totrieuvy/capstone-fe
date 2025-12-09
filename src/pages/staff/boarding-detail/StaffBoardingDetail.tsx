@@ -821,7 +821,7 @@ const BoardingDetail: React.FC = () => {
                     </span>
                   </div>
                   <div className="payment-row final">
-                    <span className="payment-label">Tổng tiền dịch vụ làm đẹp ({bookingDetail.serviceDiscount}% giảm giá)</span>
+                    <span className="payment-label">Tổng tiền dịch vụ làm đẹp ({bookingDetail.serviceDiscountPercent}% giảm giá)</span>
                     <span className="payment-value success">
                       {formatPrice(bookingDetail.serviceTotalPriceAfter)}
                     </span>

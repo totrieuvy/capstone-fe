@@ -1410,17 +1410,25 @@ const ManageAppointmentDetail: React.FC = () => {
                       <Descriptions.Item label="Tình trạng sức khỏe">
                         <Tag
                           color={
-                            selectedMedicalRecord.healthStatus === "Good"
+                            selectedMedicalRecord.healthStatus === "normal"
                               ? "green"
-                              : selectedMedicalRecord.healthStatus === "Normal"
-                              ? "blue"
-                              : selectedMedicalRecord.healthStatus === "Poor"
+                              : selectedMedicalRecord.healthStatus === "mild"
+                              ? "orange"
+                              : selectedMedicalRecord.healthStatus === "moderate"
+                              ? "orange"
+                              : selectedMedicalRecord.healthStatus === "severe"
+                              ? "orange"
+                              : selectedMedicalRecord.healthStatus === "critical"
                               ? "red"
                               : "default"
                           }
                           style={{ fontSize: "14px", padding: "4px 8px" }}
                         >
-                          {selectedMedicalRecord.healthStatus || "Chưa xác định"}
+                          {selectedMedicalRecord.healthStatus === "normal" ? "Bình thường" :
+                           selectedMedicalRecord.healthStatus === "mild" ? "Nhẹ" :
+                           selectedMedicalRecord.healthStatus === "moderate" ? "Trung bình" :
+                           selectedMedicalRecord.healthStatus === "severe" ? "Nghiêm trọng" :
+                           selectedMedicalRecord.healthStatus === "critical" ? "Nguy kịch" : "Chưa xác định"}
                         </Tag>
                       </Descriptions.Item>
                     </Descriptions>

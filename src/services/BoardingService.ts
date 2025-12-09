@@ -211,7 +211,7 @@ export interface BookingDetail {
   isIncident: boolean;
   incidentSolve: boolean;
   serviceTotalPrice: number;
-  serviceDiscount: number;
+  serviceDiscountPercent: number;
   serviceTotalPriceAfter: number;
   extendTotalPrice: number;
   extendDiscountPercent: number;  
