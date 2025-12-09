@@ -581,12 +581,12 @@ const BoardingSchedule = () => {
   const renderCheckedInGrid = () => {
     return (
       <Card
-        className="schedule-card"
+        className="schedule-card checked-in-card"
         title={<div className="card-title">Bảng theo dõi danh sách đã check in</div>}
         headStyle={{ background: 'linear-gradient(to right, #15803d, #16a34a)', border: 'none' }}
         bodyStyle={{ padding: 0 }}
       >
-        <div className="table-container">
+        <div className="table-container sticky-header-container">
           <div className="table-wrapper">
             {/* Date Header Row */}
             <div className="header-row">
