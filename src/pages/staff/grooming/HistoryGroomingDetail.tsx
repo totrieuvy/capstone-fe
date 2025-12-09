@@ -202,7 +202,7 @@ const HistoryGroomingDetail = () => {
         customerId: detail.customerId,
         hamsterId: detail.hamsterId,
         staffId: detail.staff?.id,
-        appointmentDate: dayjs(detail.appointmentTime).format("DD-MM-YYYY"),
+        appointmentDate: dayjs(detail.appointmentTime, "DD-MM-YYYY").format("DD-MM-YYYY"),
         slotStart: toHHmm(detail.slotStart),
         slotEnd: toHHmm(detail.slotEnd),
         notes: detail.notes,
