@@ -544,7 +544,7 @@ const Checkout = () => {
                             <strong>{p.policyName}</strong>
                             <br />
                             <span>
-                              <b>Phần trăm hoàn tiền:</b> {p.refundPercentage}% &nbsp;|&nbsp;
+                              <b>Phần trăm hoàn tiền:</b> {p.refundPercentage * 100}% &nbsp;|&nbsp;
                               <b>Thời gian yêu cầu hoàn:</b> {p.timesBeforeCheckin}h sau khi đặt hàng
                             </span>
                           </li>
