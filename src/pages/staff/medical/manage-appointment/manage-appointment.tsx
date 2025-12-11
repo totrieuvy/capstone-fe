@@ -219,7 +219,11 @@ const ManageAppointment: React.FC = () => {
       title: "Bác sĩ Thú y",
       dataIndex: "veterinarianName",
       key: "veterinarianName",
-      render: (text: string) => <span className="veterinarian-name">{text || "Chưa phân công"}</span>,
+      render: (text: string) => (
+        <span className="veterinarian-name" style={{ color: text ? 'inherit' : 'red' }}>
+          {text || "Chưa phân công"}
+        </span>
+      ),
     },
     {
       title: "Trạng thái",
