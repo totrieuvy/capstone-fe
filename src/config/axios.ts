@@ -1,7 +1,7 @@
 import axios from "axios";
 import type { InternalAxiosRequestConfig, AxiosError } from "axios";
 
-const baseURL = import.meta.env.VITE_BACKEND_BASE_URL || "http://54.255.196.90:9090";
+const baseURL = import.meta.env.VITE_BACKEND_BASE_URL || "http://13.229.102.172:9090";
 
 //
 const config = {
