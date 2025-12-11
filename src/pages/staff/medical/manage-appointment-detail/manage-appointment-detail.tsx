@@ -49,10 +49,13 @@ import {
   checkInAppointment,
   checkOutAppointment,
   updateAppointmentStatus,
+  getSlots,
   type AppointmentDetail,
   type AppointmentItemDetail,
   type MedicalRecord,
   type CheckOutAppointmentRequest,
+  type Staff,
+  type SlotData,
 } from "../../../../services/MedicalService";
 import { storage } from "../../../../config/firebase";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
@@ -76,6 +79,9 @@ const ManageAppointmentDetail: React.FC = () => {
   const [checkInLoading, setCheckInLoading] = useState<boolean>(false);
   const [uploadedImage, setUploadedImage] = useState<string | null>(null);
   const [healthNote, setHealthNote] = useState<string>("");
+  const [availableVeterinarians, setAvailableVeterinarians] = useState<Staff[]>([]);
+  const [selectedVeterinarianId, setSelectedVeterinarianId] = useState<string | null>(null);
+  const [loadingVeterinarians, setLoadingVeterinarians] = useState<boolean>(false);
 
   // Image preview modal states
   const [imagePreviewVisible, setImagePreviewVisible] = useState<boolean>(false);
@@ -111,6 +117,59 @@ const ManageAppointmentDetail: React.FC = () => {
       toast.error("Có lỗi xảy ra khi hủy cuộc hẹn");
     } finally {
       setCancelLoading(false);
+    }
+  };
+
+  // Fetch available veterinarians for the appointment date
+  const fetchAvailableVeterinarians = async () => {
+    if (!appointment?.appointmentTime || !appointment?.slotStart || !appointment?.slotEnd) return;
+
+    setLoadingVeterinarians(true);
+    try {
+      const appointmentDate = appointment.appointmentTime;
+      
+      // Fetch slots for the specific appointment date
+      const response = await getSlots(appointmentDate, appointmentDate);
+      
+      if (response.code === 200 && response.data && response.data.length > 0) {
+        // Find the specific time slot matching the appointment
+        const slotData = response.data.find((data: SlotData) => data.slotDate === appointmentDate);
+        
+        if (slotData) {
+          // Normalize time format by padding with zero if needed (e.g., "9:00" -> "09:00")
+          const normalizeTime = (time: string) => {
+            const parts = time.split(':');
+            return parts[0].padStart(2, '0') + ':' + parts[1].padStart(2, '0');
+          };
+          
+          const normalizedSlotStart = normalizeTime(appointment.slotStart);
+          const normalizedSlotEnd = normalizeTime(appointment.slotEnd);
+          
+          const matchingSlot = slotData.slots.find(
+            (slot) => normalizeTime(slot.startTime) === normalizedSlotStart && normalizeTime(slot.endTime) === normalizedSlotEnd
+          );
+          
+          if (matchingSlot && matchingSlot.staffs) {
+            // Get all veterinarians from the matching slot (both available and booked)
+            setAvailableVeterinarians(matchingSlot.staffs);
+          } else {
+            message.warning("Không tìm thấy khung giờ phù hợp");
+            setAvailableVeterinarians([]);
+          }
+        } else {
+          message.warning("Không có dữ liệu cho ngày hẹn này");
+          setAvailableVeterinarians([]);
+        }
+      } else {
+        message.warning("Không có dữ liệu slot");
+        setAvailableVeterinarians([]);
+      }
+    } catch (error) {
+      console.error("Error fetching veterinarians:", error);
+      message.error("Không thể tải danh sách bác sĩ thú y");
+      setAvailableVeterinarians([]);
+    } finally {
+      setLoadingVeterinarians(false);
     }
   };
 
@@ -284,8 +343,8 @@ const ManageAppointmentDetail: React.FC = () => {
       return;
     }
 
-    if (!appointment?.veterinarian?.id) {
-      message.error("Không tìm thấy thông tin bác sĩ thú y!");
+    if (!selectedVeterinarianId) {
+      message.error("Vui lòng chọn bác sĩ thú y!");
       return;
     }
 
@@ -299,7 +358,7 @@ const ManageAppointmentDetail: React.FC = () => {
       await checkInAppointment({
         appointmentId: appointmentId,
         checkInImage: uploadedImage,
-        veterinarianId: appointment.veterinarian.id,
+        veterinarianId: selectedVeterinarianId,
         staffId: null, // Default to null as requested
         healthNote: healthNote,
       });
@@ -313,6 +372,8 @@ const ManageAppointmentDetail: React.FC = () => {
       // Reset form
       setUploadedImage(null);
       setHealthNote("");
+      setSelectedVeterinarianId(null);
+      setAvailableVeterinarians([]);
     } catch (error) {
       message.error("Check-in thất bại! Vui lòng thử lại.");
       console.error("Error checking in appointment:", error);
@@ -390,6 +451,13 @@ const ManageAppointmentDetail: React.FC = () => {
     fetchAppointmentDetails();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [appointmentId]);
+
+  useEffect(() => {
+    if (checkInModalVisible) {
+      fetchAvailableVeterinarians();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [checkInModalVisible]);
 
   if (loading) {
     return (
@@ -1245,6 +1313,8 @@ const ManageAppointmentDetail: React.FC = () => {
             setCheckInModalVisible(false);
             setUploadedImage(null);
             setHealthNote("");
+            setSelectedVeterinarianId(null);
+            setAvailableVeterinarians([]);
           }}
           footer={[
             <Button
@@ -1253,6 +1323,8 @@ const ManageAppointmentDetail: React.FC = () => {
                 setCheckInModalVisible(false);
                 setUploadedImage(null);
                 setHealthNote("");
+                setSelectedVeterinarianId(null);
+                setAvailableVeterinarians([]);
               }}
             >
               Hủy
@@ -1262,12 +1334,12 @@ const ManageAppointmentDetail: React.FC = () => {
               type="primary"
               loading={checkInLoading}
               onClick={handleCheckIn}
-              disabled={!uploadedImage}
+              disabled={!uploadedImage || !selectedVeterinarianId}
             >
               Check-in
             </Button>,
           ]}
-          width={600}
+          width={900}
           className="staff-check-in-modal"
         >
           <div style={{ padding: "20px 0" }}>
@@ -1324,6 +1396,102 @@ const ManageAppointmentDetail: React.FC = () => {
                   </Text>
                 </div>
               )}
+
+              {/* Veterinarian Selection Table */}
+              <div>
+                <Text strong style={{ fontSize: "16px", marginBottom: "8px", display: "block" }}>
+                  Chọn bác sĩ thú y:
+                </Text>
+                <Text type="secondary" style={{ marginBottom: "16px", display: "block" }}>
+                  Vui lòng chọn bác sĩ thú y cho cuộc hẹn này.
+                </Text>
+                <Table<Staff>
+                  dataSource={availableVeterinarians}
+                  loading={loadingVeterinarians}
+                  rowKey="id"
+                  pagination={false}
+                  scroll={{ y: 300 }}
+                  rowClassName={(record) => record.isBooked ? 'disabled-row' : ''}
+                  rowSelection={{
+                    type: "radio",
+                    selectedRowKeys: selectedVeterinarianId ? [selectedVeterinarianId] : [],
+                    onChange: (selectedRowKeys) => {
+                      setSelectedVeterinarianId(selectedRowKeys[0] as string);
+                    },
+                    getCheckboxProps: (record) => ({
+                      disabled: record.isBooked,
+                    }),
+                  }}
+                  columns={[
+                    {
+                      title: "Avatar",
+                      key: "avatar",
+                      width: 80,
+                      align: "center",
+                      render: () => (
+                        <Avatar
+                          size={48}
+                          icon={<UserOutlined />}
+                          src="https://cdn-icons-png.flaticon.com/512/2202/2202112.png"
+                        />
+                      ),
+                    },
+                    {
+                      title: "Tên",
+                      dataIndex: "name",
+                      key: "name",
+                      width: 180,
+                      render: (name: string, record: Staff) => (
+                        <div>
+                          <div style={{ fontWeight: 600, color: record.isBooked ? '#999' : 'inherit' }}>
+                            {name}
+                            {record.isBooked && (
+                              <Tag color="red" style={{ marginLeft: '8px', fontSize: '11px' }}>
+                                Đã bận
+                              </Tag>
+                            )}
+                          </div>
+                          <Text type="secondary" style={{ fontSize: "12px" }}>
+                            {record.sex === "MALE" ? "Nam" : "Nữ"}
+                          </Text>
+                        </div>
+                      ),
+                    },
+                    {
+                      title: "Chuyên môn",
+                      dataIndex: "specialization",
+                      key: "specialization",
+                      width: 150,
+                    },
+                    {
+                      title: "Kinh nghiệm",
+                      dataIndex: "experienceYears",
+                      key: "experienceYears",
+                      width: 120,
+                      align: "center",
+                      render: (years: number) => `${years} năm`,
+                    },
+                    {
+                      title: "Dịch vụ nổi bật",
+                      dataIndex: "bestServices",
+                      key: "bestServices",
+                      render: (services: string[]) => (
+                        <div style={{ display: "flex", flexWrap: "wrap", gap: "4px" }}>
+                          {services && services.length > 0 ? (
+                            services.map((service, index) => (
+                              <Tag key={index} color="blue">
+                                {service}
+                              </Tag>
+                            ))
+                          ) : (
+                            <Text type="secondary">Không có</Text>
+                          )}
+                        </div>
+                      ),
+                    },
+                  ]}
+                />
+              </div>
 
               {/* <div>
                 <Text strong style={{ fontSize: "16px", marginBottom: "8px", display: "block" }}>

@@ -487,6 +487,16 @@
   }
 
   .staff-check-in-modal {
+    .disabled-row {
+      opacity: 0.5;
+      background-color: #fafafa !important;
+      cursor: not-allowed !important;
+      
+      &:hover {
+        background-color: #fafafa !important;
+      }
+    }
+
     .ant-modal-header {
       background: linear-gradient(135deg, #f6ffed 0%, #f0f9ff 100%);
       border-bottom: 2px solid #d9f7be;

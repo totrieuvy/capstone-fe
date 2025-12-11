@@ -129,7 +129,7 @@ export interface AppointmentItem {
 
 export interface CreateAppointmentRequest {
   hamsterId: string;
-  veterinarianId: string;
+  veterinarianId: string | null;
   appointmentDate: string;
   notes: string;
   totalAmount: number;
