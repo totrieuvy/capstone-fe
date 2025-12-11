@@ -54,6 +54,10 @@ const TrackGrooming: React.FC = () => {
   const [pageSize, setPageSize] = useState<number>(10);
   const [totalElements, setTotalElements] = useState<number>(0);
 
+  useEffect(() => {
+    document.title = "Lịch làm đẹp";
+  }, []);
+
   // Auto fetch when filter changed
   useEffect(() => {
     fetchAppointments();

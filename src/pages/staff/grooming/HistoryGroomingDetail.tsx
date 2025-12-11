@@ -15,6 +15,8 @@ import {
   Divider,
   Select,
   Popconfirm,
+  Modal,
+  Radio,
 } from "antd";
 import {
   PlusOutlined,
@@ -34,6 +36,7 @@ import "./HistoryGroomingDetail.scss";
 import dayjs from "dayjs";
 import { getFormattedPrice } from "../../../utils/formatPrice";
 import { toast } from "react-toastify";
+import type { UploadFile } from "antd/es/upload/interface";
 
 const { Title, Text } = Typography;
 const { Option } = Select;
@@ -100,6 +103,37 @@ interface ComboService {
   isActive: boolean;
 }
 
+interface SlotStaff {
+  id: string;
+  name: string;
+  isBooked: boolean;
+}
+
+interface TimeSlot {
+  startTime: string;
+  endTime: string;
+  maxSlots: number;
+  availableSlot: number;
+  staffs: SlotStaff[];
+}
+
+interface SlotDay {
+  slotDate: string;
+  slots: TimeSlot[];
+}
+
+interface MyUploadFile extends UploadFile {
+  thumbUrl?: string;
+}
+
+const getBase64 = (file: File): Promise<string> =>
+  new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = (error) => reject(error);
+  });
+
 const HistoryGroomingDetail = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -115,6 +149,22 @@ const HistoryGroomingDetail = () => {
   const [, setCheckOutImageUrl] = useState<string | null>(null);
   const [comboServices, setComboServices] = useState<ComboService[]>([]);
 
+  const [assignLoading, setAssignLoading] = useState(false);
+  // const [, setAssignStaffList] = useState<Staff[]>([]);
+  // const [selectedAssignStaff, setSelectedAssignStaff] = useState<string | null>(null);
+  // const [, setShowAssignDropdown] = useState(false);
+
+  // Check-in modal states
+  const [showCheckInModal, setShowCheckInModal] = useState(false);
+  const [checkInFile, setCheckInFile] = useState<File | null>(null);
+  const [selectedStaffForCheckIn, setSelectedStaffForCheckIn] = useState<string | null>(null);
+  const [staffListForCheckIn, setStaffListForCheckIn] = useState<Staff[]>([]);
+
+  const [fileList, setFileList] = useState<MyUploadFile[]>([]);
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const [previewImage, setPreviewImage] = useState<string>("");
+  const [previewTitle, setPreviewTitle] = useState("");
+
   const fetchSpecies = async () => {
     try {
       const res = await api.get("/api/species");
@@ -125,6 +175,20 @@ const HistoryGroomingDetail = () => {
       message.error("Không thể tải danh sách loài!");
     }
   };
+
+  const handlePreview = async (file: UploadFile) => {
+    if (!file.url && !file.preview && file.originFileObj) {
+      file.preview = await getBase64(file.originFileObj as File);
+    }
+
+    setPreviewImage(file.url || (file.preview as string));
+    setPreviewOpen(true);
+    setPreviewTitle(file.name || file.url!.substring(file.url!.lastIndexOf("/") + 1));
+  };
+
+  // const handleChange = ({ fileList: newFileList }: { fileList: UploadFile[] }) => {
+  //   setFileList(newFileList);
+  // };
 
   const fetchComboBySpecies = useCallback(async (speciesId: string) => {
     try {
@@ -167,7 +231,7 @@ const HistoryGroomingDetail = () => {
     } finally {
       setLoading(false);
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id, fetchServicesBySpecies]);
 
   // ======================= ĐỔI LOÀI =======================
@@ -295,27 +359,129 @@ const HistoryGroomingDetail = () => {
   };
 
   // ======================= CHECK-IN =======================
-  const handleUploadCheckIn = async (file: File) => {
-    if (!id) return;
-    setUploading(true);
+  const openCheckInModal = async () => {
+    if (!detail) return;
+
+    setShowCheckInModal(true);
+    setAssignLoading(true);
+
     try {
-      const fileRef = ref(storage, `checkin/${id}-${Date.now()}-${file.name}`);
-      await uploadBytes(fileRef, file);
+      const startDate = dayjs(detail.appointmentTime, "DD-MM-YYYY").format("DD-MM-YYYY");
+
+      const res = await api.get("/api/slot", {
+        params: {
+          from: startDate,
+          to: startDate,
+          serviceType: "GROOMING",
+        },
+      });
+
+      if (res.data.code !== 200) {
+        toast.error("Không thể tải danh sách nhân viên!");
+        setAssignLoading(false);
+        return;
+      }
+
+      const slotsData: SlotDay[] = res.data.data;
+
+      const matchDay = slotsData.find((d) => d.slotDate === detail.appointmentTime);
+
+      if (!matchDay) {
+        toast.warning("Không có slot phù hợp!");
+        setAssignLoading(false);
+        return;
+      }
+
+      const matchSlot = matchDay.slots.find(
+        (s) => s.startTime === detail.slotStart?.slice(0, 5) && s.endTime === detail.slotEnd?.slice(0, 5)
+      );
+
+      if (!matchSlot) {
+        toast.warning("Không có nhân viên rảnh!");
+        setStaffListForCheckIn([]);
+        setAssignLoading(false);
+        return;
+      }
+
+      const available: Staff[] = (matchSlot.staffs ?? [])
+        .filter((st: SlotStaff) => st.isBooked === false)
+        .map((st: SlotStaff) => ({
+          id: st.id,
+          fullName: st.name,
+        }));
+
+      setStaffListForCheckIn(available);
+    } catch {
+      toast.error("Lỗi khi tải nhân viên!");
+    } finally {
+      setAssignLoading(false);
+    }
+  };
+
+  const handleCloseCheckInModal = () => {
+    // revoke object URLs nếu có (chỉ những thumbUrl do chúng ta tạo)
+    fileList.forEach((f) => {
+      const thumb = f.thumbUrl;
+      if (thumb && thumb.startsWith("blob:")) {
+        try {
+          URL.revokeObjectURL(thumb);
+        } catch {
+          // ignore
+        }
+      }
+    });
+
+    setShowCheckInModal(false);
+    setCheckInFile(null);
+    setFileList([]);
+    setSelectedStaffForCheckIn(null);
+    setPreviewImage("");
+    setPreviewOpen(false);
+  };
+
+  const handleCheckInConfirm = async () => {
+    if (!id || !detail) {
+      toast.error("Thiếu thông tin lịch!");
+      return;
+    }
+
+    // staff có thể là detail.staff.id (nếu đã assign) hoặc selectedStaffForCheckIn (radio)
+    const staffId = detail.staff?.id ?? selectedStaffForCheckIn;
+    if (!staffId) {
+      toast.error("Vui lòng chọn nhân viên!");
+      return;
+    }
+
+    // lấy file: ưu tiên fileList[0].originFileObj nếu có, fallback checkInFile
+    const fileObj = (fileList[0]?.originFileObj as File) || checkInFile;
+    if (!fileObj) {
+      toast.error("Vui lòng chọn ảnh check-in!");
+      return;
+    }
+
+    setUploading(true);
+
+    try {
+      const fileRef = ref(storage, `checkin/${id}-${Date.now()}-${fileObj.name}`);
+      await uploadBytes(fileRef, fileObj);
       const url = await getDownloadURL(fileRef);
+
       await api.post(`/api/appointment/check-in`, {
         appointmentId: id,
         checkInImage: url,
+        staffId,
       });
+
       toast.success("Check-in thành công!");
+      handleCloseCheckInModal();
       fetchDetail();
     } catch {
-      toast.error("Lỗi khi upload ảnh check-in!");
+      toast.error("Lỗi khi check-in!");
     } finally {
       setUploading(false);
     }
   };
 
-  // ======================= IN PROGRESS =======================
   const handleSetInProgress = async () => {
     if (!id) return;
     try {
@@ -544,7 +710,9 @@ const HistoryGroomingDetail = () => {
                     </Tag>
                   </Descriptions.Item>
                 )}
-                {detail.staff && <Descriptions.Item label="Nhân viên">{detail.staff.fullName}</Descriptions.Item>}
+                <Descriptions.Item label="Nhân viên">
+                  {detail.staff ? detail.staff.fullName : <Tag color="red">Chưa chọn nhân viên</Tag>}
+                </Descriptions.Item>
               </Descriptions>
 
               {detail.status === "CANCELLED" && (
@@ -666,18 +834,9 @@ const HistoryGroomingDetail = () => {
               {detail.checkInImage ? (
                 <Image src={detail.checkInImage} width="100%" />
               ) : detail.status === "BOOKED" ? (
-                <Upload
-                  accept="image/*"
-                  showUploadList={false}
-                  beforeUpload={(file) => {
-                    handleUploadCheckIn(file);
-                    return false;
-                  }}
-                >
-                  <Button icon={<UploadOutlined />} type="primary" block loading={uploading}>
-                    Tải ảnh Check-in
-                  </Button>
-                </Upload>
+                <Button icon={<UploadOutlined />} type="primary" block onClick={openCheckInModal}>
+                  Tải ảnh Check-in
+                </Button>
               ) : (
                 <Text type="secondary" italic>
                   Chưa có ảnh check-in.
@@ -725,6 +884,94 @@ const HistoryGroomingDetail = () => {
             )}
           </Col>
         </Row>
+
+        {/* ---- Modal Check-in (thay thế toàn bộ phần Modal hiện tại) ---- */}
+        <Modal
+          title="Check-in Grooming"
+          open={showCheckInModal}
+          onCancel={handleCloseCheckInModal}
+          onOk={handleCheckInConfirm}
+          okText="Xác nhận Check-in"
+          cancelText="Hủy"
+          confirmLoading={uploading}
+          okButtonProps={{
+            disabled: fileList.length === 0 || (!detail?.staff && !selectedStaffForCheckIn),
+          }}
+        >
+          {/* Upload giống ManageProduct: picture-card, preview modal */}
+          <div style={{ marginBottom: 12 }}>
+            <Text strong>Ảnh check-in</Text>
+
+            <Upload
+              listType="picture-card"
+              fileList={fileList}
+              onChange={({ fileList: newFileList }) => {
+                setFileList(newFileList);
+                // đồng bộ checkInFile nếu muốn (không bắt buộc)
+                const f = newFileList[0]?.originFileObj as File | undefined;
+                setCheckInFile(f ?? null);
+              }}
+              onPreview={handlePreview}
+              beforeUpload={() => false}
+              maxCount={1}
+              accept="image/*"
+            >
+              {fileList.length >= 1 ? null : (
+                <div>
+                  <UploadOutlined />
+                  <div style={{ marginTop: 6 }}>Chọn ảnh</div>
+                </div>
+              )}
+            </Upload>
+          </div>
+
+          {/* Preview modal để xem ảnh lớn */}
+          <Modal open={previewOpen} footer={null} onCancel={() => setPreviewOpen(false)}>
+            <img alt={previewTitle || "preview"} style={{ width: "100%" }} src={previewImage} />
+          </Modal>
+
+          <Divider />
+
+          {/* Chọn / Hiển thị nhân viên */}
+          <div>
+            {detail?.staff ? (
+              <>
+                <Text strong>Nhân viên thực hiện:</Text>
+                <div style={{ marginTop: 8 }}>
+                  <Tag color="blue" style={{ fontSize: 14, padding: "4px 8px" }}>
+                    {detail.staff.fullName}
+                  </Tag>
+                </div>
+              </>
+            ) : (
+              <>
+                <Text strong>Chọn nhân viên thực hiện:</Text>
+
+                {assignLoading ? (
+                  <div style={{ textAlign: "center", padding: 20 }}>
+                    <Spin />
+                  </div>
+                ) : staffListForCheckIn.length === 0 ? (
+                  <Text type="secondary" style={{ display: "block", marginTop: 8 }}>
+                    Không có nhân viên rảnh trong khung giờ này
+                  </Text>
+                ) : (
+                  <Radio.Group
+                    onChange={(e) => setSelectedStaffForCheckIn(e.target.value)}
+                    value={selectedStaffForCheckIn}
+                    style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: 8 }}
+                  >
+                    {staffListForCheckIn.map((staff) => (
+                      <Radio key={staff.id} value={staff.id}>
+                        {staff.fullName}
+                      </Radio>
+                    ))}
+                  </Radio.Group>
+                )}
+              </>
+            )}
+          </div>
+        </Modal>
       </div>
     </div>
   );
