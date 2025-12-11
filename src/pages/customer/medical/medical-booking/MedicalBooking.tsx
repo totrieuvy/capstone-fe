@@ -326,7 +326,7 @@ function MedicalBooking() {
   };
 
   const handleConfirmBooking = async () => {
-    if (!selectedHamster || !selectedSlot || !selectedMedicalItem || !selectedStaff) {
+    if (!selectedHamster || !selectedSlot || !selectedMedicalItem) {
       message.error("Vui lòng chọn đầy đủ thông tin!");
       return;
     }
@@ -338,7 +338,7 @@ function MedicalBooking() {
 
       const payload: CreateAppointmentRequest = {
         hamsterId: selectedHamster.id,
-        veterinarianId: selectedStaff.id,
+        veterinarianId: selectedStaff?.id || null,
         appointmentDate: selectedSlot.date,
         notes,
         totalAmount,
@@ -757,7 +757,7 @@ function MedicalBooking() {
                   {selectedHamster.species})
                 </Descriptions.Item>
                 <Descriptions.Item label="Dịch vụ y tế">{selectedMedicalItem?.name}</Descriptions.Item>
-                <Descriptions.Item label="Bác sĩ">{selectedStaff?.name}</Descriptions.Item>
+                <Descriptions.Item label="Bác sĩ">{selectedStaff?.name || "Không chọn"}</Descriptions.Item>
                 <Descriptions.Item label="Ngày hẹn">{selectedSlot.date}</Descriptions.Item>
                 <Descriptions.Item label="Giờ hẹn">
                   {selectedSlot.slot.startTime} - {selectedSlot.slot.endTime}
@@ -830,13 +830,13 @@ function MedicalBooking() {
             <Button
               type={
                 (currentStep === 0 && !selectedHamster) || 
-                (currentStep === 1 && (!selectedSlot || !selectedStaff)) 
+                (currentStep === 1 && (!selectedSlot || (activeTab === "doctor" && !selectedStaff))) 
                 ? "default" : "primary"
               }
               onClick={() => setCurrentStep((s) => s + 1)}
               disabled={
                 (currentStep === 0 && !selectedHamster) || 
-                (currentStep === 1 && (!selectedSlot || !selectedStaff))
+                (currentStep === 1 && (!selectedSlot || (activeTab === "doctor" && !selectedStaff)))
               }
             >
               Tiếp theo
@@ -846,7 +846,7 @@ function MedicalBooking() {
             <Button
               type="primary"
               onClick={handleConfirmBooking}
-              disabled={!selectedHamster || !selectedSlot || !selectedStaff || !agreePolicy}
+              disabled={!selectedHamster || !selectedSlot || !agreePolicy}
             >
               Xác nhận đặt lịch
             </Button>
