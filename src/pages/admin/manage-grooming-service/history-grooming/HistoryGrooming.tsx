@@ -168,7 +168,7 @@ const HistoryGrooming = () => {
     },
     {
       title: "Nhân viên",
-      render: (_, r) => r.staffName || "—",
+      render: (_, r) => (r.staffName ? r.staffName : <Tag color="red">CHƯA CHỌN</Tag>),
     },
     {
       title: "Trạng thái",
