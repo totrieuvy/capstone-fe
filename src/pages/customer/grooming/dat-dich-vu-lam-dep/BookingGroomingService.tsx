@@ -354,12 +354,12 @@ function BookingGroomingService() {
       toast.error("Vui lòng chọn một slot trống từ lịch của nhân viên.");
       return;
     }
-    if (selectMode === "scheduleFirst" && selectedSlot && !selectedStaff) {
-      toast.error("Vui lòng chọn một nhân viên cho slot này.");
-      return;
-    }
+    // if (selectMode === "scheduleFirst" && selectedSlot && !selectedStaff) {
+    //   toast.error("Vui lòng chọn một nhân viên cho slot này.");
+    //   return;
+    // }
 
-    if (!selectedHamster || !selectedSlot || !selectedGroomingItem || !selectedStaff) {
+    if (!selectedHamster || !selectedSlot || !selectedGroomingItem) {
       toast.error("Vui lòng chọn đầy đủ thông tin!");
       return;
     }
@@ -420,7 +420,8 @@ function BookingGroomingService() {
       // ✅ Payload gửi backend
       const payload = {
         hamsterId: selectedHamster.id,
-        staffId: selectedStaff.id,
+        // staffId: selectedStaff.id,
+        staffId: selectedStaff ? selectedStaff.id : null,
         appointmentDate: selectedSlot.date,
         notes,
         totalAmount,
@@ -504,7 +505,7 @@ function BookingGroomingService() {
                             </p>
                             <p>
                               <span className="label">Ngày sinh:</span>
-                              <span className="value">{dayjs(hamster.dob).format('DD/MM/YYYY')}</span>
+                              <span className="value">{dayjs(hamster.dob).format("DD/MM/YYYY")}</span>
                             </p>
                             <p>
                               <span className="label">Màu:</span>
@@ -780,7 +781,9 @@ function BookingGroomingService() {
                   {selectedHamster.species})
                 </Descriptions.Item>
                 <Descriptions.Item label="Dịch vụ">{selectedGroomingItem?.name}</Descriptions.Item>
-                <Descriptions.Item label="Nhân viên">{selectedStaff?.name}</Descriptions.Item>
+                <Descriptions.Item label="Nhân viên">
+                  {selectedStaff?.name ? selectedStaff.name : "KHÔNG CHỌN"}
+                </Descriptions.Item>
                 <Descriptions.Item label="Ngày hẹn">{selectedSlot.date}</Descriptions.Item>
                 <Descriptions.Item label="Giờ hẹn">
                   {selectedSlot.slot.startTime} - {selectedSlot.slot.endTime}
@@ -886,9 +889,9 @@ function BookingGroomingService() {
                     if (!selectedSlot) {
                       return toast.error("Vui lòng chọn slot trước.");
                     }
-                    if (!selectedStaff) {
-                      return toast.error("Vui lòng chọn nhân viên cho slot.");
-                    }
+                    // if (!selectedStaff) {
+                    //   return toast.error("Vui lòng chọn nhân viên cho slot.");
+                    // }
                   }
 
                   // Mode 2: chọn nhân viên trước
