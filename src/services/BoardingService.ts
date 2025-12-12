@@ -375,6 +375,16 @@ export interface CancelBookingResponse {
   daysBeforeCheckIn: number;
 }
 
+// Type definitions for updating booking status
+export interface UpdateBookingStatusRequest {
+  status: string; // Default: "NO_SHOW"
+}
+
+export interface UpdateBookingStatusResponse {
+  code: number;
+  message: string;
+}
+
 // Type definitions for booking exception handling
 export interface HandleBookingExceptionResponse {
   code: number;
@@ -606,6 +616,18 @@ export const boardingService = {
       return response.data.data;
     } catch (error) {
       console.error("Error cancelling booking:", error);
+      throw error;
+    }
+  },
+
+  // Update booking status to NO_SHOW
+  updateBookingStatus: async (bookingId: string, status: string = "NO_SHOW"): Promise<UpdateBookingStatusResponse> => {
+    try {
+      const request: UpdateBookingStatusRequest = { status };
+      const response = await api.patch<UpdateBookingStatusResponse>(`/api/booking/${bookingId}`, request);
+      return response.data;
+    } catch (error) {
+      console.error("Error updating booking status:", error);
       throw error;
     }
   },

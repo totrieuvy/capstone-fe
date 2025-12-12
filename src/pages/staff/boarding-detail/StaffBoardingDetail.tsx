@@ -37,6 +37,9 @@ const BoardingDetail: React.FC = () => {
   const [exceptionLoading, setExceptionLoading] = useState<boolean>(false);
   const [reportIncidentModalVisible, setReportIncidentModalVisible] = useState<boolean>(false);
 
+  // Cancel booking states
+  const [cancelLoading, setCancelLoading] = useState<boolean>(false);
+
   useEffect(() => {
     if (bookingId) {
       fetchBookingDetail(bookingId);
@@ -100,13 +103,57 @@ const BoardingDetail: React.FC = () => {
     }
   };
 
+  // Handle cancel booking (update status to NO_SHOW)
+  const handleCancelBooking = async () => {
+    if (!bookingId) return;
+
+    Modal.confirm({
+      title: 'Xác nhận hủy lịch',
+      content: 'Bạn có chắc chắn muốn hủy lịch booking này không?',
+      okText: 'Xác nhận',
+      cancelText: 'Hủy',
+      okButtonProps: { danger: true },
+      onOk: async () => {
+        try {
+          setCancelLoading(true);
+          await boardingService.updateBookingStatus(bookingId, 'NO_SHOW');
+          
+          // Show success toast
+          toast.success('Hủy lịch thành công', {
+            position: 'top-right',
+            autoClose: 3000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+          });
+
+          // Re-fetch booking details to update the UI
+          await fetchBookingDetail(bookingId);
+        } catch (err) {
+          console.error('Error cancelling booking:', err);
+          toast.error('Có lỗi xảy ra khi hủy lịch. Vui lòng thử lại.', {
+            position: 'top-right',
+            autoClose: 3000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+          });
+        } finally {
+          setCancelLoading(false);
+        }
+      },
+    });
+  };
+
   const getStatusColor = (status: string) => {
     const statusColors: Record<string, string> = {
       'BOOKED': 'cyan',
       'IN_PROGRESS': 'blue',
       'CHECK_OUT': 'green',
       'CANCELLED': 'red',
-      'NO-SHOW': 'red',
+      'NO_SHOW': 'red',
       'INCIDENT': 'red',
      
     };
@@ -119,7 +166,7 @@ const BoardingDetail: React.FC = () => {
       'IN_PROGRESS': 'Đang thực hiện',
       'CHECK_OUT': 'Hoàn tất', 
       'CANCELLED': 'Đã hủy',
-      'NO-SHOW': 'Không xuất hiện',
+      'NO_SHOW': 'Không tới',
       'INCIDENT': 'Có sự cố',
     };
     return statusTexts[status] || status;
@@ -959,7 +1006,7 @@ const BoardingDetail: React.FC = () => {
         {/* Check-in Button for BOOKED bookings */}
         {(bookingDetail.status === 'BOOKED') && (
           <div className="info-section">
-            <div style={{ textAlign: 'center' }}>
+            <div style={{ textAlign: 'center', display: 'flex', gap: '16px', justifyContent: 'center', flexWrap: 'wrap' }}>
               <Button
                 type="primary"
                 size="large"
@@ -968,6 +1015,17 @@ const BoardingDetail: React.FC = () => {
                 className="check-in-button"
               >
                 Check In & Phân chuồng
+              </Button>
+              <Button
+                type="primary"
+                danger
+                size="large"
+                icon={<ExclamationCircleOutlined />}
+                onClick={handleCancelBooking}
+                loading={cancelLoading}
+                className="cancel-booking-button"
+              >
+                Hủy lịch
               </Button>
             </div>
           </div>

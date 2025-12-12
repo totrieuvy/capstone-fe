@@ -246,7 +246,7 @@ const BoardingHistory: React.FC = () => {
         return "orange";
       case "BOOKED":
         return "cyan";
-      case "NO-SHOW":
+      case "NO_SHOW":
         return "volcano";
       case "IN_PROGRESS":
         return "blue";
@@ -269,8 +269,8 @@ const BoardingHistory: React.FC = () => {
         return "Chờ xử lý";
       case "BOOKED":
         return "Đã đặt";
-      case "NO-SHOW":
-        return "Không đến";
+      case "NO_SHOW":
+        return "Không tới";
       case "IN_PROGRESS":
         return "Đang thực hiện";
       case "CHECK_OUT":
