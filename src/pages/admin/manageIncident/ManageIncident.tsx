@@ -1,11 +1,10 @@
 import { useEffect, useState } from "react";
 import { Table, Tag, Button, Input, Popconfirm, Space } from "antd";
+import { SearchOutlined } from "@ant-design/icons";
 import type { TableColumnsType, TablePaginationConfig } from "antd";
 import api from "../../../config/axios";
 import { toast } from "react-toastify";
 import "./ManageIncident.scss";
-
-const { Search } = Input;
 
 interface IncidentType {
   bookingId: string;
@@ -22,11 +21,11 @@ function ManageIncident() {
   const [searchTerm, setSearchTerm] = useState("");
   const [pagination, setPagination] = useState<TablePaginationConfig>({
     current: 1,
-    pageSize: 5,
+    pageSize: 10,
     total: 0,
   });
 
-  const fetchIncidents = async (page = 1, size = 5) => {
+  const fetchIncidents = async (page = 1, size = 10) => {
     try {
       setLoading(true);
       const res = await api.get("/api/booking/incidents", {
@@ -49,6 +48,7 @@ function ManageIncident() {
   };
 
   useEffect(() => {
+    document.title = "Quản lí sự cố";
     fetchIncidents(pagination.current, pagination.pageSize);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pagination.current, pagination.pageSize]);
@@ -57,7 +57,7 @@ function ManageIncident() {
     setPagination((prev) => ({ ...prev, ...newPagination }));
   };
 
-  // 🔍 Lọc theo tên khách hàng
+  // Filter by customer name
   const filteredData = data.filter((item) => item.customerName.toLowerCase().includes(searchTerm.toLowerCase()));
 
   const handleSolve = async (id: string) => {
@@ -65,10 +65,10 @@ function ManageIncident() {
       await api.patch(`/api/booking/${id}/handle-incident`, {
         refunded: true,
       });
-      toast.success("Đã cập nhật tình trạng sự cố!");
+      toast.success("Đã bồi thường!");
       fetchIncidents(pagination.current, pagination.pageSize);
     } catch {
-      toast.error("Cập nhật thất bại!");
+      toast.error("Bồi thường thất bại!");
     }
   };
 
@@ -128,23 +128,31 @@ function ManageIncident() {
     <div className="ManageIncident">
       <h1>Quản lí sự cố</h1>
 
-      <Space style={{ marginBottom: 20 }}>
-        <Search
-          placeholder="Tìm theo tên khách hàng..."
-          allowClear
-          onChange={(e) => setSearchTerm(e.target.value)}
-          style={{ width: 300 }}
-        />
-      </Space>
+      <div className="search-box">
+        <Space style={{ marginBottom: 16, width: "100%" }}>
+          <Input
+            placeholder="Tìm kiếm theo tên khách hàng..."
+            prefix={<SearchOutlined />}
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            style={{ width: 300 }}
+            allowClear
+          />
+        </Space>
+      </div>
 
       <Table
-        dataSource={filteredData}
         columns={columns}
+        dataSource={filteredData}
         loading={loading}
         rowKey="bookingId"
-        pagination={pagination}
+        pagination={{
+          ...pagination,
+          pageSize: 10,
+          showSizeChanger: true,
+          showTotal: (total) => `Tổng ${total} sự cố`,
+        }}
         onChange={handleTableChange}
-        bordered
       />
     </div>
   );
