@@ -62,7 +62,9 @@ function ManageIncident() {
 
   const handleSolve = async (id: string) => {
     try {
-      await api.patch(`/api/booking/${id}/handle-incident`);
+      await api.patch(`/api/booking/${id}/handle-incident`, {
+        refunded: true,
+      });
       toast.success("Đã cập nhật tình trạng sự cố!");
       fetchIncidents(pagination.current, pagination.pageSize);
     } catch {
