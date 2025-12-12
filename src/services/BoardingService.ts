@@ -210,6 +210,7 @@ export interface BookingDetail {
   healthNote: string | null;
   isIncident: boolean;
   incidentSolve: boolean;
+  incidentNote: string | null;
   serviceTotalPrice: number;
   serviceDiscountPercent: number;
   serviceTotalPriceAfter: number;
@@ -375,7 +376,21 @@ export interface CancelBookingResponse {
   daysBeforeCheckIn: number;
 }
 
+// Type definitions for updating booking status
+export interface UpdateBookingStatusRequest {
+  status: string; // Default: "NO_SHOW"
+}
+
+export interface UpdateBookingStatusResponse {
+  code: number;
+  message: string;
+}
+
 // Type definitions for booking exception handling
+export interface HandleBookingExceptionRequest {
+  incidentNote: string;
+}
+
 export interface HandleBookingExceptionResponse {
   code: number;
   message: string;
@@ -610,10 +625,22 @@ export const boardingService = {
     }
   },
 
-  // Handle booking exception case
-  handleBookingException: async (bookingId: string): Promise<HandleBookingExceptionResponse> => {
+  // Update booking status to NO_SHOW
+  updateBookingStatus: async (bookingId: string, status: string = "NO_SHOW"): Promise<UpdateBookingStatusResponse> => {
     try {
-      const response = await api.patch<HandleBookingExceptionResponse>(`/api/booking/${bookingId}/exception`);
+      const request: UpdateBookingStatusRequest = { status };
+      const response = await api.patch<UpdateBookingStatusResponse>(`/api/booking/${bookingId}`, request);
+      return response.data;
+    } catch (error) {
+      console.error("Error updating booking status:", error);
+      throw error;
+    }
+  },
+
+  // Handle booking exception case
+  handleBookingException: async (bookingId: string, request: HandleBookingExceptionRequest): Promise<HandleBookingExceptionResponse> => {
+    try {
+      const response = await api.patch<HandleBookingExceptionResponse>(`/api/booking/${bookingId}/exception`, request);
       return response.data;
     } catch (error) {
       console.error("Error handling booking exception:", error);
