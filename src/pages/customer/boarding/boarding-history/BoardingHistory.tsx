@@ -173,6 +173,7 @@ const BoardingHistory: React.FC = () => {
     "CHECK_OUT",
     "FAILED",
     "CANCELLED",
+    "NO_SHOW",
   ], []);
   // Pagination states
   const [currentPage, setCurrentPage] = useState(1);

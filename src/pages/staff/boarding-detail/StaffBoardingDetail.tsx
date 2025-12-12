@@ -39,6 +39,8 @@ const BoardingDetail: React.FC = () => {
 
   // Cancel booking states
   const [cancelLoading, setCancelLoading] = useState<boolean>(false);
+  const [isCancelModalVisible, setIsCancelModalVisible] = useState<boolean>(false);
+ 
 
   useEffect(() => {
     if (bookingId) {
@@ -104,47 +106,49 @@ const BoardingDetail: React.FC = () => {
   };
 
   // Handle cancel booking (update status to NO_SHOW)
-  const handleCancelBooking = async () => {
+  const handleCancelBooking = () => {
+    setIsCancelModalVisible(true);
+  };
+
+  const handleConfirmCancel = async () => {
     if (!bookingId) return;
 
-    Modal.confirm({
-      title: 'Xác nhận hủy lịch',
-      content: 'Bạn có chắc chắn muốn hủy lịch booking này không?',
-      okText: 'Xác nhận',
-      cancelText: 'Hủy',
-      okButtonProps: { danger: true },
-      onOk: async () => {
-        try {
-          setCancelLoading(true);
-          await boardingService.updateBookingStatus(bookingId, 'NO_SHOW');
-          
-          // Show success toast
-          toast.success('Hủy lịch thành công', {
-            position: 'top-right',
-            autoClose: 3000,
-            hideProgressBar: false,
-            closeOnClick: true,
-            pauseOnHover: true,
-            draggable: true,
-          });
+    try {
+      setCancelLoading(true);
+      await boardingService.updateBookingStatus(bookingId, 'NO_SHOW');
+      
+      // Show success toast
+      toast.success('Hủy lịch thành công', {
+        position: 'top-right',
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      });
 
-          // Re-fetch booking details to update the UI
-          await fetchBookingDetail(bookingId);
-        } catch (err) {
-          console.error('Error cancelling booking:', err);
-          toast.error('Có lỗi xảy ra khi hủy lịch. Vui lòng thử lại.', {
-            position: 'top-right',
-            autoClose: 3000,
-            hideProgressBar: false,
-            closeOnClick: true,
-            pauseOnHover: true,
-            draggable: true,
-          });
-        } finally {
-          setCancelLoading(false);
-        }
-      },
-    });
+      // Close modal
+      setIsCancelModalVisible(false);
+
+      // Re-fetch booking details to update the UI
+      await fetchBookingDetail(bookingId);
+    } catch (err) {
+      console.error('Error cancelling booking:', err);
+      toast.error('Có lỗi xảy ra khi hủy lịch. Vui lòng thử lại.', {
+        position: 'top-right',
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      });
+    } finally {
+      setCancelLoading(false);
+    }
+  };
+
+  const handleCloseCancelModal = () => {
+    setIsCancelModalVisible(false);
   };
 
   const getStatusColor = (status: string) => {
@@ -1567,6 +1571,51 @@ const BoardingDetail: React.FC = () => {
                 <strong>Lưu ý:</strong> Sau khi báo cáo sự cố, booking sẽ được đánh dấu là có sự cố 
                 và sẽ cần được xử lý bởi quản lý. Vui lòng đảm bảo rằng thực sự có sự cố xảy ra 
                 trước khi xác nhận.
+              </p>
+            </div>
+          </div>
+        </Modal>
+
+        {/* Cancel Booking Confirmation Modal */}
+        <Modal
+          title={
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <ExclamationCircleOutlined style={{ color: '#faad14', fontSize: 20 }} />
+              <span>Xác nhận hủy lịch</span>
+            </div>
+          }
+          open={isCancelModalVisible}
+          onCancel={handleCloseCancelModal}
+          width={500}
+          footer={[
+            <Button key="cancel" onClick={handleCloseCancelModal}>
+              Quay lại
+            </Button>,
+            <Button
+              key="confirm"
+              type="primary"
+              danger
+              loading={cancelLoading}
+              onClick={handleConfirmCancel}
+            >
+              Xác nhận hủy
+            </Button>,
+          ]}
+        >
+          <div style={{ padding: '16px 0' }}>
+            <p style={{ fontSize: 16, marginBottom: 16 }}>
+              Bạn có chắc chắn muốn hủy lịch booking này không?
+            </p>
+            <div
+              style={{
+                backgroundColor: '#fff2e8',
+                padding: 16,
+                borderRadius: 8,
+                border: '1px solid #ffd591',
+              }}
+            >
+              <p style={{ margin: 0, color: '#d46b08', fontWeight: 500 }}>
+                ⚠️ Hành động này sẽ đánh dấu booking là "Không tới" và không thể hoàn tác.
               </p>
             </div>
           </div>

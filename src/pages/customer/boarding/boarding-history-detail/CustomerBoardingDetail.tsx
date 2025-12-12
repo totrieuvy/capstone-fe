@@ -226,7 +226,7 @@ const BoardingDetail: React.FC = () => {
       IN_PROGRESS: "Đang thực hiện",
       CHECK_OUT: "Hoàn tất",
       INCIDENT: "Có sự cố",
-      NO_SHOW: "Không đến",
+      NO_SHOW: "Không tới",
     };
     return statusTexts[status as keyof typeof statusTexts] || status;
   };
