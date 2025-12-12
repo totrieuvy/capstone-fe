@@ -60,15 +60,15 @@ function ManageIncident() {
   // Filter by customer name
   const filteredData = data.filter((item) => item.customerName.toLowerCase().includes(searchTerm.toLowerCase()));
 
-  const handleSolve = async (id: string) => {
+  const handleSolve = async (id: string, refunded: boolean) => {
     try {
       await api.patch(`/api/booking/${id}/handle-incident`, {
-        refunded: true,
+        refunded,
       });
-      toast.success("Đã bồi thường!");
+      toast.success(refunded ? "Đã bồi thường!" : "Đã từ chối bồi thường!");
       fetchIncidents(pagination.current, pagination.pageSize);
     } catch {
-      toast.error("Bồi thường thất bại!");
+      toast.error(refunded ? "Bồi thường thất bại!" : "Từ chối thất bại!");
     }
   };
 
@@ -112,14 +112,24 @@ function ManageIncident() {
       align: "center",
       render: (_, record) =>
         !record.incidentSolve && (
-          <Popconfirm
-            title="Xác nhận duyệt sự cố?"
-            okText="Xác nhận"
-            cancelText="Hủy"
-            onConfirm={() => handleSolve(record.bookingId)}
-          >
-            <Button style={{ backgroundColor: "#ff6f61", color: "white" }}>Duyệt</Button>
-          </Popconfirm>
+          <Space>
+            <Popconfirm
+              title="Xác nhận duyệt sự cố?"
+              okText="Xác nhận"
+              cancelText="Hủy"
+              onConfirm={() => handleSolve(record.bookingId, true)}
+            >
+              <Button style={{ backgroundColor: "#52c41a", color: "white" }}>Duyệt</Button>
+            </Popconfirm>
+            <Popconfirm
+              title="Xác nhận từ chối sự cố?"
+              okText="Xác nhận"
+              cancelText="Hủy"
+              onConfirm={() => handleSolve(record.bookingId, false)}
+            >
+              <Button style={{ backgroundColor: "#ff4d4f", color: "white" }}>Từ chối</Button>
+            </Popconfirm>
+          </Space>
         ),
     },
   ];
