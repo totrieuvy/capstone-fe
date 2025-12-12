@@ -781,6 +781,33 @@ const BoardingDetail: React.FC = () => {
                 <div className="customer-incident-description">
                   <div className="customer-incident-message">
                     <div className="customer-incident-message-content">
+                      {booking.incidentNote && (
+                        <div className="customer-incident-note-box" style={{
+                          marginBottom: '16px',
+                          padding: '12px 16px',
+                          backgroundColor: '#fff7e6',
+                          border: '1px solid #ffd591',
+                          borderRadius: '8px'
+                        }}>
+                          <p style={{
+                            margin: '0 0 8px 0',
+                            fontSize: '14px',
+                            fontWeight: 600,
+                            color: '#d46b08'
+                          }}>
+                            Mô tả sự cố:
+                          </p>
+                          <p style={{
+                            margin: 0,
+                            fontSize: '14px',
+                            color: '#595959',
+                            lineHeight: '1.6',
+                            whiteSpace: 'pre-wrap'
+                          }}>
+                            {booking.incidentNote}
+                          </p>
+                        </div>
+                      )}
                       {!booking.incidentSolve ? (
                         <div className="customer-incident-alert-box">
                           <p className="customer-incident-text">

@@ -36,6 +36,7 @@ const BoardingDetail: React.FC = () => {
   // Exception handling states
   const [exceptionLoading, setExceptionLoading] = useState<boolean>(false);
   const [reportIncidentModalVisible, setReportIncidentModalVisible] = useState<boolean>(false);
+  const [incidentNote, setIncidentNote] = useState<string>('');
 
   // Cancel booking states
   const [cancelLoading, setCancelLoading] = useState<boolean>(false);
@@ -71,9 +72,18 @@ const BoardingDetail: React.FC = () => {
   const handleBookingException = async () => {
     if (!bookingId) return;
 
+    // Validate incident note
+    if (!incidentNote.trim()) {
+      toast.error('Vui lòng nhập mô tả sự cố', {
+        position: 'top-right',
+        autoClose: 3000,
+      });
+      return;
+    }
+
     try {
       setExceptionLoading(true);
-      await boardingService.handleBookingException(bookingId);
+      await boardingService.handleBookingException(bookingId, { incidentNote: incidentNote.trim() });
       
       // Show success toast
       toast.success('Đã gửi báo cáo sự cố', {
@@ -85,8 +95,9 @@ const BoardingDetail: React.FC = () => {
         draggable: true,
       });
 
-      // Close the modal
+      // Close the modal and reset incident note
       setReportIncidentModalVisible(false);
+      setIncidentNote('');
 
       // Re-fetch booking details to update the UI
       await fetchBookingDetail(bookingId);
@@ -974,6 +985,33 @@ const BoardingDetail: React.FC = () => {
                       <h5>Thông tin sự cố</h5>
                     </div>
                     <div className="incident-message-content">
+                      {bookingDetail.incidentNote && (
+                        <div className="incident-note-box" style={{
+                          marginBottom: '16px',
+                          padding: '12px 16px',
+                          backgroundColor: '#fff7e6',
+                          border: '1px solid #ffd591',
+                          borderRadius: '8px'
+                        }}>
+                          <p style={{
+                            margin: '0 0 8px 0',
+                            fontSize: '14px',
+                            fontWeight: 600,
+                            color: '#d46b08'
+                          }}>
+                            Mô tả sự cố:
+                          </p>
+                          <p style={{
+                            margin: 0,
+                            fontSize: '14px',
+                            color: '#595959',
+                            lineHeight: '1.6',
+                            whiteSpace: 'pre-wrap'
+                          }}>
+                            {bookingDetail.incidentNote}
+                          </p>
+                        </div>
+                      )}
                       {!bookingDetail.incidentSolve ? (
                         <div className="incident-alert-box">
                           <p className="incident-text">
@@ -1548,14 +1586,37 @@ const BoardingDetail: React.FC = () => {
                 <strong>Booking ID:</strong> {bookingDetail?.bookingId}
               </p>
               <p style={{ 
-                margin: '0', 
+                margin: '0 0 16px 0', 
                 fontSize: '14px', 
                 color: '#595959'
               }}>
                 <strong>Hamster:</strong> {bookingDetail?.hamsterName}
               </p>
+              
+              <div style={{ marginTop: '16px' }}>
+                <label style={{ 
+                  display: 'block',
+                  marginBottom: '8px',
+                  fontSize: '14px',
+                  fontWeight: 500,
+                  color: '#262626'
+                }}>
+                  Mô tả sự cố <span style={{ color: '#ff4d4f' }}>*</span>
+                </label>
+                <Input.TextArea
+                  value={incidentNote}
+                  onChange={(e) => setIncidentNote(e.target.value)}
+                  placeholder="Nhập mô tả chi tiết về sự cố..."
+                  rows={4}
+                  maxLength={500}
+                  showCount
+                  style={{
+                    resize: 'none'
+                  }}
+                />
+              </div>
             </div>
-            
+            <br/>
             <div style={{
               padding: '12px',
               backgroundColor: '#fff7e6',
@@ -1568,6 +1629,7 @@ const BoardingDetail: React.FC = () => {
                 color: '#d46b08',
                 lineHeight: '1.5'
               }}>
+                
                 <strong>Lưu ý:</strong> Sau khi báo cáo sự cố, booking sẽ được đánh dấu là có sự cố 
                 và sẽ cần được xử lý bởi quản lý. Vui lòng đảm bảo rằng thực sự có sự cố xảy ra 
                 trước khi xác nhận.

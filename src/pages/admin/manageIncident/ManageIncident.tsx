@@ -12,8 +12,7 @@ interface IncidentType {
   customerName: string;
   phoneNumber: string;
   hamsterName: string;
-  cageTypeName: string;
-  cageName: string;
+  incidentNote: string;
   isIncident: boolean;
   incidentSolve: boolean;
 }
@@ -88,14 +87,10 @@ function ManageIncident() {
       align: "center",
     },
     {
-      title: "Loại chuồng",
-      dataIndex: "cageTypeName",
+      title: "Ghi chú sự cố",
+      dataIndex: "incidentNote",
       align: "center",
-    },
-    {
-      title: "Tên chuồng",
-      dataIndex: "cageName",
-      align: "center",
+      render: (note: string) => note || "Không ghi chú",
     },
     {
       title: "Sự cố",
