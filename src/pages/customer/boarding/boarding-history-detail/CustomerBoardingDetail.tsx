@@ -826,6 +826,26 @@ const BoardingDetail: React.FC = () => {
                           <p className="customer-incident-resolution-description">
                             Tất cả các vấn đề liên quan đến booking này đã được xử lý hoàn tất.
                           </p>
+                          <div style={{
+                            marginTop: '12px',
+                            padding: '12px 16px',
+                            backgroundColor: booking.refunded ? '#f6ffed' : '#fff2e8',
+                            border: `1px solid ${booking.refunded ? '#b7eb8f' : '#ffd591'}`,
+                            borderRadius: '8px'
+                          }}>
+                            <p style={{
+                              margin: 0,
+                              fontSize: '14px',
+                              fontWeight: 600,
+                              color: booking.refunded ? '#52c41a' : '#d46b08'
+                            }}>
+                              {booking.refunded ? (
+                                <>💰 Bạn đã được bồi thường</>
+                              ) : (
+                                <>❌ Không được bồi thường</>
+                              )}
+                            </p>
+                          </div>
                         </div>
                       )}
                     </div>

@@ -217,6 +217,7 @@ export interface BookingDetail {
   extendTotalPrice: number;
   extendDiscountPercent: number;  
   extendTotalPriceAfter: number;
+  refunded: boolean;
 }
 
 // Type definitions for file upload
