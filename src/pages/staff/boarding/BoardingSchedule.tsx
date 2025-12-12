@@ -833,9 +833,9 @@ const BoardingSchedule = () => {
                     >
                       <div
                         className={`booking-bar ${
-                          bookings.find(b => b.bookingId === (booking.originalBookingId || booking.id))?.isIncident
-                            ? 'booking-bar-red'
-                            : booking.status === 'CANCELLED' || booking.status === 'NO-SHOW'
+                          booking.status === 'CANCELLED' || booking.status === 'NO-SHOW'
+                            ? 'booking-bar-dark-red'
+                            : bookings.find(b => b.bookingId === (booking.originalBookingId || booking.id))?.isIncident
                               ? 'booking-bar-red'
                               : booking.status === 'CHECK_OUT'
                                 ? 'booking-bar-green'
@@ -1005,11 +1005,20 @@ const BoardingSchedule = () => {
                 }}></div>
                 <span>Sự cố</span>
               </div>
+              {/* <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <div style={{ 
+                  width: '20px',
+                  height: '16px',
+                  backgroundColor: '#b91c1c',
+                  borderRadius: '4px'
+                }}></div>
+                  <span>Hủy/Không tới</span>
+              </div> */}
             </div>
           </div>
         </div>
-
-        {renderCheckedInGrid()}
+  
+          {renderCheckedInGrid()}
         {renderNotCheckedInGrid()}
       </div>
 

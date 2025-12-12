@@ -1,74 +1,97 @@
 .ManageIncident {
-  padding: 20px;
+  padding: 24px;
+  background-color: #f9fafc;
+  min-height: 100vh;
 
   h1 {
-    font-size: 28px;
-    font-weight: 600;
+    font-size: 24px;
+    font-weight: bold;
     margin-bottom: 20px;
+    color: #ff6f61;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    text-align: center;
   }
 
-  /* Thanh filter trạng thái */
-  .filter-status {
+  .search-box {
+    margin-bottom: 16px;
     display: flex;
-    gap: 10px;
-    margin-bottom: 20px;
+    justify-content: space-between;
+    align-items: center;
 
-    button {
-      border-radius: 6px !important;
+    .ant-space {
+      display: flex;
+      width: 100%;
+      justify-content: flex-start;
+    }
+  }
+
+  .ant-table {
+    background: #fff;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+
+    .ant-table-thead > tr > th {
+      background: #f0f2f5;
+      color: #444;
+      font-weight: 600;
+      text-align: center;
+    }
+
+    .ant-table-tbody > tr > td {
+      text-align: center;
+      padding: 12px;
+      font-size: 14px;
+      color: #333;
+    }
+
+    .ant-table-tbody > tr:hover > td {
+      background: #fff6f0;
+      cursor: pointer;
+    }
+  }
+
+  .ant-btn {
+    &[style*="background-color: rgb(255, 111, 97)"] {
+      border-radius: 6px;
       font-weight: 500;
-      transition: 0.2s;
-
+      
       &:hover {
-        transform: translateY(-1px);
-        opacity: 0.9;
+        background-color: #ff9447 !important;
+        border-color: #ff9447 !important;
       }
     }
   }
 
-  /* Thanh filter search + date */
-  .filter-bar {
-    margin-bottom: 20px;
+  .ant-tag {
+    font-weight: 500;
+    padding: 2px 8px;
+    border-radius: 4px;
+  }
 
-    .filter-controls {
-      display: flex;
-      gap: 15px;
+  .ant-pagination {
+    margin-top: 16px;
+    text-align: right;
+
+    .ant-pagination-item-active {
+      border-color: #ff6f61;
+
+      a {
+        color: #ff6f61;
+      }
     }
   }
 
-  /* TABLE */
-  .ant-table-wrapper {
-    background: white;
-    padding: 20px;
-    border-radius: 12px;
-    border: 1px solid #eaeaea;
-  }
-
-  .ant-table {
-    border-radius: 10px !important;
-  }
-
-  .ant-table-thead > tr > th {
-    font-weight: 600;
-    text-align: center !important;
-    background: #fafafa !important;
-  }
-
-  .ant-table-tbody > tr > td {
-    text-align: center !important;
-  }
-
-  /* Nút hành động */
-  .action-btn {
-    background-color: #ff6f61 !important;
-    border-color: #ff6f61 !important;
-    color: #fff !important;
-
-    &:hover {
-      opacity: 0.9;
+  .ant-input-affix-wrapper {
+    border-radius: 6px;
+    
+    &:hover, &:focus, &.ant-input-affix-wrapper-focused {
+      border-color: #ff6f61;
+      box-shadow: 0 0 0 2px rgba(255, 111, 97, 0.1);
     }
   }
 
-  /* Loading Animation từ ManageOrder */
   .loading-wrapper {
     text-align: center;
     padding: 40px;
@@ -84,11 +107,5 @@
       color: #555;
       font-size: 14px;
     }
-  }
-
-  .payment-logo {
-    width: 50px;
-    height: auto;
-    object-fit: contain;
   }
 }
