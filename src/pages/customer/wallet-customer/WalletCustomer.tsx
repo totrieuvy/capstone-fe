@@ -401,15 +401,29 @@ function WalletCustomer() {
           onFinish={handleDeposit}
           initialValues={{ paymentMethod: "VNPAY", amount: 50000 }}
         >
-          <Form.Item name="amount" label="Số tiền" rules={[{ required: true, message: "Vui lòng nhập số tiền!" }]}>
+          <Form.Item
+            name="amount"
+            label="Số tiền"
+            rules={[
+              { required: true, message: "Vui lòng nhập số tiền!" },
+              {
+                validator: (_, value) => {
+                  if (!value) return Promise.resolve();
+                  if (Number(value) < 10000) {
+                    return Promise.reject(new Error("Số tiền tối thiểu là 10.000đ"));
+                  }
+                  return Promise.resolve();
+                },
+              },
+            ]}
+          >
             <InputNumber
               style={{ width: "100%" }}
-              formatter={(v?: string | number) => `${v ?? ""}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",")}
-              parser={(v?: string) => (v ? v.replace(/,/g, "") : "")}
-              min={10000}
-              step={10000}
+              formatter={(v) => `${v ?? ""}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",")}
+              parser={(v) => (v ? v.replace(/,/g, "") : "")}
             />
           </Form.Item>
+
           <Form.Item
             name="paymentMethod"
             label="Phương thức thanh toán"
