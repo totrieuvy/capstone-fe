@@ -381,7 +381,7 @@ const CageFloorPlan: React.FC = () => {
                                 {cage.startDate && cage.endDate && (
                                   <Text type="secondary">
                                     <CalendarOutlined style={{ marginRight: 4 }} />
-                                    <strong>Thời gian:</strong> {cage.startDate} đến {cage.endDate}
+                                    <strong>Thời gian:</strong> {new Date(cage.startDate).toLocaleDateString("vi-VN")} đến {new Date(cage.endDate).toLocaleDateString("vi-VN")}
                                   </Text>
                                 )}
                               </Space>
