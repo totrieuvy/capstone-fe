@@ -1083,7 +1083,7 @@ const BoardingDetail: React.FC = () => {
                   Chọn dịch vụ làm đẹp cho {booking?.species}:
                 </Title>
                 <Text type="secondary" style={{ fontSize: 12, marginBottom: 16, display: "block" }}>
-                  * Có thể chọn nhiều dịch vụ cùng lúc
+                  * Có thể chọn nhiều dịch vụ cùng lúc (tổng thời gian không quá 60 phút)
                 </Text>
                 {groomingServices.length === 0 ? (
                   <div style={{ textAlign: "center", padding: "20px 0" }}>
@@ -1094,7 +1094,21 @@ const BoardingDetail: React.FC = () => {
                 ) : (
                   <Checkbox.Group
                     value={selectedServiceIds}
-                    onChange={(checkedValues: string[]) => setSelectedServiceIds(checkedValues)}
+                    onChange={(checkedValues: string[]) => {
+                      // Calculate total duration of selected services
+                      const totalDuration = checkedValues.reduce((total, serviceId) => {
+                        const service = groomingServices.find(s => s.id === serviceId);
+                        return total + (service?.durationMinutes || 0);
+                      }, 0);
+
+                      // Check if total duration exceeds 60 minutes
+                      if (totalDuration > 60) {
+                        message.warning("Tổng thời gian của các dịch vụ không được vượt quá 60 phút!");
+                        return;
+                      }
+
+                      setSelectedServiceIds(checkedValues);
+                    }}
                     className="service-checkbox-group"
                     style={{ width: "100%" }}
                   >
@@ -1120,6 +1134,25 @@ const BoardingDetail: React.FC = () => {
                       )}
                     />
                   </Checkbox.Group>
+                )}
+                
+                {/* Display total duration */}
+                {selectedServiceIds.length > 0 && (
+                  <div style={{ marginTop: 16, padding: "12px", backgroundColor: "#f0f5ff", borderRadius: "8px" }}>
+                    <Text>
+                      Tổng thời gian đã chọn:{" "}
+                      <Text strong style={{ color: selectedServiceIds.reduce((total, id) => {
+                        const service = groomingServices.find(s => s.id === id);
+                        return total + (service?.durationMinutes || 0);
+                      }, 0) > 60 ? "#ff4d4f" : "#1890ff" }}>
+                        {selectedServiceIds.reduce((total, id) => {
+                          const service = groomingServices.find(s => s.id === id);
+                          return total + (service?.durationMinutes || 0);
+                        }, 0)} phút
+                      </Text>
+                      {" / 60 phút"}
+                    </Text>
+                  </div>
                 )}
               </div>
 
