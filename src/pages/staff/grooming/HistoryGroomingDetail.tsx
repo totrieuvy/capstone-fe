@@ -165,6 +165,14 @@ const HistoryGroomingDetail = () => {
   const [previewImage, setPreviewImage] = useState<string>("");
   const [previewTitle, setPreviewTitle] = useState("");
 
+  // Checkout modal states
+  const [showCheckoutModal, setShowCheckoutModal] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState("PAYOS");
+  const [checkoutFileList, setCheckoutFileList] = useState<MyUploadFile[]>([]);
+  const [checkoutPreviewOpen, setCheckoutPreviewOpen] = useState(false);
+  const [checkoutPreviewImage, setCheckoutPreviewImage] = useState("");
+  const [checkoutPreviewTitle, setCheckoutPreviewTitle] = useState("");
+
   const fetchSpecies = async () => {
     try {
       const res = await api.get("/api/species");
@@ -482,6 +490,18 @@ const HistoryGroomingDetail = () => {
     }
   };
 
+  // ======================= CHECK-OUT MODAL =======================
+  const openCheckoutModal = () => setShowCheckoutModal(true);
+
+  const handleCloseCheckoutModal = () => {
+    setShowCheckoutModal(false);
+    setPaymentMethod("PAYOS");
+    setCheckoutFileList([]);
+    setCheckoutPreviewOpen(false);
+    setCheckoutPreviewImage("");
+    setCheckoutPreviewTitle("");
+  };
+
   const handleSetInProgress = async () => {
     if (!id) return;
     try {
@@ -551,34 +571,52 @@ const HistoryGroomingDetail = () => {
   };
 
   // ======================= CHECK-OUT =======================
-  const handleUploadCheckOut = async (file: File) => {
-    if (!id || !detail) return;
+  const handleCheckoutPreview = async (file: UploadFile) => {
+    if (!file.url && !file.preview && file.originFileObj) {
+      file.preview = await getBase64(file.originFileObj as File);
+    }
+    setCheckoutPreviewImage(file.url || (file.preview as string));
+    setCheckoutPreviewOpen(true);
+    setCheckoutPreviewTitle(file.name || file.url!.substring(file.url!.lastIndexOf("/") + 1));
+  };
+
+  const handleCheckoutConfirm = async () => {
+    if (!id || !detail) {
+      toast.error("Thiếu thông tin lịch hẹn!");
+      return;
+    }
+
+    const fileObj = checkoutFileList[0]?.originFileObj as File | undefined;
+    if (!fileObj) {
+      toast.error("Vui lòng chọn ảnh check-out!");
+      return;
+    }
+
     setCheckoutUploading(true);
+
     try {
-      const fileRef = ref(storage, `checkout/${id}-${Date.now()}-${file.name}`);
-      await uploadBytes(fileRef, file);
+      const fileRef = ref(storage, `checkout/${id}-${Date.now()}-${fileObj.name}`);
+      await uploadBytes(fileRef, fileObj);
       const url = await getDownloadURL(fileRef);
       setCheckOutImageUrl(url);
 
-      // Tính additionalAmount (nếu có)
       const additionalAmount = detail.additionalAmount || 0;
 
-      // Gọi API mới /appointment/check-out
       const res = await api.post("/api/appointment/check-out", {
         appointmentId: id,
         checkOutImage: url,
-        paymentMethod: "PAYOS",
+        paymentMethod,
         additionalAmount,
       });
 
       if (res.data.code === 200 && res.data.data?.paymentUrl) {
         toast.success("Tạo link thanh toán thành công!");
         window.location.href = res.data.data.paymentUrl;
-        fetchDetail();
       } else {
         toast.success("Check-out thành công!");
-        fetchDetail();
       }
+      handleCloseCheckoutModal();
+      fetchDetail();
     } catch {
       toast.error("Không thể thực hiện check-out!");
     } finally {
@@ -856,18 +894,16 @@ const HistoryGroomingDetail = () => {
                 <Title level={4}>
                   <CheckCircleOutlined /> Check-out
                 </Title>
-                <Upload
-                  accept="image/*"
-                  showUploadList={false}
-                  beforeUpload={(file) => {
-                    handleUploadCheckOut(file);
-                    return false;
-                  }}
+                <Button
+                  icon={<UploadOutlined />}
+                  type="primary"
+                  block
+                  size="large"
+                  onClick={openCheckoutModal}
+                  loading={checkoutUploading}
                 >
-                  <Button icon={<UploadOutlined />} type="primary" block size="large" loading={checkoutUploading}>
-                    Tải ảnh Check-out & Thanh toán
-                  </Button>
-                </Upload>
+                  Tải ảnh Check-out & Thanh toán
+                </Button>
                 <Text type="secondary" style={{ display: "block", textAlign: "center", marginTop: 8 }}>
                   (Chụp ảnh hamster sau khi hoàn tất dịch vụ)
                 </Text>
@@ -970,6 +1006,70 @@ const HistoryGroomingDetail = () => {
                 )}
               </>
             )}
+          </div>
+        </Modal>
+
+        {/* ---- Modal Check-out ---- */}
+        <Modal
+          title="Check-out & Thanh toán"
+          open={showCheckoutModal}
+          onCancel={handleCloseCheckoutModal}
+          onOk={handleCheckoutConfirm}
+          okText="Xác nhận & Thanh toán"
+          cancelText="Hủy"
+          confirmLoading={checkoutUploading}
+          okButtonProps={{
+            disabled: checkoutFileList.length === 0,
+          }}
+        >
+          <div style={{ marginBottom: 12 }}>
+            <Text strong>Ảnh check-out</Text>
+            <Upload
+              listType="picture-card"
+              fileList={checkoutFileList}
+              onChange={({ fileList: newFileList }) => setCheckoutFileList(newFileList)}
+              onPreview={handleCheckoutPreview}
+              beforeUpload={() => false}
+              maxCount={1}
+              accept="image/*"
+            >
+              {checkoutFileList.length >= 1 ? null : (
+                <div>
+                  <UploadOutlined />
+                  <div style={{ marginTop: 6 }}>Chọn ảnh</div>
+                </div>
+              )}
+            </Upload>
+          </div>
+
+          <Modal open={checkoutPreviewOpen} footer={null} onCancel={() => setCheckoutPreviewOpen(false)}>
+            <img alt={checkoutPreviewTitle || "preview"} style={{ width: "100%" }} src={checkoutPreviewImage} />
+          </Modal>
+
+          <Divider />
+
+          <div>
+            <Text strong>Chọn phương thức thanh toán:</Text>
+            <Radio.Group
+              onChange={(e) => setPaymentMethod(e.target.value)}
+              value={paymentMethod}
+              style={{ marginTop: 8, display: "flex", gap: 16 }}
+            >
+              <Radio value="VNPAY">
+                <img
+                  src="https://itviec.com/rails/active_storage/representations/proxy/eyJfcmFpbHMiOnsiZGF0YSI6NDAzODMzMCwicHVyIjoiYmxvYl9pZCJ9fQ==--d01b1b407f49d33d4ea19b9218e10da4dc7f231d/eyJfcmFpbHMiOnsiZGF0YSI6eyJmb3JtYXQiOiJwbmciLCJyZXNpemVfdG9fbGltaXQiOlszMDAsMzAwXX0sInB1ciI6InZhcmlhdGlvbiJ9fQ==--e1d036817a0840c585f202e70291f5cdd058753d/logo%20d%E1%BB%8Dc.png"
+                  alt="VNPAY"
+                  style={{ height: 32, verticalAlign: "middle", width: 80 }}
+                />
+              </Radio>
+              <Radio value="PAYOS">
+                <img
+                  src="https://media.zenfs.com/en/globenewswire.com/d572fcc587598e58786c3856ba2bc978"
+                  alt="PAYOS"
+                  style={{ height: 32, verticalAlign: "middle" }}
+                />
+              </Radio>
+            </Radio.Group>
           </div>
         </Modal>
       </div>

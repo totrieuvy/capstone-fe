@@ -215,7 +215,10 @@ const TrackGroomingDetail: React.FC = () => {
                     {detail.slotStart} - {detail.slotEnd}
                   </Descriptions.Item>
                 )}
-                {detail.staff && <Descriptions.Item label="Nhân viên">{detail.staff.fullName}</Descriptions.Item>}
+                <Descriptions.Item label="Nhân viên">
+                  {detail.staff?.fullName || <Text type="secondary">Chưa phân công</Text>}
+                </Descriptions.Item>
+
                 <Descriptions.Item label="Ghi chú">
                   {detail.notes || <Text type="secondary">Không có</Text>}
                 </Descriptions.Item>

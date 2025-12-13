@@ -7,7 +7,7 @@
 $bg-card: #ffffff;
 $bg-page: #f5f7fa;
 $muted: #8c8c8c;
-$primary: #1890ff;
+$primary: #ff5a4a;
 $accent: #ff6f61;
 $card-border: #e8eaf0;
 $shadow: 0 6px 18px rgba(23, 47, 77, 0.06);
@@ -105,9 +105,17 @@ $shadow: 0 6px 18px rgba(23, 47, 77, 0.06);
       justify-content: center;
     }
 
-    /* layout tweaks for columns inside Card (Row/Col from antd) */
-    .ant-row {
-      align-items: center;
+    .ant-btn-primary {
+      background: #ff5a4a;
+      border-color: #ff5a4a;
+      box-shadow: none;
+
+      &:hover,
+      &:focus,
+      &:active {
+        background: #ff5a4a;
+        border-color: #ff5a4a;
+      }
     }
   }
 
@@ -191,6 +199,6 @@ $shadow: 0 6px 18px rgba(23, 47, 77, 0.06);
 /* Accessibility: focus styles */
 .appointment-card .ant-btn:focus,
 .grooming-appointment-history .ant-select-focused {
-  outline: 3px solid rgba(24, 144, 255, 0.12);
+  outline: 3px solid #ff5a4a;
   outline-offset: 2px;
 }
