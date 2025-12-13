@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
-import { Table, Tag, Button, Input, Popconfirm, Space } from "antd";
+import { Table, Tag, Button, Input, Popconfirm, Space, Tooltip } from "antd";
 import { SearchOutlined } from "@ant-design/icons";
 import type { TableColumnsType, TablePaginationConfig } from "antd";
+import { FaEye, FaCheck, FaTimes } from "react-icons/fa";
 import api from "../../../config/axios";
 import { toast } from "react-toastify";
 import "./ManageIncident.scss";
@@ -110,27 +111,56 @@ function ManageIncident() {
       title: "Hành động",
       key: "action",
       align: "center",
-      render: (_, record) =>
-        !record.incidentSolve && (
-          <Space>
-            <Popconfirm
-              title="Xác nhận duyệt sự cố?"
-              okText="Xác nhận"
-              cancelText="Hủy"
-              onConfirm={() => handleSolve(record.bookingId, true)}
-            >
-              <Button style={{ backgroundColor: "#52c41a", color: "white" }}>Duyệt</Button>
-            </Popconfirm>
-            <Popconfirm
-              title="Xác nhận từ chối sự cố?"
-              okText="Xác nhận"
-              cancelText="Hủy"
-              onConfirm={() => handleSolve(record.bookingId, false)}
-            >
-              <Button style={{ backgroundColor: "#ff4d4f", color: "white" }}>Từ chối</Button>
-            </Popconfirm>
-          </Space>
-        ),
+      render: (_, record) => (
+        <Space>
+          <Tooltip title="Xem chi tiết">
+            <Button
+              type="primary"
+              shape="circle"
+              icon={<FaEye />}
+              style={{ backgroundColor: "#1890ff" }}
+              onClick={() => {
+                // Handle view details action
+                console.log("View details for:", record.bookingId);
+              }}
+            />
+          </Tooltip>
+          {!record.incidentSolve && (
+            <>
+              <Popconfirm
+                title="Xác nhận duyệt sự cố?"
+                okText="Xác nhận"
+                cancelText="Hủy"
+                onConfirm={() => handleSolve(record.bookingId, true)}
+              >
+                <Tooltip title="Duyệt">
+                  <Button
+                    type="primary"
+                    shape="circle"
+                    icon={<FaCheck />}
+                    style={{ backgroundColor: "#52c41a" }}
+                  />
+                </Tooltip>
+              </Popconfirm>
+              <Popconfirm
+                title="Xác nhận từ chối sự cố?"
+                okText="Xác nhận"
+                cancelText="Hủy"
+                onConfirm={() => handleSolve(record.bookingId, false)}
+              >
+                <Tooltip title="Từ chối">
+                  <Button
+                    type="primary"
+                    shape="circle"
+                    icon={<FaTimes />}
+                    style={{ backgroundColor: "#ff4d4f" }}
+                  />
+                </Tooltip>
+              </Popconfirm>
+            </>
+          )}
+        </Space>
+      ),
     },
   ];
 
