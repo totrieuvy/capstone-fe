@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Table, Tag, Button, Input, Popconfirm, Space, Tooltip } from "antd";
 import { SearchOutlined } from "@ant-design/icons";
 import type { TableColumnsType, TablePaginationConfig } from "antd";
@@ -17,6 +18,7 @@ interface IncidentType {
   incidentSolve: boolean;
 }
 function ManageIncident() {
+  const navigate = useNavigate();
   const [data, setData] = useState<IncidentType[]>([]);
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
@@ -119,10 +121,7 @@ function ManageIncident() {
               shape="circle"
               icon={<FaEye />}
               style={{ backgroundColor: "#1890ff" }}
-              onClick={() => {
-                // Handle view details action
-                console.log("View details for:", record.bookingId);
-              }}
+              onClick={() => navigate(`/ADMIN/quan-li-su-co/${record.bookingId}`)}
             />
           </Tooltip>
           {!record.incidentSolve && (

@@ -82,6 +82,7 @@ import Home from "./pages/customer/home/Home";
 import HamsterMedicalHistory from "./pages/veterinarian/hamster-medical-history/HamsterMedicalHistory";
 import ManageIncident from "./pages/admin/manageIncident/ManageIncident";
 import GroomingPaymentFailure from "./pages/staff/grooming/payment-success/GroomingPaymentFailure";
+import ViewIncidentDetail from "./pages/admin/manageIncident/ViewIncidentDetail";
 
 interface User {
   id: number;
@@ -327,6 +328,10 @@ const App = () => {
               element: <ManageIncident />,
             },
             {
+              path: "quan-li-su-co/:bookingId",
+              element: <ViewIncidentDetail />,
+            },
+            { 
               path: "*",
               element: <AdminNotFoundPage />,
             },
