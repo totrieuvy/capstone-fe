@@ -237,14 +237,24 @@ const ManageAccount: React.FC = () => {
       dataIndex: "specialization",
       key: "specialization",
       width: 180,
-      render: (specialization: string) => specialization || "—",
+      render: (specialization: string, record: StaffAccount) => {
+        if (!specialization) {
+          return record.staffType === "STAFF" ? "Không có" : "—";
+        }
+        return specialization;
+      },
     },
     {
       title: "Kinh nghiệm",
       dataIndex: "experienceYears",
       key: "experienceYears",
       width: 120,
-      render: (years: number) => years ? `${years} năm` : "—",
+      render: (years: number, record: StaffAccount) => {
+        if (!years) {
+          return record.staffType === "STAFF" ? "Không có" : "—";
+        }
+        return `${years} năm`;
+      },
     },
     {
       title: "Trạng thái",
