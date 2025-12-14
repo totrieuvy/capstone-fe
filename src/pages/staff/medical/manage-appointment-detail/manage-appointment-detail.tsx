@@ -343,7 +343,10 @@ const ManageAppointmentDetail: React.FC = () => {
       return;
     }
 
-    if (!selectedVeterinarianId) {
+    // Use assigned veterinarian if available, otherwise require selection
+    const veterinarianId = appointment?.veterinarian?.id || selectedVeterinarianId;
+    
+    if (!veterinarianId) {
       message.error("Vui lòng chọn bác sĩ thú y!");
       return;
     }
@@ -358,7 +361,7 @@ const ManageAppointmentDetail: React.FC = () => {
       await checkInAppointment({
         appointmentId: appointmentId,
         checkInImage: uploadedImage,
-        veterinarianId: selectedVeterinarianId,
+        veterinarianId: veterinarianId,
         staffId: null, // Default to null as requested
         healthNote: healthNote,
       });
@@ -453,7 +456,7 @@ const ManageAppointmentDetail: React.FC = () => {
   }, [appointmentId]);
 
   useEffect(() => {
-    if (checkInModalVisible) {
+    if (checkInModalVisible && !appointment?.veterinarian) {
       fetchAvailableVeterinarians();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -1334,12 +1337,12 @@ const ManageAppointmentDetail: React.FC = () => {
               type="primary"
               loading={checkInLoading}
               onClick={handleCheckIn}
-              disabled={!uploadedImage || !selectedVeterinarianId}
+              disabled={!uploadedImage || (!appointment?.veterinarian && !selectedVeterinarianId)}
             >
               Check-in
             </Button>,
           ]}
-          width={900}
+          width={appointment?.veterinarian ? 600 : 900}
           className="staff-check-in-modal"
         >
           <div style={{ padding: "20px 0" }}>
@@ -1397,15 +1400,16 @@ const ManageAppointmentDetail: React.FC = () => {
                 </div>
               )}
 
-              {/* Veterinarian Selection Table */}
-              <div>
-                <Text strong style={{ fontSize: "16px", marginBottom: "8px", display: "block" }}>
-                  Chọn bác sĩ thú y:
-                </Text>
-                <Text type="secondary" style={{ marginBottom: "16px", display: "block" }}>
-                  Vui lòng chọn bác sĩ thú y cho cuộc hẹn này.
-                </Text>
-                <Table<Staff>
+              {/* Veterinarian Selection Table - Only show if no veterinarian assigned */}
+              {!appointment?.veterinarian && (
+                <div>
+                  <Text strong style={{ fontSize: "16px", marginBottom: "8px", display: "block" }}>
+                    Chọn bác sĩ thú y:
+                  </Text>
+                  <Text type="secondary" style={{ marginBottom: "16px", display: "block" }}>
+                    Vui lòng chọn bác sĩ thú y cho cuộc hẹn này.
+                  </Text>
+                  <Table<Staff>
                   dataSource={availableVeterinarians}
                   loading={loadingVeterinarians}
                   rowKey="id"
@@ -1491,7 +1495,48 @@ const ManageAppointmentDetail: React.FC = () => {
                     },
                   ]}
                 />
-              </div>
+                </div>
+              )}
+
+              {/* Display assigned veterinarian info if exists */}
+              {appointment?.veterinarian && (
+                <div>
+                  <Text strong style={{ fontSize: "16px", marginBottom: "8px", display: "block" }}>
+                    Bác sĩ được phân công:
+                  </Text>
+                  <Card style={{ background: '#f6ffed', border: '1px solid #b7eb8f' }}>
+                    <Space direction="vertical" size="small" style={{ width: "100%" }}>
+                      <Space>
+                        <Avatar size={48} icon={<UserOutlined />} src="https://cdn-icons-png.flaticon.com/512/2202/2202112.png" />
+                        <div>
+                          <Text strong style={{ fontSize: "16px" }}>{appointment.veterinarian.name}</Text>
+                          <br />
+                          <Text type="secondary">{appointment.veterinarian.gender === "MALE" ? "Nam" : "Nữ"}</Text>
+                        </div>
+                      </Space>
+                      <Divider style={{ margin: "8px 0" }} />
+                      <div>
+                        <Text strong>Chuyên môn: </Text>
+                        <Text>{appointment.veterinarian.specialization}</Text>
+                      </div>
+                      <div>
+                        <Text strong>Kinh nghiệm: </Text>
+                        <Text>{appointment.veterinarian.experienceYears} năm</Text>
+                      </div>
+                      {appointment.veterinarian.bestServices && appointment.veterinarian.bestServices.length > 0 && (
+                        <div>
+                          <Text strong>Dịch vụ nổi bật: </Text>
+                          <div style={{ marginTop: "4px" }}>
+                            {appointment.veterinarian.bestServices.map((service, index) => (
+                              <Tag key={index} color="green">{service}</Tag>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </Space>
+                  </Card>
+                </div>
+              )}
 
               {/* <div>
                 <Text strong style={{ fontSize: "16px", marginBottom: "8px", display: "block" }}>
