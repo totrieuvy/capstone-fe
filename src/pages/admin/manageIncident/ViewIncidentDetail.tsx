@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Card, Spin, Alert, Button, Tag, Descriptions, Avatar, Modal, Upload, message, List, Radio, Row, Col, Input } from 'antd';
-import { ArrowLeftOutlined, UserOutlined, CalendarOutlined, ShoppingOutlined, UploadOutlined, CameraOutlined, HomeOutlined, EditOutlined, LogoutOutlined, WarningOutlined, CheckCircleOutlined, ExclamationCircleOutlined, DollarOutlined } from '@ant-design/icons';
+import { ArrowLeftOutlined, UserOutlined, CalendarOutlined, ShoppingOutlined, UploadOutlined, CameraOutlined, HomeOutlined, LogoutOutlined, WarningOutlined, CheckCircleOutlined, ExclamationCircleOutlined, DollarOutlined } from '@ant-design/icons';
 import { boardingService, type BookingDetail, type AvailableCage } from '../../../services/BoardingService';
 import { storage } from '../../../config/firebase';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
@@ -420,12 +420,12 @@ const BoardingDetail: React.FC = () => {
   };
 
   // Handle check-out modal opening
-  const handleOpenCheckOutModal = () => {
-    setCheckOutModalVisible(true);
-    setCheckOutImageFile(null);
-    setCheckOutImagePreview('');
-    setCheckOutPaymentMethod('VNPAY');
-  };
+  // const handleOpenCheckOutModal = () => {
+  //   setCheckOutModalVisible(true);
+  //   setCheckOutImageFile(null);
+  //   setCheckOutImagePreview('');
+  //   setCheckOutPaymentMethod('VNPAY');
+  // };
 
   // Reset check-out modal state when closing
   const handleCheckOutModalCancel = () => {
