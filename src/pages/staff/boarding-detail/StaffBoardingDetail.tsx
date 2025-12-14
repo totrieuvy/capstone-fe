@@ -656,53 +656,111 @@ const BoardingDetail: React.FC = () => {
               </Descriptions>
             </div>
             
-            {/* Check-in Image Section - Below the descriptions but inside the same card */}
-            {bookingDetail.checkInImage && (
-              <div className="checkin-image-section" style={{ 
+            {/* Check-in and Check-out Images Section - Side by side */}
+            {(bookingDetail.checkInImage || bookingDetail.checkOutImage) && (
+              <div className="images-section" style={{ 
                 marginTop: '24px', 
                 paddingTop: '20px', 
                 borderTop: '1px solid #f0f0f0',
                 width: '100%'
               }}>
-                <h4 style={{ 
-                  marginBottom: '12px', 
-                  color: '#262626', 
-                  fontWeight: 600,
-                  fontSize: '16px'
-                }}>
-                  Hình ảnh check-in
-                </h4>
-                <div className="checkin-image-container" style={{ width: '100%' }}>
-                  <img 
-                    src={bookingDetail.checkInImage} 
-                    alt="Check-in" 
-                    style={{
-                      maxWidth: '100%',
-                      maxHeight: '400px',
-                      borderRadius: '8px',
-                      border: '1px solid #d9d9d9',
-                      cursor: 'pointer',
-                      boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
-                      display: 'block'
-                    }}
-                    onClick={() => {
-                      // Open image in a modal for better viewing
-                      Modal.info({
-                        title: 'Hình ảnh check-in',
-                        icon: null,
-                        content: (
+                <Row gutter={[24, 24]}>
+                  {/* Check-in Image */}
+                  {bookingDetail.checkInImage && (
+                    <Col xs={24} md={12}>
+                      <div className="checkin-image-section">
+                        <h4 style={{ 
+                          marginBottom: '12px', 
+                          color: '#262626', 
+                          fontWeight: 600,
+                          fontSize: '16px'
+                        }}>
+                          Hình ảnh check-in
+                        </h4>
+                        <div className="checkin-image-container" style={{ width: '100%' }}>
                           <img 
                             src={bookingDetail.checkInImage} 
                             alt="Check-in" 
-                            style={{ width: '100%', maxWidth: '500px' }}
+                            style={{
+                              width: '100%',
+                              height: '280px',
+                              borderRadius: '8px',
+                              border: '1px solid #d9d9d9',
+                              cursor: 'pointer',
+                              boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
+                              display: 'block',
+                              objectFit: 'cover'
+                            }}
+                            onClick={() => {
+                              // Open image in a modal for better viewing
+                              Modal.info({
+                                title: 'Hình ảnh check-in',
+                                icon: null,
+                                content: (
+                                  <img 
+                                    src={bookingDetail.checkInImage} 
+                                    alt="Check-in" 
+                                    style={{ width: '100%', maxWidth: '500px' }}
+                                  />
+                                ),
+                                width: 600,
+                                okText: 'Đóng'
+                              });
+                            }}
                           />
-                        ),
-                        width: 600,
-                        okText: 'Đóng'
-                      });
-                    }}
-                  />
-                </div>
+                        </div>
+                      </div>
+                    </Col>
+                  )}
+
+                  {/* Check-out Image */}
+                  {bookingDetail.checkOutImage && (
+                    <Col xs={24} md={12}>
+                      <div className="checkout-image-section">
+                        <h4 style={{ 
+                          marginBottom: '12px', 
+                          color: '#262626', 
+                          fontWeight: 600,
+                          fontSize: '16px'
+                        }}>
+                          Hình ảnh check-out
+                        </h4>
+                        <div className="checkout-image-container" style={{ width: '100%' }}>
+                          <img 
+                            src={bookingDetail.checkOutImage} 
+                            alt="Check-out" 
+                            style={{
+                              width: '100%',
+                              height: '280px',
+                              borderRadius: '8px',
+                              border: '1px solid #d9d9d9',
+                              cursor: 'pointer',
+                              boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
+                              display: 'block',
+                              objectFit: 'cover'
+                            }}
+                            onClick={() => {
+                              // Open image in a modal for better viewing
+                              Modal.info({
+                                title: 'Hình ảnh check-out',
+                                icon: null,
+                                content: (
+                                  <img 
+                                    src={bookingDetail.checkOutImage} 
+                                    alt="Check-out" 
+                                    style={{ width: '100%', maxWidth: '500px' }}
+                                  />
+                                ),
+                                width: 600,
+                                okText: 'Đóng'
+                              });
+                            }}
+                          />
+                        </div>
+                      </div>
+                    </Col>
+                  )}
+                </Row>
               </div>
             )}
 
