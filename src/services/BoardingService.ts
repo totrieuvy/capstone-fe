@@ -199,6 +199,7 @@ export interface BookingDetail {
   endDate: string; // Format: YYYY-MM-DD
   newEndDate: string | null; // Format: YYYY-MM-DD or null
   checkInImage: string;
+  checkOutImage: string;
   totalAmount: number;
   totalAmountAfter: number;
   status: string;
