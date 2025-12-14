@@ -993,6 +993,42 @@ const BoardingDetail: React.FC = () => {
               </div>
             </Card>
           )}
+            <br/>
+          {/* Check-out Image Section */}
+          {booking.checkOutImage && (
+            <Card title="Hình ảnh check-out" className="checkout-image-card">
+              <div className="checkout-image-container">
+                <Image
+                  width="100%"
+                  height={300}
+                  src={booking.checkOutImage}
+                  alt="Check-out"
+                  style={{
+                    borderRadius: 8,
+                    objectFit: "cover",
+                  }}
+                  placeholder={
+                    <div
+                      style={{
+                        width: "100%",
+                        height: 300,
+                        background: "#f0f0f0",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        borderRadius: 8,
+                      }}
+                    >
+                      <EyeOutlined style={{ fontSize: 32, color: "#d9d9d9" }} />
+                    </div>
+                  }
+                />
+                <div style={{ marginTop: 12, textAlign: "center" }}>
+                  <Text type="secondary">Hình ảnh được chụp khi hamster check-out khỏi chuồng</Text>
+                </div>
+              </div>
+            </Card>
+          )}
         </Col>
       </Row>
 
