@@ -1740,7 +1740,7 @@ const Examination: React.FC = () => {
                   <Col>
                     <Button
                       type="primary"
-                      onClick={() => navigate('/VET/lich-kham-hom-nay')}
+                      onClick={() => navigate(`/VET/lich-kham/${appointmentId}`)}
                     >
                       Hoàn thành khám bệnh
                     </Button>
