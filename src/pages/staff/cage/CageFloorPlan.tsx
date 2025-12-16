@@ -27,7 +27,6 @@ import { cageTypeService } from '../../../services/CageTypeService';
 import type { CageTypeResponse } from '../../../services/CageTypeService';
 import { getTemperature } from '../../../services/IotService';
 import type { TemperatureData } from '../../../services/IotService';
-import { getFormattedPrice } from '../../../utils/formatPrice';
 import dayjs from 'dayjs';
 import './CageFloorPlan.scss';
 

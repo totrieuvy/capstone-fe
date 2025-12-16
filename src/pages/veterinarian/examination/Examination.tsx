@@ -88,19 +88,7 @@ interface UploadState {
   imageUrl: string;
 }
 
-// Utility function to format date to UTC+7
-const formatDateToUTC7 = (dateString: string): string => {
-  const date = new Date(dateString);
-  const utc7Date = new Date(date.getTime() + (7 * 60 * 60 * 1000));
-  return utc7Date.toLocaleString('vi-VN', {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: false
-  });
-};
+
 
 // Parse a display price string (like "20,000 VND" or "₫20.000") into a number (in VND)
 const parseDisplayPrice = (displayPrice?: string): number => {
