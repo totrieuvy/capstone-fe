@@ -28,6 +28,7 @@ import type { CageTypeResponse } from '../../../services/CageTypeService';
 import { getTemperature } from '../../../services/IotService';
 import type { TemperatureData } from '../../../services/IotService';
 import { getFormattedPrice } from '../../../utils/formatPrice';
+import dayjs from 'dayjs';
 import './CageFloorPlan.scss';
 
 const { Title, Text } = Typography;
@@ -56,10 +57,12 @@ const CageFloorPlan: React.FC = () => {
     loadInitialData();
   }, []);
 
-  // Load cages when cage type filter changes
+  // Load cages when cage type filter changes or cage types are loaded
   useEffect(() => {
-    loadCages();
-  }, [selectedCageTypeId]);
+    if (cageTypes.length > 0) {
+      loadCages();
+    }
+  }, [selectedCageTypeId, cageTypes]);
 
   // Function to update temperature data
   const updateTemperatureData = useCallback(async () => {
@@ -347,7 +350,7 @@ const CageFloorPlan: React.FC = () => {
                           )}
 
                           {/* Cage Type Information */}
-                          {cage.cageTypeInfo && (
+                          {/* {cage.cageTypeInfo && (
                             <div className="cage-type-info">
                               <Space direction="vertical" size="small" style={{ width: '100%' }}>
                                 <Text type="secondary">
@@ -361,7 +364,7 @@ const CageFloorPlan: React.FC = () => {
                                 </Text>
                               </Space>
                             </div>
-                          )}
+                          )} */}
 
                           {/* Booking Information */}
                           {isOccupied && (
@@ -381,7 +384,7 @@ const CageFloorPlan: React.FC = () => {
                                 {cage.startDate && cage.endDate && (
                                   <Text type="secondary">
                                     <CalendarOutlined style={{ marginRight: 4 }} />
-                                    <strong>Thời gian:</strong> {new Date(cage.startDate).toLocaleDateString("vi-VN")} đến {new Date(cage.endDate).toLocaleDateString("vi-VN")}
+                                    <strong>Thời gian:</strong> {dayjs(cage.startDate, "DD-MM-YYYY").format("DD/MM/YYYY")} đến {dayjs(cage.endDate, "DD-MM-YYYY").format("DD/MM/YYYY")}
                                   </Text>
                                 )}
                               </Space>
