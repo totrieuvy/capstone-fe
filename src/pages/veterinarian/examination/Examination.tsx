@@ -34,6 +34,13 @@ import {
   CaretRightOutlined
 } from '@ant-design/icons';
 import { useParams, useNavigate } from 'react-router-dom';
+import dayjs from 'dayjs';
+import utc from 'dayjs/plugin/utc';
+import timezone from 'dayjs/plugin/timezone';
+
+// Extend dayjs with timezone plugins
+dayjs.extend(utc);
+dayjs.extend(timezone);
 import { getServicesBySpeciesAndType, type Service } from '../../../services/AdditionService';
 import { 
   addServiceToAppointment, 
@@ -1090,7 +1097,7 @@ const Examination: React.FC = () => {
               </Title>
               <Text type="secondary">
                 Khách hàng: {appointmentData.customerName} | 
-                Lịch hẹn: {formatDateToUTC7(appointmentData.appointmentTime)}
+                Lịch hẹn: {dayjs(appointmentData.appointmentTime, "DD-MM-YYYY").format("DD/MM/YYYY")}
               </Text>
             </Col>
             <Col>
