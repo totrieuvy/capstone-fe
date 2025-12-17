@@ -1238,7 +1238,7 @@ const ManageAppointmentDetail: React.FC = () => {
           )}
 
           {/* Check-in and Cancel Buttons */}
-          {appointment.status !== "COMPLETED" && !appointment.checkInImage && (
+          {appointment.status === "BOOKED" && !appointment.checkInImage && (
             <Col span={24}>
               <div style={{ textAlign: "center", marginTop: "24px" }}>
                 <Row gutter={16} justify="center">
@@ -1259,26 +1259,24 @@ const ManageAppointmentDetail: React.FC = () => {
                       Check-in
                     </Button>
                   </Col>
-                  {appointment.status === "BOOKED" && (
-                    <Col>
-                      <Button
-                        type="primary"
-                        size="large"
-                        icon={<AlertOutlined />}
-                        onClick={handleCancelAppointment}
-                        loading={cancelLoading}
-                        style={{
-                          backgroundColor: "#ff4d4f",
-                          borderColor: "#ff4d4f",
-                          fontSize: "16px",
-                          height: "48px",
-                          padding: "0 32px",
-                        }}
-                      >
-                        Hủy cuộc hẹn
-                      </Button>
-                    </Col>
-                  )}
+                  <Col>
+                    <Button
+                      type="primary"
+                      size="large"
+                      icon={<AlertOutlined />}
+                      onClick={handleCancelAppointment}
+                      loading={cancelLoading}
+                      style={{
+                        backgroundColor: "#ff4d4f",
+                        borderColor: "#ff4d4f",
+                        fontSize: "16px",
+                        height: "48px",
+                        padding: "0 32px",
+                      }}
+                    >
+                      Hủy cuộc hẹn
+                    </Button>
+                  </Col>
                 </Row>
               </div>
             </Col>
