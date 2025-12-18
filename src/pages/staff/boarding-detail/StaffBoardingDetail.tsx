@@ -105,7 +105,7 @@ const BoardingDetail: React.FC = () => {
 
   const handleOpenCamera = async () => {
     if (!bookingDetail?.cameraId) {
-      message.warning("Không tìm thấy camera cho booking này.");
+      toast.warning("Chưa gắn camera!");
       return;
     }
 
