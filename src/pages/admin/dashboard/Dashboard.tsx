@@ -19,6 +19,11 @@ import {
   Filler,
 } from "chart.js";
 
+import ExcelJS from "exceljs";
+import { saveAs } from "file-saver";
+import { Button } from "antd";
+import { DownloadOutlined } from "@ant-design/icons";
+
 import "./Dashboard.scss";
 
 ChartJS.register(
@@ -100,6 +105,10 @@ const Dashboard = () => {
     total: 0,
   });
 
+  useEffect(() => {
+    document.title = "Thống kê";
+  }, []);
+
   // =================== API CALLS ===================
   const fetchYearlyRevenue = async (year: number) => {
     try {
@@ -133,6 +142,102 @@ const Dashboard = () => {
     } catch {
       toast.error("Không tải được top sản phẩm!");
     }
+  };
+
+  const handleExportExcel = async () => {
+    const workbook = new ExcelJS.Workbook();
+    workbook.creator = "Dashboard";
+    workbook.created = new Date();
+
+    /* ================= SHEET 1: DOANH THU THEO THÁNG ================= */
+    const revenueSheet = workbook.addWorksheet("Doanh thu theo tháng");
+
+    revenueSheet.columns = [
+      { header: "Tháng", key: "month", width: 12 },
+      { header: "Khám bệnh", key: "medical", width: 18 },
+      { header: "Làm đẹp", key: "grooming", width: 18 },
+      { header: "Giữ hộ", key: "boarding", width: 18 },
+      { header: "Đơn hàng", key: "order", width: 18 },
+      { header: "Tổng doanh thu", key: "total", width: 20 },
+    ];
+
+    yearlyData.forEach((m) => {
+      revenueSheet.addRow({
+        month: `Tháng ${m.month}`,
+        medical: m.medicalRevenue,
+        grooming: m.groomingRevenue,
+        boarding: m.boardingRevenue,
+        order: m.orderRevenue,
+        total: m.totalRevenue,
+      });
+    });
+
+    revenueSheet.getRow(1).font = { bold: true };
+
+    /* ================= SHEET 2: TOP SẢN PHẨM ================= */
+    const productSheet = workbook.addWorksheet("Top sản phẩm");
+
+    productSheet.columns = [
+      { header: "Tên sản phẩm", key: "name", width: 30 },
+      { header: "Số lượng bán", key: "qty", width: 18 },
+      { header: "Doanh thu", key: "revenue", width: 20 },
+    ];
+
+    topProducts.forEach((p) => {
+      productSheet.addRow({
+        name: p.productName,
+        qty: p.totalQuantitySold,
+        revenue: p.totalRevenue,
+      });
+    });
+
+    productSheet.getRow(1).font = { bold: true };
+
+    /* ================= SHEET 3: LOẠI CHUỒNG ================= */
+    const cageSheet = workbook.addWorksheet("Top loại chuồng");
+
+    cageSheet.columns = [
+      { header: "Loại chuồng", key: "name", width: 25 },
+      { header: "Số lượt đặt", key: "count", width: 18 },
+      { header: "Doanh thu", key: "revenue", width: 20 },
+    ];
+
+    cageTypes.forEach((c) => {
+      cageSheet.addRow({
+        name: c.cageTypeName,
+        count: c.totalBookings,
+        revenue: c.totalRevenue,
+      });
+    });
+
+    cageSheet.getRow(1).font = { bold: true };
+
+    /* ================= SHEET 4: GROOMING ================= */
+    const groomingSheet = workbook.addWorksheet("Top Grooming");
+
+    groomingSheet.columns = [
+      { header: "Dịch vụ", key: "name", width: 30 },
+      { header: "Số lần thực hiện", key: "times", width: 22 },
+      { header: "Doanh thu", key: "revenue", width: 20 },
+    ];
+
+    groomingServices.forEach((s) => {
+      groomingSheet.addRow({
+        name: s.serviceName,
+        times: s.totalTimesPerformed,
+        revenue: s.totalRevenue,
+      });
+    });
+
+    groomingSheet.getRow(1).font = { bold: true };
+
+    //save file
+    const buffer = await workbook.xlsx.writeBuffer();
+    const blob = new Blob([buffer], {
+      type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    });
+
+    saveAs(blob, `Dashboard_${selectedYear}.xlsx`);
   };
 
   const fetchCageTypes = async (year: number) => {
@@ -188,13 +293,13 @@ const Dashboard = () => {
         tension: 0.4,
       },
       {
-        label: "Grooming",
+        label: "Làm đẹp",
         data: yearlyData.map((m) => m.groomingRevenue),
         borderColor: "#13c2c2",
         tension: 0.4,
       },
       {
-        label: "Boarding",
+        label: "Giữ hộ",
         data: yearlyData.map((m) => m.boardingRevenue),
         borderColor: "#fa8c16",
         tension: 0.4,
@@ -253,6 +358,15 @@ const Dashboard = () => {
       <div className="dashboard-center-picker">
         <span>Chọn năm:</span>
         <DatePicker picker="year" value={dayjs(`${selectedYear}`)} onChange={handleYearChange} />
+
+        <Button
+          type="primary"
+          icon={<DownloadOutlined />}
+          style={{ marginLeft: 16, backgroundColor: "#52c41a" }}
+          onClick={handleExportExcel}
+        >
+          Xuất Excel
+        </Button>
       </div>
 
       {/* 5 BOXES */}
@@ -262,11 +376,11 @@ const Dashboard = () => {
           <h2>{summary.medical.toLocaleString()} VND</h2>
         </div>
         <div className="stat-box">
-          <h3>Grooming</h3>
+          <h3>Làm đẹp</h3>
           <h2>{summary.grooming.toLocaleString()} VND</h2>
         </div>
         <div className="stat-box">
-          <h3>Boarding</h3>
+          <h3>Giữ hộ</h3>
           <h2>{summary.boarding.toLocaleString()} VND</h2>
         </div>
         <div className="stat-box">
@@ -350,7 +464,7 @@ const Dashboard = () => {
 
         {/* TOP GROOMING SERVICES */}
         <Col xs={24} md={12}>
-          <Card title="Top 5 dịch vụ Grooming được đặt nhiều nhất">
+          <Card title="Top 5 dịch vụ làm đẹp được đặt nhiều nhất">
             <div className="chart-container">
               <Pie
                 data={pieGroomData}
