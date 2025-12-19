@@ -109,7 +109,6 @@ export interface BookingHistoryItem {
   services: BookingDetailService[];
   healthNote: string | null;
   isIncident: boolean;
-
 }
 
 // Pagination interfaces
@@ -219,6 +218,7 @@ export interface BookingDetail {
   extendDiscountPercent: number;  
   extendTotalPriceAfter: number;
   refunded: boolean;
+  iotId: string | null;
 }
 
 // Type definitions for file upload

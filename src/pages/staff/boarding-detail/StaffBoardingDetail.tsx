@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
   Card,
@@ -31,8 +31,12 @@ import {
   CheckCircleOutlined,
   ExclamationCircleOutlined,
   DollarOutlined,
+  FireOutlined,
+  CloudOutlined,
 } from "@ant-design/icons";
 import { boardingService, type BookingDetail, type AvailableCage } from "../../../services/BoardingService";
+import { getTemperature } from "../../../services/IotService";
+import type { TemperatureData } from "../../../services/IotService";
 import { storage } from "../../../config/firebase";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import type { UploadProps } from "antd/es/upload/interface";
@@ -80,6 +84,11 @@ const BoardingDetail: React.FC = () => {
   const [hlsUrl, setHlsUrl] = useState<string | null>(null);
   const [isModalLoading, setIsModalLoading] = useState(false);
 
+  // Temperature monitoring state
+  const [temperatureData, setTemperatureData] = useState<TemperatureData | null>(null);
+  const [temperatureLoading, setTemperatureLoading] = useState(false);
+  const temperatureIntervalRef = useRef<NodeJS.Timeout | null>(null);
+
   const videoRef = useRef<HTMLVideoElement>(null);
   const hlsInstanceRef = useRef<Hls | null>(null);
 
@@ -102,6 +111,36 @@ const BoardingDetail: React.FC = () => {
       setLoading(false);
     }
   };
+
+  const fetchTemperature = useCallback(async () => {
+    if (!bookingDetail?.iotId) return;
+
+    try {
+      const tempData = await getTemperature(bookingDetail.iotId);
+      setTemperatureData(tempData);
+    } catch (err) {
+      console.warn("Failed to fetch temperature data:", err);
+    }
+  }, [bookingDetail?.iotId]);
+
+  // Update temperature data every 2 seconds
+  useEffect(() => {
+    if (bookingDetail?.iotId && bookingDetail?.status === "IN_PROGRESS") {
+      setTemperatureLoading(true);
+      fetchTemperature().finally(() => setTemperatureLoading(false));
+      
+      temperatureIntervalRef.current = setInterval(() => {
+        fetchTemperature();
+      }, 2000);
+    }
+
+    return () => {
+      if (temperatureIntervalRef.current) {
+        clearInterval(temperatureIntervalRef.current);
+        temperatureIntervalRef.current = null;
+      }
+    };
+  }, [bookingDetail?.iotId, bookingDetail?.status, fetchTemperature]);
 
   const handleOpenCamera = async () => {
     if (!bookingDetail?.cameraId) {
@@ -976,42 +1015,120 @@ const BoardingDetail: React.FC = () => {
           </Card>
         </div>
 
-        {/* Third Section: Additional Services */}
+        {/* Services and Temperature Monitoring Section - Side by Side */}
         <div className="info-section">
-          <Card
-            title={
-              <div className="section-title">
-                <ShoppingOutlined />
-                <span>Dịch vụ bổ sung</span>
-              </div>
-            }
-            className="info-card services-card"
-          >
-            {bookingDetail.services && bookingDetail.services.length > 0 ? (
-              <div className="services-list">
-                {bookingDetail.services.map((service) => (
-                  <div key={service.serviceId} className="service-item">
-                    <div className="service-info">
-                      <h4 className="service-name">{service.serviceName}</h4>
-                      <p className="service-type">{service.serviceType}</p>
+          <div className="info-row">
+            {/* Left Column: Additional Services */}
+            <Card
+              title={
+                <div className="section-title">
+                  <ShoppingOutlined />
+                  <span>Dịch vụ bổ sung</span>
+                </div>
+              }
+              className="info-card services-card"
+            >
+              {bookingDetail.services && bookingDetail.services.length > 0 ? (
+                <div className="services-list">
+                  {bookingDetail.services.map((service) => (
+                    <div key={service.serviceId} className="service-item">
+                      <div className="service-info">
+                        <h4 className="service-name">{service.serviceName}</h4>
+                        <p className="service-type">{service.serviceType}</p>
+                      </div>
+                      <div className="service-price">{formatPrice(service.price)}</div>
                     </div>
-                    <div className="service-price">{formatPrice(service.price)}</div>
+                  ))}
+                  {/* <div className="services-total">
+                    <strong>
+                      Tổng dịch vụ: {formatPrice(
+                        bookingDetail.services.reduce((sum, service) => sum + service.price, 0)
+                      )}
+                    </strong>
+                  </div> */}
+                </div>
+              ) : (
+                <div className="no-services">
+                  <p>Không có dịch vụ bổ sung nào</p>
+                </div>
+              )}
+            </Card>
+
+            {/* Right Column: Temperature and Humidity Monitoring */}
+            <Card
+              title={
+                <div className="section-title">
+                  <FireOutlined />
+                  <span>Theo dõi nhiệt độ & độ ẩm</span>
+                </div>
+              }
+              className="info-card staff-temperature-card"
+            >
+              {bookingDetail.status === "IN_PROGRESS" && bookingDetail.iotId ? (
+                <div className="staff-temperature-container">
+                  {temperatureLoading && !temperatureData ? (
+                    <div className="staff-temperature-loading">
+                      <Spin size="large" />
+                      <p style={{ marginTop: 16, color: "#666" }}>Đang tải dữ liệu cảm biến...</p>
+                    </div>
+                  ) : temperatureData ? (
+                    <>
+                      <div className="staff-temperature-metrics">
+                        <div className="staff-temperature-metric-card">
+                          <div className="staff-metric-icon staff-temperature-icon">
+                            <FireOutlined />
+                          </div>
+                          <div className="staff-metric-content">
+                            <div className="staff-metric-label">Nhiệt độ</div>
+                            <div className="staff-metric-value staff-temperature-value">
+                              {temperatureData.temperature}°C
+                            </div>
+                          </div>
+                        </div>
+                        <div className="staff-temperature-metric-card">
+                          <div className="staff-metric-icon staff-humidity-icon">
+                            <CloudOutlined />
+                          </div>
+                          <div className="staff-metric-content">
+                            <div className="staff-metric-label">Độ ẩm</div>
+                            <div className="staff-metric-value staff-humidity-value">
+                              {temperatureData.humidity}%
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="staff-temperature-info">
+                        <div className="staff-info-item">
+                          <CheckCircleOutlined style={{ color: '#52c41a', marginRight: 8 }} />
+                          <span>Cảm biến IoT: <strong>{bookingDetail.iotId}</strong></span>
+                        </div>
+                        {/* <div className="info-item">
+                          <CheckCircleOutlined style={{ color: '#52c41a', marginRight: 8 }} />
+                          <span>Cập nhật tự động mỗi 2 giây</span>
+                        </div> */}
+                      </div>
+                    </>
+                  ) : (
+                    <div className="staff-temperature-placeholder">
+                      <CloudOutlined style={{ fontSize: 48, color: "#d9d9d9" }} />
+                      <p>Không thể tải dữ liệu cảm biến</p>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="staff-temperature-disabled">
+                  <div className="staff-temperature-placeholder">
+                    <CloudOutlined style={{ fontSize: 48, color: "#d9d9d9" }} />
+                    <p>
+                      {bookingDetail.status !== "IN_PROGRESS" 
+                        ? "Theo dõi nhiệt độ & độ ẩm chỉ khả dụng khi booking đang thực hiện" 
+                        : "Không có cảm biến IoT cho booking này"}
+                    </p>
                   </div>
-                ))}
-                {/* <div className="services-total">
-                  <strong>
-                    Tổng dịch vụ: {formatPrice(
-                      bookingDetail.services.reduce((sum, service) => sum + service.price, 0)
-                    )}
-                  </strong>
-                </div> */}
-              </div>
-            ) : (
-              <div className="no-services">
-                <p>Không có dịch vụ bổ sung nào</p>
-              </div>
-            )}
-          </Card>
+                </div>
+              )}
+            </Card>
+          </div>
         </div>
 
         {/* Payment Details Section */}
