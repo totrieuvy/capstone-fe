@@ -9,9 +9,14 @@ import {
   Typography, 
   Space, 
   Empty,
-  Badge,
-  message
+  message,
+  Modal,
+  Button
 } from 'antd';
+import { FaCamera } from 'react-icons/fa';
+import Hls from 'hls.js';
+import { toast } from 'react-toastify';
+import api from '../../../config/axios';
 import { 
   HomeOutlined, 
   CheckCircleOutlined, 
@@ -45,6 +50,13 @@ const CageFloorPlan: React.FC = () => {
   const [selectedCageTypeId, setSelectedCageTypeId] = useState<string>('all');
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const cagesRef = useRef<CageDisplayItem[]>([]);
+
+  // Camera viewing states
+  const [isVideoModalVisible, setIsVideoModalVisible] = useState(false);
+  const [hlsUrl, setHlsUrl] = useState<string | null>(null);
+  const [isModalLoading, setIsModalLoading] = useState(false);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const hlsInstanceRef = useRef<Hls | null>(null);
 
   // Keep cagesRef in sync with cages state
   useEffect(() => {
@@ -163,6 +175,72 @@ const CageFloorPlan: React.FC = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  // Handle opening camera modal
+  const handleOpenCamera = async (cameraId: string | null) => {
+    if (!cameraId) {
+      toast.warning("Chưa gắn camera!");
+      return;
+    }
+
+    setIsModalLoading(true);
+    setIsVideoModalVisible(true);
+
+    try {
+      const response = await api.get(`/api/camera/play?cameraId=${cameraId}`);
+      const result = response.data;
+
+      if (result.code === 200 && result.data?.url) {
+        setHlsUrl(result.data.url);
+      } else {
+        message.error("Không thể lấy URL camera");
+        setIsVideoModalVisible(false);
+      }
+    } catch (err) {
+      console.error(err);
+      message.error("Không thể mở camera");
+      setIsVideoModalVisible(false);
+    } finally {
+      setIsModalLoading(false);
+    }
+  };
+
+  // Handle HLS video playback
+  useEffect(() => {
+    if (hlsUrl && videoRef.current) {
+      const video = videoRef.current;
+
+      if (Hls.isSupported()) {
+        const hls = new Hls();
+        hls.loadSource(hlsUrl);
+        hls.attachMedia(video);
+        hls.on(Hls.Events.MANIFEST_PARSED, () => {
+          video.play();
+        });
+        hlsInstanceRef.current = hls;
+      } else if (video.canPlayType("application/vnd.apple.mpegurl")) {
+        video.src = hlsUrl;
+        video.play();
+      }
+    }
+
+    return () => {
+      if (hlsInstanceRef.current) {
+        hlsInstanceRef.current.destroy();
+        hlsInstanceRef.current = null;
+      }
+      if (videoRef.current) {
+        videoRef.current.pause();
+        videoRef.current.src = "";
+      }
+    };
+  }, [hlsUrl]);
+
+  // Handle modal close
+  const handleCloseVideoModal = () => {
+    setIsVideoModalVisible(false);
+    setHlsUrl(null);
   };
 
   const availableCages = cages.filter(cage => !cage.bookingId);
@@ -308,15 +386,21 @@ const CageFloorPlan: React.FC = () => {
                           position: 'relative'
                         }}
                       >
+                        {cage.cameraId && (
+                          <Button
+                            className="camera-fab"
+                            type="primary"
+                            shape="circle"
+                            icon={<FaCamera style={{ fontSize: '16px' }} />}
+                            onClick={() => handleOpenCamera(cage.cameraId)}
+                            title="Xem camera"
+                          />
+                        )}
                         <div className="cage-content">
                           <div className="cage-header">
                             <Title level={5} className="cage-id">
                               {cage.cageName}
                             </Title>
-                            <Badge 
-                              status={isOccupied ? 'error' : 'success'}
-                              text={isOccupied ? 'Đang sử dụng' : 'Có sẵn'}
-                            />
                           </div>
                           
                           <div className="cage-status">
@@ -399,6 +483,35 @@ const CageFloorPlan: React.FC = () => {
           )}
         </Card>
       </div>
+
+      {/* Camera Viewing Modal */}
+      <Modal
+        title="Xem Camera"
+        open={isVideoModalVisible}
+        onCancel={handleCloseVideoModal}
+        footer={null}
+        width={800}
+        centered
+      >
+        {isModalLoading ? (
+          <div style={{ textAlign: 'center', padding: '40px' }}>
+            <Spin size="large" />
+            <p style={{ marginTop: '16px' }}>Đang tải camera...</p>
+          </div>
+        ) : (
+          <div style={{ width: '100%', backgroundColor: '#000' }}>
+            <video
+              ref={videoRef}
+              controls
+              style={{
+                width: '100%',
+                maxHeight: '500px',
+                objectFit: 'contain'
+              }}
+            />
+          </div>
+        )}
+      </Modal>
     </div>
   );
 };
