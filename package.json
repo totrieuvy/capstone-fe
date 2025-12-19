@@ -27,6 +27,8 @@
     "clsx": "^2.1.1",
     "embla-carousel-react": "^8.6.0",
     "env": "^0.0.2",
+    "exceljs": "^4.4.0",
+    "file-saver": "^2.0.5",
     "firebase": "^12.3.0",
     "framer-motion": "^12.23.24",
     "hls": "^0.0.1",
@@ -52,6 +54,7 @@
   "devDependencies": {
     "@eslint/js": "^9.33.0",
     "@types/aos": "^3.0.7",
+    "@types/file-saver": "^2.0.7",
     "@types/node": "^24.10.1",
     "@types/react": "^19.1.10",
     "@types/react-dom": "^19.1.7",
