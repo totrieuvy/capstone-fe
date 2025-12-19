@@ -68,6 +68,10 @@ const BoardingSchedule = () => {
   const [extensionDays, setExtensionDays] = useState<number>(0);
   const [loadingPrice, setLoadingPrice] = useState<boolean>(false);
 
+  // State for cage type details
+  const [selectedCageTypeDetails, setSelectedCageTypeDetails] = useState<any>(null);
+  const [loadingCageTypeDetails, setLoadingCageTypeDetails] = useState<boolean>(false);
+
   // Context menu handlers
   const handleViewDetails = (booking: Booking) => {
     const originalBookingId = booking.originalBookingId || booking.id;
@@ -328,6 +332,8 @@ const BoardingSchedule = () => {
     setAdditionalServicePrice(0);
     setTotalExtensionPrice(0);
     setExtensionDays(0);
+    // Reset cage type details
+    setSelectedCageTypeDetails(null);
   };
 
   // Calculate extension price
@@ -621,6 +627,29 @@ const BoardingSchedule = () => {
   useEffect(() => {
     calculateExtensionPrice();
   }, [newEndDate, selectedCageTypeId]);
+
+  // Fetch cage type details when selectedCageTypeId changes
+  useEffect(() => {
+    const fetchCageTypeDetails = async () => {
+      if (!selectedCageTypeId) {
+        setSelectedCageTypeDetails(null);
+        return;
+      }
+
+      try {
+        setLoadingCageTypeDetails(true);
+        const cageTypeDetails = await cageTypeService.getCageTypeById(selectedCageTypeId);
+        setSelectedCageTypeDetails(cageTypeDetails);
+      } catch (error) {
+        console.error('Error fetching cage type details:', error);
+        message.error('Không thể tải thông tin loại chuồng');
+      } finally {
+        setLoadingCageTypeDetails(false);
+      }
+    };
+
+    fetchCageTypeDetails();
+  }, [selectedCageTypeId]);
 
   // Separate bookings by status
   // First table: Bookings that are checked in or in progress (CHECK_IN, IN_PROGRESS, CHECK_OUT, INCIDENT)
@@ -1233,6 +1262,63 @@ const BoardingSchedule = () => {
                 ))}
               </select>
             </div>
+
+            {/* Cage Type Specifications Section */}
+            {selectedCageTypeId && (
+              <div style={{
+                backgroundColor: '#fff7e6',
+                border: '1px solid #ffd591',
+                borderRadius: '8px',
+                padding: '16px',
+                marginBottom: '20px'
+              }}>
+                <div style={{ 
+                  fontSize: '15px', 
+                  fontWeight: 'bold', 
+                  marginBottom: '12px',
+                  color: '#ad6800'
+                }}>
+                  Thông số {selectedCageTypeDetails?.typeName || ''}
+                </div>
+                
+                {loadingCageTypeDetails ? (
+                  <div style={{ textAlign: 'center', padding: '12px' }}>
+                    <Spin size="small" /> Đang tải thông tin...
+                  </div>
+                ) : selectedCageTypeDetails ? (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    {/* Price */}
+                    <div style={{ 
+                      display: 'flex', 
+                      justifyContent: 'space-between',
+                      padding: '6px 0',
+                      borderBottom: '1px solid #ffe7ba'
+                    }}>
+                      <span style={{ color: '#8c5c00', fontSize: '14px', fontWeight: '500' }}>
+                        Giá chuồng/ngày:
+                      </span>
+                      <span style={{ fontWeight: '600', fontSize: '14px', color: '#ad6800' }}>
+                        {selectedCageTypeDetails.price.toLocaleString('vi-VN')} ₫
+                      </span>
+                    </div>
+
+                    {/* Size Dimensions */}
+                    <div style={{ 
+                      display: 'flex', 
+                      justifyContent: 'space-between',
+                      padding: '6px 0'
+                    }}>
+                      <span style={{ color: '#8c5c00', fontSize: '14px', fontWeight: '500' }}>
+                        Kích thước:
+                      </span>
+                      <span style={{ fontWeight: '600', fontSize: '14px', color: '#ad6800' }}>
+                        {selectedCageTypeDetails.sizeDimensions}
+                      </span>
+                    </div>
+                  </div>
+                ) : null}
+              </div>
+            )}
 
             {/* Available Cages */}
             {selectedCageTypeId && (
