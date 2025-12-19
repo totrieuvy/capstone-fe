@@ -60,7 +60,7 @@ const SideBar: React.FC = () => {
     let items: MenuItem[] = [];
     if (user?.role === "ADMIN") {
       items = [
-        getItem("Dashboard", "thong-ke", <AreaChartOutlined />),
+        getItem("Thống kê", "thong-ke", <AreaChartOutlined />),
         getItem("Quản lí sản phẩm", "product-management", <TagOutlined />, [
           getItem("Loài hamster", "quan-li-loai-hamster"),
           getItem("Danh mục sản phẩm", "quan-li-danh-muc-san-pham"),
