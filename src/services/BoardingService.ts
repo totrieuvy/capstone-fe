@@ -415,6 +415,7 @@ export interface CageFloorPlanItem {
   endDate: string | null; // Format: YYYY-MM-DD
   newEndDate: string | null; // Format: YYYY-MM-DD
   bookingStatus: string | null;
+  cameraId: string | null;
 }
 
 // Type definitions for available cages by cage type and date range
