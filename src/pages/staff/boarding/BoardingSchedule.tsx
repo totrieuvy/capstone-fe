@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import dayjs, { Dayjs } from 'dayjs';
 import 'dayjs/locale/vi';
 import { boardingService, type BookingByDateRange } from '../../../services/BoardingService';
+import { cageTypeService } from '../../../services/CageTypeService';
 
 // Set Vietnamese locale for dayjs
 dayjs.locale('vi');
@@ -59,6 +60,13 @@ const BoardingSchedule = () => {
 
   // State for transfer booking hover effect
   const [hoveredTransferBooking, setHoveredTransferBooking] = useState<string | null>(null);
+
+  // State for price calculation
+  const [cagePrice, setCagePrice] = useState<number>(0);
+  const [additionalServicePrice, setAdditionalServicePrice] = useState<number>(0);
+  const [totalExtensionPrice, setTotalExtensionPrice] = useState<number>(0);
+  const [extensionDays, setExtensionDays] = useState<number>(0);
+  const [loadingPrice, setLoadingPrice] = useState<boolean>(false);
 
   // Context menu handlers
   const handleViewDetails = (booking: Booking) => {
@@ -315,6 +323,95 @@ const BoardingSchedule = () => {
     setSelectedCageTypeId(null);
     setAvailableCages([]);
     setSelectedCageId(null);
+    // Reset price calculation states
+    setCagePrice(0);
+    setAdditionalServicePrice(0);
+    setTotalExtensionPrice(0);
+    setExtensionDays(0);
+  };
+
+  // Calculate extension price
+  const calculateExtensionPrice = async () => {
+    if (!selectedBooking || !newEndDate || !selectedCageTypeId) {
+      setCagePrice(0);
+      setAdditionalServicePrice(0);
+      setTotalExtensionPrice(0);
+      setExtensionDays(0);
+      return;
+    }
+
+    try {
+      setLoadingPrice(true);
+
+      // Get the current booking data
+      const currentBookingData = bookings.find(b => b.bookingId === selectedBooking.id);
+      if (!currentBookingData) {
+        console.error('Current booking data not found');
+        return;
+      }
+
+      // Get the current effective end date
+      const currentEffectiveEndDate = currentBookingData.newEndDate && currentBookingData.newEndDate !== null && currentBookingData.newEndDate !== ''
+        ? dayjs(currentBookingData.newEndDate)
+        : dayjs(currentBookingData.endDate);
+
+      // Calculate extension start date (end date + 1 day)
+      const extensionStartDate = currentEffectiveEndDate.add(1, 'day');
+      
+      // Calculate number of extension days (inclusive)
+      const numberOfDays = newEndDate.diff(extensionStartDate, 'day') + 1;
+      setExtensionDays(numberOfDays);
+
+      if (numberOfDays <= 0) {
+        setCagePrice(0);
+        setAdditionalServicePrice(0);
+        setTotalExtensionPrice(0);
+        return;
+      }
+
+      // Fetch cage type price
+      let cageTypePricePerDay = 0;
+      try {
+        const allCageTypesData = await cageTypeService.getCageTypes();
+        const selectedCageType = allCageTypesData.find(ct => ct.id === selectedCageTypeId);
+        if (selectedCageType) {
+          cageTypePricePerDay = selectedCageType.price;
+        }
+      } catch (error) {
+        console.error('Error fetching cage type price:', error);
+      }
+
+      // Calculate cage price
+      const calculatedCagePrice = cageTypePricePerDay * numberOfDays;
+      setCagePrice(calculatedCagePrice);
+
+      // Fetch booking details to get FOOD services
+      let calculatedServicePrice = 0;
+      try {
+        const bookingDetails = await boardingService.getBookingDetails(selectedBooking.id);
+        
+        // Filter only FOOD services and sum their prices
+        if (bookingDetails.services && Array.isArray(bookingDetails.services)) {
+          const foodServices = bookingDetails.services.filter(service => service.serviceType === 'FOOD');
+          const totalServicePricePerDay = foodServices.reduce((sum, service) => sum + service.price, 0);
+          calculatedServicePrice = totalServicePricePerDay * numberOfDays;
+        }
+      } catch (error) {
+        console.error('Error fetching booking details for service price:', error);
+      }
+
+      setAdditionalServicePrice(calculatedServicePrice);
+
+      // Calculate total price
+      const total = calculatedCagePrice + calculatedServicePrice;
+      setTotalExtensionPrice(total);
+
+    } catch (error) {
+      console.error('Error calculating extension price:', error);
+      message.error('Không thể tính toán giá gia hạn');
+    } finally {
+      setLoadingPrice(false);
+    }
   };
 
   // Fetch bookings for the current month
@@ -519,6 +616,11 @@ const BoardingSchedule = () => {
       }
     }
   }, [newEndDate]);
+
+  // Calculate price when newEndDate or selectedCageTypeId changes
+  useEffect(() => {
+    calculateExtensionPrice();
+  }, [newEndDate, selectedCageTypeId]);
 
   // Separate bookings by status
   // First table: Bookings that are checked in or in progress (CHECK_IN, IN_PROGRESS, CHECK_OUT, INCIDENT)
@@ -1123,7 +1225,7 @@ const BoardingSchedule = () => {
                   backgroundColor: 'white'
                 }}
               >
-                <option value="">Chọn loại chuồng</option>
+                {/* <option value="">Chọn loại chuồng</option> */}
                 {allCageTypes.map(cageType => (
                   <option key={cageType.cageTypeId} value={cageType.cageTypeId}>
                     {cageType.typeName}
@@ -1206,6 +1308,115 @@ const BoardingSchedule = () => {
                     type="warning"
                     showIcon
                   />
+                )}
+              </div>
+            )}
+            
+            {/* Price Calculation Section */}
+            {newEndDate && selectedCageTypeId && (
+              <div style={{
+                backgroundColor: '#e6f7ff',
+                border: '1px solid #91d5ff',
+                borderRadius: '8px',
+                padding: '20px',
+                marginTop: '24px'
+              }}>
+                <div style={{ 
+                  fontSize: '16px', 
+                  fontWeight: 'bold', 
+                  marginBottom: '16px',
+                  color: '#0050b3'
+                }}>
+                  Chi tiết giá gia hạn
+                </div>
+                
+                {loadingPrice ? (
+                  <div style={{ textAlign: 'center', padding: '20px' }}>
+                    <Spin size="small" /> Đang tính toán...
+                  </div>
+                ) : (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                    {/* Extension Days */}
+                    <div style={{ 
+                      display: 'flex', 
+                      justifyContent: 'space-between',
+                      padding: '8px 0',
+                      borderBottom: '1px solid #d9d9d9'
+                    }}>
+                      <span style={{ color: '#595959', fontSize: '14px' }}>
+                        Số ngày gia hạn:
+                      </span>
+                      <span style={{ fontWeight: '600', fontSize: '14px', color: '#262626' }}>
+                        {extensionDays} ngày
+                      </span>
+                    </div>
+
+                    {/* Cage Price */}
+                    <div style={{ 
+                      display: 'flex', 
+                      justifyContent: 'space-between',
+                      padding: '8px 0',
+                      borderBottom: '1px solid #d9d9d9'
+                    }}>
+                      <span style={{ color: '#595959', fontSize: '14px' }}>
+                        Tiền chuồng:
+                      </span>
+                      <span style={{ fontWeight: '600', fontSize: '14px', color: '#262626' }}>
+                        {cagePrice.toLocaleString('vi-VN')} ₫
+                      </span>
+                    </div>
+
+                    {/* Additional Service Price */}
+                    <div style={{ 
+                      display: 'flex', 
+                      justifyContent: 'space-between',
+                      padding: '8px 0',
+                      borderBottom: '1px solid #d9d9d9'
+                    }}>
+                      <span style={{ color: '#595959', fontSize: '14px' }}>
+                        Tiền dịch vụ bổ sung:
+                      </span>
+                      <span style={{ fontWeight: '600', fontSize: '14px', color: '#262626' }}>
+                        {additionalServicePrice.toLocaleString('vi-VN')} ₫
+                      </span>
+                    </div>
+
+                    {/* Total Price */}
+                    <div style={{ 
+                      display: 'flex', 
+                      justifyContent: 'space-between',
+                      padding: '12px 16px',
+                      backgroundColor: '#1890ff',
+                      borderRadius: '6px',
+                      marginTop: '8px'
+                    }}>
+                      <span style={{ 
+                        color: 'white', 
+                        fontSize: '16px',
+                        fontWeight: 'bold'
+                      }}>
+                        Tổng chi phí gia hạn:
+                      </span>
+                      <span style={{ 
+                        fontWeight: 'bold', 
+                        fontSize: '18px', 
+                        color: 'white'
+                      }}>
+                        {totalExtensionPrice.toLocaleString('vi-VN')} ₫
+                      </span>
+                    </div>
+
+                    {/* {additionalServicePrice > 0 && (
+                      <div style={{ 
+                        fontSize: '12px', 
+                        color: '#8c8c8c',
+                        fontStyle: 'italic',
+                        marginTop: '4px'
+                      }}>
+                        * Dịch vụ FOOD hiện tại sẽ được tự động gia hạn
+                      </div>
+                    )} */}
+                  </div>
                 )}
               </div>
             )}
