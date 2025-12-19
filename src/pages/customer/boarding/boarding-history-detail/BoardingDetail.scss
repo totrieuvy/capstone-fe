@@ -240,6 +240,138 @@
   }
 }
 
+.temperature-card {
+  margin-bottom: 24px;
+  
+  .temperature-container {
+    .temperature-loading {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 40px;
+      gap: 12px;
+    }
+    
+    .temperature-metrics {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 20px;
+      margin-bottom: 24px;
+      
+      .temperature-metric-card {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        padding: 20px;
+        background: linear-gradient(135deg, #f6f8fa 0%, #ffffff 100%);
+        border: 1px solid #e8e8e8;
+        border-radius: 12px;
+        transition: all 0.3s ease;
+        
+        &:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        }
+        
+        .metric-icon {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          width: 56px;
+          height: 56px;
+          border-radius: 12px;
+          font-size: 24px;
+          flex-shrink: 0;
+          
+          &.temperature-icon {
+            background: linear-gradient(135deg, #fff2f0 0%, #ffebe8 100%);
+            border: 2px solid #ffccc7;
+            color: #ff4d4f;
+          }
+          
+          &.humidity-icon {
+            background: linear-gradient(135deg, #e6f7ff 0%, #bae7ff 100%);
+            border: 2px solid #91d5ff;
+            color: #1890ff;
+          }
+        }
+        
+        .metric-content {
+          flex: 1;
+          display: flex;
+          flex-direction: column;
+          gap: 4px;
+          
+          .metric-label {
+            font-size: 14px;
+            color: #8c8c8c;
+            font-weight: 500;
+            margin: 0;
+          }
+          
+          .metric-value {
+            margin: 0;
+            font-weight: 700;
+            line-height: 1.2;
+            
+            &.temperature-value {
+              color: #ff4d4f;
+            }
+            
+            &.humidity-value {
+              color: #1890ff;
+            }
+          }
+        }
+      }
+    }
+    
+    .temperature-info {
+      background: #f0f9ff;
+      padding: 16px;
+      border-radius: 8px;
+      border: 1px solid #bae7ff;
+      
+      .info-item {
+        display: flex;
+        align-items: center;
+        margin-bottom: 8px;
+        
+        &:last-child {
+          margin-bottom: 0;
+        }
+      }
+    }
+    
+    .temperature-placeholder {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 40px;
+      background: #fafafa;
+      border: 2px dashed #d9d9d9;
+      border-radius: 8px;
+      gap: 12px;
+    }
+  }
+  
+  .temperature-disabled {
+    .temperature-placeholder {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 40px;
+      background: #fafafa;
+      border: 2px dashed #d9d9d9;
+      border-radius: 8px;
+      gap: 12px;
+    }
+  }
+}
+
 .book-service-button {
   width: 100%;
   height: 48px;
@@ -323,6 +455,40 @@
       .report-image .ant-image {
         width: 100% !important;
         height: auto !important;
+      }
+    }
+  }
+  
+  // Temperature card responsive
+  .temperature-card {
+    .temperature-container {
+      .temperature-metrics {
+        grid-template-columns: 1fr;
+        gap: 12px;
+        
+        .temperature-metric-card {
+          padding: 16px;
+          
+          .metric-icon {
+            width: 48px;
+            height: 48px;
+            font-size: 20px;
+          }
+          
+          .metric-content {
+            .metric-value {
+              font-size: 24px;
+            }
+          }
+        }
+      }
+      
+      .temperature-info {
+        padding: 12px;
+        
+        .info-item {
+          font-size: 13px;
+        }
       }
     }
   }

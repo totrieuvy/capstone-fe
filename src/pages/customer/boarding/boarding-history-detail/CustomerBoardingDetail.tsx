@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import Hls from "hls.js";
 import {
   Card,
@@ -33,10 +33,14 @@ import {
   ExclamationCircleOutlined,
   WarningOutlined,
   CheckCircleOutlined,
+  FireOutlined,
+  CloudOutlined,
 } from "@ant-design/icons";
 import { useParams, useNavigate } from "react-router-dom";
 import { boardingService } from "../../../../services/BoardingService";
 import type { BookingDetail, CareLogItem } from "../../../../services/BoardingService";
+import { getTemperature } from "../../../../services/IotService";
+import type { TemperatureData } from "../../../../services/IotService";
 import { getServicesBySpeciesAndType, ServiceType } from "../../../../services/AdditionService";
 import type { Service } from "../../../../services/AdditionService";
 import { ProfileHamsterService } from "../../../../services/ProfileHamsterService";
@@ -66,6 +70,11 @@ const BoardingDetail: React.FC = () => {
   const [careLogs, setCareLogs] = useState<CareLogItem[]>([]);
   const [careLogsLoading, setCareLogsLoading] = useState(false);
   const [careLogsError, setCareLogsError] = useState<string | null>(null);
+
+  // Temperature monitoring state
+  const [temperatureData, setTemperatureData] = useState<TemperatureData | null>(null);
+  const [temperatureLoading, setTemperatureLoading] = useState(false);
+  const temperatureIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const hlsInstanceRef = useRef<Hls | null>(null);
@@ -186,6 +195,36 @@ const BoardingDetail: React.FC = () => {
       setCareLogsLoading(false);
     }
   };
+
+  const fetchTemperature = useCallback(async () => {
+    if (!booking?.iotId) return;
+
+    try {
+      const tempData = await getTemperature(booking.iotId);
+      setTemperatureData(tempData);
+    } catch (err) {
+      console.warn("Failed to fetch temperature data:", err);
+    }
+  }, [booking?.iotId]);
+
+  // Update temperature data every 2 seconds
+  useEffect(() => {
+    if (booking?.iotId && booking?.status === "IN_PROGRESS") {
+      setTemperatureLoading(true);
+      fetchTemperature().finally(() => setTemperatureLoading(false));
+      
+      temperatureIntervalRef.current = setInterval(() => {
+        fetchTemperature();
+      }, 2000);
+    }
+
+    return () => {
+      if (temperatureIntervalRef.current) {
+        clearInterval(temperatureIntervalRef.current);
+        temperatureIntervalRef.current = null;
+      }
+    };
+  }, [booking?.iotId, booking?.status, fetchTemperature]);
 
   const fetchSpeciesList = async () => {
     try {
@@ -891,6 +930,77 @@ const BoardingDetail: React.FC = () => {
               <br />
               <Text type="secondary">Bấm phát để xem hamster của bạn sẽ đang hoạt động.</Text>
             </div> */}
+          </Card>
+
+          {/* Temperature and Humidity Monitoring */}
+          <Card title="Theo dõi nhiệt độ & độ ẩm" className="temperature-card">
+            {booking?.status === "IN_PROGRESS" && booking?.iotId ? (
+              <div className="temperature-container">
+                {temperatureLoading && !temperatureData ? (
+                  <div className="temperature-loading">
+                    <Spin size="large" />
+                    <Text type="secondary" style={{ marginTop: 16 }}>Đang tải dữ liệu cảm biến...</Text>
+                  </div>
+                ) : temperatureData ? (
+                  <>
+                    <div className="temperature-metrics">
+                      <div className="temperature-metric-card">
+                        <div className="metric-icon temperature-icon">
+                          <FireOutlined />
+                        </div>
+                        <div className="metric-content">
+                          <Text className="metric-label">Nhiệt độ</Text>
+                          <Title level={2} className="metric-value temperature-value">
+                            {temperatureData.temperature}°C
+                          </Title>
+                        </div>
+                      </div>
+                      <div className="temperature-metric-card">
+                        <div className="metric-icon humidity-icon">
+                          <CloudOutlined />
+                        </div>
+                        <div className="metric-content">
+                          <Text className="metric-label">Độ ẩm</Text>
+                          <Title level={2} className="metric-value humidity-value">
+                            {temperatureData.humidity}%
+                          </Title>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="temperature-info">
+                      <div className="info-item">
+                        <CheckCircleOutlined style={{ color: '#52c41a', marginRight: 8 }} />
+                        <Text type="secondary">
+                          Cảm biến IoT: <strong>{booking.iotId}</strong>
+                        </Text>
+                      </div>
+                      {/* <div className="info-item">
+                        <CheckCircleOutlined style={{ color: '#52c41a', marginRight: 8 }} />
+                        <Text type="secondary">
+                          Cập nhật tự động mỗi 2 giây
+                        </Text>
+                      </div> */}
+                    </div>
+                  </>
+                ) : (
+                  <div className="temperature-placeholder">
+                    <CloudOutlined style={{ fontSize: 48, color: "#d9d9d9" }} />
+                    <Text type="secondary">Không thể tải dữ liệu cảm biến</Text>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="temperature-disabled">
+                <div className="temperature-placeholder">
+                  <CloudOutlined style={{ fontSize: 48, color: "#d9d9d9" }} />
+                  <Text type="secondary">
+                    {booking?.status !== "IN_PROGRESS" 
+                      ? "Theo dõi nhiệt độ & độ ẩm chỉ khả dụng khi booking đang thực hiện" 
+                      : "Không có cảm biến IoT cho booking này"}
+                  </Text>
+                </div>
+              </div>
+            )}
           </Card>
 
           {/* Daily Reports */}

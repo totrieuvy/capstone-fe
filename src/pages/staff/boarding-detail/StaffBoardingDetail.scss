@@ -1558,3 +1558,186 @@
     border-color: transparent;
   }
 }
+
+// Temperature Card Styles
+.staff-temperature-card {
+  .staff-temperature-container {
+    .staff-temperature-loading {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 40px;
+      gap: 12px;
+    }
+    
+    .staff-temperature-metrics {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 20px;
+      margin-bottom: 24px;
+      
+      .staff-temperature-metric-card {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        padding: 20px;
+        background: linear-gradient(135deg, #f6f8fa 0%, #ffffff 100%);
+        border: 1px solid #e8e8e8;
+        border-radius: 12px;
+        transition: all 0.3s ease;
+        
+        &:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        }
+        
+        .staff-metric-icon {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          width: 56px;
+          height: 56px;
+          border-radius: 12px;
+          font-size: 24px;
+          flex-shrink: 0;
+          
+          &.staff-temperature-icon {
+            background: linear-gradient(135deg, #fff2f0 0%, #ffebe8 100%);
+            border: 2px solid #ffccc7;
+            color: #ff4d4f;
+          }
+          
+          &.staff-humidity-icon {
+            background: linear-gradient(135deg, #e6f7ff 0%, #bae7ff 100%);
+            border: 2px solid #91d5ff;
+            color: #1890ff;
+          }
+        }
+        
+        .staff-metric-content {
+          flex: 1;
+          display: flex;
+          flex-direction: column;
+          gap: 4px;
+          
+          .staff-metric-label {
+            font-size: 14px;
+            color: #8c8c8c;
+            font-weight: 500;
+            margin: 0;
+          }
+          
+          .staff-metric-value {
+            margin: 0;
+            font-weight: 700;
+            font-size: 32px;
+            line-height: 1.2;
+            
+            &.staff-temperature-value {
+              color: #ff4d4f;
+            }
+            
+            &.staff-humidity-value {
+              color: #1890ff;
+            }
+          }
+        }
+      }
+    }
+    
+    .staff-temperature-info {
+      background: #f0f9ff;
+      padding: 16px;
+      border-radius: 8px;
+      border: 1px solid #bae7ff;
+      
+      .staff-info-item {
+        display: flex;
+        align-items: center;
+        margin-bottom: 8px;
+        color: #595959;
+        font-size: 14px;
+        
+        &:last-child {
+          margin-bottom: 0;
+        }
+      }
+    }
+    
+    .staff-temperature-placeholder {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 40px;
+      background: #fafafa;
+      border: 2px dashed #d9d9d9;
+      border-radius: 8px;
+      gap: 12px;
+      
+      p {
+        margin: 0;
+        color: #8c8c8c;
+        font-size: 14px;
+      }
+    }
+  }
+  
+  .staff-temperature-disabled {
+    .staff-temperature-placeholder {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 40px;
+      background: #fafafa;
+      border: 2px dashed #d9d9d9;
+      border-radius: 8px;
+      gap: 12px;
+      
+      p {
+        margin: 0;
+        color: #8c8c8c;
+        font-size: 14px;
+        text-align: center;
+      }
+    }
+  }
+}
+
+// Responsive design for temperature card
+@media (max-width: 768px) {
+  .staff-temperature-card {
+    .staff-temperature-container {
+      .staff-temperature-metrics {
+        grid-template-columns: 1fr;
+        gap: 12px;
+        
+        .staff-temperature-metric-card {
+          padding: 16px;
+          
+          .staff-metric-icon {
+            width: 48px;
+            height: 48px;
+            font-size: 20px;
+          }
+          
+          .staff-metric-content {
+            .staff-metric-value {
+              font-size: 24px;
+            }
+          }
+        }
+      }
+      
+      .staff-temperature-info {
+        padding: 12px;
+        
+        .staff-info-item {
+          font-size: 13px;
+        }
+      }
+    }
+  }
+}
