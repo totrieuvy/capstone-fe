@@ -178,30 +178,30 @@
     overflow: hidden;
     min-height: 200px;
 
-    // Floating Camera Button
+    // Camera Button - Top Right Position
     .camera-fab {
       position: absolute;
-      bottom: 12px;
-      right: 12px;
-      width: 40px;
-      height: 40px;
+      top: 8px;
+      right: 8px;
+      width: 36px;
+      height: 36px;
       display: flex;
       align-items: center;
       justify-content: center;
       background: linear-gradient(135deg, #1890ff, #40a9ff);
       border: none;
-      box-shadow: 0 4px 12px rgba(24, 144, 255, 0.4);
+      box-shadow: 0 3px 8px rgba(24, 144, 255, 0.4);
       transition: all 0.3s ease;
       z-index: 15;
 
       &:hover {
         background: linear-gradient(135deg, #40a9ff, #69c0ff);
-        transform: translateY(-3px) scale(1.1);
-        box-shadow: 0 6px 16px rgba(24, 144, 255, 0.6);
+        transform: scale(1.08);
+        box-shadow: 0 4px 12px rgba(24, 144, 255, 0.6);
       }
 
       &:active {
-        transform: translateY(-1px) scale(1.05);
+        transform: scale(1.02);
       }
 
       svg {
@@ -258,23 +258,6 @@
         align-items: center;
         justify-content: center;
         z-index: 5;
-      }
-    }
-
-    &.iot-enabled {
-      &::before {
-        content: "IoT";
-        position: absolute;
-        top: 8px;
-        right: 8px;
-        background: linear-gradient(135deg, #1890ff, #40a9ff);
-        color: white;
-        font-size: 10px;
-        font-weight: bold;
-        padding: 2px 6px;
-        border-radius: 8px;
-        z-index: 10;
-        box-shadow: 0 2px 4px rgba(24, 144, 255, 0.3);
       }
     }
 
