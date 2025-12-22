@@ -186,7 +186,7 @@ const WithDraw: React.FC = () => {
               cancelText="Hủy"
             >
               <Button danger size="small">
-                REJECTED
+                TỪ CHỐI
               </Button>
             </Popconfirm>
             <Upload
@@ -197,7 +197,7 @@ const WithDraw: React.FC = () => {
               }}
             >
               <Button type="primary" size="small" icon={<UploadOutlined />}>
-                COMPLETED
+                XÁC NHẬN
               </Button>
             </Upload>
           </Space>
