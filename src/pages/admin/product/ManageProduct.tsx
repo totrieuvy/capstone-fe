@@ -344,12 +344,22 @@ function ManageProduct() {
                 <Form.Item
                   label="Giá"
                   name="price"
+                  validateTrigger={["onChange", "onBlur"]}
                   rules={[
-                    { required: true, message: "Vui lòng nhập giá!" },
-                    { type: "number", min: 1, max: 999999, message: "Giá phải từ 1 đến 999,999!" },
+                    {
+                      validator: (_, value) => {
+                        if (value === undefined || value === null) {
+                          return Promise.reject("Vui lòng nhập giá!");
+                        }
+                        if (value < 1 || value > 999999) {
+                          return Promise.reject("Giá phải từ 1 đến 999,999!");
+                        }
+                        return Promise.resolve();
+                      },
+                    },
                   ]}
                 >
-                  <InputNumber style={{ width: "100%" }} min={1} max={999999} />
+                  <InputNumber style={{ width: "100%" }} min={0} />
                 </Form.Item>
               </Col>
 
@@ -380,7 +390,11 @@ function ManageProduct() {
               </Col>
 
               <Col xs={24}>
-                <Form.Item label="Mô tả" name="description" rules={[{ required: true, message: "Vui lòng nhập mô tả!" }]}>
+                <Form.Item
+                  label="Mô tả"
+                  name="description"
+                  rules={[{ required: true, message: "Vui lòng nhập mô tả!" }]}
+                >
                   <Input.TextArea placeholder="Nhập mô tả sản phẩm" rows={3} />
                 </Form.Item>
               </Col>
