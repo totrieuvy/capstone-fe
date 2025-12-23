@@ -7,6 +7,15 @@ export interface Cage {
   status: "Available" | "In Use";
 }
 
+export interface CageDetail {
+  id: string;
+  cageTypeId: string;
+  cageTypeName: string;
+  cageName: string;
+  status: string;
+  iotCode: string | null;
+}
+
 export interface GetCagesByTypeAndDateRequest {
   cageTypeId: string;
   date: string; // Format: YYYY-MM-DD
@@ -43,6 +52,17 @@ export const cageService = {
       };
     } catch (error) {
       console.error("Error fetching cages by type and date:", error);
+      throw error;
+    }
+  },
+
+  // Get cage by ID
+  getCageById: async (id: string): Promise<CageDetail> => {
+    try {
+      const response = await api.get<ApiResponse<CageDetail>>(`/api/cage/${id}`);
+      return response.data.data;
+    } catch (error) {
+      console.error("Error fetching cage by ID:", error);
       throw error;
     }
   },

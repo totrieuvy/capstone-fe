@@ -1,8 +1,11 @@
 import React, { useState, useEffect, useMemo } from "react";
-import { Table, Input, Tag, message } from "antd";
+import { Table, Input, Tag, message, Modal } from "antd";
 import { SearchOutlined } from "@ant-design/icons";
 import type { ColumnsType } from "antd/es/table";
+import { AiOutlineEye, AiOutlineEdit } from "react-icons/ai";
 import api from "../../../config/axios";
+import { cageService } from "../../../services/CageService";
+import type { CageDetail } from "../../../services/CageService";
 import "./ManageCage.scss";
 
 // Màu sắc cho từng loại chuồng
@@ -29,6 +32,9 @@ const ManageCage: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [searchText, setSearchText] = useState("");
   const [selectedCageType, setSelectedCageType] = useState<string | null>(null);
+  const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+  const [selectedCage, setSelectedCage] = useState<CageDetail | null>(null);
+  const [modalLoading, setModalLoading] = useState(false);
 
   // Fetch cages
   const fetchCages = async () => {
@@ -103,6 +109,25 @@ const ManageCage: React.FC = () => {
     }
   };
 
+  const handleViewCage = async (cageId: string) => {
+    setModalLoading(true);
+    setIsViewModalOpen(true);
+    try {
+      const cageDetail = await cageService.getCageById(cageId);
+      setSelectedCage(cageDetail);
+    } catch (error) {
+      message.error("Không thể tải thông tin chuồng");
+      setIsViewModalOpen(false);
+    } finally {
+      setModalLoading(false);
+    }
+  };
+
+  const handleCloseViewModal = () => {
+    setIsViewModalOpen(false);
+    setSelectedCage(null);
+  };
+
   const columns: ColumnsType<CageResponse> = [
     {
       title: "Tên chuồng",
@@ -152,6 +177,25 @@ const ManageCage: React.FC = () => {
         </Tag>
       ),
     },
+    {
+      title: "Hành động",
+      key: "actions",
+      render: (_: any, record: CageResponse) => (
+        <div style={{ display: "flex", gap: "8px", justifyContent: "center" }}>
+          <AiOutlineEye
+            style={{ fontSize: "18px", color: "#1890ff", cursor: "pointer" }}
+            onClick={() => handleViewCage(record.id)}
+          />
+          <AiOutlineEdit
+            style={{ fontSize: "18px", color: "#52c41a", cursor: "pointer" }}
+            onClick={() => {
+              // Update action - you can implement this later
+              console.log("Update cage:", record);
+            }}
+          />
+        </div>
+      ),
+    },
   ];
 
   return (
@@ -195,6 +239,55 @@ const ManageCage: React.FC = () => {
           showTotal: (total) => `Tổng ${total} chuồng`,
         }}
       />
+
+      <Modal
+        title="Thông tin chi tiết chuồng"
+        open={isViewModalOpen}
+        onCancel={handleCloseViewModal}
+        footer={null}
+        width={600}
+      >
+        {modalLoading ? (
+          <div style={{ textAlign: "center", padding: "20px" }}>Đang tải...</div>
+        ) : selectedCage ? (
+          <div style={{ padding: "16px 0" }}>
+            <div style={{ marginBottom: "16px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <span style={{ fontWeight: 600, color: "#666" }}>ID:</span>
+              <span style={{ fontSize: "14px" }}>{selectedCage.id}</span>
+            </div>
+            <div style={{ marginBottom: "16px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <span style={{ fontWeight: 600, color: "#666" }}>Tên chuồng:</span>
+              <span style={{ fontSize: "16px", fontWeight: 600 }}>{selectedCage.cageName}</span>
+            </div>
+            <div style={{ marginBottom: "16px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <span style={{ fontWeight: 600, color: "#666" }}>Loại chuồng:</span>
+              <Tag color={cageTypeColorMap[selectedCage.cageTypeName]} style={{ fontWeight: 500, fontSize: "14px" }}>
+                {selectedCage.cageTypeName}
+              </Tag>
+            </div>
+            <div style={{ marginBottom: "16px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <span style={{ fontWeight: 600, color: "#666" }}>ID loại chuồng:</span>
+              <span style={{ fontSize: "14px" }}>{selectedCage.cageTypeId}</span>
+            </div>
+            <div style={{ marginBottom: "16px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <span style={{ fontWeight: 600, color: "#666" }}>Mã IoT:</span>
+              {selectedCage.iotCode ? (
+                <Tag color="cyan" style={{ fontWeight: 500, fontSize: "14px" }}>
+                  {selectedCage.iotCode}
+                </Tag>
+              ) : (
+                <Tag color="default">Chưa có</Tag>
+              )}
+            </div>
+            <div style={{ marginBottom: "16px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <span style={{ fontWeight: 600, color: "#666" }}>Trạng thái:</span>
+              <Tag color={getStatusColor(selectedCage.status)} style={{ fontWeight: 500, fontSize: "14px" }}>
+                {getStatusText(selectedCage.status)}
+              </Tag>
+            </div>
+          </div>
+        ) : null}
+      </Modal>
     </div>
   );
 };
