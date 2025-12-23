@@ -1,9 +1,15 @@
 import React, { useState, useEffect, useMemo } from "react";
-import { Table, Input, Tag, message } from "antd";
-import { SearchOutlined } from "@ant-design/icons";
+import { Table, Input, Tag, message, Modal, Form, Select, Button, Card, Divider } from "antd";
+import { PlusOutlined, SearchOutlined } from "@ant-design/icons";
 import type { ColumnsType } from "antd/es/table";
+import { AiOutlineEye, AiOutlineEdit } from "react-icons/ai";
 import api from "../../../config/axios";
+import { cageService } from "../../../services/CageService";
+import type { CageDetail, UpdateCageRequest, CreateCageRequest } from "../../../services/CageService";
+import { cageTypeService } from "../../../services/CageTypeService";
+import type { CageTypeResponse } from "../../../services/CageTypeService";
 import "./ManageCage.scss";
+import { toast } from "react-toastify";
 
 // Màu sắc cho từng loại chuồng
 const CAGE_TYPE_COLORS: Record<string, string> = {
@@ -29,6 +35,16 @@ const ManageCage: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [searchText, setSearchText] = useState("");
   const [selectedCageType, setSelectedCageType] = useState<string | null>(null);
+  const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+  const [selectedCage, setSelectedCage] = useState<CageDetail | null>(null);
+  const [modalLoading, setModalLoading] = useState(false);
+  const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
+  const [updateLoading, setUpdateLoading] = useState(false);
+  const [allCageTypes, setAllCageTypes] = useState<CageTypeResponse[]>([]);
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [createLoading, setCreateLoading] = useState(false);
+  const [form] = Form.useForm();
+  const [createForm] = Form.useForm();
 
   // Fetch cages
   const fetchCages = async () => {
@@ -43,9 +59,20 @@ const ManageCage: React.FC = () => {
     }
   };
 
+  // Fetch cage types
+  const fetchCageTypes = async () => {
+    try {
+      const types = await cageTypeService.getCageTypes();
+      setAllCageTypes(types);
+    } catch {
+      message.error("Không thể tải danh sách loại chuồng");
+    }
+  };
+
   useEffect(() => {
     document.title = "Quản lí chuồng";
     fetchCages();
+    fetchCageTypes();
   }, []);
 
   // Lấy danh sách loại chuồng unique và tạo map màu
@@ -103,6 +130,99 @@ const ManageCage: React.FC = () => {
     }
   };
 
+  const handleViewCage = async (cageId: string) => {
+    setModalLoading(true);
+    setIsViewModalOpen(true);
+    try {
+      const cageDetail = await cageService.getCageById(cageId);
+      setSelectedCage(cageDetail);
+    } catch (error) {
+      message.error("Không thể tải thông tin chuồng");
+      setIsViewModalOpen(false);
+    } finally {
+      setModalLoading(false);
+    }
+  };
+
+  const handleCloseViewModal = () => {
+    setIsViewModalOpen(false);
+    setSelectedCage(null);
+  };
+
+  const handleUpdateCage = async (cageId: string) => {
+    try {
+      const cageDetail = await cageService.getCageById(cageId);
+      setSelectedCage(cageDetail);
+      form.setFieldsValue({
+        cageTypeId: cageDetail.cageTypeId,
+        cageName: cageDetail.cageName,
+        status: cageDetail.status,
+        iotCode: cageDetail.iotCode || "",
+      });
+      setIsUpdateModalOpen(true);
+    } catch (error) {
+      message.error("Không thể tải thông tin chuồng");
+    }
+  };
+
+  const handleCloseUpdateModal = () => {
+    setIsUpdateModalOpen(false);
+    setSelectedCage(null);
+    form.resetFields();
+  };
+
+  const handleSubmitUpdate = async (values: UpdateCageRequest) => {
+    if (!selectedCage) return;
+    
+    setUpdateLoading(true);
+    try {
+      // Remove iotCode if empty
+      const updateData: UpdateCageRequest = {
+        ...values,
+        iotCode: values.iotCode || "",
+      };
+      
+      await cageService.updateCage(selectedCage.id, updateData);
+      toast.success("Cập nhật chuồng thành công");
+      handleCloseUpdateModal();
+      fetchCages(); // Refresh the list
+    } catch (error) {
+      toast.error("Không thể cập nhật chuồng");
+    } finally {
+      setUpdateLoading(false);
+    }
+  };
+
+  const handleOpenCreateModal = () => {
+    setIsCreateModalOpen(true);
+    createForm.resetFields();
+  };
+
+  const handleCloseCreateModal = () => {
+    setIsCreateModalOpen(false);
+    createForm.resetFields();
+  };
+
+  const handleSubmitCreate = async (values: CreateCageRequest) => {
+    setCreateLoading(true);
+    try {
+      const createData: CreateCageRequest = {
+        cageTypeId: values.cageTypeId,
+        cageName: values.cageName,
+        iotCode: values.iotCode || null,
+      };
+      
+      await cageService.createCage(createData);
+      toast.success("Tạo chuồng mới thành công");
+      handleCloseCreateModal();
+      fetchCages(); // Refresh the list
+    } catch (error) {
+      toast.error("Không thể tạo chuồng mới");
+    } finally {
+      setCreateLoading(false);
+    }
+  };
+
   const columns: ColumnsType<CageResponse> = [
     {
       title: "Tên chuồng",
@@ -152,6 +272,22 @@ const ManageCage: React.FC = () => {
         </Tag>
       ),
     },
+    {
+      title: "Hành động",
+      key: "actions",
+      render: (_: any, record: CageResponse) => (
+        <div style={{ display: "flex", gap: "8px", justifyContent: "center" }}>
+          <AiOutlineEye
+            style={{ fontSize: "18px", color: "#1890ff", cursor: "pointer" }}
+            onClick={() => handleViewCage(record.id)}
+          />
+          <AiOutlineEdit
+            style={{ fontSize: "18px", color: "#52c41a", cursor: "pointer" }}
+            onClick={() => handleUpdateCage(record.id)}
+          />
+        </div>
+      ),
+    },
   ];
 
   return (
@@ -166,6 +302,9 @@ const ManageCage: React.FC = () => {
           onChange={(e) => setSearchText(e.target.value)}
           style={{ width: 300, marginBottom: 12 }}
         />
+        <Button type="primary" icon={<PlusOutlined />}  style={{ marginBottom: 12 }} onClick={handleOpenCreateModal}>
+          Thêm chuồng mới
+        </Button>
       </div>
 
       <div className="cage-type-filter">
@@ -195,6 +334,216 @@ const ManageCage: React.FC = () => {
           showTotal: (total) => `Tổng ${total} chuồng`,
         }}
       />
+
+      <Modal
+        title="Thông tin chi tiết chuồng"
+        open={isViewModalOpen}
+        onCancel={handleCloseViewModal}
+        footer={
+          <Button type="primary" onClick={handleCloseViewModal}>
+            Đóng
+          </Button>
+        }
+        width={650}
+      >
+        {modalLoading ? (
+          <div style={{ textAlign: "center", padding: "40px" }}>
+            <div>Đang tải...</div>
+          </div>
+        ) : selectedCage ? (
+          <div style={{ padding: "8px 0" }}>
+            <Card
+              size="small"
+              style={{
+                marginBottom: "16px",
+                borderRadius: "8px",
+                boxShadow: "0 1px 4px rgba(0,0,0,0.08)",
+              }}
+            >
+              <div style={{ marginBottom: "12px" }}>
+                <div style={{ color: "#999", fontSize: "12px", marginBottom: "4px" }}>ID Chuồng</div>
+                <div style={{ fontSize: "13px", color: "#666", fontFamily: "monospace" }}>{selectedCage.id}</div>
+              </div>
+              <Divider style={{ margin: "12px 0" }} />
+              <div>
+                <div style={{ color: "#999", fontSize: "12px", marginBottom: "4px" }}>Tên chuồng</div>
+                <div style={{ fontSize: "20px", fontWeight: 600, color: "#ff6f61" }}>{selectedCage.cageName}</div>
+              </div>
+            </Card>
+
+            <Card
+              title="Thông tin loại chuồng"
+              size="small"
+              style={{
+                marginBottom: "16px",
+                borderRadius: "8px",
+                boxShadow: "0 1px 4px rgba(0,0,0,0.08)",
+              }}
+              headStyle={{ backgroundColor: "#fafafa", fontSize: "14px", fontWeight: 600 }}
+            >
+              <div style={{ marginBottom: "12px" }}>
+                <div style={{ color: "#999", fontSize: "12px", marginBottom: "6px" }}>Loại chuồng</div>
+                <Tag color={cageTypeColorMap[selectedCage.cageTypeName]} style={{ fontSize: "14px", padding: "4px 12px" }}>
+                  {selectedCage.cageTypeName}
+                </Tag>
+              </div>
+              <div>
+                <div style={{ color: "#999", fontSize: "12px", marginBottom: "4px" }}>ID Loại chuồng</div>
+                <div style={{ fontSize: "13px", color: "#666", fontFamily: "monospace" }}>{selectedCage.cageTypeId}</div>
+              </div>
+            </Card>
+
+            <Card
+              title="Thông tin thiết bị & trạng thái"
+              size="small"
+              style={{
+                borderRadius: "8px",
+                boxShadow: "0 1px 4px rgba(0,0,0,0.08)",
+              }}
+              headStyle={{ backgroundColor: "#fafafa", fontSize: "14px", fontWeight: 600 }}
+            >
+              <div style={{ marginBottom: "12px" }}>
+                <div style={{ color: "#999", fontSize: "12px", marginBottom: "6px" }}>Mã IoT</div>
+                {selectedCage.iotCode ? (
+                  <Tag color="cyan" style={{ fontSize: "14px", padding: "4px 12px" }}>
+                    {selectedCage.iotCode}
+                  </Tag>
+                ) : (
+                  <Tag color="default" style={{ fontSize: "14px", padding: "4px 12px" }}>Chưa có</Tag>
+                )}
+              </div>
+              <div>
+                <div style={{ color: "#999", fontSize: "12px", marginBottom: "6px" }}>Trạng thái</div>
+                <Tag
+                  color={getStatusColor(selectedCage.status)}
+                  style={{
+                    fontSize: "14px",
+                    padding: "4px 12px",
+                    fontWeight: 500,
+                  }}
+                >
+                  {getStatusText(selectedCage.status)}
+                </Tag>
+              </div>
+            </Card>
+          </div>
+        ) : null}
+      </Modal>
+
+      <Modal
+        title="Cập nhật thông tin chuồng"
+        open={isUpdateModalOpen}
+        onCancel={handleCloseUpdateModal}
+        footer={null}
+        width={600}
+      >
+        <Form
+          form={form}
+          layout="vertical"
+          onFinish={handleSubmitUpdate}
+          style={{ marginTop: "20px" }}
+        >
+          <Form.Item
+            label="Loại chuồng"
+            name="cageTypeId"
+            rules={[{ required: true, message: "Vui lòng chọn loại chuồng" }]}
+          >
+            <Select placeholder="Chọn loại chuồng">
+              {allCageTypes
+                .filter((type) => type.isActive)
+                .map((type) => (
+                  <Select.Option key={type.id} value={type.id}>
+                    {type.typeName}
+                  </Select.Option>
+                ))}
+            </Select>
+          </Form.Item>
+
+          <Form.Item
+            label="Tên chuồng"
+            name="cageName"
+            rules={[{ required: true, message: "Vui lòng nhập tên chuồng" }]}
+          >
+            <Input placeholder="Nhập tên chuồng" />
+          </Form.Item>
+
+          <Form.Item
+            label="Trạng thái"
+            name="status"
+            rules={[{ required: true, message: "Vui lòng chọn trạng thái" }]}
+          >
+            <Select placeholder="Chọn trạng thái">
+              <Select.Option value="ACTIVE">Hoạt động</Select.Option>
+              <Select.Option value="INACTIVE">Không hoạt động</Select.Option>
+            </Select>
+          </Form.Item>
+
+          <Form.Item label="Mã IoT (Tùy chọn)" name="iotCode">
+            <Input placeholder="Nhập mã IoT" />
+          </Form.Item>
+
+          <Form.Item style={{ marginBottom: 0, textAlign: "right" }}>
+            <Button onClick={handleCloseUpdateModal} style={{ marginRight: "8px" }}>
+              Hủy
+            </Button>
+            <Button type="primary" htmlType="submit" loading={updateLoading}>
+              Cập nhật
+            </Button>
+          </Form.Item>
+        </Form>
+      </Modal>
+
+      <Modal
+        title="Tạo chuồng mới"
+        open={isCreateModalOpen}
+        onCancel={handleCloseCreateModal}
+        footer={null}
+        width={600}
+      >
+        <Form
+          form={createForm}
+          layout="vertical"
+          onFinish={handleSubmitCreate}
+          style={{ marginTop: "20px" }}
+        >
+          <Form.Item
+            label="Loại chuồng"
+            name="cageTypeId"
+            rules={[{ required: true, message: "Vui lòng chọn loại chuồng" }]}
+          >
+            <Select placeholder="Chọn loại chuồng">
+              {allCageTypes
+                .filter((type) => type.isActive)
+                .map((type) => (
+                  <Select.Option key={type.id} value={type.id}>
+                    {type.typeName}
+                  </Select.Option>
+                ))}
+            </Select>
+          </Form.Item>
+
+          <Form.Item
+            label="Tên chuồng"
+            name="cageName"
+            rules={[{ required: true, message: "Vui lòng nhập tên chuồng" }]}
+          >
+            <Input placeholder="Nhập tên chuồng" />
+          </Form.Item>
+
+          <Form.Item label="Mã IoT (Tùy chọn)" name="iotCode">
+            <Input placeholder="Nhập mã IoT" />
+          </Form.Item>
+
+          <Form.Item style={{ marginBottom: 0, textAlign: "right" }}>
+            <Button onClick={handleCloseCreateModal} style={{ marginRight: "8px" }}>
+              Hủy
+            </Button>
+            <Button type="primary" htmlType="submit" loading={createLoading}>
+              Tạo chuồng
+            </Button>
+          </Form.Item>
+        </Form>
+      </Modal>
     </div>
   );
 };

@@ -45,6 +45,7 @@ import { getServicesBySpeciesAndType, ServiceType } from "../../../../services/A
 import type { Service } from "../../../../services/AdditionService";
 import { ProfileHamsterService } from "../../../../services/ProfileHamsterService";
 import type { Species } from "../../../../services/ProfileHamsterService";
+import { getPoliciesByServiceType } from "../../../../services/PolicyService";
 import { getFormattedPrice } from "../../../../utils/formatPrice";
 import dayjs from "dayjs";
 import { toast } from "react-toastify";
@@ -157,14 +158,41 @@ const BoardingDetail: React.FC = () => {
   const [isCancelModalVisible, setIsCancelModalVisible] = useState(false);
   const [cancelLoading, setCancelLoading] = useState(false);
 
+  // Cancellation policy state
+  const [cancellationPolicy, setCancellationPolicy] = useState<{
+    description: string;
+    refundPercentage: number;
+    timesBeforeCheckin: number;
+  } | null>(null);
+
   useEffect(() => {
     if (bookingId) {
       fetchBookingDetails();
       fetchCareLogs();
       fetchSpeciesList();
+      fetchCancellationPolicy();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [bookingId]);
+
+  const fetchCancellationPolicy = async () => {
+    try {
+      const response = await getPoliciesByServiceType("BOOKING");
+      const cancelPolicy = response.data.find(
+        (policy) => policy.category === "CANCELLED" && policy.status === "ACTIVE"
+      );
+      
+      if (cancelPolicy) {
+        setCancellationPolicy({
+          description: cancelPolicy.description,
+          refundPercentage: cancelPolicy.refundPercentage,
+          timesBeforeCheckin: cancelPolicy.timesBeforeCheckin,
+        });
+      }
+    } catch (error) {
+      console.error("Error fetching cancellation policy:", error);
+    }
+  };
 
   const fetchBookingDetails = async () => {
     try {
@@ -371,19 +399,25 @@ const BoardingDetail: React.FC = () => {
 
   // Calculate refund information preview
   const getRefundInfo = () => {
-    if (!booking) return null;
+    if (!booking || !cancellationPolicy) return null;
 
     const startDate = dayjs(booking.startDate);
     const today = dayjs();
+    const hoursBeforeCheckIn = startDate.diff(today, "hour");
     const daysBeforeCheckIn = startDate.diff(today, "day");
 
-    if (daysBeforeCheckIn > 1) {
-      const refundAmount = Math.round(booking.totalAmountAfter * 0.7);
+    // Check if cancellation is within the policy time frame
+    const isEligibleForRefund = hoursBeforeCheckIn >= cancellationPolicy.timesBeforeCheckin;
+
+    if (isEligibleForRefund) {
+      const refundAmount = Math.round(booking.totalAmountAfter * cancellationPolicy.refundPercentage);
       return {
         isRefunded: true,
-        refundPercentage: 70,
+        refundPercentage: cancellationPolicy.refundPercentage * 100,
         refundAmount,
         daysBeforeCheckIn,
+        hoursBeforeCheckIn,
+        policyDescription: cancellationPolicy.description,
       };
     } else {
       return {
@@ -391,6 +425,8 @@ const BoardingDetail: React.FC = () => {
         refundPercentage: 0,
         refundAmount: 0,
         daysBeforeCheckIn,
+        hoursBeforeCheckIn,
+        policyDescription: cancellationPolicy.description,
       };
     }
   };
@@ -1362,9 +1398,25 @@ const BoardingDetail: React.FC = () => {
                   Thông tin hoàn tiền:
                 </Title>
 
+                {refundInfo.policyDescription && (
+                  <div
+                    style={{
+                      marginBottom: 12,
+                      padding: 12,
+                      backgroundColor: "#e6f7ff",
+                      borderRadius: 6,
+                      border: "1px solid #91d5ff",
+                    }}
+                  >
+                    <Text style={{ color: "#096dd9" }}>
+                      📋 Chính sách: {refundInfo.policyDescription}
+                    </Text>
+                  </div>
+                )}
+
                 <div style={{ marginBottom: 8 }}>
-                  <Text strong>Số ngày trước khi check-in: </Text>
-                  <Text>{refundInfo.daysBeforeCheckIn} ngày</Text>
+                  <Text strong>Thời gian trước check-in: </Text>
+                  <Text>{refundInfo.hoursBeforeCheckIn} giờ ({refundInfo.daysBeforeCheckIn} ngày)</Text>
                 </div>
 
                 <div style={{ marginBottom: 8 }}>
@@ -1395,7 +1447,7 @@ const BoardingDetail: React.FC = () => {
                     }}
                   >
                     <Text style={{ color: "#d46b08" }}>
-                      ⚠️ Hủy booking trong vòng 1 ngày trước check-in sẽ không được hoàn tiền
+                      ⚠️ Không đủ điều kiện hoàn tiền theo chính sách hủy booking
                     </Text>
                   </div>
                 )}
