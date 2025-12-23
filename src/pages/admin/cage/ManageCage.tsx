@@ -1,11 +1,13 @@
 import React, { useState, useEffect, useMemo } from "react";
-import { Table, Input, Tag, message, Modal } from "antd";
+import { Table, Input, Tag, message, Modal, Form, Select, Button } from "antd";
 import { SearchOutlined } from "@ant-design/icons";
 import type { ColumnsType } from "antd/es/table";
 import { AiOutlineEye, AiOutlineEdit } from "react-icons/ai";
 import api from "../../../config/axios";
 import { cageService } from "../../../services/CageService";
-import type { CageDetail } from "../../../services/CageService";
+import type { CageDetail, UpdateCageRequest } from "../../../services/CageService";
+import { cageTypeService } from "../../../services/CageTypeService";
+import type { CageTypeResponse } from "../../../services/CageTypeService";
 import "./ManageCage.scss";
 
 // Màu sắc cho từng loại chuồng
@@ -35,6 +37,10 @@ const ManageCage: React.FC = () => {
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [selectedCage, setSelectedCage] = useState<CageDetail | null>(null);
   const [modalLoading, setModalLoading] = useState(false);
+  const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
+  const [updateLoading, setUpdateLoading] = useState(false);
+  const [allCageTypes, setAllCageTypes] = useState<CageTypeResponse[]>([]);
+  const [form] = Form.useForm();
 
   // Fetch cages
   const fetchCages = async () => {
@@ -49,9 +55,20 @@ const ManageCage: React.FC = () => {
     }
   };
 
+  // Fetch cage types
+  const fetchCageTypes = async () => {
+    try {
+      const types = await cageTypeService.getCageTypes();
+      setAllCageTypes(types);
+    } catch {
+      message.error("Không thể tải danh sách loại chuồng");
+    }
+  };
+
   useEffect(() => {
     document.title = "Quản lí chuồng";
     fetchCages();
+    fetchCageTypes();
   }, []);
 
   // Lấy danh sách loại chuồng unique và tạo map màu
@@ -128,6 +145,50 @@ const ManageCage: React.FC = () => {
     setSelectedCage(null);
   };
 
+  const handleUpdateCage = async (cageId: string) => {
+    try {
+      const cageDetail = await cageService.getCageById(cageId);
+      setSelectedCage(cageDetail);
+      form.setFieldsValue({
+        cageTypeId: cageDetail.cageTypeId,
+        cageName: cageDetail.cageName,
+        status: cageDetail.status,
+        iotCode: cageDetail.iotCode || "",
+      });
+      setIsUpdateModalOpen(true);
+    } catch (error) {
+      message.error("Không thể tải thông tin chuồng");
+    }
+  };
+
+  const handleCloseUpdateModal = () => {
+    setIsUpdateModalOpen(false);
+    setSelectedCage(null);
+    form.resetFields();
+  };
+
+  const handleSubmitUpdate = async (values: UpdateCageRequest) => {
+    if (!selectedCage) return;
+    
+    setUpdateLoading(true);
+    try {
+      // Remove iotCode if empty
+      const updateData: UpdateCageRequest = {
+        ...values,
+        iotCode: values.iotCode || "",
+      };
+      
+      await cageService.updateCage(selectedCage.id, updateData);
+      message.success("Cập nhật chuồng thành công");
+      handleCloseUpdateModal();
+      fetchCages(); // Refresh the list
+    } catch (error) {
+      message.error("Không thể cập nhật chuồng");
+    } finally {
+      setUpdateLoading(false);
+    }
+  };
+
   const columns: ColumnsType<CageResponse> = [
     {
       title: "Tên chuồng",
@@ -188,10 +249,7 @@ const ManageCage: React.FC = () => {
           />
           <AiOutlineEdit
             style={{ fontSize: "18px", color: "#52c41a", cursor: "pointer" }}
-            onClick={() => {
-              // Update action - you can implement this later
-              console.log("Update cage:", record);
-            }}
+            onClick={() => handleUpdateCage(record.id)}
           />
         </div>
       ),
@@ -287,6 +345,69 @@ const ManageCage: React.FC = () => {
             </div>
           </div>
         ) : null}
+      </Modal>
+
+      <Modal
+        title="Cập nhật thông tin chuồng"
+        open={isUpdateModalOpen}
+        onCancel={handleCloseUpdateModal}
+        footer={null}
+        width={600}
+      >
+        <Form
+          form={form}
+          layout="vertical"
+          onFinish={handleSubmitUpdate}
+          style={{ marginTop: "20px" }}
+        >
+          <Form.Item
+            label="Loại chuồng"
+            name="cageTypeId"
+            rules={[{ required: true, message: "Vui lòng chọn loại chuồng" }]}
+          >
+            <Select placeholder="Chọn loại chuồng">
+              {allCageTypes.map((type) => (
+                <Select.Option key={type.id} value={type.id}>
+                  {type.typeName}
+                </Select.Option>
+              ))}
+            </Select>
+          </Form.Item>
+
+          <Form.Item
+            label="Tên chuồng"
+            name="cageName"
+            rules={[{ required: true, message: "Vui lòng nhập tên chuồng" }]}
+          >
+            <Input placeholder="Nhập tên chuồng" />
+          </Form.Item>
+
+          <Form.Item
+            label="Trạng thái"
+            name="status"
+            rules={[{ required: true, message: "Vui lòng chọn trạng thái" }]}
+          >
+            <Select placeholder="Chọn trạng thái">
+              <Select.Option value="ACTIVE">Hoạt động</Select.Option>
+              <Select.Option value="INACTIVE">Không hoạt động</Select.Option>
+              <Select.Option value="MAINTENANCE">Bảo trì</Select.Option>
+              <Select.Option value="OCCUPIED">Đang sử dụng</Select.Option>
+            </Select>
+          </Form.Item>
+
+          <Form.Item label="Mã IoT (Tùy chọn)" name="iotCode">
+            <Input placeholder="Nhập mã IoT" />
+          </Form.Item>
+
+          <Form.Item style={{ marginBottom: 0, textAlign: "right" }}>
+            <Button onClick={handleCloseUpdateModal} style={{ marginRight: "8px" }}>
+              Hủy
+            </Button>
+            <Button type="primary" htmlType="submit" loading={updateLoading}>
+              Cập nhật
+            </Button>
+          </Form.Item>
+        </Form>
       </Modal>
     </div>
   );
