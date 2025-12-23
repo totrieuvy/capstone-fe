@@ -318,7 +318,10 @@ function ManageProduct() {
                 <Form.Item
                   label="Tên sản phẩm"
                   name="name"
-                  rules={[{ required: true, message: "Vui lòng nhập tên sản phẩm!" }]}
+                  rules={[
+                    { required: true, message: "Vui lòng nhập tên sản phẩm!" },
+                    { min: 3, message: "Tên sản phẩm phải 3 kí tự trở lên" },
+                  ]}
                 >
                   <Input placeholder="Nhập tên sản phẩm" />
                 </Form.Item>
@@ -351,8 +354,8 @@ function ManageProduct() {
                         if (value === undefined || value === null) {
                           return Promise.reject("Vui lòng nhập giá!");
                         }
-                        if (value < 1 || value > 999999) {
-                          return Promise.reject("Giá phải từ 1 đến 999,999!");
+                        if (value < 1000 || value > 999999) {
+                          return Promise.reject("Giá phải từ 1,000 đến 999,999");
                         }
                         return Promise.resolve();
                       },
@@ -367,7 +370,19 @@ function ManageProduct() {
                 <Form.Item
                   label="Cân nặng (gram)"
                   name="weight"
-                  rules={[{ required: true, message: "Vui lòng nhập cân nặng!" }]}
+                  rules={[
+                    {
+                      validator: (_, value) => {
+                        if (value === undefined || value === null) {
+                          return Promise.reject("Vui lòng nhập cân nặng!");
+                        }
+                        if (value <= 0 || value > 10000) {
+                          return Promise.reject("Khối lượng phải > 0 và <= 10000");
+                        }
+                        return Promise.resolve();
+                      },
+                    },
+                  ]}
                 >
                   <InputNumber style={{ width: "100%" }} min={0} />
                 </Form.Item>
@@ -377,7 +392,19 @@ function ManageProduct() {
                 <Form.Item
                   label="Số lượng"
                   name="stockQuantity"
-                  rules={[{ required: true, message: "Vui lòng nhập số lượng!" }]}
+                  rules={[
+                    {
+                      validator: (_, value) => {
+                        if (value === undefined || value === null) {
+                          return Promise.reject("Vui lòng nhập số lượng!");
+                        }
+                        if (value <= 0 || value >= 2000) {
+                          return Promise.reject("Số lượng phải > 0 và < 2000");
+                        }
+                        return Promise.resolve();
+                      },
+                    },
+                  ]}
                 >
                   <InputNumber style={{ width: "100%" }} min={0} />
                 </Form.Item>
@@ -393,7 +420,10 @@ function ManageProduct() {
                 <Form.Item
                   label="Mô tả"
                   name="description"
-                  rules={[{ required: true, message: "Vui lòng nhập mô tả!" }]}
+                  rules={[
+                    { required: true, message: "Vui lòng nhập mô tả!" },
+                    { min: 5, message: "Mô tả phải 5 kí tự trở lên" },
+                  ]}
                 >
                   <Input.TextArea placeholder="Nhập mô tả sản phẩm" rows={3} />
                 </Form.Item>

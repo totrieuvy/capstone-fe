@@ -83,6 +83,7 @@ import HamsterMedicalHistory from "./pages/veterinarian/hamster-medical-history/
 import ManageIncident from "./pages/admin/manageIncident/ManageIncident";
 import GroomingPaymentFailure from "./pages/staff/grooming/payment-success/GroomingPaymentFailure";
 import ViewIncidentDetail from "./pages/admin/manageIncident/ViewIncidentDetail";
+import ManageCage from "./pages/admin/cage/ManageCage";
 
 interface User {
   id: number;
@@ -296,6 +297,7 @@ const App = () => {
             { path: "quan-li-loai-hamster", element: <Species /> },
             { path: "quan-li-danh-muc-san-pham", element: <Category /> },
             { path: "quan-li-loai-chuong", element: <CageType /> },
+            { path: "quan-li-chuong", element: <ManageCage /> },
             { path: "quan-li-dich-vu-y-te", element: <ManageMedical /> },
             { path: "quan-li-dich-vu-grooming/grooming-le", element: <ManageGroomingService /> },
             { path: "chinh-sach", element: <Policy /> },
@@ -331,7 +333,7 @@ const App = () => {
               path: "quan-li-su-co/:bookingId",
               element: <ViewIncidentDetail />,
             },
-            { 
+            {
               path: "*",
               element: <AdminNotFoundPage />,
             },
@@ -363,10 +365,10 @@ const App = () => {
             { path: "*", element: <StaffNotFoundPage /> },
             { path: "lich-dat-kham", element: <ManageAppointment /> },
             { path: "lich-dat-kham/:appointmentId", element: <ManageAppointmentDetail /> },
-            {path: "boardingpayment-success", element: <BoardingPaymentSuccess />},
-            {path: "boardingpayment-failure", element: <BoardingPaymentFailure />},
-            {path: "medical-payment-success", element: <MedicalPaymentSuccess />},
-            {path: "medical-payment-failure", element: <MedicalPaymentFailure />}, 
+            { path: "boardingpayment-success", element: <BoardingPaymentSuccess /> },
+            { path: "boardingpayment-failure", element: <BoardingPaymentFailure /> },
+            { path: "medical-payment-success", element: <MedicalPaymentSuccess /> },
+            { path: "medical-payment-failure", element: <MedicalPaymentFailure /> },
           ],
         },
       ],
