@@ -7,6 +7,28 @@ export interface Cage {
   status: "Available" | "In Use";
 }
 
+export interface CageDetail {
+  id: string;
+  cageTypeId: string;
+  cageTypeName: string;
+  cageName: string;
+  status: string;
+  iotCode: string | null;
+}
+
+export interface UpdateCageRequest {
+  cageTypeId: string;
+  cageName: string;
+  status: string;
+  iotCode: string |null
+}
+
+export interface CreateCageRequest {
+  cageTypeId: string;
+  cageName: string;
+  iotCode: string | null;
+}
+
 export interface GetCagesByTypeAndDateRequest {
   cageTypeId: string;
   date: string; // Format: YYYY-MM-DD
@@ -43,6 +65,39 @@ export const cageService = {
       };
     } catch (error) {
       console.error("Error fetching cages by type and date:", error);
+      throw error;
+    }
+  },
+
+  // Get cage by ID
+  getCageById: async (id: string): Promise<CageDetail> => {
+    try {
+      const response = await api.get<ApiResponse<CageDetail>>(`/api/cage/${id}`);
+      return response.data.data;
+    } catch (error) {
+      console.error("Error fetching cage by ID:", error);
+      throw error;
+    }
+  },
+
+  // Update cage by ID
+  updateCage: async (id: string, data: UpdateCageRequest): Promise<any> => {
+    try {
+      const response = await api.put(`/api/cage/${id}`, data);
+      return response.data.data || response.data;
+    } catch (error) {
+      console.error("Error updating cage:", error);
+      throw error;
+    }
+  },
+
+  // Create new cage
+  createCage: async (data: CreateCageRequest): Promise<any> => {
+    try {
+      const response = await api.post("/api/cage", data);
+      return response.data;
+    } catch (error) {
+      console.error("Error creating cage:", error);
       throw error;
     }
   },

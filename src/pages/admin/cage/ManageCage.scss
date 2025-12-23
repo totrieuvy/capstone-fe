@@ -15,6 +15,19 @@
 
   .search-box {
     margin-bottom: 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+
+    .ant-btn-primary {
+      background-color: #ff6f61;
+      border-color: #ff6f61;
+      
+      &:hover {
+        background-color: #ff9447;
+        border-color: #ff9447;
+      }
+    }
   }
 
   .cage-type-filter {
@@ -53,7 +66,7 @@
       }
     }
   }
-
+  
   .ant-table {
     background: #fff;
     border-radius: 12px;
