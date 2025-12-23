@@ -452,7 +452,22 @@ function WalletCustomer() {
         ]}
       >
         <Form form={withdrawForm} layout="vertical" onFinish={handleWithdraw}>
-          <Form.Item name="amount" label="Số tiền muốn rút" rules={[{ required: true }]}>
+          <Form.Item
+            name="amount"
+            label="Số tiền muốn rút"
+            rules={[
+              { required: true, message: "Vui lòng nhập số tiền!" },
+              {
+                validator: (_, value) => {
+                  if (!value) return Promise.resolve();
+                  if (Number(value) < 10000) {
+                    return Promise.reject("Số tiền tối thiểu là 10,000đ");
+                  }
+                  return Promise.resolve();
+                },
+              },
+            ]}
+          >
             <InputNumber
               style={{ width: "100%" }}
               min={10000}
@@ -460,7 +475,11 @@ function WalletCustomer() {
               parser={(v?: string) => (v ? v.replace(/,/g, "") : "")}
             />
           </Form.Item>
-          <Form.Item name="bankName" label="Ngân hàng" rules={[{ required: true }]}>
+          <Form.Item
+            name="bankName"
+            label="Ngân hàng"
+            rules={[{ required: true, message: "Vui lòng chọn ngân hàng!" }]}
+          >
             <Select
               showSearch
               placeholder="Chọn ngân hàng"
@@ -471,10 +490,26 @@ function WalletCustomer() {
             />
           </Form.Item>
 
-          <Form.Item name="bankAccount" label="Số tài khoản" rules={[{ required: true }]}>
+          <Form.Item
+            name="bankAccount"
+            label="Số tài khoản"
+            rules={[
+              { required: true, message: "Vui lòng nhập số tài khoản!" },
+              { pattern: /^[0-9]+$/, message: "Số tài khoản chỉ được chứa số!" },
+              { min: 6, message: "Số tài khoản phải từ 6 chữ số trở lên" },
+              { max: 20, message: "Số tài khoản không được quá 20 chữ số" },
+            ]}
+          >
             <Input placeholder="Nhập số tài khoản" />
           </Form.Item>
-          <Form.Item name="cardOwner" label="Tên chủ thẻ" rules={[{ required: true }]}>
+          <Form.Item
+            name="cardOwner"
+            label="Tên chủ thẻ"
+            rules={[
+              { required: true, message: "Vui lòng nhập tên chủ thẻ!" },
+              { min: 3, message: "Tên chủ thẻ phải từ 3 ký tự trở lên" },
+            ]}
+          >
             <Input placeholder="Nhập tên chủ thẻ" />
           </Form.Item>
           <Form.Item name="note" label="Ghi chú">

@@ -73,6 +73,7 @@ const SideBar: React.FC = () => {
         ]),
         getItem("Cơ sở hạ tầng", "infrastructure", <GiCage />, [
           getItem("Loại chuồng", "quan-li-loai-chuong"),
+          getItem("Chuồng", "quan-li-chuong"),
           getItem("Chính sách", "chinh-sach"),
         ]),
         getItem("Vận hành kinh doanh", "business-operations", <ShoppingOutlined />, [
