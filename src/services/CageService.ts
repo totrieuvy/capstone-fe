@@ -23,6 +23,12 @@ export interface UpdateCageRequest {
   iotCode: string |null
 }
 
+export interface CreateCageRequest {
+  cageTypeId: string;
+  cageName: string;
+  iotCode: string | null;
+}
+
 export interface GetCagesByTypeAndDateRequest {
   cageTypeId: string;
   date: string; // Format: YYYY-MM-DD
@@ -81,6 +87,17 @@ export const cageService = {
       return response.data.data || response.data;
     } catch (error) {
       console.error("Error updating cage:", error);
+      throw error;
+    }
+  },
+
+  // Create new cage
+  createCage: async (data: CreateCageRequest): Promise<any> => {
+    try {
+      const response = await api.post("/api/cage", data);
+      return response.data;
+    } catch (error) {
+      console.error("Error creating cage:", error);
       throw error;
     }
   },
