@@ -18,6 +18,13 @@ import {
 import type { RootState } from "@/redux/rootReducer";
 import { toast } from "react-toastify";
 
+import { AxiosError } from "axios";
+
+interface ErrorResponse {
+  code?: number;
+  message?: string;
+}
+
 interface Service {
   id: string;
   serviceType: string;
@@ -46,11 +53,32 @@ function GroomingPage() {
   const [, setActiveView] = useState<ActiveView>("services");
   const [selectedServices, setSelectedServices] = useState<Service[]>([]); // Nhiều dịch vụ lẻ
   const [selectedCombo, setSelectedCombo] = useState<Combo | null>(null); // 1 combo
+  const [isBanned, setIsBanned] = useState<boolean>(false);
 
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
   const user = useSelector((state: RootState) => state.user);
+
+  // Check if account is banned
+  useEffect(() => {
+    const checkBanStatus = async () => {
+      if (!user?.token) return;
+      try {
+        const response = await api.get("/api/auth/is-banned");
+        if (response.data?.code === 401) {
+          setIsBanned(true);
+        }
+      } catch (err) {
+        const error = err as AxiosError<ErrorResponse>;
+        if (error.response?.data?.code === 401) {
+          setIsBanned(true);
+        }
+      }
+    };
+
+    checkBanStatus();
+  }, [user?.token]);
 
   useEffect(() => {
     document.title = "Dịch vụ Grooming - The Hamster";
@@ -95,6 +123,11 @@ function GroomingPage() {
   // };
 
   const toggleServiceSelect = (service: Service) => {
+    if (isBanned) {
+      toast.error("Tài khoản của bạn đã bị khóa!");
+      return;
+    }
+
     setSelectedServices((prev) => {
       const isSelected = prev.some((s) => s.id === service.id);
 
@@ -118,6 +151,11 @@ function GroomingPage() {
 
   /** ✅ Chọn combo (chỉ 1, chọn là đi luôn) */
   const handleComboSelect = (combo: Combo) => {
+    if (isBanned) {
+      toast.error("Tài khoản của bạn đã bị khóa!");
+      return;
+    }
+
     setSelectedCombo(combo);
     dispatch(
       selectGroomingItem({
@@ -244,7 +282,7 @@ function GroomingPage() {
     <div className="GroomingPage">
       <div className="grooming-banner">
         <h1 className="banner-title" data-aos="fade-down">
-          Dịch vụ Grooming & Spa
+          Dịch vụ làm đẹp
         </h1>
         <p className="banner-subtitle" data-aos="fade-up" data-aos-delay="200">
           Chăm sóc chuyên nghiệp cho các bé Hamster cưng của bạn.
