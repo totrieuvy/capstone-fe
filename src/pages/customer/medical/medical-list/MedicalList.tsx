@@ -4,6 +4,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { Row, Col, Card, Button, Spin } from "antd";
 import { getMedicalServices, type Service } from "../../../../services/MedicalService";
 import { selectMedicalItem } from "../../../../redux/features/SelectedMedicalItem";
+import api from "../../../../config/axios";
 import AOS from "aos";
 import "aos/dist/aos.css";
 import "./MedicalList.scss";
@@ -11,13 +12,41 @@ import { DollarOutlined, ClockCircleOutlined, MedicineBoxOutlined } from "@ant-d
 import { toast } from "react-toastify";
 import type { RootState } from "@/redux/rootReducer";
 
+import { AxiosError } from "axios";
+
+interface ErrorResponse {
+  code?: number;
+  message?: string;
+}
+
 function MedicalList() {
   const [services, setServices] = useState<Service[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
+  const [isBanned, setIsBanned] = useState<boolean>(false);
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
   const user = useSelector((state: RootState) => state.user);
+
+  // Check if account is banned
+  useEffect(() => {
+    const checkBanStatus = async () => {
+      if (!user?.token) return;
+      try {
+        const response = await api.get("/api/auth/is-banned");
+        if (response.data?.code === 401) {
+          setIsBanned(true);
+        }
+      } catch (err) {
+        const error = err as AxiosError<ErrorResponse>;
+        if (error.response?.data?.code === 401) {
+          setIsBanned(true);
+        }
+      }
+    };
+
+    checkBanStatus();
+  }, [user?.token]);
 
   useEffect(() => {
     document.title = "Dịch vụ Y tế - The Hamster";
@@ -44,6 +73,11 @@ function MedicalList() {
 
   const handleBookNowClick = (service: Service) => {
     // Dispatch the selected medical service to Redux store
+
+    if (isBanned) {
+      toast.error("Tài khoản của bạn đã bị khóa!");
+      return;
+    }
 
     if (!user?.token) {
       toast.error("Vui lòng đăng nhập để đặt dịch vụ.");
