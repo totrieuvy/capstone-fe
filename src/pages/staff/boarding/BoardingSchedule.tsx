@@ -48,6 +48,9 @@ const BoardingSchedule = () => {
   // State for extend booking modal
   const [extendModalVisible, setExtendModalVisible] = useState<boolean>(false);
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
+  
+  // State for status filters
+  const [activeFilters, setActiveFilters] = useState<Set<string>>(new Set());
   const [newEndDate, setNewEndDate] = useState<Dayjs | null>(null);
   const [extendLoading, setExtendLoading] = useState<boolean>(false);
   
@@ -651,23 +654,71 @@ const BoardingSchedule = () => {
     fetchCageTypeDetails();
   }, [selectedCageTypeId]);
 
-  // Separate bookings by status
+  // Filter toggle handler
+  const toggleFilter = (filterKey: string) => {
+    setActiveFilters(prev => {
+      const newFilters = new Set(prev);
+      if (newFilters.has(filterKey)) {
+        newFilters.delete(filterKey);
+      } else {
+        newFilters.add(filterKey);
+      }
+      return newFilters;
+    });
+  };
+
+  // Helper function to check if a booking matches active filters
+  // Uses priority system: INCIDENT > CHECK_OUT > EXTENDED > OTHER_STATUS
+  const matchesFilters = (booking: BookingByDateRange): boolean => {
+    if (activeFilters.size === 0) return true;
+    
+    // Determine booking's primary category based on priority
+    const hasIncident = booking.isIncident === true;
+    const hasExtension = booking.newEndDate && booking.newEndDate !== null && booking.newEndDate !== '';
+    const isCheckOut = booking.status === 'CHECK_OUT';
+    
+    // Priority 1: Incident bookings - only match INCIDENT filter
+    if (hasIncident) {
+      return activeFilters.has('INCIDENT');
+    }
+    
+    // Priority 2: Completed bookings (CHECK_OUT) - only match CHECK_OUT filter
+    // This takes precedence over extension status since completed bookings shouldn't show in EXTENDED filter
+    if (isCheckOut) {
+      return activeFilters.has('CHECK_OUT');
+    }
+    
+    // Priority 3: Extended bookings (that are not completed) - only match EXTENDED filter
+    if (hasExtension) {
+      return activeFilters.has('EXTENDED');
+    }
+    
+    // Priority 4: Other status-based filters - only for non-incident, non-extended, non-completed bookings
+    if (activeFilters.has('BOOKED') && booking.status === 'BOOKED') return true;
+    if (activeFilters.has('IN_PROGRESS') && booking.status === 'IN_PROGRESS') return true;
+    
+    return false;
+  };
+
+  // Separate bookings by status with filters applied
   // First table: Bookings that are checked in or in progress (CHECK_IN, IN_PROGRESS, CHECK_OUT, INCIDENT)
   const checkedInBookings = convertToDisplayBookings(
     bookings.filter(booking =>
-      booking.status === 'CHECK_IN' ||
+      (booking.status === 'CHECK_IN' ||
       booking.status === 'IN_PROGRESS' ||
       booking.status === 'CHECK_OUT' ||
-      booking.isIncident === true
+      booking.isIncident === true) &&
+      matchesFilters(booking)
     )
   );
 
   // Second table: Bookings that are booked but not yet checked in or no-shows (BOOKED, NO-SHOW), CANCELLED
   const notCheckedInBookings = convertToDisplayBookings(
     bookings.filter(booking =>
-      booking.status === 'BOOKED' ||
+      (booking.status === 'BOOKED' ||
       booking.status === 'NO-SHOW' ||
-      booking.status === 'CANCELLED'
+      booking.status === 'CANCELLED') &&
+      matchesFilters(booking)
     )
   );
 
@@ -1087,54 +1138,132 @@ const BoardingSchedule = () => {
             </Button>
           </div>
           
-          {/* Booking Status Legend */}
+          {/* Booking Status Legend - Interactive Filters */}
           <div style={{ marginTop: '24px', padding: '16px', backgroundColor: '#f8f9fa', borderRadius: '8px' }}>
-            <h4 style={{ marginBottom: '12px', color: '#1f2937' }}>Chú thích màu:</h4>
+            <h4 style={{ marginBottom: '12px', color: '#1f2937' }}>
+              Chú thích màu (chọn để lọc):
+              {activeFilters.size > 0 && (
+                <Button 
+                  size="small" 
+                  type="link" 
+                  onClick={() => setActiveFilters(new Set())}
+                  style={{ marginLeft: '12px', fontSize: '12px' }}
+                >
+                  Xóa bộ lọc
+                </Button>
+              )}
+            </h4>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '16px', fontSize: '13px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <div 
+                onClick={() => toggleFilter('BOOKED')}
+                style={{ 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  gap: '8px',
+                  cursor: 'pointer',
+                  padding: '6px 12px',
+                  borderRadius: '6px',
+                  backgroundColor: activeFilters.has('BOOKED') ? '#fff' : 'transparent',
+                  border: activeFilters.has('BOOKED') ? '2px solid #f97316' : '2px solid transparent',
+                  transition: 'all 0.2s',
+                  opacity: activeFilters.size === 0 || activeFilters.has('BOOKED') ? 1 : 0.4
+                }}
+              >
                 <div style={{
                   width: '20px',
                   height: '16px',
                   backgroundColor: '#f97316',
                   borderRadius: '4px'
                 }}></div>
-                <span>Chưa check in</span>
+                <span style={{ fontWeight: activeFilters.has('BOOKED') ? 'bold' : 'normal' }}>Chưa check in</span>
               </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <div 
+                onClick={() => toggleFilter('IN_PROGRESS')}
+                style={{ 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  gap: '8px',
+                  cursor: 'pointer',
+                  padding: '6px 12px',
+                  borderRadius: '6px',
+                  backgroundColor: activeFilters.has('IN_PROGRESS') ? '#fff' : 'transparent',
+                  border: activeFilters.has('IN_PROGRESS') ? '2px solid #3b82f6' : '2px solid transparent',
+                  transition: 'all 0.2s',
+                  opacity: activeFilters.size === 0 || activeFilters.has('IN_PROGRESS') ? 1 : 0.4
+                }}>
                 <div style={{ 
                   width: '20px', 
                   height: '16px', 
                   backgroundColor: '#3b82f6', 
                   borderRadius: '4px' 
                 }}></div>
-                <span>Đang thực hiện</span>
+                <span style={{ fontWeight: activeFilters.has('IN_PROGRESS') ? 'bold' : 'normal' }}>Đang thực hiện</span>
               </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <div 
+                onClick={() => toggleFilter('CHECK_OUT')}
+                style={{ 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  gap: '8px',
+                  cursor: 'pointer',
+                  padding: '6px 12px',
+                  borderRadius: '6px',
+                  backgroundColor: activeFilters.has('CHECK_OUT') ? '#fff' : 'transparent',
+                  border: activeFilters.has('CHECK_OUT') ? '2px solid #22c55e' : '2px solid transparent',
+                  transition: 'all 0.2s',
+                  opacity: activeFilters.size === 0 || activeFilters.has('CHECK_OUT') ? 1 : 0.4
+                }}>
                 <div style={{ 
                   width: '20px', 
                   height: '16px', 
                   backgroundColor: '#22c55e', 
                   borderRadius: '4px' 
                 }}></div>
-                <span>Hoàn tất</span>
+                <span style={{ fontWeight: activeFilters.has('CHECK_OUT') ? 'bold' : 'normal' }}>Hoàn tất</span>
               </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <div 
+                onClick={() => toggleFilter('EXTENDED')}
+                style={{ 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  gap: '8px',
+                  cursor: 'pointer',
+                  padding: '6px 12px',
+                  borderRadius: '6px',
+                  backgroundColor: activeFilters.has('EXTENDED') ? '#fff' : 'transparent',
+                  border: activeFilters.has('EXTENDED') ? '2px solid #06b6d4' : '2px solid transparent',
+                  transition: 'all 0.2s',
+                  opacity: activeFilters.size === 0 || activeFilters.has('EXTENDED') ? 1 : 0.4
+                }}>
                 <div style={{ 
                   width: '20px', 
                   height: '16px', 
                   backgroundColor: '#06b6d4', 
                   borderRadius: '4px' 
                 }}></div>
-                <span>Đã gia hạn</span>
+                <span style={{ fontWeight: activeFilters.has('EXTENDED') ? 'bold' : 'normal' }}>Đã gia hạn</span>
               </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <div 
+                onClick={() => toggleFilter('INCIDENT')}
+                style={{ 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  gap: '8px',
+                  cursor: 'pointer',
+                  padding: '6px 12px',
+                  borderRadius: '6px',
+                  backgroundColor: activeFilters.has('INCIDENT') ? '#fff' : 'transparent',
+                  border: activeFilters.has('INCIDENT') ? '2px solid #ef4444' : '2px solid transparent',
+                  transition: 'all 0.2s',
+                  opacity: activeFilters.size === 0 || activeFilters.has('INCIDENT') ? 1 : 0.4
+                }}>
                 <div style={{ 
                   width: '20px', 
                   height: '16px', 
                   backgroundColor: '#ef4444', 
                   borderRadius: '4px' 
                 }}></div>
-                <span>Sự cố</span>
+                <span style={{ fontWeight: activeFilters.has('INCIDENT') ? 'bold' : 'normal' }}>Sự cố</span>
               </div>
               {/* <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <div style={{ 
