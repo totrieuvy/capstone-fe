@@ -64,6 +64,9 @@ const AiChat: React.FC = () => {
 
   const recognitionRef = useRef<ISpeechRecognition | null>(null);
 
+  // Check if user is logged in
+  const isLoggedIn = !!localStorage.getItem("token");
+
   const formatAnswerText = (text: string): string => {
     if (!text) return text;
 
@@ -224,47 +227,56 @@ const AiChat: React.FC = () => {
           </div>
 
           <div className="chat-suggestions">
-            {suggestedQuestions.map((q, i) => (
-              <Tag key={i} onClick={() => sendMessage(q)} className="suggestion-tag">
-                {q}
-              </Tag>
-            ))}
+            {isLoggedIn &&
+              suggestedQuestions.map((q, i) => (
+                <Tag key={i} onClick={() => sendMessage(q)} className="suggestion-tag">
+                  {q}
+                </Tag>
+              ))}
           </div>
 
-          <div className="chat-input">
-            <Input
-              placeholder="Nhập tin nhắn..."
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onPressEnter={() => sendMessage(input)}
-              suffix={
-                <>
-                  <div className={`mic-wrapper ${listening ? "listening" : ""}`}>
-                    <AudioOutlined
-                      onClick={handleStartListening}
-                      className="mic-icon"
+          {isLoggedIn ? (
+            <div className="chat-input">
+              <Input
+                placeholder="Nhập tin nhắn..."
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onPressEnter={() => sendMessage(input)}
+                suffix={
+                  <>
+                    <div className={`mic-wrapper ${listening ? "listening" : ""}`}>
+                      <AudioOutlined
+                        onClick={handleStartListening}
+                        className="mic-icon"
+                        style={{
+                          cursor: "pointer",
+                          fontSize: 18,
+                          marginRight: 8,
+                          color: listening ? "#ff4d4f" : "#a47148",
+                        }}
+                        aria-label={listening ? "Đang ghi âm" : "Bắt đầu ghi âm"}
+                      />
+                      {listening && <div className="mic-wave" aria-hidden="true"></div>}
+                    </div>
+                    <SendOutlined
+                      onClick={() => sendMessage(input)}
                       style={{
                         cursor: "pointer",
                         fontSize: 18,
-                        marginRight: 8,
-                        color: listening ? "#ff4d4f" : "#a47148",
+                        color: "#a47148",
                       }}
-                      aria-label={listening ? "Đang ghi âm" : "Bắt đầu ghi âm"}
                     />
-                    {listening && <div className="mic-wave" aria-hidden="true"></div>}
-                  </div>
-                  <SendOutlined
-                    onClick={() => sendMessage(input)}
-                    style={{
-                      cursor: "pointer",
-                      fontSize: 18,
-                      color: "#a47148",
-                    }}
-                  />
-                </>
-              }
-            />
-          </div>
+                  </>
+                }
+              />
+            </div>
+          ) : (
+            <div className="chat-login-required">
+              <span>
+                Vui lòng <a href="/login">đăng nhập</a> để chat với Hamster AI 🐹
+              </span>
+            </div>
+          )}
         </div>
       )}
     </>

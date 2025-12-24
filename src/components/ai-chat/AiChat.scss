@@ -149,6 +149,26 @@
   }
 }
 
+.chat-login-required {
+  padding: 14px 16px;
+  background: linear-gradient(135deg, #fff7ed 0%, #ffe7c2 100%);
+  border-top: 1px solid #f2e4d9;
+  text-align: center;
+  font-size: 13px;
+  color: #8b5e34;
+
+  a {
+    color: #a47148;
+    font-weight: 600;
+    text-decoration: underline;
+    transition: color 0.2s ease;
+
+    &:hover {
+      color: #6d3e1a;
+    }
+  }
+}
+
 /* ==================== 🎤 Hiệu ứng mic khi đang nói ==================== */
 .mic-wrapper {
   position: relative;
