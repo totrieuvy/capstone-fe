@@ -678,7 +678,7 @@ const HistoryGroomingDetail = () => {
           </Button>
           <div className="header-content">
             <Title level={2} className="page-title">
-              <ScissorOutlined /> Chi tiết Lịch Grooming
+              <ScissorOutlined /> Chi tiết lịch làm đẹp
             </Title>
             <Text className="booking-id">ID: {detail.id}</Text>
           </div>
@@ -923,7 +923,12 @@ const HistoryGroomingDetail = () => {
 
         {/* ---- Modal Check-in (thay thế toàn bộ phần Modal hiện tại) ---- */}
         <Modal
-          title="Check-in Grooming"
+          title={
+            <div className="checkin-modal-title">
+              <ClockCircleOutlined style={{ marginRight: 8, color: "#1677ff" }} />
+              Check-in lịch làm đẹp
+            </div>
+          }
           open={showCheckInModal}
           onCancel={handleCloseCheckInModal}
           onOk={handleCheckInConfirm}
@@ -932,18 +937,26 @@ const HistoryGroomingDetail = () => {
           confirmLoading={uploading}
           okButtonProps={{
             disabled: fileList.length === 0 || (!detail?.staff && !selectedStaffForCheckIn),
+            icon: <CheckCircleOutlined />,
           }}
+          className="checkin-modal"
+          width={500}
         >
-          {/* Upload giống ManageProduct: picture-card, preview modal */}
-          <div style={{ marginBottom: 12 }}>
-            <Text strong>Ảnh check-in</Text>
+          {/* Upload ảnh check-in */}
+          <div className="checkin-upload-section">
+            <div className="section-label">
+              <UploadOutlined style={{ marginRight: 6 }} />
+              <Text strong>Ảnh check-in hamster</Text>
+            </div>
+            <div className="upload-hint">
+              <Text type="secondary">Chụp ảnh hamster trước khi thực hiện dịch vụ</Text>
+            </div>
 
             <Upload
               listType="picture-card"
               fileList={fileList}
               onChange={({ fileList: newFileList }) => {
                 setFileList(newFileList);
-                // đồng bộ checkInFile nếu muốn (không bắt buộc)
                 const f = newFileList[0]?.originFileObj as File | undefined;
                 setCheckInFile(f ?? null);
               }}
@@ -951,11 +964,12 @@ const HistoryGroomingDetail = () => {
               beforeUpload={() => false}
               maxCount={1}
               accept="image/*"
+              className="checkin-upload"
             >
               {fileList.length >= 1 ? null : (
-                <div>
-                  <UploadOutlined />
-                  <div style={{ marginTop: 6 }}>Chọn ảnh</div>
+                <div className="upload-placeholder">
+                  <UploadOutlined style={{ fontSize: 24, color: "#1677ff" }} />
+                  <div style={{ marginTop: 8, color: "#666" }}>Chọn ảnh</div>
                 </div>
               )}
             </Upload>
@@ -966,43 +980,59 @@ const HistoryGroomingDetail = () => {
             <img alt={previewTitle || "preview"} style={{ width: "100%" }} src={previewImage} />
           </Modal>
 
-          <Divider />
+          <Divider style={{ margin: "16px 0" }} />
 
           {/* Chọn / Hiển thị nhân viên */}
-          <div>
+          <div className="staff-selection-section">
+            <div className="section-label">
+              <IdcardOutlined style={{ marginRight: 6 }} />
+              <Text strong>Nhân viên thực hiện</Text>
+            </div>
+
             {detail?.staff ? (
-              <>
-                <Text strong>Nhân viên thực hiện:</Text>
-                <div style={{ marginTop: 8 }}>
-                  <Tag color="blue" style={{ fontSize: 14, padding: "4px 8px" }}>
-                    {detail.staff.fullName}
-                  </Tag>
+              <div className="assigned-staff-card">
+                <div className="staff-avatar">{detail.staff.fullName?.charAt(0).toUpperCase() || "S"}</div>
+                <div className="staff-info">
+                  <Text strong>{detail.staff.fullName}</Text>
+                  <Text type="secondary" style={{ fontSize: 12 }}>
+                    Đã được phân công
+                  </Text>
                 </div>
-              </>
+                <CheckCircleOutlined style={{ color: "#52c41a", fontSize: 20 }} />
+              </div>
             ) : (
               <>
-                <Text strong>Chọn nhân viên thực hiện:</Text>
-
                 {assignLoading ? (
-                  <div style={{ textAlign: "center", padding: 20 }}>
+                  <div className="loading-staff">
                     <Spin />
+                    <Text type="secondary" style={{ marginTop: 8 }}>
+                      Đang tải danh sách nhân viên...
+                    </Text>
                   </div>
                 ) : staffListForCheckIn.length === 0 ? (
-                  <Text type="secondary" style={{ display: "block", marginTop: 8 }}>
-                    Không có nhân viên rảnh trong khung giờ này
-                  </Text>
+                  <div className="no-staff-available">
+                    <Text type="secondary">Không có nhân viên rảnh trong khung giờ này</Text>
+                  </div>
                 ) : (
-                  <Radio.Group
-                    onChange={(e) => setSelectedStaffForCheckIn(e.target.value)}
-                    value={selectedStaffForCheckIn}
-                    style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: 8 }}
-                  >
+                  <div className="staff-list">
                     {staffListForCheckIn.map((staff) => (
-                      <Radio key={staff.id} value={staff.id}>
-                        {staff.fullName}
-                      </Radio>
+                      <div
+                        key={staff.id}
+                        className={`staff-card ${selectedStaffForCheckIn === staff.id ? "selected" : ""}`}
+                        onClick={() => setSelectedStaffForCheckIn(staff.id)}
+                      >
+                        <div className="staff-avatar">{staff.fullName?.charAt(0).toUpperCase() || "S"}</div>
+                        <div className="staff-name">
+                          <Text>{staff.fullName}</Text>
+                        </div>
+                        <div className="staff-check">
+                          {selectedStaffForCheckIn === staff.id && (
+                            <CheckCircleOutlined style={{ color: "#1677ff", fontSize: 18 }} />
+                          )}
+                        </div>
+                      </div>
                     ))}
-                  </Radio.Group>
+                  </div>
                 )}
               </>
             )}
