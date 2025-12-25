@@ -31,6 +31,13 @@ import { storage } from "../../../config/firebase";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { FiEdit, FiTrash2 } from "react-icons/fi";
 
+import { AxiosError } from "axios";
+
+interface ErrorResponse {
+  code?: number;
+  message?: string;
+}
+
 const { Search } = Input;
 const { Option } = Select;
 
@@ -139,8 +146,10 @@ function ManageProduct() {
 
       fetchProducts();
       handleCancel();
-    } catch (error) {
-      message.error("Thao tác thất bại: " + error);
+    } catch (err) {
+      const error = err as AxiosError<ErrorResponse>;
+      const errorMessage = error?.response?.data?.message;
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }
