@@ -9,7 +9,6 @@ import {
   Tag,
   Popconfirm,
   Spin,
-  message,
   Space,
   Divider,
   Typography,
@@ -22,6 +21,13 @@ import api from "../../../config/axios";
 import { toast } from "react-toastify";
 import "./ManageGroomingService.scss";
 import { FiEdit, FiTrash2 } from "react-icons/fi";
+
+import { AxiosError } from "axios";
+
+interface ErrorResponse {
+  code?: number;
+  message?: string;
+}
 
 const { Search } = Input;
 const { Text, Title } = Typography;
@@ -185,9 +191,10 @@ function ManageGroomingService() {
 
       fetchServices();
       handleCancel();
-    } catch (error) {
-      message.error("Thao tác thất bại!");
-      console.error("Submit error:", error);
+    } catch (err) {
+      const error = err as AxiosError<ErrorResponse>;
+      const errorMessage = error?.response?.data?.message;
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }
