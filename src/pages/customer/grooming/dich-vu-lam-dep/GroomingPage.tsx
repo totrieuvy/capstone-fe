@@ -81,7 +81,7 @@ function GroomingPage() {
   }, [user?.token]);
 
   useEffect(() => {
-    document.title = "Dịch vụ Grooming - The Hamster";
+    document.title = "Dịch vụ làm đẹp";
     AOS.init({ duration: 800, once: true, offset: 80 });
 
     const fetchData = async () => {

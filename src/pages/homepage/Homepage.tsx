@@ -93,7 +93,7 @@ function Homepage() {
   }, [pagination.page, pagination.size]);
 
   useEffect(() => {
-    document.title = "The Hamster";
+    document.title = "Mua hàng";
     AOS.init({ duration: 800, once: true, offset: 80 });
     fetchProducts();
   }, [fetchProducts]);

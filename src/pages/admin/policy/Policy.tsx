@@ -50,6 +50,10 @@ const Policy: React.FC = () => {
   const [form] = Form.useForm();
   const [currentId, setCurrentId] = useState<string | null>(null);
 
+  useEffect(() => {
+    document.title = "Quản lí chính sách";
+  }, []);
+
   const fetchPolicies = async () => {
     setLoading(true);
     try {
