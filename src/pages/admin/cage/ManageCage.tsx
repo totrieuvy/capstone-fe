@@ -8,6 +8,8 @@ import { cageService } from "../../../services/CageService";
 import type { CageDetail, UpdateCageRequest, CreateCageRequest } from "../../../services/CageService";
 import { cageTypeService } from "../../../services/CageTypeService";
 import type { CageTypeResponse } from "../../../services/CageTypeService";
+import { getAllTemperatures } from "../../../services/IotService";
+import type { TemperatureData } from "../../../services/IotService";
 import "./ManageCage.scss";
 import { toast } from "react-toastify";
 
@@ -45,6 +47,7 @@ const ManageCage: React.FC = () => {
   const [createLoading, setCreateLoading] = useState(false);
   const [form] = Form.useForm();
   const [createForm] = Form.useForm();
+  const [iotDevices, setIotDevices] = useState<TemperatureData[]>([]);
 
   // Fetch cages
   const fetchCages = async () => {
@@ -69,10 +72,21 @@ const ManageCage: React.FC = () => {
     }
   };
 
+  // Fetch IoT devices
+  const fetchIotDevices = async () => {
+    try {
+      const devices = await getAllTemperatures();
+      setIotDevices(devices);
+    } catch {
+      message.error("Không thể tải danh sách thiết bị IoT");
+    }
+  };
+
   useEffect(() => {
     document.title = "Quản lí chuồng";
     fetchCages();
     fetchCageTypes();
+    fetchIotDevices();
   }, []);
 
   // Lấy danh sách loại chuồng unique và tạo map màu
@@ -479,7 +493,13 @@ const ManageCage: React.FC = () => {
           </Form.Item>
 
           <Form.Item label="Mã IoT (Tùy chọn)" name="iotCode">
-            <Input placeholder="Nhập mã IoT" />
+            <Select placeholder="Chọn mã IoT" allowClear>
+              {iotDevices.map((device) => (
+                <Select.Option key={device.iotId} value={device.iotId}>
+                  {device.iotId}
+                </Select.Option>
+              ))}
+            </Select>
           </Form.Item>
 
           <Form.Item style={{ marginBottom: 0, textAlign: "right" }}>
@@ -531,7 +551,13 @@ const ManageCage: React.FC = () => {
           </Form.Item>
 
           <Form.Item label="Mã IoT (Tùy chọn)" name="iotCode">
-            <Input placeholder="Nhập mã IoT" />
+            <Select placeholder="Chọn mã IoT" allowClear>
+              {iotDevices.map((device) => (
+                <Select.Option key={device.iotId} value={device.iotId}>
+                  {device.iotId}
+                </Select.Option>
+              ))}
+            </Select>
           </Form.Item>
 
           <Form.Item style={{ marginBottom: 0, textAlign: "right" }}>
