@@ -190,10 +190,10 @@ const ManageCage: React.FC = () => {
     
     setUpdateLoading(true);
     try {
-      // Remove iotCode if empty
+      // Set iotCode to null if not selected
       const updateData: UpdateCageRequest = {
         ...values,
-        iotCode: values.iotCode || "",
+        iotCode: values.iotCode || null,
       };
       
       await cageService.updateCage(selectedCage.id, updateData);
