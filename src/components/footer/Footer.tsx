@@ -29,7 +29,7 @@ const Footer = () => {
             <EnvironmentOutlined className="icon" /> Lô E2a-7, Đường D1, Long Thạnh Mỹ, TP. Thủ Đức, Hồ Chí Minh
           </p>
           <p>
-            <MailOutlined className="icon" /> cskh@gmail.com
+            <MailOutlined className="icon" /> hamster@nls.io.vn
           </p>
           <p>
             <PhoneOutlined className="icon" /> 090811111
