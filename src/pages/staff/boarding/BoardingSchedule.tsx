@@ -75,6 +75,9 @@ const BoardingSchedule = () => {
   const [selectedCageTypeDetails, setSelectedCageTypeDetails] = useState<any>(null);
   const [loadingCageTypeDetails, setLoadingCageTypeDetails] = useState<boolean>(false);
 
+  // State for food services
+  const [foodServices, setFoodServices] = useState<any[]>([]);
+
   // Context menu handlers
   const handleViewDetails = (booking: Booking) => {
     const originalBookingId = booking.originalBookingId || booking.id;
@@ -401,12 +404,14 @@ const BoardingSchedule = () => {
         
         // Filter only FOOD services and sum their prices
         if (bookingDetails.services && Array.isArray(bookingDetails.services)) {
-          const foodServices = bookingDetails.services.filter(service => service.serviceType === 'FOOD');
-          const totalServicePricePerDay = foodServices.reduce((sum, service) => sum + service.price, 0);
+          const foodServicesData = bookingDetails.services.filter(service => service.serviceType === 'FOOD');
+          setFoodServices(foodServicesData);
+          const totalServicePricePerDay = foodServicesData.reduce((sum, service) => sum + service.price, 0);
           calculatedServicePrice = totalServicePricePerDay * numberOfDays;
         }
       } catch (error) {
         console.error('Error fetching booking details for service price:', error);
+        setFoodServices([]);
       }
 
       setAdditionalServicePrice(calculatedServicePrice);
@@ -1542,7 +1547,7 @@ const BoardingSchedule = () => {
                   marginBottom: '16px',
                   color: '#0050b3'
                 }}>
-                  Chi tiết giá gia hạn
+                  Chi tiết giá gia hạn 
                 </div>
                 
                 {loadingPrice ? (
@@ -1583,17 +1588,46 @@ const BoardingSchedule = () => {
 
                     {/* Additional Service Price */}
                     <div style={{ 
-                      display: 'flex', 
-                      justifyContent: 'space-between',
                       padding: '8px 0',
                       borderBottom: '1px solid #d9d9d9'
                     }}>
-                      <span style={{ color: '#595959', fontSize: '14px' }}>
-                        Tiền dịch vụ bổ sung:
-                      </span>
-                      <span style={{ fontWeight: '600', fontSize: '14px', color: '#262626' }}>
-                        {additionalServicePrice.toLocaleString('vi-VN')} ₫
-                      </span>
+                      <div style={{ 
+                        display: 'flex', 
+                        justifyContent: 'space-between',
+                        marginBottom: foodServices.length > 0 ? '8px' : '0'
+                      }}>
+                        <span style={{ color: '#595959', fontSize: '14px' }}>
+                          Tiền dịch vụ bổ sung:
+                        </span>
+                        <span style={{ fontWeight: '600', fontSize: '14px', color: '#262626' }}>
+                          {additionalServicePrice.toLocaleString('vi-VN')} ₫
+                        </span>
+                      </div>
+                      {/* Display food services details */}
+                      {foodServices.length > 0 && (
+                        <div style={{ 
+                          marginLeft: '16px',
+                          padding: '8px',
+                          backgroundColor: '#f5f5f5',
+                          borderRadius: '4px'
+                        }}>
+                          {foodServices.map((service, index) => (
+                            <div 
+                              key={index}
+                              style={{ 
+                                display: 'flex', 
+                                justifyContent: 'space-between',
+                                padding: '4px 0',
+                                fontSize: '13px',
+                                color: '#595959'
+                              }}
+                            >
+                              <span>• {service.serviceName}</span>
+                              <span>{service.price.toLocaleString('vi-VN')} ₫/ngày</span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
                     </div>
 
                     {/* Total Price */}
@@ -1610,7 +1644,7 @@ const BoardingSchedule = () => {
                         fontSize: '16px',
                         fontWeight: 'bold'
                       }}>
-                        Tổng chi phí gia hạn:
+                        Tổng chi phí gia hạn (chưa giảm giá):
                       </span>
                       <span style={{ 
                         fontWeight: 'bold', 
