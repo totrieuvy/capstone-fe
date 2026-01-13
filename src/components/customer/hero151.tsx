@@ -1,6 +1,4 @@
 import { AspectRatio } from "@/components/ui/aspect-ratio";
-// import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-// import { Button } from "@/components/ui/button";
 
 interface Testimonial {
   quote: string;
